@@ -13,7 +13,10 @@ import torch
 import torch.nn as nn
 import torchvision
 from tqdm import tqdm
-import torch_utils  # , google_utils
+import pandas as pd
+import sys
+sys.path.append('.')
+import torch_utils # , google_utils
 
 matplotlib.rc('font', **{'size': 11})
 
@@ -42,13 +45,14 @@ def load_classes(path):
     return list(filter(None, names))  # filter removes empty strings (such as last line)
 
 
-def labels_to_class_weights(labels, nc=80):
+def labels_to_class_weights(labels, nc=60):
     # Get class weights (inverse frequency) from training labels
     if labels[0] is None:  # no labels loaded
         return torch.Tensor()
 
     labels = np.concatenate(labels, 0)  # labels.shape = (866643, 5) for COCO
     classes = labels[:, 0].astype(np.int)  # labels = [class xywh]
+    print(min(classes), max(classes))
     weights = np.bincount(classes, minlength=nc)  # occurences per class
 
     # Prepend gridpoint count (for uCE trianing)
@@ -61,7 +65,7 @@ def labels_to_class_weights(labels, nc=80):
     return torch.from_numpy(weights)
 
 
-def labels_to_image_weights(labels, nc=80, class_weights=np.ones(80)):
+def labels_to_image_weights(labels, nc=60, class_weights=np.ones(60)):
     # Produces image weights based on class mAPs
     n = len(labels)
     class_counts = np.array([np.bincount(labels[i][:, 0].astype(np.int), minlength=nc) for i in range(n)])
@@ -94,6 +98,27 @@ def coco80_to_coco91_class():  # converts 80-index (val2014) to 91-index (paper)
          35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63,
          64, 65, 67, 70, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 84, 85, 86, 87, 88, 89, 90]
     return x
+
+
+def xview_classes2indices(classes, class_num=60):  # remap xview classes 11-94 to 0-61
+    # FIXME
+    # indices = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28,
+    #            29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54,
+    #            55, 56, 57, 58, 59]
+    # labels = [74, 45, 73, 19, 24, 35, 65, 79, 55, 51, 32, 76, 60, 53, 64, 77, 49, 47, 11, 36, 63, 66, 61, 15, 84, 71,
+    #            38, 40, 59, 41, 52, 34, 17, 13, 20, 93, 33, 56, 42, 62, 72, 91, 89, 12, 18, 86, 57, 37, 94, 54, 27, 23,
+    #            26, 25, 28, 29, 44, 21, 83, 50]
+    df_cat = pd.read_csv('cfg/categories_id_color_diverse_{}.txt'.format(class_num), delimiter='\t')
+    cat_labels = list(df_cat['category_label'])
+    return [cat_labels.index(c) for c in classes]
+
+
+def xview_indices2classes(indices, class_num=60):  # remap xview classes 11-94 to 0-61
+    # FIXME -- yang
+    # df_cat = pd.read_csv('/media/lab/Yang/code/xview-yolov3-changed/cfg/categories_id_color_diverse_60.txt', delimiter='\t')
+    df_cat = pd.read_csv('cfg/categories_id_color_diverse_{}.txt'.format(class_num), delimiter='\t')
+    cat_labels = list(df_cat['category_label'])
+    return [cat_labels[i] for i in indices]
 
 
 def weights_init_normal(m):
@@ -398,6 +423,7 @@ def compute_loss(p, targets, model):  # predictions, targets, model
             pbox = torch.cat((pxy, pwh), 1)  # predicted box
             giou = bbox_iou(pbox.t(), tbox[i], x1y1x2y2=False, GIoU=True)  # giou computation
             lbox += (1.0 - giou).sum() if red == 'sum' else (1.0 - giou).mean()  # giou loss
+            # print('b, a, gj, gi', b, a, gj, gi)
             tobj[b, a, gj, gi] = giou.detach().type(tobj.dtype)
 
             if 'default' in arc and model.nc > 1:  # cls loss (only if multiple classes)
@@ -903,7 +929,7 @@ def plot_images(imgs, targets, paths=None, fname='images.jpg'):
     # Plots training images overlaid with targets
     imgs = imgs.cpu().numpy()
     targets = targets.cpu().numpy()
-    # targets = targets[targets[:, 1] == 21]  # plot only one class
+    targets = targets[targets[:, 1] == 21]  # plot only one class
 
     fig = plt.figure(figsize=(10, 10))
     bs, _, h, w = imgs.shape  # batch size, _, height, width
@@ -1029,3 +1055,20 @@ def plot_results(start=0, stop=0, bucket='', id=()):  # from utils.utils import 
     fig.tight_layout()
     ax[1].legend()
     fig.savefig('results.png', dpi=200)
+
+
+if __name__ == '__main__':
+    img_file = '/media/lab/Yang/data/xView_YOLO/images/2115.tif'
+    lbl_file = '/media/lab/Yang/data/xView_YOLO/labels/60_cls/2115.txt'
+    # img = cv2.imread(img_file)
+    from PIL import Image
+    img = np.array(Image.open(img_file))
+    lbl = np.loadtxt(lbl_file, delimiter=' ')
+    # plot_images(img, lbl)
+    h, w = img.shape[:2]
+    boxes = xywh2xyxy(lbl[:, 1:5]).T
+    boxes[[0, 2]] *= w
+    boxes[[1, 3]] *= h
+    plt.imshow(img)
+    plt.plot(boxes[[0, 2, 2, 0, 0]], boxes[[1, 1, 3, 3, 1]], '.-')
+
