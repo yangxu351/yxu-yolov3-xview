@@ -435,9 +435,10 @@ def compute_loss(p, targets, model):  # predictions, targets, model
     lcls *= h['cls']
     if red == 'sum':
         bs = tobj.shape[0]  # batch size
-        lbox *= 3 / ng
         lobj *= 3 / (6300 * bs) * 2  # 3 / np * 2
-        lcls *= 3 / ng / model.nc
+        if ng:
+            lcls *= 3 / ng / model.nc
+            lbox *= 3 / ng
 
     loss = lbox + lobj + lcls
     return loss, torch.cat((lbox, lobj, lcls, loss)).detach()
@@ -759,7 +760,7 @@ def kmean_anchors(path='../coco/train2017.txt', n=9, img_size=(320, 640)):
     def fitness(thr, wh, k):  # mutation fitness
         iou = wh_iou(wh, torch.Tensor(k)).max(1)[0]  # max iou
         bpr = (iou > thr).float().mean()  # best possible recall
-        return iou.mean() * 0.80 + bpr * 0.20  # weighted combination
+        return iou.mean() * bpr  # product
 
     # Get label wh
     wh = []
@@ -771,17 +772,17 @@ def kmean_anchors(path='../coco/train2017.txt', n=9, img_size=(320, 640)):
     wh *= np.random.uniform(img_size[0], img_size[1], size=(wh.shape[0], 1))  # normalized to pixels (multi-scale)
 
     # Darknet yolov3.cfg anchors
-    if n == 9:
+    use_darknet = False
+    if use_darknet:
         k = np.array([[10, 13], [16, 30], [33, 23], [30, 61], [62, 45], [59, 119], [116, 90], [156, 198], [373, 326]])
-        k = print_results(thr, wh, k)
     else:
         # Kmeans calculation
         from scipy.cluster.vq import kmeans
-        print('Running kmeans on %g points...' % len(wh))
+        print('Running kmeans for %g anchors on %g points...' % (n, len(wh)))
         s = wh.std(0)  # sigmas for whitening
-        k, dist = kmeans(wh / s, n, iter=20)  # points, mean distance
+        k, dist = kmeans(wh / s, n, iter=30)  # points, mean distance
         k *= s
-        k = print_results(thr, wh, k)
+    k = print_results(thr, wh, k)
 
     # # Plot
     # k, d = [None] * 20, [None] * 20
@@ -795,11 +796,11 @@ def kmean_anchors(path='../coco/train2017.txt', n=9, img_size=(320, 640)):
     wh = torch.Tensor(wh)
     f, ng = fitness(thr, wh, k), 1000  # fitness, generations
     for _ in tqdm(range(ng), desc='Evolving anchors'):
-        kg = (k.copy() * (1 + np.random.random() * np.random.randn(*k.shape) * 0.20)).clip(min=2.0)
+        kg = (k.copy() * (1 + np.random.random() * np.random.randn(*k.shape) * 0.30)).clip(min=2.0)
         fg = fitness(thr, wh, kg)
         if fg > f:
             f, k = fg, kg.copy()
-            print(fg, list(k.round().reshape(-1)))
+            print_results(thr, wh, k)
     k = print_results(thr, wh, k)
 
     return k
@@ -809,7 +810,7 @@ def print_mutation(hyp, results, bucket=''):
     # Print mutation results to evolve.txt (for use with train.py --evolve)
     a = '%10s' * len(hyp) % tuple(hyp.keys())  # hyperparam keys
     b = '%10.3g' * len(hyp) % tuple(hyp.values())  # hyperparam values
-    c = '%10.3g' * len(results) % results  # results (P, R, mAP, F1, test_loss)
+    c = '%10.4g' * len(results) % results  # results (P, R, mAP, F1, test_loss)
     print('\n%s\n%s\nEvolved fitness: %s\n' % (a, b, c))
 
     if bucket:
