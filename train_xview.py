@@ -19,8 +19,6 @@ try:  # Mixed precision training https://github.com/NVIDIA/apex
 except:
     mixed_precision = False  # not installed
 
-
-
 # Hyperparameters (results68: 59.2 mAP@0.5 yolov3-spp-416) https://github.com/ultralytics/yolov3/issues/310
 
 hyp = {'giou': 3.54,  # giou loss gain
@@ -66,8 +64,8 @@ def train():
     # Initialize
     init_seeds()
     if opt.multi_scale:
-        img_sz_min = 9  # round(img_size / 32 / 1.5)
-        img_sz_max = 21  # round(img_size / 32 * 1.5)
+        img_sz_min = round(img_size / 32 / 1.5)
+        img_sz_max = round(img_size / 32 * 1.5)
         img_size = img_sz_max * 32  # initiate with maximum multi_scale size
         print('Using multi-scale %g - %g' % (img_sz_min * 32, img_size))
 
@@ -363,7 +361,7 @@ def train():
 
             # Save backup every 10 epochs (optional)
             if epoch > 0 and epoch % 10 == 0:
-                torch.save(chkpt, wdir + 'backup%g.pt' % epoch)
+                torch.save(chkpt, opt.weights_dir + 'backup%g.pt' % epoch)
 
             # Delete checkpoint
             del chkpt
@@ -374,12 +372,12 @@ def train():
     if len(opt.name) and not opt.prebias:
         fresults, flast, fbest = 'results%s.txt' % opt.name, 'last%s.pt' % opt.name, 'best%s.pt' % opt.name
         os.rename('results.txt', fresults)
-        os.rename(wdir + 'last.pt', wdir + flast) if os.path.exists(wdir + 'last.pt') else None
-        os.rename(wdir + 'best.pt', wdir + fbest) if os.path.exists(wdir + 'best.pt') else None
+        os.rename(opt.weights_dir + 'last.pt', opt.weights_dir + flast) if os.path.exists(opt.weights_dir + 'last.pt') else None
+        os.rename(opt.weights_dir + 'best.pt', opt.weights_dir + fbest) if os.path.exists(opt.weights_dir + 'best.pt') else None
 
         # save to cloud
         if opt.bucket:
-            os.system('gsutil cp %s %s gs://%s' % (fresults, wdir + flast, opt.bucket))
+            os.system('gsutil cp %s %s gs://%s' % (fresults, opt.weights_dir + flast, opt.bucket))
 
     plot_results()  # save as results.png
     print('%g epochs completed in %.3f hours.\n' % (epoch - start_epoch + 1, (time.time() - t0) / 3600))
@@ -399,24 +397,24 @@ def prebias():
         create_backbone(last)  # saved results as backbone.pt
 
         # opt = opt_0  # reset settings
-        opt.weights = wdir + 'backbone.pt'  # assign backbone
+        opt.weights = opt.weights_dir + 'backbone.pt'  # assign backbone
         opt.prebias = False  # disable prebias
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--epochs', type=int, default=273)  # 500200 batches at bs 16, 117263 images = 273 epochs
+    parser.add_argument('--epochs', type=int, default=300)  # 500200 batches at bs 16, 117263 images = 273 epochs
     parser.add_argument('--batch-size', type=int, default=8)  # effective bs = batch_size * accumulate = 16 * 4 = 64
     parser.add_argument('--accumulate', type=int, default=4, help='batches to accumulate before optimizing')
     parser.add_argument('--cfg', type=str, default='cfg/yolov3-spp-60cls.cfg', help='*.cfg path')
     parser.add_argument('--data', type=str, default='data_xview/60_cls/xview.data', help='*.data path')
     parser.add_argument('--writer_dir', type=str, default='writer_output/', help='*.data path')
-    parser.add_argument('--multi-scale', action='store_true', help='adjust (67% - 150%) img_size every 10 batches')
+    parser.add_argument('--multi_scale', action='store_true', help='adjust (67% - 150%) img_size every 10 batches')
     parser.add_argument('--img-size', type=int, default=608, help='inference size (pixels)') # 416 608
     parser.add_argument('--class_num', type=int, default=60, help='class number') # 416 608
     parser.add_argument('--json_file', type=str, default='/media/lab/Yang/data/xView_YOLO/', help='*.json path')
     parser.add_argument('--weights_dir', type=str, default='weights/', help='to save weights path')
-    parser.add_argument('--result_dir', type=str, default='result_output/', help='*.json path')
+    parser.add_argument('--result_dir', type=str, default='result_output/', help='to save result files path')
 
     parser.add_argument('--rect', action='store_true', help='rectangular training')
     parser.add_argument('--resume', action='store_true', help='resume training from last.pt')
@@ -425,7 +423,7 @@ if __name__ == '__main__':
     parser.add_argument('--evolve', action='store_true', help='evolve hyperparameters')
     parser.add_argument('--bucket', type=str, default='', help='gsutil bucket')
     parser.add_argument('--cache_images', action='store_true', help='cache images for faster training')
-    parser.add_argument('--weights', type=str, default='weights/ultralytics68.pt', help='initial weights')
+    parser.add_argument('--weights', type=str, default='', help='initial weights') # weights/ultralytics68.pt
     parser.add_argument('--arc', type=str, default='default', help='yolo architecture')  # defaultpw, uCE, uBCE
     parser.add_argument('--prebias', action='store_true', help='pretrain model biases')
     parser.add_argument('--name', default='', help='renames results.txt to results_name.txt if supplied')

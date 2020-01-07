@@ -14,9 +14,7 @@ import torch.nn as nn
 import torchvision
 from tqdm import tqdm
 import pandas as pd
-import sys
-sys.path.append('.')
-import torch_utils # , google_utils
+from utils import torch_utils # , google_utils
 
 matplotlib.rc('font', **{'size': 11})
 
@@ -929,7 +927,7 @@ def plot_images(imgs, targets, paths=None, fname='images.jpg'):
     # Plots training images overlaid with targets
     imgs = imgs.cpu().numpy()
     targets = targets.cpu().numpy()
-    targets = targets[targets[:, 1] == 21]  # plot only one class
+    targets = targets[targets[:, 1] == 2]  # plot only one class
 
     fig = plt.figure(figsize=(10, 10))
     bs, _, h, w = imgs.shape  # batch size, _, height, width
@@ -1058,9 +1056,8 @@ def plot_results(start=0, stop=0, bucket='', id=()):  # from utils.utils import 
 
 
 if __name__ == '__main__':
-    img_file = '/media/lab/Yang/data/xView_YOLO/images/2115.tif'
-    lbl_file = '/media/lab/Yang/data/xView_YOLO/labels/60_cls/2115.txt'
-    # img = cv2.imread(img_file)
+    img_file = '/media/lab/Yang/data/xView_YOLO/images/2230.tif'
+    lbl_file = '/media/lab/Yang/data/xView_YOLO/labels/60_cls/2230.txt'
     from PIL import Image
     img = np.array(Image.open(img_file))
     lbl = np.loadtxt(lbl_file, delimiter=' ')
