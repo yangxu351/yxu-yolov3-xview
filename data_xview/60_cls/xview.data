@@ -1,0 +1,6 @@
+classes=60
+train=./data_xview/60_cls/xviewtrain_img.txt
+valid=./data_xview/60_cls/xviewval_img.txt
+names=./data_xview/60_cls/xview.names
+backup=backup/
+eval=xview
