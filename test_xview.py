@@ -12,6 +12,40 @@ from utils.utils_xview import *
 # sys.path.append('.')
 
 
+class MyEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        else:
+            return super(MyEncoder, self).default(obj)
+
+def get_opt():
+    parser = argparse.ArgumentParser(prog='test.py')
+    parser.add_argument('--cfg', type=str, default='cfg/yolov3-spp-60cls.cfg', help='*.cfg path')
+    parser.add_argument('--data', type=str, default='data_xview/60_cls/xview.data', help='*.data path')
+    parser.add_argument('--weights', type=str, default='weights/60_cls/best.pt', help='path to weights file')
+    parser.add_argument('--batch-size', type=int, default=8, help='size of each image batch')
+    parser.add_argument('--img-size', type=int, default=608, help='inference size (pixels)')
+    parser.add_argument('--class_num', type=int, default=60, help='class number')
+    parser.add_argument('--json_file', type=str, default='/media/lab/Yang/data/xView_YOLO/', help='*.json path')
+    parser.add_argument('--weights_dir', type=str, default='weights/', help='to save weights path')
+    parser.add_argument('--result_dir', type=str, default='result_output/', help='to save result files path')
+    parser.add_argument('--conf-thres', type=float, default=0.001, help='object confidence threshold')
+    parser.add_argument('--iou-thres', type=float, default=0.5, help='IOU threshold for NMS')
+    parser.add_argument('--save-json', action='store_true', help='save a cocoapi-compatible JSON results file')
+    parser.add_argument('--task', default='test', help="'test', 'study', 'benchmark'")
+    parser.add_argument('--device', default='', help='device id (i.e. 0 or 0,1) or cpu')
+    opt = parser.parse_args()
+    # opt.save_json = opt.save_json or any([x in opt.data for x in ['coco.data', 'coco2014.data', 'coco2017.data']])
+    opt.save_json = opt.save_json or any([x in opt.data for x in ['xview.data']])
+    print(opt)
+    opt.result_dir = opt.result_dir + '{}_cls/'.format(opt.class_num)
+    opt.weights_dir = opt.weights_dir + '{}_cls/'.format(opt.class_num)
+    return opt
 
 def test(cfg,
          data,
@@ -22,7 +56,7 @@ def test(cfg,
          iou_thres=0.5,  # for nms
          save_json=False,
          model=None,
-         dataloader=None):
+         dataloader=None, opt=None):
     # Initialize/load model and set device
     if model is None:
         device = torch_utils.select_device(opt.device, batch_size=batch_size)
@@ -184,8 +218,9 @@ def test(cfg,
     # Save JSON
     if save_json and map and len(jdict):
         imgIds = [int(Path(x).stem.split('_')[-1]) for x in dataloader.dataset.img_files]
-        with open('results.json', 'w') as file:
-            json.dump(jdict, file)
+        with open(opt.result_dir + 'results.json', 'w') as file:
+            # json.dump(jdict, file)
+            json.dump(jdict, file, ensure_ascii=False, indent=2, cls=MyEncoder)
 
         try:
             from pycocotools.coco import COCO
@@ -196,8 +231,8 @@ def test(cfg,
         # https://github.com/cocodataset/cocoapi/blob/master/PythonAPI/pycocoEvalDemo.ipynb
         #fixme
         # cocoGt = COCO(glob.glob('../coco/annotations/instances_val*.json')[0])  # initialize COCO ground truth api
-        cocoGt = COCO(opt.data_json_file + 'xViewval_{}cls.json'.format(opt.class_num))
-        cocoDt = cocoGt.loadRes('results.json')  # initialize COCO pred api
+        cocoGt = COCO(opt.json_file + 'xViewval_{}cls.json'.format(opt.class_num))
+        cocoDt = cocoGt.loadRes(opt.result_dir + 'results.json')  # initialize COCO pred api
 
         cocoEval = COCOeval(cocoGt, cocoDt, 'bbox')
         cocoEval.params.imgIds = imgIds  # [:32]  # only evaluate these images
@@ -214,22 +249,7 @@ def test(cfg,
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(prog='test.py')
-    parser.add_argument('--cfg', type=str, default='cfg/yolov3-spp-60cls.cfg', help='*.cfg path')
-    parser.add_argument('--data', type=str, default='data_xview/60_cls/xview.data', help='*.data path')
-    parser.add_argument('--weights', type=str, default='weights/yolov3-spp.weights', help='path to weights file')
-    parser.add_argument('--batch-size', type=int, default=8, help='size of each image batch')
-    parser.add_argument('--img-size', type=int, default=608, help='inference size (pixels)')
-    parser.add_argument('--class_num', type=int, default=60, help='class number')
-    parser.add_argument('--data_json_file', type=str, default='/media/lab/Yang/data/xView_YOLO/', help='*.json path')
-    parser.add_argument('--conf-thres', type=float, default=0.001, help='object confidence threshold')
-    parser.add_argument('--iou-thres', type=float, default=0.5, help='IOU threshold for NMS')
-    parser.add_argument('--save-json', action='store_true', help='save a cocoapi-compatible JSON results file')
-    parser.add_argument('--task', default='test', help="'test', 'study', 'benchmark'")
-    parser.add_argument('--device', default='', help='device id (i.e. 0 or 0,1) or cpu')
-    opt = parser.parse_args()
-    opt.save_json = opt.save_json or any([x in opt.data for x in ['coco.data', 'coco2014.data', 'coco2017.data']])
-    print(opt)
+    opt = get_opt()
 
     if opt.task == 'test':  # task = 'test', 'study', 'benchmark'
         # Test
@@ -240,7 +260,7 @@ if __name__ == '__main__':
              opt.img_size,
              opt.conf_thres,
              opt.iou_thres,
-             opt.save_json)
+             opt.save_json, opt)
 
     elif opt.task == 'benchmark':
         # mAPs at 320-608 at conf 0.5 and 0.7
@@ -250,7 +270,7 @@ if __name__ == '__main__':
                 t = time.time()
                 r = test(opt.cfg, opt.data, opt.weights, opt.batch_size, i, opt.conf_thres, j, opt.save_json)[0]
                 y.append(r + (time.time() - t,))
-        np.savetxt('benchmark.txt', y, fmt='%10.4g')  # y = np.loadtxt('study.txt')
+        np.savetxt(opt.result_dir + 'benchmark.txt', y, fmt='%10.4g')  # y = np.loadtxt('study.txt')
 
     elif opt.task == 'study':
         # Parameter study
@@ -260,7 +280,7 @@ if __name__ == '__main__':
             t = time.time()
             r = test(opt.cfg, opt.data, opt.weights, opt.batch_size, opt.img_size, opt.conf_thres, i, opt.save_json)[0]
             y.append(r + (time.time() - t,))
-        np.savetxt('study.txt', y, fmt='%10.4g')  # y = np.loadtxt('study.txt')
+        np.savetxt(opt.result_dir + 'study.txt', y, fmt='%10.4g')  # y = np.loadtxt('study.txt')
 
         # Plot
         fig, ax = plt.subplots(3, 1, figsize=(6, 6))
@@ -275,4 +295,11 @@ if __name__ == '__main__':
             ax[i].legend()
             ax[i].set_xlabel('iou_thr')
         fig.tight_layout()
-        plt.savefig('study.jpg', dpi=200)
+        plt.savefig(opt.result_dir + 'study.jpg', dpi=200)
+
+
+    # from pycocotools.coco import COCO
+    # from pycocotools.cocoeval import COCOeval
+    # cocoGt = COCO(opt.json_file + 'xViewval_{}cls.json'.format(opt.class_num))
+    # cocoDt = cocoGt.loadRes(opt.result_dir + 'results.json')  # initialize COCO pred api
+    # cocoEval = COCOeval(cocoGt, cocoDt, 'bbox')

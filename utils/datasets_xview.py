@@ -265,6 +265,8 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
             self.img_files = [x.replace('/', os.sep) for x in f.read().splitlines()  # os-agnostic
                               if os.path.splitext(x)[-1].lower() in img_formats]
 
+        print(self.img_files)
+
         n = len(self.img_files)
         assert n > 0, 'No images found in %s. See %s' % (path, help_url)
         bi = np.floor(np.arange(n) / batch_size).astype(np.int)  # batch index
@@ -281,7 +283,7 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
         # Define labels
         # self.label_files = [x.replace('images', 'labels').replace(os.path.splitext(x)[-1], '.txt')
         #                     for x in self.img_files]
-        self.label_files = [x.replace('images', 'labels/{}_cls'.format(class_num)).replace(os.path.splitext(x)[-1], '.txt')
+        self.label_files = [x.replace('images/{}'.format(img_size), 'labels/{}/{}_cls_xcycwh'.format(img_size, class_num)).replace(os.path.splitext(x)[-1], '.txt')
                             for x in self.img_files]
 
         # Rectangular Training  https://github.com/ultralytics/yolov3/issues/232
@@ -395,6 +397,7 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
             pbar = tqdm(range(len(self.img_files)), desc='Caching images')
             for i in pbar:  # max 10k images
                 self.imgs[i] = load_image(self, i)
+                # print('img----------', self.imgs[i].shape)
                 gb += self.imgs[i].nbytes
                 pbar.desc = 'Caching images (%.1fGB)' % (gb / 1E9)
 
@@ -424,7 +427,9 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
         label_path = self.label_files[index]
 
         hyp = self.hyp
-        mosaic = True and self.augment  # load 4 images at a time into a mosaic (only during training)
+        #fixme
+        # mosaic = True and self.augment  # load 4 images at a time into a mosaic (only during training)
+        mosaic = False  # load 4 images at a time into a mosaic (only during training)
         if mosaic:
             # Load mosaic
             img, labels = load_mosaic(self, index)
@@ -434,11 +439,15 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
         else:
             # Load image
             img = load_image(self, index)
+            # print(img.shape)
 
             # Letterbox
             h, w = img.shape[:2]
+            # print('after resize', img.shape)
             shape = self.batch_shapes[self.batch[index]] if self.rect else self.img_size  # final letterboxed shape
+            # print('shape', shape)
             img, ratio, pad = letterbox(img, shape, auto=False, scaleup=self.augment)
+            # print('ratio, w, h', ratio, w, h)
 
             # Load labels
             labels = []
@@ -455,6 +464,7 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
                     labels[:, 2] = ratio[1] * h * (x[:, 2] - x[:, 4] / 2) + pad[1]  # pad height
                     labels[:, 3] = ratio[0] * w * (x[:, 1] + x[:, 3] / 2) + pad[0]
                     labels[:, 4] = ratio[1] * h * (x[:, 2] + x[:, 4] / 2) + pad[1]
+
 
         if self.augment:
             # Augment imagespace
@@ -520,6 +530,7 @@ def load_image(self, index):
     if img is None:
         img_path = self.img_files[index]
         img = cv2.imread(img_path)  # BGR
+        # print('load_img', img.shape)
         assert img is not None, 'Image Not Found ' + img_path
         r = self.img_size / max(img.shape)  # resize image to img_size
         if self.augment and (r != 1):  # always resize down, only resize up if training with augmentation

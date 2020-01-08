@@ -182,7 +182,7 @@ def train():
     # Dataset
     dataset = LoadImagesAndLabels(train_path, img_size, batch_size,
                                   class_num=opt.class_num,
-                                  augment=True,
+                                  augment=True, # False, #True,
                                   hyp=hyp,  # augmentation hyperparameters
                                   rect=opt.rect,  # rectangular training
                                   image_weights=False,
@@ -318,8 +318,9 @@ def train():
                                       model=model,
                                       conf_thres=0.001 if final_epoch else 0.1,  # 0.1 for speed
                                       iou_thres=0.6 if final_epoch and is_xview else 0.5,
-                                      save_json=final_epoch and is_xview,
-                                      dataloader=testloader)
+                                      save_json=False, # final_epoch and is_xview, #fixme
+                                      dataloader=testloader,
+                                      opt=opt)
 
         # Write epoch results
         with open(results_file, 'a') as f:
@@ -371,7 +372,7 @@ def train():
     # end training
     if len(opt.name) and not opt.prebias:
         fresults, flast, fbest = 'results%s.txt' % opt.name, 'last%s.pt' % opt.name, 'best%s.pt' % opt.name
-        os.rename('results.txt', fresults)
+        os.rename(opt.result_dir + 'results.txt', fresults)
         os.rename(opt.weights_dir + 'last.pt', opt.weights_dir + flast) if os.path.exists(opt.weights_dir + 'last.pt') else None
         os.rename(opt.weights_dir + 'best.pt', opt.weights_dir + fbest) if os.path.exists(opt.weights_dir + 'best.pt') else None
 
@@ -417,7 +418,7 @@ if __name__ == '__main__':
     parser.add_argument('--result_dir', type=str, default='result_output/', help='to save result files path')
 
     parser.add_argument('--rect', action='store_true', help='rectangular training')
-    parser.add_argument('--resume', action='store_true', help='resume training from last.pt')
+    parser.add_argument('--resume', action='store_true', default=False, help='resume training from last.pt')
     parser.add_argument('--nosave', action='store_true', help='only save final checkpoint')
     parser.add_argument('--notest', action='store_true', help='only test final epoch')
     parser.add_argument('--evolve', action='store_true', help='evolve hyperparameters')

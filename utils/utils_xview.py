@@ -1027,16 +1027,19 @@ def plot_results_overlay(start=0, stop=0):  # from utils.utils import *; plot_re
         fig.savefig(f.replace('.txt', '.png'), dpi=200)
 
 
-def plot_results(start=0, stop=0, bucket='', id=()):  # from utils.utils import *; plot_results()
+def plot_results(start=0, stop=0, bucket='', id=(), class_num=60):  # from utils.utils import *; plot_results()
     # Plot training results files 'results*.txt'
     fig, ax = plt.subplots(2, 5, figsize=(14, 7))
     ax = ax.ravel()
     s = ['GIoU', 'Objectness', 'Classification', 'Precision', 'Recall',
          'val GIoU', 'val Objectness', 'val Classification', 'mAP@0.5', 'F1']
+
+    result_dir = '../result_output/{}_cls/'.format(class_num)
     if bucket:
         files = ['https://storage.googleapis.com/%s/results%g.txt' % (bucket, x) for x in id]
     else:
-        files = glob.glob('results*.txt') + glob.glob('../../Downloads/results*.txt')
+        # files = glob.glob('results*.txt') + glob.glob('../../Downloads/results*.txt')
+        files = glob.glob(result_dir + 'results*.txt')
     for f in sorted(files):
         results = np.loadtxt(f, usecols=[2, 3, 4, 8, 9, 12, 13, 14, 10, 11], ndmin=2).T
         n = results.shape[1]  # number of rows
@@ -1051,21 +1054,23 @@ def plot_results(start=0, stop=0, bucket='', id=()):  # from utils.utils import 
                 ax[i].get_shared_y_axes().join(ax[i], ax[i - 5])
 
     fig.tight_layout()
-    ax[1].legend()
-    fig.savefig('results.png', dpi=200)
+    # ax[1].legend()
+    fig.savefig(result_dir + 'results.png', dpi=200)
 
 
 if __name__ == '__main__':
-    img_file = '/media/lab/Yang/data/xView_YOLO/images/2230.tif'
-    lbl_file = '/media/lab/Yang/data/xView_YOLO/labels/60_cls/2230.txt'
-    from PIL import Image
-    img = np.array(Image.open(img_file))
-    lbl = np.loadtxt(lbl_file, delimiter=' ')
-    # plot_images(img, lbl)
-    h, w = img.shape[:2]
-    boxes = xywh2xyxy(lbl[:, 1:5]).T
-    boxes[[0, 2]] *= w
-    boxes[[1, 3]] *= h
-    plt.imshow(img)
-    plt.plot(boxes[[0, 2, 2, 0, 0]], boxes[[1, 1, 3, 3, 1]], '.-')
+    # img_file = '/media/lab/Yang/data/xView_YOLO/images/2230.tif'
+    # lbl_file = '/media/lab/Yang/data/xView_YOLO/labels/60_cls/2230.txt'
+    # from PIL import Image
+    # img = np.array(Image.open(img_file))
+    # lbl = np.loadtxt(lbl_file, delimiter=' ')
+    # # plot_images(img, lbl)
+    # h, w = img.shape[:2]
+    # boxes = xywh2xyxy(lbl[:, 1:5]).T
+    # boxes[[0, 2]] *= w
+    # boxes[[1, 3]] *= h
+    # plt.imshow(img)
+    # plt.plot(boxes[[0, 2, 2, 0, 0]], boxes[[1, 1, 3, 3, 1]], '.-')
 
+    class_num = 60
+    plot_results(class_num=class_num)
