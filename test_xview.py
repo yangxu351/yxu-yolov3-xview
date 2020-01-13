@@ -29,9 +29,9 @@ def get_opt():
     parser.add_argument('--data', type=str, default='data_xview/60_cls/xview.data', help='*.data path')
     parser.add_argument('--weights', type=str, default='weights/60_cls/best.pt', help='path to weights file')
     parser.add_argument('--batch-size', type=int, default=8, help='size of each image batch')
-    parser.add_argument('--img-size', type=int, default=608, help='inference size (pixels)')
+    parser.add_argument('--img_size', type=int, default=608, help='inference size (pixels)')
     parser.add_argument('--class_num', type=int, default=60, help='class number')
-    parser.add_argument('--json_file', type=str, default='/media/lab/Yang/data/xView_YOLO/', help='*.json path')
+    parser.add_argument('--label_dir', type=str, default='/media/lab/Yang/data/xView_YOLO/labels/', help='*.json path')
     parser.add_argument('--weights_dir', type=str, default='weights/', help='to save weights path')
     parser.add_argument('--result_dir', type=str, default='result_output/', help='to save result files path')
     parser.add_argument('--conf-thres', type=float, default=0.001, help='object confidence threshold')
@@ -45,7 +45,16 @@ def get_opt():
     print(opt)
     opt.result_dir = opt.result_dir + '{}_cls/'.format(opt.class_num)
     opt.weights_dir = opt.weights_dir + '{}_cls/'.format(opt.class_num)
+    opt.label_dir = opt.label_dir + '{}/'.format(opt.img_size)
     return opt
+
+
+def get_val_imgid_by_name(image_name):
+    image_id_name_maps = json.load(open(os.path.join(opt.label_dir, 'all_image_ids_names_dict_{}cls.json'.format(opt.class_num))))
+    img_ids = [int(k) for k in image_id_name_maps.keys()]
+    img_names = [v for v in image_id_name_maps.values()]
+    return img_ids[img_names.index(image_name)]
+
 
 def test(cfg,
          data,
@@ -85,15 +94,25 @@ def test(cfg,
     # Configure run
     data = parse_data_cfg(data)
     nc = int(data['classes'])  # number of classes
-    path = data['valid']  # path to test images
+    #fixme
+    # path = data['valid']  # path to test images
+    # lbl_path = data['valid_label']
+    path = data['valid_rare']  # path to test images
+    lbl_path = data['valid_rare_label']
     names = load_classes(data['names'])  # class names
     iouv = torch.linspace(0.5, 0.95, 10).to(device)  # iou vector for mAP@0.5:0.95
     iouv = iouv[0].view(1)  # for mAP@0.5
     niou = iouv.numel()
 
+    #fixme
+    # result_json_file = 'results.json'
+    # gt_json_file = 'xViewval_{}_{}cls_xtlytlwh.json'.format(img_size, opt.class_num)
+    result_json_file = 'results_rare.json'
+    gt_json_file = 'xViewval_rare_{}_{}cls_xtlytlwh.json'.format(img_size, opt.class_num)
+
     # Dataloader
     if dataloader is None:
-        dataset = LoadImagesAndLabels(path, img_size, batch_size, rect=True)
+        dataset = LoadImagesAndLabels(path, lbl_path, img_size, batch_size, rect=True) # , cache_labels=True
         batch_size = min(batch_size, len(dataset))
         dataloader = DataLoader(dataset,
                                 batch_size=batch_size,
@@ -110,9 +129,15 @@ def test(cfg,
     p, r, f1, mp, mr, map, mf1 = 0., 0., 0., 0., 0., 0., 0.
     loss = torch.zeros(3)
     jdict, stats, ap, ap_class = [], [], [], []
+    #fixme
     for batch_i, (imgs, targets, paths, shapes) in enumerate(tqdm(dataloader, desc=s)):
         imgs = imgs.to(device).float() / 255.0  # uint8 to float32, 0 - 255 to 0.0 - 1.0
         targets = targets.to(device)
+        print('targets--', targets.shape)
+        # print('paths--', paths)
+        # print('shapes', shapes)
+        # print(targets)
+        # exit(0)
         _, _, height, width = imgs.shape  # batch size, channels, height, width
 
         # Plot images with bounding boxes
@@ -148,16 +173,22 @@ def test(cfg,
             #    [file.write('%11.5g' * 7 % tuple(x) + '\n') for x in pred]
 
             # Clip boxes to image bounds
-            clip_coords(pred, (height, width))
+            #fixme
+            # clip_coords(pred, (height, width))
 
             # Append to pycocotools JSON dictionary
             if save_json:
                 # [{"image_id": 42, "category_id": 18, "bbox": [258.15, 41.29, 348.26, 243.78], "score": 0.236}, ...
-                image_id = int(Path(paths[si]).stem.split('_')[-1])
+                #fixme
+                # print('paths[si]', paths[si]) #  /media/lab/Yang/data/xView_YOLO/images/608/1094_11.jpg
+                # image_id = int(Path(paths[si]).stem.split('_')[-1])
+                image_name = paths[si].split('/')[-1]
+                image_id = get_val_imgid_by_name(image_name)
+
                 box = pred[:, :4].clone()  # xyxy
                 scale_coords(imgs[si].shape[1:], box, shapes[si][0], shapes[si][1])  # to original shape
                 box = xyxy2xywh(box)  # xywh
-                box[:, :2] -= box[:, 2:] / 2  # xy center to top-left corner
+                box[:, :2] -= box[:, 2:] / 2  # xy center to top-left corner # xtlytlwh
                 for di, d in enumerate(pred):
                     jdict.append({'image_id': image_id,
                                   'category_id': xview_classes[int(d[5])],
@@ -217,8 +248,15 @@ def test(cfg,
 
     # Save JSON
     if save_json and map and len(jdict):
-        imgIds = [int(Path(x).stem.split('_')[-1]) for x in dataloader.dataset.img_files]
-        with open(opt.result_dir + 'results.json', 'w') as file:
+        #fixme
+        # imgIds = [int(Path(x).stem.split('_')[-1]) for x in dataloader.dataset.img_files]
+        img_names = [x.split('/')[-1] for x in dataloader.dataset.img_files]
+        img_id_maps = json.load(open(os.path.join(opt.label_dir, 'all_image_ids_names_dict_{}cls.json'.format(opt.class_num))))
+        img_id_list = [k for k in img_id_maps.keys()]
+        img_name_list = [v for v in img_id_maps.values()]
+        imgIds = [img_id_list[img_name_list.index(v)] for v in img_name_list if v in img_names] # note: index is the same as the keys
+
+        with open(opt.result_dir + result_json_file, 'w') as file:
             # json.dump(jdict, file)
             json.dump(jdict, file, ensure_ascii=False, indent=2, cls=MyEncoder)
 
@@ -231,8 +269,8 @@ def test(cfg,
         # https://github.com/cocodataset/cocoapi/blob/master/PythonAPI/pycocoEvalDemo.ipynb
         #fixme
         # cocoGt = COCO(glob.glob('../coco/annotations/instances_val*.json')[0])  # initialize COCO ground truth api
-        cocoGt = COCO(opt.json_file + 'xViewval_{}cls.json'.format(opt.class_num))
-        cocoDt = cocoGt.loadRes(opt.result_dir + 'results.json')  # initialize COCO pred api
+        cocoGt = COCO(opt.label_dir + gt_json_file)
+        cocoDt = cocoGt.loadRes(opt.result_dir + result_json_file)  # initialize COCO pred api
 
         cocoEval = COCOeval(cocoGt, cocoDt, 'bbox')
         cocoEval.params.imgIds = imgIds  # [:32]  # only evaluate these images
@@ -260,7 +298,7 @@ if __name__ == '__main__':
              opt.img_size,
              opt.conf_thres,
              opt.iou_thres,
-             opt.save_json, opt)
+             opt.save_json, opt=opt)
 
     elif opt.task == 'benchmark':
         # mAPs at 320-608 at conf 0.5 and 0.7
@@ -298,8 +336,26 @@ if __name__ == '__main__':
         plt.savefig(opt.result_dir + 'study.jpg', dpi=200)
 
 
+
+
     # from pycocotools.coco import COCO
     # from pycocotools.cocoeval import COCOeval
-    # cocoGt = COCO(opt.json_file + 'xViewval_{}cls.json'.format(opt.class_num))
+    # cocoGt = COCO(opt.label_dir + 'xViewval_{}_{}cls_xtlytlwh.json'.format(opt.img_size, opt.class_num))
     # cocoDt = cocoGt.loadRes(opt.result_dir + 'results.json')  # initialize COCO pred api
     # cocoEval = COCOeval(cocoGt, cocoDt, 'bbox')
+
+    # img_names = [x.split('/')[-1] for x in dataloader.dataset.img_files]
+    # img_id_maps = json.load(open(os.path.join(opt.label_dir, 'all_image_ids_names_dict_{}cls.json'.format(opt.class_num))))
+    # img_id_list = [k for k in img_id_maps.keys()]
+    # img_name_list = [v for v in img_id_maps.values()]
+    # imgIds = [img_id_list[img_name_list.index(v)] for v in img_name_list if v in img_names] # note: index is the same as the keys
+    # cocoEval.params.imgIds = imgIds  # [:32]  # only evaluate these images
+    # cocoEval.evaluate()
+    # cocoEval.accumulate()
+    # cocoEval.summarize()
+    # mf1, map = cocoEval.stats[:2]  # update to pycocotools results (mAP@0.5:0.95, mAP@0.5)
+    #
+    # # Return results
+    # maps = np.zeros(nc) + map
+    # for i, c in enumerate(ap_class):
+    #     maps[c] = ap[i]

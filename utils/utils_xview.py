@@ -15,6 +15,7 @@ import torchvision
 from tqdm import tqdm
 import pandas as pd
 from utils import torch_utils # , google_utils
+import json
 
 matplotlib.rc('font', **{'size': 11})
 
@@ -927,7 +928,8 @@ def plot_images(imgs, targets, paths=None, fname='images.jpg'):
     # Plots training images overlaid with targets
     imgs = imgs.cpu().numpy()
     targets = targets.cpu().numpy()
-    targets = targets[targets[:, 1] == 2]  # plot only one class
+    #fixme
+    # targets = targets[targets[:, 1] == 2]  # plot only one class
 
     fig = plt.figure(figsize=(10, 10))
     bs, _, h, w = imgs.shape  # batch size, _, height, width
@@ -1027,14 +1029,14 @@ def plot_results_overlay(start=0, stop=0):  # from utils.utils import *; plot_re
         fig.savefig(f.replace('.txt', '.png'), dpi=200)
 
 
-def plot_results(start=0, stop=0, bucket='', id=(), class_num=60):  # from utils.utils import *; plot_results()
+def plot_results(start=0, stop=0, bucket='', id=(), class_num=60, result_dir=None):  # from utils.utils import *; plot_results()
     # Plot training results files 'results*.txt'
     fig, ax = plt.subplots(2, 5, figsize=(14, 7))
     ax = ax.ravel()
     s = ['GIoU', 'Objectness', 'Classification', 'Precision', 'Recall',
          'val GIoU', 'val Objectness', 'val Classification', 'mAP@0.5', 'F1']
-
-    result_dir = '../result_output/{}_cls/'.format(class_num)
+    if not result_dir:
+        result_dir = '../result_output/{}_cls/'.format(class_num)
     if bucket:
         files = ['https://storage.googleapis.com/%s/results%g.txt' % (bucket, x) for x in id]
     else:
@@ -1050,12 +1052,76 @@ def plot_results(start=0, stop=0, bucket='', id=(), class_num=60):  # from utils
                 y[y == 0] = np.nan  # dont show zero loss values
             ax[i].plot(x, y, marker='.', label=Path(f).stem)
             ax[i].set_title(s[i])
+            ax[i].grid(True)
             if i in [5, 6, 7]:  # share train and val loss y axes
                 ax[i].get_shared_y_axes().join(ax[i], ax[i - 5])
 
     fig.tight_layout()
     # ax[1].legend()
     fig.savefig(result_dir + 'results.png', dpi=200)
+
+
+#fixme
+def plot_rare_results(rare_cat_ids, score_thre=0.001):
+    img_ids_names_file = '/media/lab/Yang/data/xView_YOLO/labels/608/all_image_ids_names_dict_60cls.json'
+    img_ids_names_map = json.load(open(img_ids_names_file))
+    img_ids = [int(k) for k in img_ids_names_map.keys()] ## important
+    img_names = [v for v in img_ids_names_map.values()]
+
+    # rare_gt_json_file = '/media/lab/Yang/data/xView_YOLO/labels/608/xViewval_rare_608_60cls_xtlytlwh.json'
+    # rare_gt_json = json.load(open(rare_gt_json_file))
+
+    df_rare_img = pd.read_csv('../data_xview/60_cls/xviewval_rare_img.txt', header=None)
+    df_rare_gt = pd.read_csv('../data_xview/60_cls/xviewval_rare_lbl.txt', header=None)
+    rare_img_list = df_rare_img[0].tolist()
+    rare_gt_list = []
+    img_size = 608
+    for i in range(len(df_rare_gt[0])):
+        gt = pd.read_csv(df_rare_gt[0].iloc[i], header=None, delimiter=' ')
+        gt.iloc[:, 1:] = gt.iloc[:, 1:]*img_size
+        gt.iloc[:, 1] = gt.iloc[:, 1] - gt.iloc[:, 3]/2
+        gt.iloc[:, 2] = gt.iloc[:, 2] - gt.iloc[:, 4]/2
+        rare_gt_list.append(gt.to_numpy())
+
+    rare_img_names = [f.split('/')[-1] for f in rare_img_list]
+    rare_img_ids = []
+    for ri in rare_img_names:
+        rare_img_ids.append(img_ids[img_names.index(ri)])
+
+    rare_result_json_file = '../result_output/60_cls/results_rare.json'
+    rare_result_allcat_list = json.load(open(rare_result_json_file))
+    rare_result_list = []
+    for ri in rare_result_allcat_list:
+        if ri['category_id'] in rare_cat_ids:
+            rare_result_list.append(ri)
+    del rare_result_allcat_list
+
+    fig = plt.figure(figsize=(10, 10))
+    prd_color = (0, 255, 0)
+    gt_color = (0, 0, 255) # yellow
+    for ix in range(len(rare_img_list)):
+        img = cv2.imread(rare_img_list[ix])
+        img_id = rare_img_ids[ix]
+        img_gt_lbl_arr = rare_gt_list[ix] # class, xc, yc, w, h
+        for gx in range(img_gt_lbl_arr.shape[0]):
+            if img_gt_lbl_arr[gx, 0] in rare_cat_ids:
+                cat_id = int(img_gt_lbl_arr[gx, 0])
+                gt_bbx = img_gt_lbl_arr[gx, 1:]
+                gt_bbx = gt_bbx.astype(np.int64)
+                img = cv2.rectangle(img, (gt_bbx[0], gt_bbx[1]), (gt_bbx[0] + gt_bbx[2], gt_bbx[1] + gt_bbx[3]), gt_color, 2)
+
+        img_prd_lbl_list = []
+        for jx in rare_result_list:
+            if jx['image_id'] == img_id and jx['score']>=score_thre:
+                img_prd_lbl_list.append(rare_result_list.pop())
+                bbx = jx['bbox'] # xtopleft, ytopleft, w, h
+                bbx = [int(x) for x in bbx]
+                img = cv2.rectangle(img, (bbx[0], bbx[1]), (bbx[0] + bbx[2], bbx[1] + bbx[3]), prd_color, 2)
+                cv2.putText(img, text=str(jx['score']), org=(bbx[0] + 10, bbx[1] + 10),
+                            fontFace=cv2.FONT_HERSHEY_SIMPLEX,
+                            fontScale=0.5, thickness=1, lineType=cv2.LINE_AA, color=(0, 255, 255))
+        cv2.imwrite('../result_output/rare_result_figures/' + 'cat{}_'.format(cat_id)+ rare_img_names[ix], img)
+
 
 
 if __name__ == '__main__':
@@ -1072,5 +1138,17 @@ if __name__ == '__main__':
     # plt.imshow(img)
     # plt.plot(boxes[[0, 2, 2, 0, 0]], boxes[[1, 1, 3, 3, 1]], '.-')
 
-    class_num = 60
-    plot_results(class_num=class_num)
+
+    '''
+    plot  results
+    '''
+    # class_num = 60
+    # plot_results(class_num=class_num)
+
+    '''
+    plot rare results
+    '''
+    rare_cat_ids = [18, 46, 23, 33, 59]
+    score_thre = 0.1
+    # score_thre = 0.001
+    plot_rare_results(rare_cat_ids, score_thre)

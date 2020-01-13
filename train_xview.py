@@ -73,6 +73,8 @@ def train():
     data_dict = parse_data_cfg(data)
     train_path = data_dict['train']
     test_path = data_dict['valid']
+    train_label_path = data_dict['train_label']
+    test_label_path = data_dict['valid_label']
     nc = int(data_dict['classes'])  # number of classes
 
     # Remove previous results
@@ -104,7 +106,7 @@ def train():
     cutoff = -1  # backbone reaches to cutoff layer
     start_epoch = 0
     best_fitness = float('inf')
-    attempt_download(weights)
+    # attempt_download(weights)
     if weights.endswith('.pt'):  # pytorch format
         # possible weights are '*.pt', 'yolov3-spp.pt', 'yolov3-tiny.pt' etc.
         chkpt = torch.load(weights, map_location=device)
@@ -180,7 +182,7 @@ def train():
         model.yolo_layers = model.module.yolo_layers  # move yolo layer indices to top level
 
     # Dataset
-    dataset = LoadImagesAndLabels(train_path, img_size, batch_size,
+    dataset = LoadImagesAndLabels(train_path, train_label_path, img_size, batch_size,
                                   class_num=opt.class_num,
                                   augment=True, # False, #True,
                                   hyp=hyp,  # augmentation hyperparameters
@@ -201,7 +203,7 @@ def train():
 
     # Test Dataloader
     if not opt.prebias:
-        testloader = torch.utils.data.DataLoader(LoadImagesAndLabels(test_path, opt.img_size, batch_size * 2, class_num=opt.class_num,
+        testloader = torch.utils.data.DataLoader(LoadImagesAndLabels(test_path, test_label_path, opt.img_size, batch_size * 2, class_num=opt.class_num,
                                                                      hyp=hyp,
                                                                      rect=True,
                                                                      cache_labels=True,
@@ -318,7 +320,7 @@ def train():
                                       model=model,
                                       conf_thres=0.001 if final_epoch else 0.1,  # 0.1 for speed
                                       iou_thres=0.6 if final_epoch and is_xview else 0.5,
-                                      save_json=False, # final_epoch and is_xview, #fixme
+                                      save_json=True, # final_epoch and is_xview, #fixme
                                       dataloader=testloader,
                                       opt=opt)
 
@@ -380,7 +382,7 @@ def train():
         if opt.bucket:
             os.system('gsutil cp %s %s gs://%s' % (fresults, opt.weights_dir + flast, opt.bucket))
 
-    plot_results()  # save as results.png
+    plot_results(result_dir='result_output/{}_cls/'.format(opt.class_num))  # save as results.png
     print('%g epochs completed in %.3f hours.\n' % (epoch - start_epoch + 1, (time.time() - t0) / 3600))
     dist.destroy_process_group() if torch.cuda.device_count() > 1 else None
     torch.cuda.empty_cache()

@@ -20,6 +20,8 @@ from utils.utils_xview import xyxy2xywh, xywh2xyxy
 help_url = 'https://github.com/ultralytics/yolov3/wiki/Train-Custom-Data'
 img_formats = ['.bmp', '.jpg', '.jpeg', '.png', '.tif', '.dng']
 vid_formats = ['.mov', '.avi', '.mp4']
+#FIXME
+lbl_formats = ['.txt']
 
 # Get orientation exif tag
 for orientation in ExifTags.TAGS.keys():
@@ -257,15 +259,19 @@ class LoadStreams:  # multiple IP or RTSP cameras
 
 
 class LoadImagesAndLabels(Dataset):  # for training/testing
-    def __init__(self, path, img_size=608, batch_size=8, class_num=60, augment=False, hyp=None, rect=False, image_weights=False,
+    def __init__(self, path, label_path, img_size=608, batch_size=8, class_num=60, augment=False, hyp=None, rect=False, image_weights=False,
                  cache_labels=False, cache_images=False):
         path = str(Path(path))  # os-agnostic
         assert os.path.isfile(path), 'File not found %s. See %s' % (path, help_url)
         with open(path, 'r') as f:
             self.img_files = [x.replace('/', os.sep) for x in f.read().splitlines()  # os-agnostic
                               if os.path.splitext(x)[-1].lower() in img_formats]
+        #fixme---lbl_formats
+        with open(label_path, 'r') as f:
+            self.lbl_files = [x.replace('/', os.sep) for x in f.read().splitlines()  # os-agnostic
+                              if os.path.splitext(x)[-1].lower() in lbl_formats]
 
-        print(self.img_files)
+        # print(self.img_files)
 
         n = len(self.img_files)
         assert n > 0, 'No images found in %s. See %s' % (path, help_url)
@@ -281,10 +287,9 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
         self.rect = False if image_weights else rect
 
         # Define labels
+        #fixme
         # self.label_files = [x.replace('images', 'labels').replace(os.path.splitext(x)[-1], '.txt')
         #                     for x in self.img_files]
-        self.label_files = [x.replace('images/{}'.format(img_size), 'labels/{}/{}_cls_xcycwh'.format(img_size, class_num)).replace(os.path.splitext(x)[-1], '.txt')
-                            for x in self.img_files]
 
         # Rectangular Training  https://github.com/ultralytics/yolov3/issues/232
         if self.rect:
@@ -303,7 +308,9 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
             ar = s[:, 1] / s[:, 0]  # aspect ratio
             i = ar.argsort()
             self.img_files = [self.img_files[i] for i in i]
-            self.label_files = [self.label_files[i] for i in i]
+            #fixme
+            self.label_files = [self.lbl_files[i] for i in i]
+            # print('label_files', self.label_files)
             self.shapes = s[i]
             ar = ar[i]
 

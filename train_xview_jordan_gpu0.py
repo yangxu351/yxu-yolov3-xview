@@ -12,6 +12,8 @@ from utils.utils_xview import *
 from utils.torch_utils import *
 import warnings
 warnings.filterwarnings("ignore")
+GPU="0"
+os.environ["CUDA_VISIBLE_DEVICES"]=GPU
 
 mixed_precision = True
 try:  # Mixed precision training https://github.com/NVIDIA/apex
@@ -413,12 +415,12 @@ if __name__ == '__main__':
     parser.add_argument('--multi_scale', action='store_true', help='adjust (67% - 150%) img_size every 10 batches')
     parser.add_argument('--img-size', type=int, default=608, help='inference size (pixels)') # 416 608
     parser.add_argument('--class_num', type=int, default=60, help='class number') # 416 608
-    parser.add_argument('--json_file', type=str, default='/media/data/Yang/data/xView_YOLO/', help='*.json path')
+    parser.add_argument('--json_file', type=str, default='/media/data/Yang/xView_YOLO/', help='*.json path')
     parser.add_argument('--weights_dir', type=str, default='weights/', help='to save weights path')
     parser.add_argument('--result_dir', type=str, default='result_output/', help='to save result files path')
 
     parser.add_argument('--rect', action='store_true', help='rectangular training')
-    parser.add_argument('--resume', action='store_true', default=False, help='resume training from last.pt')
+    parser.add_argument('--resume', action='store_true', default=True, help='resume training from last.pt')
     parser.add_argument('--nosave', action='store_true', help='only save final checkpoint')
     parser.add_argument('--notest', action='store_true', help='only test final epoch')
     parser.add_argument('--evolve', action='store_true', help='evolve hyperparameters')
