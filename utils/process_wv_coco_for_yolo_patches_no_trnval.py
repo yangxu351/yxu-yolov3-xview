@@ -21,6 +21,7 @@ import numpy as np
 import argparse
 import os
 import wv_util as wv
+from utils_xview import coord_iou, compute_iou
 import pandas as pd
 from ast import literal_eval
 import json
@@ -28,6 +29,7 @@ import datetime
 from matplotlib import pyplot as plt
 from tqdm import tqdm
 import shutil
+import cv2
 
 """
   A script that processes xView imagery. 
@@ -452,34 +454,50 @@ def create_json_for_val_according_to_all_json():
     json.dump(trn_instance, open(json_file, 'w'), ensure_ascii=False, indent=2, cls=MyEncoder)
 
 
-def rare_cat_id_to_imgs(rare_cat_ids, typestr='all'):
-    cat_img_ids_maps = json.load(open(os.path.join(args.label_save_dir, '{}_cat_img_ids_dict_{}cls.json'.format(typestr, args.class_num))))
-    img_ids_names_maps = json.load(open(os.path.join(args.label_save_dir, '{}_image_ids_names_dict_{}cls.json'.format(typestr, args.class_num))))
+def get_val_imgs_by_rare_cat_id(rare_cat_ids, typestr='all'):
+    cat_img_ids_maps = json.load(open(os.path.join(args.txt_save_dir, '{}_cat_img_ids_dict_{}cls.json'.format(typestr, args.class_num))))
+    img_ids_names_maps = json.load(open(os.path.join(args.txt_save_dir, '{}_image_ids_names_dict_{}cls.json'.format(typestr, args.class_num))))
+    imgids = [k for k in img_ids_names_maps.keys()]
+    imgnames = [v for v in img_ids_names_maps.values()]
 
     val_rare_img_txt = open(os.path.join(args.data_save_dir, 'xviewval_rare_img.txt'), 'w')
     val_rare_lbl_txt = open(os.path.join(args.data_save_dir, 'xviewval_rare_lbl.txt'), 'w')
     img_path = args.images_save_dir
-    lbl_path = args.label_save_dir + '{}_cls_xcycwh/'.format(args.class_num)
+    lbl_path = args.txt_save_dir + '{}_cls_xcycwh/'.format(args.class_num)
 
     val_files = pd.read_csv(os.path.join(args.data_save_dir, 'xviewval_img.txt'), header=None)
     val_img_names = [f.split('/')[-1] for f in val_files[0]]
+    val_img_ids = [imgids[imgnames.index(n)] for n in val_img_names]
     rare_cat_val_imgs = {}
+    #fixme
+    # for rc in rare_cat_ids:
+    #     cat_img_ids = cat_img_ids_maps[rc]
+    #     rare_cat_all_imgs_files = []
+    #     for c in cat_img_ids:
+    #         rare_cat_all_imgs_files.append(img_ids_names_maps[str(c)]) # rare cat id map to all imgs
+    #     rare_cat_val_imgs[rc] = [v for v in rare_cat_all_imgs_files if v in val_img_names] # rare cat id map to val imgs
+    #     print('cat imgs in val', rare_cat_val_imgs[rc])
+    #     print('cat {} total imgs {}, val imgs {}'.format(rc, len(rare_cat_all_imgs_files), len(rare_cat_val_imgs)))
+    #     for rimg in rare_cat_val_imgs[rc]:
+    #         val_rare_img_txt.write("%s\n" % (img_path + rimg))
+    #         val_rare_lbl_txt.write("%s\n" % (lbl_path + rimg.replace('.jpg', '.txt')))
+    # rare_cat_val_imgs_files = os.path.join(args.txt_save_dir, 'rare_cat_ids_2_val_img_names.json')
+    # json.dump(rare_cat_val_imgs, open(rare_cat_val_imgs_files, 'w'), ensure_ascii=False, indent=2, cls=MyEncoder)
+
+    rare_all_cats_val_imgs = []
     for rc in rare_cat_ids:
         cat_img_ids = cat_img_ids_maps[rc]
-        rare_cat_val_imgs[rc] = []
-        rare_cat_all_imgs_files = []
-        for c in cat_img_ids:
-            rare_cat_all_imgs_files.append(img_ids_names_maps[str(c)]) # rare cat id map to all imgs
-        rare_cat_val_imgs[rc] = [v for v in rare_cat_all_imgs_files if v in val_img_names] # rare cat id map to val imgs
-        print('cat imgs in val', rare_cat_val_imgs[rc])
-        print('cat {} total imgs {}, val imgs {}'.format(rc, len(rare_cat_all_imgs_files), len(rare_cat_val_imgs)))
-        for rimg in rare_cat_val_imgs[rc]:
-            val_rare_img_txt.write("%s\n" % (img_path + rimg))
-            val_rare_lbl_txt.write("%s\n" % (lbl_path + rimg.replace('.jpg', '.txt')))
-
-    rare_cat_val_imgs_files = os.path.join(args.label_save_dir, 'rare_cat_ids_2_val_imgs_files.json')
+        cat_img_names = [val_img_names[val_img_ids.index(str(i))] for i in cat_img_ids if str(i) in val_img_ids]
+        rare_all_cats_val_imgs.extend(cat_img_names)
+        rare_cat_val_imgs[rc] = cat_img_names
+    # print(len(rare_all_cats_val_imgs))
+    rare_all_cats_val_imgs = list(set(rare_all_cats_val_imgs))
+    # print(len(rare_all_cats_val_imgs))
+    for rimg in rare_all_cats_val_imgs:
+        val_rare_img_txt.write("%s\n" % (img_path + rimg))
+        val_rare_lbl_txt.write("%s\n" % (lbl_path + rimg.replace('.jpg', '.txt')))
+    rare_cat_val_imgs_files = os.path.join(args.txt_save_dir, 'rare_cat_ids_2_val_img_names.json')
     json.dump(rare_cat_val_imgs, open(rare_cat_val_imgs_files, 'w'), ensure_ascii=False, indent=2, cls=MyEncoder)
-
 
 def create_json_for_val_rare_according_to_all_json():
     json_all_file = os.path.join(args.txt_save_dir, 'xViewall_{}_{}cls_xtlytlwh.json'.format(args.input_size, args.class_num)) # topleft
@@ -528,6 +546,222 @@ def create_xview_data():
     data_txt.write('backup=backup/\n')
     data_txt.write('eval=xview')
     data_txt.close()
+
+
+def plot_val_image_with_bbx_by_image_name(image_name):
+    img_ids_names_file = '/media/lab/Yang/data/xView_YOLO/labels/608/all_image_ids_names_dict_60cls.json'
+    img_ids_names_map = json.load(open(img_ids_names_file))
+    img_ids = [int(k) for k in img_ids_names_map.keys()] ## important
+    img_names = [v for v in img_ids_names_map.values()]
+
+    df_cat_color = pd.read_csv('../data_xview/60_cls/categories_id_color_diverse_60.txt', delimiter='\t')
+    cat_ids = df_cat_color['category_id'].tolist()
+    cat_colors = df_cat_color['color'].tolist()
+
+    df_val_img = pd.read_csv('../data_xview/60_cls/xviewval_img.txt', header=None)
+    df_val_gt = pd.read_csv('../data_xview/60_cls/xviewval_lbl.txt', header=None)
+    val_img_list = df_val_img[0].tolist()
+    img_size = 608
+
+    val_img_names = [f.split('/')[-1] for f in val_img_list]
+    img_index = val_img_names.index(image_name)
+    gt = pd.read_csv(df_val_gt[0].iloc[img_index], header=None, delimiter=' ')
+    gt.iloc[:, 1:] = gt.iloc[:, 1:]*img_size
+    gt.iloc[:, 1] = gt.iloc[:, 1] - gt.iloc[:, 3]/2
+    gt.iloc[:, 2] = gt.iloc[:, 2] - gt.iloc[:, 4]/2
+
+    img_bbx_fig_dir = args.cat_sample_dir + 'img_name_2_bbx_figures/'
+    if not os.path.exists(img_bbx_fig_dir):
+        os.mkdir(img_bbx_fig_dir)
+
+    fig = plt.figure(figsize=(10, 10))
+    img = cv2.imread(val_img_list[img_index])
+    for ix in range(len(gt)):
+        cat_id = gt.iloc[ix, 0]
+        color = literal_eval(cat_colors[cat_ids.index(cat_id)])
+        gt_bbx = gt.iloc[ix, 1:].to_numpy()
+        gt_bbx = gt_bbx.astype(np.int64)
+        img = cv2.rectangle(img, (gt_bbx[0], gt_bbx[1]), (gt_bbx[0] + gt_bbx[2], gt_bbx[1] + gt_bbx[3]), color, 2)
+        # cv2.putText(img, text=str(cat_id), org=(gt_bbx[0] + 10, gt_bbx[1] + 10),
+        #             fontFace=cv2.FONT_HERSHEY_SIMPLEX,
+        #             fontScale=0.5, thickness=1, lineType=cv2.LINE_AA, color=(0, 255, 255))
+    cv2.imwrite(img_bbx_fig_dir + image_name, img)
+
+
+#fixme
+def plot_rare_results_by_rare_cat_ids(rare_cat_ids, score_thres=0.001):
+    '''
+    all: TP + FP + FN
+    '''
+    img_ids_names_file = '/media/lab/Yang/data/xView_YOLO/labels/608/all_image_ids_names_dict_60cls.json'
+    img_ids_names_map = json.load(open(img_ids_names_file))
+    img_ids = [int(k) for k in img_ids_names_map.keys()] ## important
+    img_names = [v for v in img_ids_names_map.values()]
+
+    df_rare_val_img = pd.read_csv('../data_xview/60_cls/xviewval_rare_img.txt', header=None)
+    df_rare_val_gt = pd.read_csv('../data_xview/60_cls/xviewval_rare_lbl.txt', header=None)
+    rare_val_img_list = df_rare_val_img[0].tolist()
+    rare_val_id_list = df_rare_val_gt[0].tolist()
+    rare_val_img_names = [f.split('/')[-1] for f in rare_val_img_list]
+    rare_val_img_ids = [img_ids[img_names.index(x)] for x in rare_val_img_names]
+
+    rare_result_json_file = '../result_output/60_cls/results_rare.json'
+    rare_result_allcat_list = json.load(open(rare_result_json_file))
+    rare_result_list = []
+    for ri in rare_result_allcat_list:
+        if ri['category_id'] in rare_cat_ids and ri['score'] >= score_thres:
+            rare_result_list.append(ri)
+    del rare_result_allcat_list
+
+    prd_color = (0, 255, 0)
+    gt_color = (0, 255, 255) # yellow
+    args.txt_save_dir = args.txt_save_dir + '60_cls_xcycwh/'
+    save_dir = '../result_output/rare_result_figures/'
+    if not os.path.exists(save_dir):
+        os.mkdir(save_dir)
+
+    for ix in range(len(rare_val_img_list)):
+        img = cv2.imread(rare_val_img_list[ix])
+        img_size = img.shape[0]
+        gt_rare_cat = pd.read_csv(rare_val_id_list[ix], delimiter=' ').to_numpy()
+        for gx in range(gt_rare_cat.shape[0]):
+            cat_id = int(gt_rare_cat[gx, 0])
+            if gt_rare_cat[gx, 0] in rare_cat_ids:
+                gt_rare_cat[gx, 1:] = gt_rare_cat[gx, 1:] * img_size
+                gt_rare_cat[gx, 1] = gt_rare_cat[gx, 1] - gt_rare_cat[gx, 3]/2
+                gt_rare_cat[gx, 2] = gt_rare_cat[gx, 2] - gt_rare_cat[gx, 4]/2
+                gt_bbx = gt_rare_cat[gx, 1:]
+                gt_bbx = gt_bbx.astype(np.int64)
+                img = cv2.rectangle(img, (gt_bbx[0], gt_bbx[1]), (gt_bbx[0] + gt_bbx[2], gt_bbx[1] + gt_bbx[3]), gt_color, 2)
+                cv2.putText(img, text=str(cat_id), org=(gt_bbx[0] + 10, gt_bbx[1] + 10),
+                            fontFace=cv2.FONT_HERSHEY_SIMPLEX,
+                            fontScale=0.5, thickness=1, lineType=cv2.LINE_AA, color=(255, 255, 0))
+
+        img_prd_lbl_list = []
+        for jx in rare_result_list:
+            cat_id = jx['category_id']
+            if jx['image_id'] == rare_val_img_ids[ix]:
+                img_prd_lbl_list.append(rare_result_list.pop())
+                bbx = jx['bbox'] # xtopleft, ytopleft, w, h
+                bbx = [int(x) for x in bbx]
+                img = cv2.rectangle(img, (bbx[0], bbx[1]), (bbx[0] + bbx[2], bbx[1] + bbx[3]), prd_color, 2)
+                cv2.putText(img, text=str(jx['category_id']), org=(bbx[0] + 10, bbx[1] + 10),
+                            fontFace=cv2.FONT_HERSHEY_SIMPLEX,
+                            fontScale=0.5, thickness=1, lineType=cv2.LINE_AA, color=(0, 255, 255))
+        cv2.imwrite(save_dir + 'cat{}_'.format(cat_id) + rare_val_img_names[ix], img)
+
+
+def plot_rare_results_by_rare_cat_ids_with_FP_FN(rare_cat_ids, iou_thres=0.5, score_thres=0.1):
+    '''
+    FP FN
+    '''
+    img_ids_names_file = '/media/lab/Yang/data/xView_YOLO/labels/608/all_image_ids_names_dict_60cls.json'
+    img_ids_names_map = json.load(open(img_ids_names_file))
+    img_ids = [int(k) for k in img_ids_names_map.keys()] ## important
+    img_names = [v for v in img_ids_names_map.values()]
+
+    rare_cat_id_2_img_names_file = args.txt_save_dir + 'rare_cat_ids_2_val_img_names.json'
+    rare_cat_id_2_img_names_json = json.load(open(rare_cat_id_2_img_names_file))
+    rare_img_name_list = []
+    #fixme get image_names corresponded to rare_cat_ids
+    for rc in rare_cat_ids:
+        rare_img_name_list.extend(rare_cat_id_2_img_names_json[str(rc)])
+    rare_img_name_list = list(set(rare_img_name_list))
+    rare_img_id_list = [img_ids[img_names.index(n)] for n in rare_img_name_list]
+
+    rare_result_json_file = '../result_output/60_cls/results_rare.json'
+    rare_result_allcat_list = json.load(open(rare_result_json_file))
+    rare_result_list = []
+    #fixme filter, and rare_result_allcat_list contains rare_cat_ids, rare_img_id_list and object score larger than score_thres
+    for ri in rare_result_allcat_list:
+        if ri['category_id'] in rare_cat_ids and ri['image_id'] in rare_img_id_list and ri['score'] >= score_thres:
+            rare_result_list.append(ri)
+    del rare_result_allcat_list
+
+    fn_color = (255, 0, 0) # Blue
+    fp_color = (0, 0, 255) # Red
+    save_dir = '../result_output/rare_result_figures_fp_fn/'
+    if not os.path.exists(save_dir):
+        os.mkdir(save_dir)
+    label_save_dir = args.txt_save_dir + '60_cls_xcycwh/'
+    # rare_img_name_list = ['1139_4.jpg']
+    # rare_img_id_list = [img_ids[img_names.index('1139_4.jpg')]]
+    for ix in range(len(rare_img_name_list)):
+        img = cv2.imread(args.images_save_dir + rare_img_name_list[ix])
+        img_size = img.shape[0]
+        rcids = []
+
+        gt_arr = pd.read_csv(label_save_dir + rare_img_name_list[ix].replace('.jpg', '.txt'), delimiter=' ').to_numpy()
+        gt_rare_cat_list = []
+        for gx in range(gt_arr.shape[0]):
+            if gt_arr[gx, 0] in rare_cat_ids:
+                gt_rare_cat_list.append(gt_arr[gx])
+        gt_rare_cat = np.array(gt_rare_cat_list)
+        del gt_arr, gt_rare_cat_list
+
+        if gt_rare_cat.shape[0]:
+            gt_rare_cat[:, 1:] = gt_rare_cat[:, 1:] * img_size
+            gt_rare_cat[:, 1] = gt_rare_cat[:, 1] - gt_rare_cat[:, 3]/2
+            gt_rare_cat[:, 2] = gt_rare_cat[:, 2] - gt_rare_cat[:, 4]/2
+            gt_rare_cat[:, 3] = gt_rare_cat[:, 1] + gt_rare_cat[:, 3]
+            gt_rare_cat[:, 4] = gt_rare_cat[:, 2] + gt_rare_cat[:, 4]
+        gt_rare_cat = gt_rare_cat.tolist()
+        img_id = rare_img_id_list[ix]
+        prd_rare_cat = []
+        for ri in rare_result_list:
+            if ri['image_id'] == img_id:
+                bbx = ri['bbox']
+                rare_prd = [int(ri['category_id']), int(bbx[0]), int(bbx[1]), int(bbx[0] + bbx[2]), int(bbx[1] + bbx[3])]
+                prd_rare_cat.append(rare_prd)
+        # print('prd_rare_cat', len(prd_rare_cat))
+
+        fn_list = []
+        fp_list = []
+        prd_rare_cat_no_match = prd_rare_cat.copy()
+        if len(prd_rare_cat) == 0:
+            fn_list.extend(gt_rare_cat)
+        elif len(gt_rare_cat) == 0:
+            fp_list.extend(prd_rare_cat)
+        else:
+            for gr in gt_rare_cat:
+                if gr[0] not in [pr[0] for pr in prd_rare_cat]:
+                    fn_list.append(gr)
+                    # print('fn', gr)
+                    continue
+                else:
+                    for px, pr in enumerate(prd_rare_cat):
+                        if gr[0] == pr[0]:
+                            gp_iou = coord_iou(gr[1:], pr[1:])
+                            if gp_iou == 0 and px == len(prd_rare_cat) - 1:
+                                # print(gr[0])
+                                fn_list.append(gr)
+                                # print('fn', gr)
+                            elif gp_iou > 0:
+                                if pr in prd_rare_cat_no_match:
+                                    prd_rare_cat_no_match.remove(pr)
+            fp_list.extend(prd_rare_cat_no_match)
+
+            # print('fp', len(fp_list))
+            # print('fn', len(fn_list))
+
+        for gr in fn_list:
+            # print('gr', gr)
+            gr_bx = [int(x) for x in gr[1:]]
+            img = cv2.rectangle(img, (gr_bx[0], gr_bx[1]), (gr_bx[2], gr_bx[3]), fn_color, 2)
+            rcids.append(int(gr[0]))
+            cv2.putText(img, text=str(int(gr[0])), org=(gr_bx[0] + 20, gr_bx[3] - 5),
+                        fontFace=cv2.FONT_HERSHEY_SIMPLEX,
+                        fontScale=0.5, thickness=1, lineType=cv2.LINE_AA, color=(0, 255, 255))
+
+        for pr in fp_list:
+            # print('pr', pr)
+            rcids.append(pr[0])
+            img = cv2.rectangle(img, (pr[1], pr[2]), (pr[3], pr[4]), fp_color, 2)
+            cv2.putText(img, text=str(pr[0]), org=(pr[1] + 10, pr[2] + 10),
+                        fontFace=cv2.FONT_HERSHEY_SIMPLEX,
+                        fontScale=0.5, thickness=1, lineType=cv2.LINE_AA, color=(0, 255, 0))
+        rcids = list(set(rcids))
+        cv2.imwrite(save_dir + 'cat{}_'.format(rcids) + rare_img_name_list[ix], img)
 
 
 def autolabel(ax, rects, x, labels, ylabel, rotation=90, txt_rotation=45):
@@ -729,6 +963,9 @@ if __name__ == "__main__":
     parser.add_argument("--cat_sample_dir", type=str, help="to save figures",
                         default='/media/lab/Yang/data/xView_YOLO/cat_samples/')
 
+    parser.add_argument("--img_bbx_figures_dir", type=str, help="to save figures",
+                        default='/media/lab/Yang/data/xView_YOLO/img_name_2_bbx_figures/')
+
     parser.add_argument("--val_percent", type=float, default=0.20,
                         help="Percent to split into validation (ie .25 = val set is 25% total)")
     parser.add_argument("--font3", type=str, help="legend font",
@@ -744,6 +981,7 @@ if __name__ == "__main__":
     args.images_save_dir = args.images_save_dir + '{}/'.format(args.input_size)
     args.cat_sample_dir = args.cat_sample_dir + '{}/'.format(args.input_size)
     args.data_save_dir = args.data_save_dir + '{}_cls/'.format(args.class_num)
+    args.img_bbx_figures_dir = args.img_bbx_figures_dir + '{}/'.format(args.input_size)
 
     # logging.basicConfig(level=logging.INFO)
     # logger = logging.getLogger(__name__)
@@ -780,18 +1018,7 @@ if __name__ == "__main__":
     '''
     # create_json_for_val_according_to_all_json()
 
-    '''
-    rare classes random split check
-    '''
-    # cat_ids = ['18', '46', '23', '33', '59']
-    # typestr='all'
-    # # cat_id = '18'
-    # rare_cat_id_to_imgs(cat_ids, typestr)
 
-    '''
-    create json for val according to all jsons 
-    '''
-    # create_json_for_val_rare_according_to_all_json()
 
     '''
     create xview.data includes cls_num, trn, val, ...
@@ -810,20 +1037,37 @@ if __name__ == "__main__":
     # draw_rare_cat(N)
 
 
+    '''
+    rare classes random split check
+    '''
+    # cat_ids = ['18', '46', '23', '43', '33', '59']
+    # typestr='all'
+    # # cat_id = '18'
+    # get_val_imgs_by_rare_cat_id(cat_ids, typestr)
 
-    # import json
-    # import cv2
-    # gs = json.load(open('/media/lab/Yang/data/xView/xView_train.geojson'))
-    # feas = gs['features']
-    # for i in range(len(feas)):
-    #     img_name = feas[i]['properties']['image_id']
-    #     img = cv2.imread(args.image_path + img_name) # h,w,c
-    #     ht = img.shape[0]
-    #     wd = img.shape[1]
-    #
-    #     coords = literal_eval(feas[i]['properties']['bounds_imcoords'])
-    #     coords[0] = max(0, coords[0])
-    #     coords[2] = min(coords[2], wd)
-    #
-    #     coords[1] = max(0, coords[1])
-    #     coords[3] = min(coords[3], ht)
+    '''
+    create json for val according to all jsons 
+    '''
+    # create_json_for_val_rare_according_to_all_json()
+
+    '''
+    plot rare results 
+    '''
+    rare_cat_ids = [18, 46, 23, 43, 33, 59]
+    # rare_cat_ids = [18]
+    score_thres = 0.1
+    plot_rare_results_by_rare_cat_ids(rare_cat_ids, score_thres)
+
+    '''
+    plot rare results FN FP
+    '''
+    # rare_cat_ids = [18, 46, 23, 43, 33, 59]
+    # iou_thres = 0.5
+    # score_thres = 0.1
+    # plot_rare_results_by_rare_cat_ids_with_FP_FN(rare_cat_ids, iou_thres, score_thres)
+
+    '''
+    plot img with bbx by img name
+    '''
+    # image_name = '1139_4.jpg'
+    # plot_val_image_with_bbx_by_image_name(image_name)

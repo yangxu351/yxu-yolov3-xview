@@ -249,12 +249,18 @@ def test(cfg,
     # Save JSON
     if save_json and map and len(jdict):
         #fixme
-        # imgIds = [int(Path(x).stem.split('_')[-1]) for x in dataloader.dataset.img_files]
         img_names = [x.split('/')[-1] for x in dataloader.dataset.img_files]
+        #fixme
         img_id_maps = json.load(open(os.path.join(opt.label_dir, 'all_image_ids_names_dict_{}cls.json'.format(opt.class_num))))
         img_id_list = [k for k in img_id_maps.keys()]
         img_name_list = [v for v in img_id_maps.values()]
         imgIds = [img_id_list[img_name_list.index(v)] for v in img_name_list if v in img_names] # note: index is the same as the keys
+        sids = set(imgIds)
+        print('imgIds', len(imgIds), 'sids', len(sids))
+
+        # imgIds = [get_val_imgid_by_name(na) for na in img_names]
+        # sids = set(imgIds)
+        # print('imgIds', len(imgIds), 'sids', len(sids))
 
         with open(opt.result_dir + result_json_file, 'w') as file:
             # json.dump(jdict, file)

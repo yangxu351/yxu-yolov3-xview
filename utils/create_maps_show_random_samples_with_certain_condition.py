@@ -260,7 +260,7 @@ if __name__ == '__main__':
     draw figures with bbx by catid
     '''
     # cat_id = '18'
-    # draw_fig_with_bbx_by_catid(cat_id)
+    draw_fig_with_bbx_by_catid(cat_id)
 
 
     # cat_anno_ids = category_anno_ids_dict.get(str(cat_id))

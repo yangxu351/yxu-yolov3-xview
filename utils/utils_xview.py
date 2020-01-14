@@ -169,6 +169,81 @@ def xywh2xyxy(x):
 #         return np.stack(((x1 + x2) / 2, (y1 + y2) / 2, x2 - x1, y2 - y1)).T
 
 
+#fixme
+def iou_metric(truth, pred, divide=False):
+    """
+    Compute IoU, i.e., jaccard index
+    :param truth: truth data matrix, should be H*W
+    :param pred: prediction data matrix, should be the same dimension as the truth data matrix
+    :param divide: if True, will return the IoU, otherwise return the numerator and denominator
+    :return:
+    """
+    truth = truth.flatten()
+    pred = pred.flatten()
+    intersect = truth*pred
+    if not divide:
+        return float(np.sum(intersect == 1)), float(np.sum(truth+pred >= 1))
+    else:
+        return float(np.sum(intersect == 1) / np.sum(truth+pred >= 1))
+
+
+def coord_iou(coords_a, coords_b):
+    """
+    This code comes from https://stackoverflow.com/a/42874377
+    :param coords_a: [xtl, ytl, xbr, ybr]
+    :param coords_b: [xtl, ytl, xbr, ybr]
+    :return:
+    """
+
+    # y1, x1 = np.min(coords_a, axis=0)
+    # y2, x2 = np.max(coords_a, axis=0)
+    # # bb1 = {'x1': x1, 'y1': y1, 'x2': x2, 'y2': y2}
+    # y1, x1 = np.min(coords_b, axis=0)
+    # y2, x2 = np.max(coords_b, axis=0)
+    # bb2 = {'x1': x1, 'y1': y1, 'x2': x2, 'y2': y2}
+
+    assert coords_a[0] <= coords_a[2]
+    assert coords_a[1] <= coords_a[3]
+    assert coords_b[0] <= coords_b[2]
+    assert coords_b[1] <= coords_b[3]
+
+    x_left = max(coords_a[0], coords_b[0])
+    y_top = max(coords_a[1], coords_b[1])
+    x_right = min(coords_a[2], coords_b[2])
+    y_bottom = min(coords_a[3], coords_b[3])
+
+    if x_right < x_left or y_bottom < y_top:
+        return 0.0
+    intersection_area = (x_right - x_left) * (y_bottom - y_top)
+    bb1_area = (coords_a[2] - coords_a[0]) * (coords_a[3] - coords_a[1])
+    bb2_area = (coords_b[2] - coords_b[0]) * (coords_b[3] - coords_b[1])
+    iou = intersection_area / float(bb1_area + bb2_area - intersection_area)
+    assert 0.0 <= iou <= 1.0
+    return iou
+
+
+def compute_iou(coords_a, coords_b, size):
+    """
+    Compute object-wise IoU
+    :param self:
+    :param coords_a:
+    :param coords_b:
+    :param size:
+    :return:
+    """
+    # compute bbox IoU since this is faster
+    iou = coord_iou(coords_a, coords_b)
+    if iou > 0:
+        # if bboxes overlaps, compute object-wise IoU
+        tile_a = np.zeros(size)
+        tile_a[coords_a[:, 0], coords_a[:, 1]] = 1
+        tile_b = np.zeros(size)
+        tile_b[coords_b[:, 0], coords_b[:, 1]] = 1
+        return iou_metric(tile_a, tile_b, divide=True)
+    else:
+        return 0
+
+
 def scale_coords(img1_shape, coords, img0_shape, ratio_pad=None):
     # Rescale coords (xyxy) from img1_shape to img0_shape
     if ratio_pad is None:  # calculate from img0_shape
@@ -1061,68 +1136,6 @@ def plot_results(start=0, stop=0, bucket='', id=(), class_num=60, result_dir=Non
     fig.savefig(result_dir + 'results.png', dpi=200)
 
 
-#fixme
-def plot_rare_results(rare_cat_ids, score_thre=0.001):
-    img_ids_names_file = '/media/lab/Yang/data/xView_YOLO/labels/608/all_image_ids_names_dict_60cls.json'
-    img_ids_names_map = json.load(open(img_ids_names_file))
-    img_ids = [int(k) for k in img_ids_names_map.keys()] ## important
-    img_names = [v for v in img_ids_names_map.values()]
-
-    # rare_gt_json_file = '/media/lab/Yang/data/xView_YOLO/labels/608/xViewval_rare_608_60cls_xtlytlwh.json'
-    # rare_gt_json = json.load(open(rare_gt_json_file))
-
-    df_rare_img = pd.read_csv('../data_xview/60_cls/xviewval_rare_img.txt', header=None)
-    df_rare_gt = pd.read_csv('../data_xview/60_cls/xviewval_rare_lbl.txt', header=None)
-    rare_img_list = df_rare_img[0].tolist()
-    rare_gt_list = []
-    img_size = 608
-    for i in range(len(df_rare_gt[0])):
-        gt = pd.read_csv(df_rare_gt[0].iloc[i], header=None, delimiter=' ')
-        gt.iloc[:, 1:] = gt.iloc[:, 1:]*img_size
-        gt.iloc[:, 1] = gt.iloc[:, 1] - gt.iloc[:, 3]/2
-        gt.iloc[:, 2] = gt.iloc[:, 2] - gt.iloc[:, 4]/2
-        rare_gt_list.append(gt.to_numpy())
-
-    rare_img_names = [f.split('/')[-1] for f in rare_img_list]
-    rare_img_ids = []
-    for ri in rare_img_names:
-        rare_img_ids.append(img_ids[img_names.index(ri)])
-
-    rare_result_json_file = '../result_output/60_cls/results_rare.json'
-    rare_result_allcat_list = json.load(open(rare_result_json_file))
-    rare_result_list = []
-    for ri in rare_result_allcat_list:
-        if ri['category_id'] in rare_cat_ids:
-            rare_result_list.append(ri)
-    del rare_result_allcat_list
-
-    fig = plt.figure(figsize=(10, 10))
-    prd_color = (0, 255, 0)
-    gt_color = (0, 0, 255) # yellow
-    for ix in range(len(rare_img_list)):
-        img = cv2.imread(rare_img_list[ix])
-        img_id = rare_img_ids[ix]
-        img_gt_lbl_arr = rare_gt_list[ix] # class, xc, yc, w, h
-        for gx in range(img_gt_lbl_arr.shape[0]):
-            if img_gt_lbl_arr[gx, 0] in rare_cat_ids:
-                cat_id = int(img_gt_lbl_arr[gx, 0])
-                gt_bbx = img_gt_lbl_arr[gx, 1:]
-                gt_bbx = gt_bbx.astype(np.int64)
-                img = cv2.rectangle(img, (gt_bbx[0], gt_bbx[1]), (gt_bbx[0] + gt_bbx[2], gt_bbx[1] + gt_bbx[3]), gt_color, 2)
-
-        img_prd_lbl_list = []
-        for jx in rare_result_list:
-            if jx['image_id'] == img_id and jx['score']>=score_thre:
-                img_prd_lbl_list.append(rare_result_list.pop())
-                bbx = jx['bbox'] # xtopleft, ytopleft, w, h
-                bbx = [int(x) for x in bbx]
-                img = cv2.rectangle(img, (bbx[0], bbx[1]), (bbx[0] + bbx[2], bbx[1] + bbx[3]), prd_color, 2)
-                cv2.putText(img, text=str(jx['score']), org=(bbx[0] + 10, bbx[1] + 10),
-                            fontFace=cv2.FONT_HERSHEY_SIMPLEX,
-                            fontScale=0.5, thickness=1, lineType=cv2.LINE_AA, color=(0, 255, 255))
-        cv2.imwrite('../result_output/rare_result_figures/' + 'cat{}_'.format(cat_id)+ rare_img_names[ix], img)
-
-
 
 if __name__ == '__main__':
     # img_file = '/media/lab/Yang/data/xView_YOLO/images/2230.tif'
@@ -1145,10 +1158,3 @@ if __name__ == '__main__':
     # class_num = 60
     # plot_results(class_num=class_num)
 
-    '''
-    plot rare results
-    '''
-    rare_cat_ids = [18, 46, 23, 33, 59]
-    score_thre = 0.1
-    # score_thre = 0.001
-    plot_rare_results(rare_cat_ids, score_thre)
