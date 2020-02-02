@@ -13,6 +13,9 @@ from utils.torch_utils import *
 import warnings
 warnings.filterwarnings("ignore")
 
+GPU="0"
+os.environ["CUDA_VISIBLE_DEVICES"] = GPU
+
 mixed_precision = True
 try:  # Mixed precision training https://github.com/NVIDIA/apex
     from apex import amp
@@ -316,13 +319,12 @@ def train():
             results, maps = test.test(cfg,
                                       data,
                                       batch_size=batch_size * 2,
-                                      img_size=opt.img_size,
-                                      model=model,
+                                      img_size=opt.img_size, 
                                       conf_thres=0.001 if final_epoch else 0.1,  # 0.1 for speed
                                       iou_thres=0.6 if final_epoch and is_xview else 0.5,
                                       save_json=True, # final_epoch and is_xview, #fixme
-                                      dataloader=testloader,
-                                      opt=opt)
+                                      model=model,
+                                      dataloader=testloader, opt=opt)
 
         # Write epoch results
         with open(results_file, 'a') as f:
@@ -409,15 +411,16 @@ if __name__ == '__main__':
     parser.add_argument('--epochs', type=int, default=300)  # 500200 batches at bs 16, 117263 images = 273 epochs
     parser.add_argument('--batch-size', type=int, default=8)  # effective bs = batch_size * accumulate = 16 * 4 = 64
     parser.add_argument('--accumulate', type=int, default=4, help='batches to accumulate before optimizing')
-    parser.add_argument('--cfg', type=str, default='cfg/yolov3-spp-60cls.cfg', help='*.cfg path')
-    parser.add_argument('--data', type=str, default='data_xview/60_cls/xview.data', help='*.data path')
+    parser.add_argument('--cfg', type=str, default='cfg/yolov3-spp-{}cls.cfg', help='*.cfg path')
+    parser.add_argument('--data', type=str, default='data_xview/{}_cls/xview.data', help='*.data path')
     parser.add_argument('--writer_dir', type=str, default='writer_output/', help='*.data path')
     parser.add_argument('--multi_scale', action='store_true', help='adjust (67% - 150%) img_size every 10 batches')
-    parser.add_argument('--img-size', type=int, default=608, help='inference size (pixels)') # 416 608
-    parser.add_argument('--class_num', type=int, default=60, help='class number') # 416 608
+    parser.add_argument('--img_size', type=int, default=608, help='inference size (pixels)') # 416 608
+    parser.add_argument('--class_num', type=int, default=6, help='class number') # 60 6
     parser.add_argument('--json_file', type=str, default='/media/lab/Yang/data/xView_YOLO/', help='*.json path')
     parser.add_argument('--weights_dir', type=str, default='weights/', help='to save weights path')
     parser.add_argument('--result_dir', type=str, default='result_output/', help='to save result files path')
+    parser.add_argument('--label_dir', type=str, default='/media/lab/Yang/data/xView_YOLO/labels/', help='*.json path')
 
     parser.add_argument('--rect', action='store_true', help='rectangular training')
     parser.add_argument('--resume', action='store_true', default=False, help='resume training from last.pt')
@@ -430,17 +433,24 @@ if __name__ == '__main__':
     parser.add_argument('--arc', type=str, default='default', help='yolo architecture')  # defaultpw, uCE, uBCE
     parser.add_argument('--prebias', action='store_true', help='pretrain model biases')
     parser.add_argument('--name', default='', help='renames results.txt to results_name.txt if supplied')
-    parser.add_argument('--device', default='', help='device id (i.e. 0 or 0,1 or cpu)')
+    parser.add_argument('--device', default='0', help='device id (i.e. 0 or 0,1 or cpu)')
     parser.add_argument('--adam', action='store_true', help='use adam optimizer')
     parser.add_argument('--var', type=float, help='debug variable')
     opt = parser.parse_args()
-
+    opt.data = opt.data.format(opt.class_num)
+    opt.cfg = opt.cfg.format(opt.class_num)
     opt.weights_dir = opt.weights_dir + '{}_cls/'.format(opt.class_num)
     if not os.path.exists(opt.weights_dir):
         os.makedirs(opt.weights_dir)
     last = os.path.join(opt.weights_dir, 'last.pt')
     best = os.path.join(opt.weights_dir, 'best.pt')
 
+    opt.json_file = opt.json_file + '{}/{}_cls/'.format(opt.img_size, opt.class_num)
+    if not os.path.exists(opt.json_file):
+        os.makedirs(opt.json_file)
+    opt.label_dir = opt.label_dir + '{}/{}_cls/'.format(opt.img_size, opt.class_num)
+    if not os.path.exists(opt.label_dir):
+        os.makedirs(opt.label_dir)
     opt.result_dir = opt.result_dir + '{}_cls/'.format(opt.class_num)
     if not os.path.exists(opt.result_dir):
         os.makedirs(opt.result_dir)

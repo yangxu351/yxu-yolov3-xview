@@ -201,7 +201,7 @@ def coord_iou(coords_a, coords_b):
     # y1, x1 = np.min(coords_b, axis=0)
     # y2, x2 = np.max(coords_b, axis=0)
     # bb2 = {'x1': x1, 'y1': y1, 'x2': x2, 'y2': y2}
-
+    # print('coords_a {} {}'.format(coords_a[0], coords_a[2]))
     assert coords_a[0] <= coords_a[2]
     assert coords_a[1] <= coords_a[3]
     assert coords_b[0] <= coords_b[2]
@@ -218,6 +218,8 @@ def coord_iou(coords_a, coords_b):
     bb1_area = (coords_a[2] - coords_a[0]) * (coords_a[3] - coords_a[1])
     bb2_area = (coords_b[2] - coords_b[0]) * (coords_b[3] - coords_b[1])
     iou = intersection_area / float(bb1_area + bb2_area - intersection_area)
+    # if iou>0.5:
+    #     print(x_left, y_top, x_right, y_bottom)
     assert 0.0 <= iou <= 1.0
     return iou
 
@@ -536,7 +538,7 @@ def compute_loss(p, targets, model):  # predictions, targets, model
     if red == 'sum':
         bs = tobj.shape[0]  # batch size
         lbox *= 3 / ng
-        lobj *= 3 / (6300 * bs) * 2  # 3 / np * 2
+        lobj *= 3 / (6300 * bs) * 2  # 3 / np * 2 # ?????
         lcls *= 3 / ng / model.nc
 
     loss = lbox + lobj + lcls
@@ -607,7 +609,9 @@ def non_max_suppression(prediction, conf_thres=0.5, iou_thres=0.5, multi_cls=Tru
     # NMS methods https://github.com/ultralytics/yolov3/issues/679 'or', 'and', 'merge', 'vision', 'vision_batch'
 
     # Box constraints
-    min_wh, max_wh = 2, 4096  # (pixels) minimum and maximum box width and height
+    #fixme
+    # min_wh, max_wh = 2, 4096  # (pixels) minimum and maximum box width and height
+    min_wh, max_wh = 4, 608
 
     output = [None] * len(prediction)
     for image_i, pred in enumerate(prediction):

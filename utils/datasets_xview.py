@@ -270,7 +270,8 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
         with open(label_path, 'r') as f:
             self.lbl_files = [x.replace('/', os.sep) for x in f.read().splitlines()  # os-agnostic
                               if os.path.splitext(x)[-1].lower() in lbl_formats]
-
+        #fixme
+        self.label_files = self.lbl_files
         # print(self.img_files)
 
         n = len(self.img_files)

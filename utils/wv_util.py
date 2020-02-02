@@ -65,7 +65,7 @@ def get_labels(fname, catNum=60):
     l_classes = []
     feature_ids = []
 
-    cat_index_id_file = 'data_xview/{}_cls/categories_id_color_diverse_{}.txt'.format(catNum, catNum)
+    cat_index_id_file = '../data_xview/{}_cls/categories_id_color_diverse_{}.txt'.format(catNum, catNum)
     df_cat_idx_id = pd.read_csv(cat_index_id_file, delimiter='\t')
     feas = data['features']
     for i in range(len(feas)):
@@ -78,7 +78,7 @@ def get_labels(fname, catNum=60):
         if df_cat_type.empty:
             continue
         '''
-        cat num 60
+        cat num 
         '''
         # l_classes[i] = df_cat_type['category_id'].iloc[0]
         l_classes.append(df_cat_type['category_id'].iloc[0])
@@ -125,23 +125,35 @@ def get_all_categories(catNum=60):
     categories = []
 
     # df_category_id = pd.read_csv('categories_id_color_diverse_60.txt', sep="\t")
-    df_category_id = pd.read_csv('data_xview/{}_cls/categories_id_color_diverse_{}.txt'.format(catNum, catNum), sep="\t")
+    df_category_id = pd.read_csv('../data_xview/{}_cls/categories_id_color_diverse_{}.txt'.format(catNum, catNum), sep="\t")
 
     for i in range(df_category_id.shape[0]):
+        # category_id = df_category_id['category_id'].iloc[i]
+        # category = df_category_id['category'].iloc[i]
+        # category_label = df_category_id['category_label'].iloc[i]
+        # super_id = df_category_id['super_category_id'].iloc[i]
+        # super_label = df_category_id['super_category_label'].iloc[i]
+        # super_category = df_category_id['super_category'].iloc[i]
+        #
+        # category_info = {
+        #     'id': category_id,
+        #     'cat_label': category_label,
+        #     'name': category,
+        #     'super_id': super_id,
+        #     'super_label': super_label,
+        #     'super_category': super_category
+        # }
+
         category_id = df_category_id['category_id'].iloc[i]
         category = df_category_id['category'].iloc[i]
         category_label = df_category_id['category_label'].iloc[i]
-        super_id = df_category_id['super_category_id'].iloc[i]
-        super_label = df_category_id['super_category_label'].iloc[i]
-        super_category = df_category_id['super_category'].iloc[i]
+        child_cat = df_category_id['children_category'].iloc[i]
 
         category_info = {
             'id': category_id,
             'cat_label': category_label,
             'name': category,
-            'super_id': super_id,
-            'super_label': super_label,
-            'super_category': super_category
+            'children_category': child_cat
         }
         categories.append(category_info)
     return categories

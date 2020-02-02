@@ -26,7 +26,7 @@ def create_maps_for_cat_img_anns(typestr='all'):
     df_category_id = pd.read_csv(args.data_save_dir + 'categories_id_color_diverse_{}.txt'.format(args.class_num), sep="\t")
     cat_names = df_category_id['category'].to_list()
     cat_ids = df_category_id['category_id'].to_list()
-    cat_labels = df_category_id['category_label'].to_list()
+    # cat_labels = df_category_id['category_label'].to_list()
     annos_js = json.load(open(args.label_save_dir + 'xView{}_{}_{}cls_xtlytlwh.json'.format(typestr, args.input_size, args.class_num)))
     annos_list = annos_js['annotations']
     image_list = annos_js['images']
@@ -70,6 +70,9 @@ def create_maps_for_cat_img_anns(typestr='all'):
 
 
 def show_cat_annos_by_cat_id(cat_id, N=2, typestr='all'):
+    save_dir = args.cat_sample_dir + 'cat_id_2_img_with_gt_bbx_figures/'
+    if not os.path.exists(save_dir):
+        os.mkdir(save_dir)
     df_category_id = pd.read_csv(args.data_save_dir + 'categories_id_color_diverse_{}.txt'.format(args.class_num), sep="\t")
     cat_names = df_category_id['category'].to_list()
     cat_ids = df_category_id['category_id'].to_list()
@@ -93,8 +96,6 @@ def show_cat_annos_by_cat_id(cat_id, N=2, typestr='all'):
     cat_anno_ids = category_anno_ids_dict.get(cat_id) # cat[i]--> anns
     np.random.seed(args.seed)
     rand_annos = np.random.permutation(cat_anno_ids)
-    if not os.path.exists(args.cat_sample_dir):
-        os.makedirs(args.cat_sample_dir)
     for r in range(N):
         image_id = str(annos_list[rand_annos[r]]['image_id']) # anns[r]--> img
         img_name = image_dict.get(image_id)
@@ -106,10 +107,10 @@ def show_cat_annos_by_cat_id(cat_id, N=2, typestr='all'):
             cv2.putText(img, text=str(cat_id), org=(bbx[0] + 10, bbx[1] + 10),
                         fontFace=cv2.FONT_HERSHEY_SIMPLEX,
                         fontScale=0.5, thickness=1, lineType=cv2.LINE_AA, color=(0, 255, 255))
-        cv2.imwrite(os.path.join(args.cat_sample_dir, 'cat{}_{}_sample{}_img{}.png'.format(cat_id, cat_name, r, img_name.split('.')[0])), img)
+        cv2.imwrite(os.path.join(save_dir, 'cat{}_{}_sample{}_img{}.png'.format(cat_id, cat_name, r, img_name.split('.')[0])), img)
 
 
-def draw_fig_with_bbx_by_catid(cat_id, typestr='all'):
+def draw_fig_with_all_cats_bbx_by_catid(cat_id, typestr='all'):
     """
     draw figure with bbx by catid
     """
@@ -126,7 +127,7 @@ def draw_fig_with_bbx_by_catid(cat_id, typestr='all'):
     json_file = json.load(open(os.path.join(args.label_save_dir, json_name)))
     annos_list = json_file['annotations']
 
-    fig_save_dir = args.cat_sample_dir + 'catid2imgs_figures/'
+    fig_save_dir = args.cat_sample_dir + 'catid2imgs_all_cats_bbx_figures/'
     if not os.path.exists(fig_save_dir):
         os.makedirs(fig_save_dir)
 
@@ -163,7 +164,10 @@ if __name__ == '__main__':
     parser.add_argument("--images_save_dir", type=str, help="to save chip trn val images files",
                         default='/media/lab/Yang/data/xView_YOLO/images/')
 
-    parser.add_argument("--label_save_dir", type=str, help="to save txt labels files",
+    parser.add_argument("--annos_save_dir", type=str, help="to save txt annotation files",
+                        default='/media/lab/Yang/data/xView_YOLO/labels/')
+
+    parser.add_argument("--label_save_dir", type=str, help="to related label files",
                         default='/media/lab/Yang/data/xView_YOLO/labels/')
 
     parser.add_argument("--fig_save_dir", type=str, help="to save figures",
@@ -181,16 +185,28 @@ if __name__ == '__main__':
     parser.add_argument("-ft2", "--font2", type=str, help="legend font",
                         default="{'family': 'serif', 'weight': 'normal', 'size': 23}")
 
-    parser.add_argument("--class_num", type=int, default=60, help="Number of Total Categories")  # 60  6
+    parser.add_argument("--class_num", type=int, default=6, help="Number of Total Categories")  # 60  6
     parser.add_argument("--input_size", type=int, default=608, help="Number of Total Categories")
     parser.add_argument("--seed", type=int, default=1024, help="random seed")
 
     args = parser.parse_args()
 
-    args.label_save_dir = args.label_save_dir + '{}/'.format(args.input_size)
+    args.label_save_dir = args.label_save_dir + '{}/{}_cls/'.format(args.input_size, args.class_num)
+    args.annos_save_dir = args.annos_save_dir + '{}/{}_cls_xcycwh/'.format(args.input_size, args.class_num)
     args.images_save_dir = args.images_save_dir + '{}/'.format(args.input_size)
-    args.cat_sample_dir = args.cat_sample_dir + '{}/'.format(args.input_size)
+    args.cat_sample_dir = args.cat_sample_dir + '{}/{}_cls/'.format(args.input_size, args.class_num)
     args.data_save_dir = args.data_save_dir + '{}_cls/'.format(args.class_num)
+
+    if not os.path.exists(args.label_save_dir):
+        os.makedirs(args.label_save_dir)
+    if not os.path.exists(args.annos_save_dir):
+        os.makedirs(args.annos_save_dir)
+    if not os.path.exists(args.images_save_dir):
+        os.makedirs(args.images_save_dir)
+    if not os.path.exists(args.cat_sample_dir):
+        os.makedirs(args.cat_sample_dir)
+    if not os.path.exists(args.data_save_dir):
+        os.makedirs(args.data_save_dir)
 
     '''
     1. create maps between cats imgs annos
@@ -202,7 +218,7 @@ if __name__ == '__main__':
     2. show *.tif that contains * category
        group according to categories
     '''
-    N = 2
+    # N = 2
     # cat_id = '43'
     # cat_id = '18'
     # cat_id = '33'
@@ -235,7 +251,12 @@ if __name__ == '__main__':
     # cat_id = '14'
     # cat_id = '20'
     # cat_id = '25'
+    # cat_id = '0'
     # cat_id = '1'
+    # cat_id = '2'
+    # cat_id = '3'
+    # cat_id = '4'
+    # cat_id = '5'
     # typestr = "all"
     # show_cat_annos_by_cat_id(cat_id, N, typestr=typestr)
 
@@ -255,12 +276,11 @@ if __name__ == '__main__':
     #     cat_imgs_map_dict[c] = []
 
 
-
     '''
     draw figures with bbx by catid
     '''
     # cat_id = '18'
-    draw_fig_with_bbx_by_catid(cat_id)
+    # draw_fig_with_all_cats_bbx_by_catid(cat_id)
 
 
     # cat_anno_ids = category_anno_ids_dict.get(str(cat_id))
@@ -272,9 +292,9 @@ if __name__ == '__main__':
     #     image_id = annos_list[rand_annos[r]]['image_id']
     #     img = cv2.imread(args.images_save_dir + image_dict.get(image_id))
     #     anno_ids = image_to_cat_to_anno_ids_dict[image_id][cat_id]
-        # bbx = annos_list[rand_annos[r]]['bbox']
-        # img = cv2.rectangle(img, (bbx[0], bbx[1]), (bbx[0] + bbx[2], bbx[1] + bbx[3]), (255, 0, 0), 2)
-        # cv2.putText(img, text=str(cat_id), org=(bbx[0] + 10, bbx[1] + 10),
-        #             fontFace=cv2.FONT_HERSHEY_SIMPLEX,
-        #             fontScale=0.5, thickness=1, lineType=cv2.LINE_AA, color=(0, 255, 255))
-        # cv2.imwrite(os.path.join(args.cat_sample_dir, 'cat{}_sample{}.png'.format(cat_id, r)), img)
+    #     bbx = annos_list[rand_annos[r]]['bbox']
+    #     img = cv2.rectangle(img, (bbx[0], bbx[1]), (bbx[0] + bbx[2], bbx[1] + bbx[3]), (255, 0, 0), 2)
+    #     cv2.putText(img, text=str(cat_id), org=(bbx[0] + 10, bbx[1] + 10),
+    #                 fontFace=cv2.FONT_HERSHEY_SIMPLEX,
+    #                 fontScale=0.5, thickness=1, lineType=cv2.LINE_AA, color=(0, 255, 255))
+    #     cv2.imwrite(os.path.join(args.cat_sample_dir, 'cat{}_sample{}.png'.format(cat_id, r)), img)
