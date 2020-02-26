@@ -785,7 +785,7 @@ def plot_rare_gt_prd_bbx_by_rare_cat_ids(rare_cat_ids, iou_thres=0.5, score_thre
     for ix in range(len(rare_val_img_list)):
         img = cv2.imread(rare_val_img_list[ix])
         img_size = img.shape[0]
-        gt_rare_cat = pd.read_csv(rare_val_id_list[ix], delimiter=' ').to_numpy()
+        gt_rare_cat = pd.read_csv(rare_val_id_list[ix], delimiter=' ', header=None).to_numpy() #fixme note header=None
         gt_rare_list = []
 
         for gx in range(gt_rare_cat.shape[0]):
@@ -880,7 +880,7 @@ def check_prd_gt_iou(image_name, score_thres=0.3, iou_thres=0.5, rare=False):
     cv2.imwrite(rare_result_iout_check_dir + image_name, img)
 
 
-def get_fp_fn_list(cat_ids, img_name, img_id, confusion_matrix, result_list, iou_thres=0.5, score_thres=0.3, whr_thres=3):
+def get_fp_fn_list(cat_ids, img_name, img_id, result_list, confusion_matrix=None, iou_thres=0.5, score_thres=0.3, whr_thres=3):
     ''' ground truth '''
     good_gt_list = []
     df_lbl = pd.read_csv(args.annos_save_dir + img_name.replace('.jpg', '.txt'), delimiter=' ', header=None)
@@ -953,7 +953,7 @@ def get_fp_fn_list(cat_ids, img_name, img_id, confusion_matrix, result_list, iou
         matches = matches[np.unique(matches[:, 0], return_index=True)[1]]
 
     for i in range(len(gt_boxes)):
-        if matches.shape[0] > 0 and matches[matches[:, 0] == i].shape[0] == 1:
+        if matches.shape[0] > 0 and matches[matches[:, 0] == i].shape[0] == 1 and confusion_matrix:
             mt_i = matches[matches[:, 0] == i]
             # print('mt_i', mt_i.shape)
             confusion_matrix[cat_ids.index(gt_classes[int(mt_i[0, 0])]), cat_ids.index(dt_classes[int(mt_i[0, 1])])] += 1
@@ -970,7 +970,8 @@ def get_fp_fn_list(cat_ids, img_name, img_id, confusion_matrix, result_list, iou
             # unique matches at most has one match for each ground truth
             # 1. ground truth id deleted due to duplicate detections  --> FN
             # 2. matches.shape[0] == 0 --> no matches --> FN
-            confusion_matrix[cat_ids.index(gt_classes[i]), -1] += 1
+            if confusion_matrix:
+                confusion_matrix[cat_ids.index(gt_classes[i]), -1] += 1
             c_box_iou = [gt_classes[i]]
             c_box_iou.extend(gt_boxes[i])
             c_box_iou.append(0) # [cat_id, box[0:4], iou]
@@ -982,14 +983,16 @@ def get_fp_fn_list(cat_ids, img_name, img_id, confusion_matrix, result_list, iou
         # 1. deleted due to duplicate ground truth (background-->Y_prd)
         # 2. lower than iou_thresh (maybe iou=0)  (background-->Y_prd)
         if matches.shape[0] > 0 and matches[matches[:, 1] == j].shape[0] == 0:
-            confusion_matrix[-1, cat_ids.index(dt_classes[j])] += 1
+            if confusion_matrix:
+                confusion_matrix[-1, cat_ids.index(dt_classes[j])] += 1
             c_box_iou = [dt_classes[j]]
             c_box_iou.extend(dt_boxes[j])
             c_box_iou.append(0) # [cat_id, box[0:4], iou]
             fp_list.append(c_box_iou)
-        elif matches.shape[0] == 0: #fixme ?
+        elif matches.shape[0] == 0: #fixme
             print('gt matches=0')
-            confusion_matrix[-1, cat_ids.index(dt_classes[j])] += 1
+            if confusion_matrix:
+                confusion_matrix[-1, cat_ids.index(dt_classes[j])] += 1
             c_box_iou = [dt_classes[j]]
             c_box_iou.extend(dt_boxes[j])
             c_box_iou.append(0) # [cat_id, box[0:4], iou]
@@ -1024,8 +1027,8 @@ def get_confusion_matrix(cat_ids, iou_thres=0.5, score_thres=0.3, whr_thres=3):
             result_list.append(ri)
     print('len result_list', len(result_list))
     del result_allcat_list
-
-    confusion_matrix = np.zeros(shape=(len(cat_ids) + 1, len(cat_ids) + 1))
+    if confusion_matrix:
+        confusion_matrix = np.zeros(shape=(len(cat_ids) + 1, len(cat_ids) + 1))
 
     fn_color = (255, 0, 0) # Blue
     fp_color = (0, 0, 255) # Red
@@ -1042,7 +1045,7 @@ def get_confusion_matrix(cat_ids, iou_thres=0.5, score_thres=0.3, whr_thres=3):
         img_name = img_name_list[ix]
         # print(img_name)
         #fixme
-        fp_list, fn_list = get_fp_fn_list(cat_ids, img_name, img_id, confusion_matrix, result_list, iou_thres, score_thres, whr_thres)
+        fp_list, fn_list = get_fp_fn_list(cat_ids, img_name, img_id, result_list, confusion_matrix, iou_thres, score_thres, whr_thres)
 
         rcids = []
         img = cv2.imread(args.images_save_dir + img_name)
@@ -1160,7 +1163,7 @@ def get_confusion_matrix_rare(rare_cat_ids, iou_thres=0.5, score_thres=0.3, whr_
         img_name = rare_img_name_list[ix]
         # print(img_name)
 
-        fp_list, fn_list = get_fp_fn_list(rare_cat_ids, img_name, img_id, confusion_matrix, rare_result_list, iou_thres, score_thres, whr_thres)
+        fp_list, fn_list = get_fp_fn_list(rare_cat_ids, img_name, img_id, rare_result_list, confusion_matrix, iou_thres, score_thres, whr_thres)
 
         rcids = []
         img = cv2.imread(args.images_save_dir + img_name)
@@ -1649,15 +1652,6 @@ if __name__ == "__main__":
     # iou_thres=0.5
     # whr_thres=3
     # plot_rare_gt_prd_bbx_by_rare_cat_ids(rare_cat_ids, iou_thres, score_thres, whr_thres)
-
-    '''
-    IoU check by image name
-    '''
-    # score_thres = 0.5
-    # iou_thres = 0.5
-    # image_name = '310_12.jpg'
-    # args.rare = False
-    # check_prd_gt_iou(image_name, score_thres, iou_thres, args.rare)
 
     '''
     rare results confusion matrix  rare results statistic FP FN NMS

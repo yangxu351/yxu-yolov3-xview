@@ -16,24 +16,19 @@ limitations under the License.
 """
 
 # import tensorflow as tf
-import glob
 import numpy as np
 import argparse
 import os
 import pandas as pd
 from ast import literal_eval
 import json
-import datetime
 from matplotlib import pyplot as plt
-from tqdm import tqdm
-import shutil
 import cv2
 import seaborn as sn
 import sys
 sys.path.append('./')
-import utils.wv_util as wv
-from utils.utils_xview import coord_iou, compute_iou
-from utils.process_wv_coco_for_yolo_patches_no_trnval import draw_bar_for_each_cat_cnt_with_txt_rotation
+from utils.utils_xview import coord_iou
+from utils.distribution_vis_util.process_wv_coco_for_yolo_patches_no_trnval import draw_bar_for_each_cat_cnt_with_txt_rotation
 """
   A script that processes xView imagery. 
   Args:
@@ -216,12 +211,12 @@ def plot_val_image_with_bbx_by_image_name(image_name):
     img_ids = [int(k) for k in img_ids_names_map.keys()] ## important
     img_names = [v for v in img_ids_names_map.values()]
 
-    df_cat_color = pd.read_csv('../data_xview/60_cls/categories_id_color_diverse_60.txt', delimiter='\t')
+    df_cat_color = pd.read_csv('../../data_xview/60_cls/categories_id_color_diverse_60.txt', delimiter='\t')
     cat_ids = df_cat_color['category_id'].tolist()
     cat_colors = df_cat_color['color'].tolist()
 
-    df_val_img = pd.read_csv('../data_xview/60_cls/xviewval_img.txt', header=None)
-    df_val_gt = pd.read_csv('../data_xview/60_cls/xviewval_lbl.txt', header=None)
+    df_val_img = pd.read_csv('../../data_xview/60_cls/xviewval_img.txt', header=None)
+    df_val_gt = pd.read_csv('../../data_xview/60_cls/xviewval_lbl.txt', header=None)
     val_img_list = df_val_img[0].tolist()
     img_size = 608
 

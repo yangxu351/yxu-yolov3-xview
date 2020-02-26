@@ -220,7 +220,11 @@ def coord_iou(coords_a, coords_b):
     iou = intersection_area / float(bb1_area + bb2_area - intersection_area)
     # if iou>0.5:
     #     print(x_left, y_top, x_right, y_bottom)
-    assert 0.0 <= iou <= 1.0
+    # if not iou:
+    #     print('bb1_area', bb1_area)
+    #     print('bb2_area', bb2_area)
+    #     print('intersection_area', intersection_area)
+    assert 0.0 <= iou <= 1.0, print(iou)
     return iou
 
 
