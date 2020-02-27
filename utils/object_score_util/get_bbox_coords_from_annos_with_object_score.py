@@ -1,4 +1,4 @@
-from utils.object_score_utils import misc_utils, eval_utils
+from utils.object_score_util import misc_utils, eval_utils
 import glob
 import os
 import numpy as np

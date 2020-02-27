@@ -1112,7 +1112,7 @@ def plot_results_overlay(start=0, stop=0):  # from utils.utils import *; plot_re
         fig.savefig(f.replace('.txt', '.png'), dpi=200)
 
 
-def plot_results(start=0, stop=0, bucket='', id=(), class_num=60, result_dir=None):  # from utils.utils import *; plot_results()
+def plot_results(start=0, stop=0, bucket='', id=(), class_num=60, result_dir=None, png_name='result.png'):  # from utils.utils import *; plot_results()
     # Plot training results files 'results*.txt'
     fig, ax = plt.subplots(2, 5, figsize=(14, 7))
     ax = ax.ravel()
@@ -1141,7 +1141,7 @@ def plot_results(start=0, stop=0, bucket='', id=(), class_num=60, result_dir=Non
 
     fig.tight_layout()
     # ax[1].legend()
-    fig.savefig(result_dir + 'results.png', dpi=200)
+    fig.savefig(result_dir + png_name, dpi=200)
 
 
 

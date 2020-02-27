@@ -28,7 +28,7 @@ import seaborn as sn
 import sys
 sys.path.append('./')
 from utils.utils_xview import coord_iou
-from utils.distribution_vis_util.process_wv_coco_for_yolo_patches_no_trnval import draw_bar_for_each_cat_cnt_with_txt_rotation
+from utils.data_process_distribution_vis_util.process_wv_coco_for_yolo_patches_no_trnval import draw_bar_for_each_cat_cnt_with_txt_rotation
 """
   A script that processes xView imagery. 
   Args:

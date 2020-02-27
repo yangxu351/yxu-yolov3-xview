@@ -28,30 +28,39 @@ class MyEncoder(json.JSONEncoder):
 
 def get_opt():
     parser = argparse.ArgumentParser(prog='test.py')
-    parser.add_argument('--cfg', type=str, default='cfg/yolov3-spp-{}cls.cfg', help='*.cfg path')
-    parser.add_argument('--data', type=str, default='data_xview/{}_cls/xview.data', help='*.data path')
-    parser.add_argument('--weights', type=str, default='weights/{}_cls/best.pt', help='path to weights file')
+
+    parser.add_argument('--cfg', type=str, default='cfg/yolov3-spp-{}cls_syn.cfg', help='*.cfg path')
+    parser.add_argument('--data', type=str, default='data_xview/{}_cls/xview_{}_{}.data', help='*.data path')
+    parser.add_argument('--weights', type=str, default='weights/{}_cls/{}_{}/best_{}_{}.pt', help='path to weights file')
+
     parser.add_argument('--batch-size', type=int, default=8, help='size of each image batch')
     parser.add_argument('--img_size', type=int, default=608, help='inference size (pixels)')
-    parser.add_argument('--class_num', type=int, default=6, help='class number')  # 60 6
+
+    parser.add_argument('--class_num', type=int, default=1, help='class number')  # 60 6
     parser.add_argument('--label_dir', type=str, default='/media/lab/Yang/data/xView_YOLO/labels/', help='*.json path')
-    parser.add_argument('--weights_dir', type=str, default='weights/', help='to save weights path')
-    parser.add_argument('--result_dir', type=str, default='result_output/', help='to save result files path')
+    parser.add_argument('--weights_dir', type=str, default='weights/{}_cls/{}_{}/', help='to save weights path')
+    parser.add_argument('--result_dir', type=str, default='result_output/{}_cls/{}_{}/', help='to save result files path')
+    parser.add_argument('--writer_dir', type=str, default='writer_output/{}_cls/{}_{}/', help='*events* path')
+    parser.add_argument("--syn_ratio", type=float, default=0, help="ratio of synthetic data: 0 0.25, 0.5, 0.75, 1.0")
+    parser.add_argument('--syn_display_type', type=str, default='syn', help='syn, syn_texture, syn_color')
+
     parser.add_argument('--conf-thres', type=float, default=0.001, help='object confidence threshold')
     parser.add_argument('--iou-thres', type=float, default=0.5, help='IOU threshold for NMS')
     parser.add_argument('--save-json', action='store_true', help='save a cocoapi-compatible JSON results file')
     parser.add_argument('--task', default='test', help="'test', 'study', 'benchmark'")
     parser.add_argument('--device', default='', help='device id (i.e. 0 or 0,1) or cpu')
     opt = parser.parse_args()
-    # opt.save_json = opt.save_json or any([x in opt.data for x in ['coco.data', 'coco2014.data', 'coco2017.data']])
-    opt.save_json = opt.save_json or any([x in opt.data for x in ['xview.data']])
-    # print(opt)
+    # opt.save_json = opt.save_json or any([x in opt.data for x in ['xview.data']])
+
     opt.cfg = opt.cfg.format(opt.class_num)
-    opt.data = opt.data.format(opt.class_num)
-    opt.weights = opt.weights.format(opt.class_num)
-    opt.result_dir = opt.result_dir + '{}_cls/'.format(opt.class_num)
-    opt.weights_dir = opt.weights_dir + '{}_cls/'.format(opt.class_num)
-    opt.label_dir = opt.label_dir + '{}/{}_cls/'.format(opt.img_size, opt.class_num)
+
+    opt.save_json = opt.save_json or any([x in opt.data for x in ['xview_{}_{}.data'.format(opt.syn_display_type, opt.syn_ratio)]])
+    opt.weights_dir = opt.weights_dir.format(opt.class_num, opt.syn_display_type, opt.syn_ratio)
+    opt.writer_dir = opt.writer_dir.format(opt.class_num, opt.syn_display_type, opt.syn_ratio)
+    opt.data = opt.data.format(opt.class_num, opt.syn_display_type, opt.syn_ratio)
+    opt.result_dir = opt.result_dir .format(opt.class_num, opt.syn_display_type, opt.syn_ratio)
+    opt.weights = opt.weights.format(opt.class_num, opt.syn_display_type, opt.syn_ratio, opt.syn_display_type, opt.syn_ratio)
+    opt.label_dir = opt.label_dir + '{}/{}_cls/{}_{}/'.format(opt.img_size, opt.class_num, opt.syn_display_type, opt.syn_ratio)
     return opt
 
 
@@ -113,8 +122,9 @@ def test(cfg,
     niou = iouv.numel()
 
     # fixme
-    result_json_file = 'results.json'
-    gt_json_file = 'xViewval_{}_{}cls_xtlytlwh.json'.format(img_size, opt.class_num)
+    result_json_file = 'results_{}_{}.json'.format(opt.syn_display_type, opt.syn_ratio)
+    gt_json_file = 'xViewval_{}_{}cls_{}_{}_xtlytlwh.json'.format(img_size, opt.class_num, opt.syn_display_type, opt.syn_ratio)
+
     # result_json_file = 'results_rare.json'
     # gt_json_file = 'xViewval_rare_{}_{}cls_xtlytlwh.json'.format(img_size, opt.class_num)
 
@@ -190,8 +200,11 @@ def test(cfg,
                 # fixme
                 # print('paths[si]', paths[si]) #  /media/lab/Yang/data/xView_YOLO/images/608/1094_11.jpg
                 # image_id = int(Path(paths[si]).stem.split('_')[-1])
+                #fixme
+                # image_name = paths[si].split('/')[-1]
+                # image_id = get_val_imgid_by_name(image_name, opt)
                 image_name = paths[si].split('/')[-1]
-                image_id = get_val_imgid_by_name(image_name, opt)
+                image_id = si
 
                 box = pred[:, :4].clone()  # xyxy
                 scale_coords(imgs[si].shape[1:], box, shapes[si][0], shapes[si][1])  # to original shape
@@ -258,19 +271,20 @@ def test(cfg,
     if save_json and map and len(jdict):
         # fixme
         img_names = [x.split('/')[-1] for x in dataloader.dataset.img_files]
-        # fixme
-        img_id_maps = json.load(
-            open(os.path.join(opt.label_dir, 'all_image_ids_names_dict_{}cls.json'.format(opt.class_num))))
-        img_id_list = [k for k in img_id_maps.keys()]
-        img_name_list = [v for v in img_id_maps.values()]
-        imgIds = [img_id_list[img_name_list.index(v)] for v in img_name_list if
-                  v in img_names]  # note: index is the same as the keys
-        sids = set(imgIds)
-        print('imgIds', len(imgIds), 'sids', len(sids))
+        #fixme
+        # img_id_maps = json.load(
+        #     open(os.path.join(opt.label_dir, 'all_image_ids_names_dict_{}cls.json'.format(opt.class_num))))
+        # img_id_list = [k for k in img_id_maps.keys()]
+        # img_name_list = [v for v in img_id_maps.values()]
+        # imgIds = [img_id_list[img_name_list.index(v)] for v in img_name_list if
+        #           v in img_names]  # note: index is the same as the keys
+        # sids = set(imgIds)
+        # print('imgIds', len(imgIds), 'sids', len(sids))
 
         # imgIds = [get_val_imgid_by_name(na) for na in img_names]
         # sids = set(imgIds)
         # print('imgIds', len(imgIds), 'sids', len(sids))
+        imgIds = np.arange(len(output))
 
         with open(opt.result_dir + result_json_file, 'w') as file:
             # json.dump(jdict, file)

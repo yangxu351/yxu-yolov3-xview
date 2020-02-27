@@ -23,6 +23,7 @@ import os
 
 import utils.wv_util as wv
 from utils.utils_xview import coord_iou, compute_iou
+from utils.xview_synthetic_util import preprocess_synthetic_data_distribution as pps
 import pandas as pd
 from ast import literal_eval
 import json
@@ -176,7 +177,9 @@ def shuffle_images_and_boxes_classes(sh_ims, sh_img_names, sh_box, sh_classes_fi
     return out_m, out_n, out_b, out_c, out_i
 
 
-def create_chips_and_txt_geojson_2_json():
+def create_chips_and_txt_geojson_2_json(syn=False):
+    if syn:
+        args = pps.get_syn_args()
     coords, chips, classes, features_ids = wv.get_labels(args.json_filepath, args.class_num)
     # gs = json.load(open('/media/lab/Yang/data/xView/xView_train.geojson'))
     res = (args.input_size, args.input_size)
@@ -267,7 +270,40 @@ def create_chips_and_txt_geojson_2_json():
     json.dump(trn_instance, open(json_file, 'w'), ensure_ascii=False, indent=2, cls=MyEncoder)
 
 
+def clean_backup_xview_plane_with_constraints(catid, px_thres=6, whr_thres=4):
+    '''
+    backupu *.txt first
+    then remove labels with some constraints
+    :param catid:
+    :param px_thres:
+    :param whr_thres:
+    :return:
+    '''
+    args = get_args()
+    txt_files = np.sort(glob.glob(os.path.join(args.annos_save_dir, '*.txt')))
+    backup_path = args.annos_save_dir[:-1] + '_backup/'
+    if not os.path.exists(backup_path):
+        os.mkdir(backup_path)
+        for f in txt_files:
+            shutil.copy(f, backup_path)
+    for f in txt_files:
+        if not pps.is_non_zero_file(f):
+            os.remove(f)
+            continue
+        df_txt = pd.read_csv(f, header=None, delimiter=' ')
+        for i in df_txt.index:
+            bbx = df_txt.loc[i, 1:] * args.input_size
+            bbx_wh = max(bbx.loc[3]/bbx.loc[4], bbx.loc[4]/bbx.loc[3])
+            if bbx.loc[3] <= px_thres or bbx.loc[4] <= px_thres or bbx_wh > whr_thres:
+                df_txt = df_txt.drop(i)
+        if df_txt.empty:
+            os.remove(f)
+            continue
+        df_txt.to_csv(f, header=False, index=False, sep=' ')
+
+
 def create_xview_names(file_name='xview'):
+    args = get_args()
     df_cat = pd.read_csv(args.data_save_dir + 'categories_id_color_diverse_{}.txt'.format(args.class_num),
                          delimiter='\t')
     cat_names = df_cat['category'].to_list()
@@ -278,45 +314,50 @@ def create_xview_names(file_name='xview'):
 
 
 def split_trn_val_with_chips(data_name='xview'):
-    all_files = glob.glob(args.images_save_dir + '*.jpg')
+    args = get_args()
+
+    txt_save_dir = args.data_list_save_dir
+    data_save_dir = args.data_save_dir
     lbl_path = args.annos_save_dir
+    images_save_dir = args.images_save_dir
+    all_files = glob.glob(lbl_path + '*.txt')
+
     num_files = len(all_files)
     trn_num = int(num_files * (1 - args.val_percent))
     np.random.seed(args.seed)
     perm_files = np.random.permutation(all_files)
 
-    trn_img_txt = open(os.path.join(args.txt_save_dir, '{}train_img.txt'.format(data_name)), 'w')
-    trn_lbl_txt = open(os.path.join(args.txt_save_dir, '{}train_lbl.txt'.format(data_name)), 'w')
-    val_img_txt = open(os.path.join(args.txt_save_dir, '{}val_img.txt'.format(data_name)), 'w')
-    val_lbl_txt = open(os.path.join(args.txt_save_dir, '{}val_lbl.txt'.format(data_name)), 'w')
+    trn_img_txt = open(os.path.join(txt_save_dir, '{}train_img.txt'.format(data_name)), 'w')
+    trn_lbl_txt = open(os.path.join(txt_save_dir, '{}train_lbl.txt'.format(data_name)), 'w')
+    val_img_txt = open(os.path.join(txt_save_dir, '{}val_img.txt'.format(data_name)), 'w')
+    val_lbl_txt = open(os.path.join(txt_save_dir, '{}val_lbl.txt'.format(data_name)), 'w')
 
     for i in range(trn_num):
-        trn_img_txt.write("%s\n" % perm_files[i])
-        img_name = perm_files[i].split('/')[-1]
-        lbl_name = img_name.replace('.jpg', '.txt')
-        trn_lbl_txt.write("%s\n" % (lbl_path + lbl_name))
+        trn_lbl_txt.write("%s\n" % perm_files[i])
+        lbl_name = perm_files[i].split('/')[-1]
+        img_name = lbl_name.replace('.txt', '.jpg')
+        trn_img_txt.write("%s\n" % os.path.join(images_save_dir, img_name))
 
     trn_img_txt.close()
     trn_lbl_txt.close()
 
     for i in range(trn_num, num_files):
-        val_img_txt.write("%s\n" % perm_files[i])
-        img_name = perm_files[i].split('/')[-1]
-        lbl_name = img_name.replace('.jpg', '.txt')
-        val_lbl = os.path.join(lbl_path, lbl_name)
-        val_lbl_txt.write("%s\n" % val_lbl)
+        val_lbl_txt.write("%s\n" % perm_files[i])
+        lbl_name = perm_files[i].split('/')[-1]
+        img_name = lbl_name.replace('.txt', '.jpg')
+        val_img_txt.write("%s\n" % os.path.join(images_save_dir, img_name))
 
     val_img_txt.close()
     val_lbl_txt.close()
 
-    shutil.copyfile(os.path.join(args.txt_save_dir, '{}train_img.txt'.format(data_name)),
-                    os.path.join(args.data_save_dir, '{}train_img.txt'.format(data_name)))
-    shutil.copyfile(os.path.join(args.txt_save_dir, '{}train_lbl.txt'.format(data_name)),
-                    os.path.join(args.data_save_dir, '{}train_lbl.txt'.format(data_name)))
-    shutil.copyfile(os.path.join(args.txt_save_dir, '{}val_img.txt'.format(data_name)),
-                    os.path.join(args.data_save_dir, '{}val_img.txt'.format(data_name)))
-    shutil.copyfile(os.path.join(args.txt_save_dir, '{}val_lbl.txt'.format(data_name)),
-                    os.path.join(args.data_save_dir, '{}val_lbl.txt'.format(data_name)))
+    shutil.copyfile(os.path.join(txt_save_dir, '{}train_img.txt'.format(data_name)),
+                    os.path.join(data_save_dir, '{}train_img.txt'.format(data_name)))
+    shutil.copyfile(os.path.join(txt_save_dir, '{}train_lbl.txt'.format(data_name)),
+                    os.path.join(data_save_dir, '{}train_lbl.txt'.format(data_name)))
+    shutil.copyfile(os.path.join(txt_save_dir, '{}val_img.txt'.format(data_name)),
+                    os.path.join(data_save_dir, '{}val_img.txt'.format(data_name)))
+    shutil.copyfile(os.path.join(txt_save_dir, '{}val_lbl.txt'.format(data_name)),
+                    os.path.join(data_save_dir, '{}val_lbl.txt'.format(data_name)))
 
 
 def split_trn_val_with_tifs():
@@ -607,12 +648,12 @@ def get_img_id_by_image_name(image_name):
 #         if gt_rare_list or img_prd_lbl_list:
 #             cv2.imwrite(save_dir + 'rare_cat_' + rare_val_img_names[ix], img)
 
-def cnt_ground_truth_overlap_from_pathces(cat_ids, iou_thres=0.5, px_thres=6, whr_thres=4):
-    # img_files = pd.read_csv(os.path.join(args.data_save_dir, 'xview{}_img.txt'.format(typestr)), header=None)
-    # lbl_files = pd.read_csv(os.path.join(args.data_save_dir, 'xview{}_lbl.txt'.format(typestr)), header=None)
-    # lbl_files = lbl_files[0].to_list()
-    # img_names = [f.split('/')[-1] for f in img_files[0].tolist()]
-
+def cnt_ground_truth_overlap_from_pathces(cat_ids, iou_thres=0.5, px_thres=6, whr_thres=4, syn = False):
+    if syn:
+        args = pps.get_syn_args()
+        json_name = '{}_gt_iou_overlap_cnt_each_cat.json'.format(args.syn_display_type)
+    else:
+        json_name = 'xView_gt_iou_overlap_cnt_each_cat.json'
     lbl_files = glob.glob(args.annos_save_dir + '*.txt')
     img_names = [os.path.basename(x) for x in lbl_files]
 
@@ -655,7 +696,7 @@ def cnt_ground_truth_overlap_from_pathces(cat_ids, iou_thres=0.5, px_thres=6, wh
                     #fixme  save the index
                     f_txt.write('%d %d %d\n' % (ci, df_lbl.index[i], df_lbl.index[j]))
                     f_txt.close()
-    json_file = os.path.join(f_save_dir, 'xView_gt_iou_overlap_cnt_each_cat.json')  # topleft
+    json_file = os.path.join(f_save_dir, json_name)  # topleft
     json.dump(cnt_cat_overlap, open(json_file, 'w'), ensure_ascii=False, indent=2, cls=MyEncoder)
 
 
@@ -723,7 +764,7 @@ def check_duplicate_gt_bbx_for_60_classes(cat_id, iou_thres=0.5, whr_thres=3):
             cv2.imwrite(save_dir + b_str + img_name, img)
 
 
-def remove_duplicate_gt_bbx(cat_id, px_thres=6, whr_thres=4):
+def remove_duplicate_gt_bbx(cat_id, px_thres=6, whr_thres=4, syn = False):
     dup_dir = args.txt_save_dir + 'gt_iou_overlap/'
     duplicate_files = np.sort(glob.glob(dup_dir + '*.txt'))
 
@@ -1686,6 +1727,8 @@ def get_args():
 
     parser.add_argument("--txt_save_dir", type=str, help="to save  related label files",
                         default='/media/lab/Yang/data/xView_YOLO/labels/')
+    parser.add_argument("--data_list_save_dir", type=str, help="to save selected trn val images and labels",
+                        default='/media/lab/Yang/data/xView_YOLO/labels/{}/{}_cls/data_list/')
 
     parser.add_argument("--annos_save_dir", type=str, help="to save txt annotation files",
                         default='/media/lab/Yang/data/xView_YOLO/labels/')
@@ -1697,10 +1740,10 @@ def get_args():
                         default='/media/lab/Yang/data/xView_YOLO/figures/')
 
     parser.add_argument("--data_save_dir", type=str, help="to save data files",
-                        default='../../data_xview/')
+                        default='/media/lab/Yang/code/yolov3/data_xview/{}_cls/')
 
     parser.add_argument("--results_dir", type=str, help="to save category files",
-                        default='../../result_output/{}_cls/')
+                        default='/media/lab/Yang/code/yolov3/result_output/{}_cls/')
 
     parser.add_argument("--cat_sample_dir", type=str, help="to save figures",
                         default='/media/lab/Yang/data/xView_YOLO/cat_samples/')
@@ -1734,9 +1777,9 @@ def get_args():
     args.txt_save_dir = args.txt_save_dir + '{}/{}_cls/'.format(args.input_size, args.class_num)
     args.cat_sample_dir = args.cat_sample_dir + '{}/{}_cls/'.format(args.input_size, args.class_num)
     args.ori_lbl_dir = args.ori_lbl_dir + '{}_cls/'.format(args.class_num)
-    args.data_save_dir = args.data_save_dir + '{}_cls/'.format(args.class_num)
+    args.data_save_dir = args.data_save_dir.format(args.class_num)
     args.results_dir = args.results_dir.format(args.class_num)
-
+    args.data_list_save_dir = args.data_list_save_dir.format(args.input_size, args.class_num)
     if not os.path.exists(args.txt_save_dir):
         os.makedirs(args.txt_save_dir)
 
@@ -1757,6 +1800,8 @@ def get_args():
 
     if not os.path.exists(args.data_save_dir):
         os.makedirs(args.data_save_dir)
+    if not os.path.exists(args.data_list_save_dir):
+        os.makedirs(args.data_list_save_dir)
 
     args.cat_bbx_patches_dir = args.cat_bbx_patches_dir.format(args.input_size, args.class_num)
     args.cat_bbx_origins_dir = args.cat_bbx_origins_dir.format(args.class_num)
@@ -1777,9 +1822,6 @@ if __name__ == "__main__":
 
     args = get_args()
 
-    # logging.basicConfig(level=logging.INFO)
-    # logger = logging.getLogger(__name__)
-
     '''
     create chips and label txt and get all images json, convert from *.geojson to *.json
     
@@ -1792,20 +1834,46 @@ if __name__ == "__main__":
     # create_chips_and_txt_geojson_2_json()
 
     '''
+    count ground truth self overlap from patches for each cat 
+    '''
+    # cat_ids = np.arange(0, 6).tolist()
+    # cat_ids = [0]
+    # whr_thres = 4
+    # px_thres=6
+    # iou_thres = 0.5
+    # cnt_ground_truth_overlap_from_pathces(cat_ids, iou_thres, px_thres, whr_thres)
+
+    '''
+    check the the origin 60 classes: see if one object is assigned to  two different classes
+    '''
+    # iou_thres = 0.5
+    # whr_thres = 3
+    # px_thres = 4
+    # cat_ids = np.arange(0, 6).tolist()
+    # for cat_id in cat_ids:
+    #     check_duplicate_gt_bbx_for_60_classes(cat_id, iou_thres, px_thres, whr_thres)
+
+
+    '''
+    remove duplicate ground truth bbox by cat_id
+    '''
+    # # #fixme Not Done
+    # cat_id = 0
+    # remove_duplicate_gt_bbx(cat_id)
+
+    '''
     create xview.names 
     '''
     # file_name = 'xview'
-    # file_name = 'xview_syn_color_'
-    # file_name = 'xview_syn_texture_'
     # create_xview_names(file_name)
 
     '''
-    split train:val  randomly split chips
+    split train:val randomly split chips
     default split
     '''
     # data_name = 'xview'
-    # data_name = 'xview_1syn_'
     # split_trn_val_with_chips(data_name)
+
 
     '''
     split train:val  randomly split tifs
@@ -1908,34 +1976,6 @@ if __name__ == "__main__":
     # whr_thres = 3
     # iou_thres = 0.5
     # get_fp_fn_separtely_by_cat_ids(cat_ids, iou_thres=0.5, score_thres=0.3, whr_thres=3)
-
-    '''
-    count ground truth self overlap from patches for each cat 
-    '''
-    # cat_ids = np.arange(0, 6).tolist()
-    # cat_ids = [0]
-    # whr_thres = 4
-    # px_thres=6
-    # iou_thres = 0.5
-    # cnt_ground_truth_overlap_from_pathces(cat_ids, iou_thres, px_thres, whr_thres)
-
-    '''
-    check the the origin 60 classes: see if one object is assigned to  two different classes
-    '''
-    # iou_thres = 0.5
-    # whr_thres = 3
-    # px_thres = 4
-    # cat_ids = np.arange(0, 6).tolist()
-    # for cat_id in cat_ids:
-    #     check_duplicate_gt_bbx_for_60_classes(cat_id, iou_thres, px_thres, whr_thres)
-
-
-    '''
-    remove duplicate ground truth bbox by cat_id
-    '''
-    # # #fixme Not Done
-    # cat_id = 0
-    # remove_duplicate_gt_bbx(cat_id)
 
     '''
     plot img with prd bbox by cat id

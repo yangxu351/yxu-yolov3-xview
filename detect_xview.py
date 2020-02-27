@@ -9,7 +9,14 @@ from utils.torch_utils import *
 
 def detect(save_img=False):
     img_size = (320, 192) if ONNX_EXPORT else opt.img_size  # (320, 192) or (416, 256) or (608, 352) for (height, width)
-    out, source, weights, half, view_img, save_txt = opt.output, opt.source, opt.weights, opt.half, opt.view_img, opt.save_txt
+    # out, source, weights, half, view_img, save_txt = opt.output, opt.source, opt.weights, opt.half, opt.view_img, opt.save_txt
+    # webcam = source == '0' or source.startswith('rtsp') or source.startswith('http') or source.endswith('.txt')
+    out, weights, half, view_img, save_txt = opt.output, opt.weights, opt.half, opt.view_img, opt.save_txt
+    data = opt.data
+    # Configure run
+    data_dict = parse_data_cfg(data)
+    source = data_dict['valid']
+    # test_label_path = data_dict['valid_label']
     webcam = source == '0' or source.startswith('rtsp') or source.startswith('http') or source.endswith('.txt')
 
     # Initialize
@@ -72,7 +79,7 @@ def detect(save_img=False):
     #fixme
     # names = load_classes(opt.names)
     # colors = [[random.randint(0, 255) for _ in range(3)] for _ in range(len(names))]
-    df_cat_color = pd.read_csv(os.path.join(opt.data_dir, 'categories_id_color_diverse_{}.txt'.format(opt.class_num)))
+    df_cat_color = pd.read_csv(os.path.join(opt.data_dir, 'categories_id_color_diverse_{}.txt'.format(opt.class_num)), delimiter='\t')
     names = df_cat_color['category'].tolist()
     colors = df_cat_color['color'].tolist()
 
@@ -160,14 +167,19 @@ def detect(save_img=False):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--cfg', type=str, default='cfg/yolov3-spp-60cls.cfg', help='*.cfg path')
-    parser.add_argument('--names', type=str, default='data_xview/60_cls/xview.names', help='*.names path')
-    parser.add_argument('--weights', type=str, default='weights/60_cls/best.pt', help='path to weights file')
-    parser.add_argument('--source', type=str, default='data_xview/rare_samples/', help='source')  # input file/folder, 0 for webcam
-    parser.add_argument('--output', type=str, default='result_output/', help='output folder')  # output folder
-    parser.add_argument('--data_dir', type=str, default='data_xview/', help='data xview folder')  # output folder
+    parser.add_argument('--cfg', type=str, default='cfg/yolov3-spp-{}cls_syn.cfg', help='*.cfg path')
+    parser.add_argument('--names', type=str, default='data_xview/{}_cls/xview.names', help='*.names path')
+    parser.add_argument('--weights', type=str, default='weights/{}_cls/{}_{}/best_{}_{}.pt', help='path to weights file')
+    parser.add_argument('--source', type=str, default='data_xview/{}_cls/', help='source')  # input file/folder, 0 for webcam
+    parser.add_argument('--output', type=str, default='runs/{}_cls/{}_{}/', help='output folder')  # output folder
+    parser.add_argument('--data_dir', type=str, default='data_xview/{}_cls/', help='data xview folder')  # output folder
+    parser.add_argument('--data', type=str, default='data_xview/{}_cls/xview_{}_{}.data', help='data xview folder')
     parser.add_argument('--img-size', type=int, default=608, help='inference size (pixels)')
-    parser.add_argument('--class_num', type=int, default=60, help='class number')
+
+    parser.add_argument('--class_num', type=int, default=1, help='class number') # 60
+    parser.add_argument("--syn_ratio", type=float, default=0.25, help="ratio of synthetic data: 0 0.25, 0.5, 0.75, 1.0")
+    parser.add_argument('--syn_display_type', type=str, default='syn_texture', help='syn, syn_texture, syn_color')
+
     parser.add_argument('--conf-thres', type=float, default=0.3, help='object confidence threshold')
     parser.add_argument('--iou-thres', type=float, default=0.5, help='IOU threshold for NMS')
     parser.add_argument('--fourcc', type=str, default='mp4v', help='output video codec (verify ffmpeg support)')
@@ -177,7 +189,13 @@ if __name__ == '__main__':
     parser.add_argument('--save-txt', action='store_true', help='display results')
     parser.add_argument('--classes', nargs='+', type=int, help='filter by class')
     opt = parser.parse_args()
-    opt.data_dir = opt.data_dir + '{}_cls/'
+    opt.cfg = opt.cfg.format(opt.class_num)
+    opt.names = opt.names.format(opt.class_num)
+    opt.source = opt.source.format(opt.class_num)
+    opt.weights = opt.weights.format(opt.class_num, opt.syn_display_type, opt.syn_ratio, opt.syn_display_type, opt.syn_ratio)
+    opt.data = opt.data.format(opt.class_num, opt.syn_display_type, opt.syn_ratio)
+    opt.data_dir = opt.data_dir.format(opt.class_num)
+    opt.output = opt.output .format(opt.class_num, opt.syn_display_type, opt.syn_ratio)
     print(opt)
 
     with torch.no_grad():

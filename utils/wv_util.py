@@ -64,8 +64,11 @@ def get_labels(fname, catNum=60):
     l_chips = []
     l_classes = []
     feature_ids = []
+    if catNum == 60:
+        cat_index_id_file = '../../data_xview/{}_cls/categories_id_color_diverse_{}.txt'.format(catNum, catNum)
+    else:
+        cat_index_id_file = '../../data_xview/{}_cls/categories_id_color_{}_new_group.txt'.format(catNum, catNum)
 
-    cat_index_id_file = '../data_xview/{}_cls/categories_id_color_diverse_{}.txt'.format(catNum, catNum)
     df_cat_idx_id = pd.read_csv(cat_index_id_file, delimiter='\t')
     feas = data['features']
     for i in range(len(feas)):
@@ -80,11 +83,9 @@ def get_labels(fname, catNum=60):
         '''
         cat num 
         '''
-        # l_classes[i] = df_cat_type['category_id'].iloc[0]
         l_classes.append(df_cat_type['category_id'].iloc[0])
 
         b_id = feas[i]['properties']['image_id']
-        # imcoords = np.array([int(num) for num in feas[i]['properties']['bounds_imcoords'].split(",")])  # (w1, h1, w2, h2)
         imcoords = np.array(literal_eval(feas[i]['properties']['bounds_imcoords']))
         l_chips.append(b_id)
 
@@ -125,7 +126,7 @@ def get_all_categories(catNum=60):
     categories = []
 
     # df_category_id = pd.read_csv('categories_id_color_diverse_60.txt', sep="\t")
-    df_category_id = pd.read_csv('../data_xview/{}_cls/categories_id_color_diverse_{}.txt'.format(catNum, catNum), sep="\t")
+    df_category_id = pd.read_csv('../../data_xview/{}_cls/categories_id_color_diverse_{}.txt'.format(catNum, catNum), sep="\t")
 
     for i in range(df_category_id.shape[0]):
         # category_id = df_category_id['category_id'].iloc[i]

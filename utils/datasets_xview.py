@@ -261,6 +261,7 @@ class LoadStreams:  # multiple IP or RTSP cameras
 class LoadImagesAndLabels(Dataset):  # for training/testing
     def __init__(self, path, label_path, img_size=608, batch_size=8, class_num=60, augment=False, hyp=None, rect=False, image_weights=False,
                  cache_labels=False, cache_images=False):
+        #fixme
         path = str(Path(path))  # os-agnostic
         assert os.path.isfile(path), 'File not found %s. See %s' % (path, help_url)
         with open(path, 'r') as f:
@@ -270,14 +271,15 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
         with open(label_path, 'r') as f:
             self.lbl_files = [x.replace('/', os.sep) for x in f.read().splitlines()  # os-agnostic
                               if os.path.splitext(x)[-1].lower() in lbl_formats]
+
         #fixme
         self.label_files = self.lbl_files
         # print(self.img_files)
 
-        n = len(self.img_files)
+        n = len(self.img_files) # 8453
         assert n > 0, 'No images found in %s. See %s' % (path, help_url)
         bi = np.floor(np.arange(n) / batch_size).astype(np.int)  # batch index
-        nb = bi[-1] + 1  # number of batches
+        nb = bi[-1] + 1  # number of batches 1057
 
         self.n = n
         self.batch = bi  # batch index of image

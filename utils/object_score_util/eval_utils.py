@@ -14,7 +14,7 @@ from scipy.spatial import KDTree
 from sklearn.metrics import precision_recall_curve, average_precision_score
 
 # Own modules
-from utils.object_score_utils import misc_utils, metric_utils, vis_utils
+from utils.object_score_util import misc_utils, metric_utils, vis_utils
 
 
 def display_group(reg_groups, size, img=None, need_return=False):
