@@ -89,6 +89,8 @@ def create_xview_syn_data(sr):
         data_txt.write('train=./data_xview/{}_cls/xviewtrain_img.txt\n'.format(syn_args.class_num, syn_args.syn_display_type, sr))
         data_txt.write('train_label=./data_xview/{}_cls/xviewtrain_lbl.txt\n'.format(syn_args.class_num, syn_args.syn_display_type, sr))
 
+    df = pd.read_csv(os.path.join(args.data_save_dir, 'xviewtrain_img.txt'), header=None)
+    data_txt.write('syn_0_xview_number=%s\n' % str(df.shape[0]))
     data_txt.write('classes=%s\n' % str(syn_args.class_num))
     data_txt.write('valid=./data_xview/{}_cls/xviewval_img.txt\n'.format(syn_args.class_num))
     data_txt.write('valid_label=./data_xview/{}_cls/xviewval_lbl.txt\n'.format(syn_args.class_num))
@@ -167,9 +169,9 @@ if __name__ == "__main__":
     ''''
     create xview_syn_texture_0.25.data
     '''
-    # syn_ratio = [0,  0.25, 0.5, 0.75, 1.0]
-    # for sr in syn_ratio:
-    #     create_xview_syn_data(sr)
+    syn_ratio = [0,  0.25, 0.5, 0.75, 1.0]
+    for sr in syn_ratio:
+        create_xview_syn_data(sr)
 
     # sr = 0
     # create_xview_syn_data(sr)

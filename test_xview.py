@@ -7,6 +7,7 @@ from utils.parse_config_xview import *
 from models_xview import *
 
 from utils.datasets_xview import *
+# from utils.datasets_xview_backup import *
 from utils.utils_xview import *
 
 
@@ -41,8 +42,8 @@ def get_opt():
     parser.add_argument('--weights_dir', type=str, default='weights/{}_cls/{}_{}/', help='to save weights path')
     parser.add_argument('--result_dir', type=str, default='result_output/{}_cls/{}_{}/', help='to save result files path')
     parser.add_argument('--writer_dir', type=str, default='writer_output/{}_cls/{}_{}/', help='*events* path')
-    parser.add_argument("--syn_ratio", type=float, default=0, help="ratio of synthetic data: 0 0.25, 0.5, 0.75, 1.0")
-    parser.add_argument('--syn_display_type', type=str, default='syn', help='syn, syn_texture, syn_color')
+    parser.add_argument("--syn_ratio", type=float, default=0.75, help="ratio of synthetic data: 0 0.25, 0.5, 0.75, 1.0")
+    parser.add_argument('--syn_display_type', type=str, default='syn_texture', help='syn, syn_texture, syn_color')
 
     parser.add_argument('--conf-thres', type=float, default=0.001, help='object confidence threshold')
     parser.add_argument('--iou-thres', type=float, default=0.5, help='IOU threshold for NMS')

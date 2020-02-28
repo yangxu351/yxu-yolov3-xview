@@ -1163,6 +1163,6 @@ if __name__ == '__main__':
     '''
     plot  results
     '''
-    # class_num = 60
-    # plot_results(class_num=class_num)
+    class_num = 1
+    plot_results(class_num=class_num)
 

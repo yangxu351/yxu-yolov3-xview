@@ -47,16 +47,11 @@ def exif_size(img):
 class LoadImages:  # for inference
     def __init__(self, path, img_size=416, half=False):
         path = str(Path(path))  # os-agnostic
-        print(path)
         files = []
         if os.path.isdir(path):
             files = sorted(glob.glob(os.path.join(path, '*.*')))
         elif os.path.isfile(path):
-            #fixme
-            # files = [path]
-            with open(path, 'r') as f:
-                files = [x.replace('/', os.sep) for x in f.read().splitlines()  # os-agnostic
-                                  if os.path.splitext(x)[-1].lower() in img_formats]
+            files = [path]
 
         images = [x for x in files if os.path.splitext(x)[-1].lower() in img_formats]
         videos = [x for x in files if os.path.splitext(x)[-1].lower() in vid_formats]
@@ -277,9 +272,11 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
             self.lbl_files = [x.replace('/', os.sep) for x in f.read().splitlines()  # os-agnostic
                               if os.path.splitext(x)[-1].lower() in lbl_formats]
 
+        #fixme
         self.label_files = self.lbl_files
-        n = len(self.img_files)
         # print(self.img_files)
+
+        n = len(self.img_files) # 8453
         assert n > 0, 'No images found in %s. See %s' % (path, help_url)
         bi = np.floor(np.arange(n) / batch_size).astype(np.int)  # batch index
         nb = bi[-1] + 1  # number of batches
@@ -294,6 +291,7 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
         self.rect = False if image_weights else rect
 
         # Define labels
+        #fixme
         # self.label_files = [x.replace('images', 'labels').replace(os.path.splitext(x)[-1], '.txt')
         #                     for x in self.img_files]
 
@@ -314,7 +312,9 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
             ar = s[:, 1] / s[:, 0]  # aspect ratio
             i = ar.argsort()
             self.img_files = [self.img_files[i] for i in i]
+            #fixme
             self.label_files = [self.lbl_files[i] for i in i]
+            # self.label_files = np.array([self.lbl_files[i] for i in i])
             # print('label_files', self.label_files)
             self.shapes = s[i]
             ar = ar[i]
@@ -336,12 +336,13 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
         self.labels = [None] * n
         if cache_labels or image_weights:  # cache labels for faster training
             self.labels = [np.zeros((0, 5))] * n
-            pbar = tqdm(self.label_files, desc='Caching labels')
-
             extract_bounding_boxes = False
             create_datasubset = False
+            #fixme
+            pbar = tqdm(self.label_files, desc='Caching labels')
 
             nm, nf, ne, ns, nd = 0, 0, 0, 0, 0  # number missing, found, empty, datasubset, duplicate
+            #fixme
             for i, file in enumerate(pbar):
                 try:
                     # with open(file, 'r') as f:
@@ -478,6 +479,7 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
                     labels[:, 3] = ratio[0] * w * (x[:, 1] + x[:, 3] / 2) + pad[0]
                     labels[:, 4] = ratio[1] * h * (x[:, 2] + x[:, 4] / 2) + pad[1]
 
+
         if self.augment:
             # Augment imagespace
             if not mosaic:
@@ -538,7 +540,6 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
 
 def load_image(self, index):
     # loads 1 image from dataset
-    # print(index)
     img = self.imgs[index]
     if img is None:
         img_path = self.img_files[index]

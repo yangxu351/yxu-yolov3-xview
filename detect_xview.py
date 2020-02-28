@@ -1,23 +1,25 @@
 import argparse
 from sys import platform
 
-from models import *  # set ONNX_EXPORT in models.py
+from models_xview import *  # set ONNX_EXPORT in models.py
 from utils.datasets_xview import *
 from utils.utils_xview import *
 from utils.torch_utils import *
-
+from ast import literal_eval
 
 def detect(save_img=False):
     img_size = (320, 192) if ONNX_EXPORT else opt.img_size  # (320, 192) or (416, 256) or (608, 352) for (height, width)
     # out, source, weights, half, view_img, save_txt = opt.output, opt.source, opt.weights, opt.half, opt.view_img, opt.save_txt
     # webcam = source == '0' or source.startswith('rtsp') or source.startswith('http') or source.endswith('.txt')
-    out, weights, half, view_img, save_txt = opt.output, opt.weights, opt.half, opt.view_img, opt.save_txt
+    out, weights, half, view_img, save_txt = opt.detect_output, opt.weights, opt.half, opt.view_img, opt.save_txt
     data = opt.data
     # Configure run
     data_dict = parse_data_cfg(data)
     source = data_dict['valid']
     # test_label_path = data_dict['valid_label']
-    webcam = source == '0' or source.startswith('rtsp') or source.startswith('http') or source.endswith('.txt')
+    #fixme
+    # webcam = source == '0' or source.startswith('rtsp') or source.startswith('http') or source.endswith('.txt')
+    webcam = False
 
     # Initialize
     device = torch_utils.select_device(device='cpu' if ONNX_EXPORT else opt.device)
@@ -67,12 +69,14 @@ def detect(save_img=False):
 
     # Set Dataloader
     vid_path, vid_writer = None, None
+    #fixme
     if webcam:
         view_img = True
         torch.backends.cudnn.benchmark = True  # set True to speed up constant image size inference
         dataset = LoadStreams(source, img_size=img_size, half=half)
     else:
         save_img = True
+        print(source)
         dataset = LoadImages(source, img_size=img_size, half=half)
 
     # Get names and colors
@@ -81,7 +85,7 @@ def detect(save_img=False):
     # colors = [[random.randint(0, 255) for _ in range(3)] for _ in range(len(names))]
     df_cat_color = pd.read_csv(os.path.join(opt.data_dir, 'categories_id_color_diverse_{}.txt'.format(opt.class_num)), delimiter='\t')
     names = df_cat_color['category'].tolist()
-    colors = df_cat_color['color'].tolist()
+    colors = [literal_eval(c) for c in df_cat_color['color'].tolist()]
 
     # Run inference
     t0 = time.time()
@@ -129,7 +133,7 @@ def detect(save_img=False):
                             file.write(('%g ' * 6 + '\n') % (*xyxy, cls, conf))
 
                     if save_img or view_img:  # Add bbox to image
-                        label = '%s %.2f' % (names[int(cls)], conf)
+                        label = '%.2f %s' % (names[int(cls)], conf)
                         plot_one_box(xyxy, im0, label=label, color=colors[int(cls)])
 
             # Print time (inference + NMS)
@@ -171,7 +175,7 @@ if __name__ == '__main__':
     parser.add_argument('--names', type=str, default='data_xview/{}_cls/xview.names', help='*.names path')
     parser.add_argument('--weights', type=str, default='weights/{}_cls/{}_{}/best_{}_{}.pt', help='path to weights file')
     parser.add_argument('--source', type=str, default='data_xview/{}_cls/', help='source')  # input file/folder, 0 for webcam
-    parser.add_argument('--output', type=str, default='runs/{}_cls/{}_{}/', help='output folder')  # output folder
+    parser.add_argument('--detect_output', type=str, default='detect_output/{}_cls/{}_{}/', help='output folder')  # output folder
     parser.add_argument('--data_dir', type=str, default='data_xview/{}_cls/', help='data xview folder')  # output folder
     parser.add_argument('--data', type=str, default='data_xview/{}_cls/xview_{}_{}.data', help='data xview folder')
     parser.add_argument('--img-size', type=int, default=608, help='inference size (pixels)')
@@ -195,7 +199,9 @@ if __name__ == '__main__':
     opt.weights = opt.weights.format(opt.class_num, opt.syn_display_type, opt.syn_ratio, opt.syn_display_type, opt.syn_ratio)
     opt.data = opt.data.format(opt.class_num, opt.syn_display_type, opt.syn_ratio)
     opt.data_dir = opt.data_dir.format(opt.class_num)
-    opt.output = opt.output .format(opt.class_num, opt.syn_display_type, opt.syn_ratio)
+    opt.detect_output = opt.detect_output .format(opt.class_num, opt.syn_display_type, opt.syn_ratio)
+    if not os.path.exists(opt.detect_output):
+        os.makedirs(opt.detect_output)
     print(opt)
 
     with torch.no_grad():

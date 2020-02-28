@@ -360,6 +360,13 @@ def train():
 
             # Save best checkpoint
             if best_fitness == fitness:
+                torch.save(chkpt, best)
+            # Save backup every 10 epochs (optional)
+            if epoch > 0 and epoch % 10 == 0:
+                torch.save(chkpt, opt.weights_dir + 'backup%g.pt' % epoch)
+
+            # Delete checkpoint
+            del chkpt
 
 hyp = {'giou': 3.54,  # giou loss gain
        'cls': 37.4,  # cls loss gain
@@ -745,7 +752,7 @@ def prebias():
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--epochs', type=int, default=300)  # 500200 batches at bs 16, 117263 images = 273 epochs
+    parser.add_argument('--epochs', type=int, default=180)  # 500200 batches at bs 16, 117263 images = 273 epochs
     parser.add_argument('--batch-size', type=int, default=8)  # effective bs = batch_size * accumulate = 16 * 4 = 64
     parser.add_argument('--accumulate', type=int, default=4, help='batches to accumulate before optimizing')
     parser.add_argument('--cfg', type=str, default='cfg/yolov3-spp-{}cls_syn.cfg', help='*.cfg path')
@@ -754,14 +761,14 @@ if __name__ == '__main__':
     parser.add_argument('--weights_dir', type=str, default='weights/{}_cls/{}_{}/', help='to save weights path')
     parser.add_argument('--result_dir', type=str, default='result_output/{}_cls/{}_{}/', help='to save result files path')
 
-    parser.add_argument("--syn_ratio", type=float, default=0.5, help="ratio of synthetic data: 0.25, 0.5, 0.75, 1.0  0")
+    parser.add_argument("--syn_ratio", type=float, default=0.75, help="ratio of synthetic data: 0.25, 0.5, 0.75, 1.0  0")
     parser.add_argument('--syn_display_type', type=str, default='syn_texture', help='syn_texture, syn_color, syn (match 0)')
 
     parser.add_argument('--img_size', type=int, default=608, help='inference size (pixels)') # 416 608
     parser.add_argument('--class_num', type=int, default=1, help='class number') # 60 6 1
 
     parser.add_argument('--multi_scale', action='store_true', help='adjust (67% - 150%) img_size every 10 batches')
-    parser.add_argument('--json_file', type=str, default='/media/data/Yang/xView_YOLO/', help='*.json path')
+    parser.add_argument('--json_file', type=str, default='/hdd4/data/Yang/xView_YOLO/', help='*.json path')
 
     parser.add_argument('--rect', action='store_true', help='rectangular training')
     parser.add_argument('--resume', action='store_true', default=True, help='resume training from last.pt')
@@ -778,7 +785,7 @@ if __name__ == '__main__':
     parser.add_argument('--adam', action='store_true', help='use adam optimizer')
     parser.add_argument('--var', type=float, help='debug variable')
     opt = parser.parse_args()
-opt.cfg = opt.cfg.format(opt.class_num)
+    opt.cfg = opt.cfg.format(opt.class_num)
     opt.weights_dir = opt.weights_dir.format(opt.class_num, opt.syn_display_type, opt.syn_ratio)
     opt.writer_dir = opt.writer_dir.format(opt.class_num, opt.syn_display_type, opt.syn_ratio)
     opt.data = opt.data.format(opt.class_num, opt.syn_display_type, opt.syn_ratio)

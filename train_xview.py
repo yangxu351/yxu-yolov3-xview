@@ -8,6 +8,7 @@ import test_xview as test  # import test.py to get mAP after each epoch
 from models_xview import *
 from utils import torch_utils
 from utils.datasets_xview import *
+# from utils.datasets_xview_backup import *
 from utils.utils_xview import *
 from utils.torch_utils import *
 import warnings
@@ -51,6 +52,25 @@ if f:
         hyp[k] = v
 
 
+def infi(dl, loop_count):
+    while True:
+        num_indices = np.random.permutation(len(dl))
+        nb = len(dl) // opt.batch_size
+        j = 0
+        for i in range(loop_count):
+            if j == nb:
+                j = 0
+            index_batch = num_indices[j*opt.batch_size: (j+1)*opt.batch_size]
+            j += 1
+            yield dl[index_batch]
+
+
+def infi_loop(dl):
+    while True:
+        for (imgs, targets, paths, _) in dl:
+            yield imgs, targets, paths
+
+
 def train():
     cfg = opt.cfg
     data = opt.data
@@ -79,7 +99,8 @@ def train():
     train_label_path = data_dict['train_label']
     test_label_path = data_dict['valid_label']
     nc = int(data_dict['classes'])  # number of classes
-
+    syn_0_xview_number = data_dict['syn_0_xview_number']
+    loop_count = int(syn_0_xview_number)//batch_size
     # Remove previous results
     for f in glob.glob('*_batch*.jpg') + glob.glob(results_file):
         os.remove(f)
@@ -217,7 +238,10 @@ def train():
                                                  collate_fn=dataset.collate_fn)
 
     # Start training
-    nb = len(dataloader)
+    #fixme
+    # nb = len(dataloader)
+    nb = loop_count
+    print('nb ', nb)
     model.nc = nc  # attach number of classes to model
     model.arc = opt.arc  # attach yolo architecture
     model.hyp = hyp  # attach hyperparameters to model
@@ -240,8 +264,16 @@ def train():
             dataset.indices = random.choices(range(dataset.n), weights=image_weights, k=dataset.n)  # rand weighted idx
 
         mloss = torch.zeros(4).to(device)  # mean losses
-        pbar = tqdm(enumerate(dataloader), total=nb)  # progress bar
-        for i, (imgs, targets, paths, _) in pbar:  # batch -------------------------------------------------------------
+        #fixme
+        # pbar = tqdm(enumerate(dataloader), total=nb)  # progress bar
+        # for i, (imgs, targets, paths, _) in pbar:
+
+        # pbar = tqdm(enumerate(gen_data.__next__()), total=nb)
+
+        gen_data = infi_loop(dataloader)
+        # for (imgs, targets, paths) in next(gen_data):  # in pbar # batch -------------------------------------------------------------?????????????
+        for i in range(nb):
+            imgs, targets, paths = next(gen_data)
             ni = i + nb * epoch  # number integrated batches (since train start)
             imgs = imgs.to(device).float() / 255.0  # uint8 to float32, 0 - 255 to 0.0 - 1.0
             targets = targets.to(device)
@@ -302,8 +334,8 @@ def train():
             mem = torch.cuda.memory_cached() / 1E9 if torch.cuda.is_available() else 0  # (GB)
             s = ('%10s' * 2 + '%10.3g' * 6) % (
                 '%g/%g' % (epoch, epochs - 1), '%.3gG' % mem, *mloss, len(targets), img_size)
-            pbar.set_description(s)
-
+            print(s)
+            # pbar.set_description(s)
             # end batch ------------------------------------------------------------------------------------------------
 
         # Update scheduler
@@ -408,8 +440,9 @@ def prebias():
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--epochs', type=int, default=150)  # 500200 batches at bs 16, 117263 images = 273 epochs
+    parser.add_argument('--epochs', type=int, default=180)  # 500200 batches at bs 16, 117263 images = 273 epochs
     parser.add_argument('--batch-size', type=int, default=8)  # effective bs = batch_size * accumulate = 16 * 4 = 64
+
     parser.add_argument('--accumulate', type=int, default=4, help='batches to accumulate before optimizing')
     parser.add_argument('--cfg', type=str, default='cfg/yolov3-spp-{}cls_syn.cfg', help='*.cfg path')
     parser.add_argument('--data', type=str, default='data_xview/{}_cls/xview_{}_{}.data', help='*.data path')
@@ -417,8 +450,8 @@ if __name__ == '__main__':
     parser.add_argument('--weights_dir', type=str, default='weights/{}_cls/{}_{}/', help='to save weights path')
     parser.add_argument('--result_dir', type=str, default='result_output/{}_cls/{}_{}/', help='to save result files path')
 
-    parser.add_argument("--syn_ratio", type=float, default=0, help="ratio of synthetic data: 0.25, 0.5, 0.75, 1.0  0")
-    parser.add_argument('--syn_display_type', type=str, default='syn', help='syn_texture, syn_color, syn (match 0)')
+    parser.add_argument("--syn_ratio", type=float, default=0.75, help="ratio of synthetic data: 0.25, 0.5, 0.75, 1.0  0")
+    parser.add_argument('--syn_display_type', type=str, default='syn_texture', help='syn_texture, syn_color, syn (match 0)')
 
     parser.add_argument('--multi_scale', action='store_true', help='adjust (67% - 150%) img_size every 10 batches')
     parser.add_argument('--img_size', type=int, default=608, help='inference size (pixels)') # 416 608
