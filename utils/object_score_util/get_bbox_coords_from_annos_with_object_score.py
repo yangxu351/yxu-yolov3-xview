@@ -5,7 +5,7 @@ import numpy as np
 import cv2
 import pandas as pd
 
-IMG_FORMAT = 'jpg'
+IMG_FORMAT = 'png'
 TEX_FORMAT = 'txt'
 
 

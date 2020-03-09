@@ -11,8 +11,8 @@ from matplotlib import pyplot as plt
 import json
 import shutil
 
-IMG_FORMAT = 'jpg'
-TXT_FORMAT = 'txt'
+IMG_FORMAT = '.png'
+TXT_FORMAT = '.txt'
 
 
 class MyEncoder(json.JSONEncoder):
@@ -53,7 +53,7 @@ def is_non_zero_file(fpath):
 
 
 def analyze_category_distribution_by_catid(catid, txt_path, json_number_file, json_name_file, px_thresh=6, whr_thres=4):
-    txt_files = np.sort(glob.glob(os.path.join(txt_path, "*.{}".format(TXT_FORMAT))))
+    txt_files = np.sort(glob.glob(os.path.join(txt_path, "*" + TXT_FORMAT)))
     plane_number_2_img_number_map = {}
     plane_number_2_txt_name_map = {}
     for i in range(len(txt_files)):
@@ -90,12 +90,12 @@ def draw_bar_of_image_numbers_for_certain_number_of_planes(png_name, cat_distrib
     :param cat_distribution_map:
     :return:
     '''
-    args = get_syn_args()
+    syn_args = get_syn_args()
     num_planes = np.array([int(k) for k in cat_distribution_map.keys()])
     num_planes_sort_indices = np.argsort(num_planes)
     num_images = np.array([v for v in cat_distribution_map.values()])
 
-    save_dir = args.txt_save_dir + 'data_distribution_fig/'
+    save_dir = syn_args.syn_txt_save_dir + 'data_distribution_fig/'
     if not os.path.exists(save_dir):
         os.mkdir(save_dir)
 
@@ -113,9 +113,9 @@ def draw_bar_of_image_numbers_for_certain_number_of_planes(png_name, cat_distrib
     ax.legend()
     xlabel = 'Number of Airplanes'
     ylabel = "Number of Images"
-    plt.title(title, literal_eval(args.font2))
-    plt.ylabel(ylabel, literal_eval(args.font2))
-    plt.xlabel(xlabel, literal_eval(args.font2))
+    plt.title(title, literal_eval(syn_args.font2))
+    plt.ylabel(ylabel, literal_eval(syn_args.font2))
+    plt.xlabel(xlabel, literal_eval(syn_args.font2))
     plt.tight_layout(pad=0.4, w_pad=3.0, h_pad=3.0)
     plt.grid()
     plt.savefig(os.path.join(save_dir, png_name))
@@ -142,7 +142,7 @@ def compare_bar_of_image_numbers_for_certain_number_of_planes(png_name, cat_dist
     num_images_syn = np.array([v for v in cat_distribution_map_syn.values()])
     num_images_syn = num_images_syn[num_planes_syn_sort_indices]
     syn_args = get_syn_args()
-    save_dir = syn_args.txt_save_dir + 'data_distribution_fig/'
+    save_dir = syn_args.syn_txt_save_dir + 'data_distribution_fig/'
     if not os.path.exists(save_dir):
         os.mkdir(save_dir)
 
@@ -189,10 +189,10 @@ def rename_images_groundtruth(cities, streets, tile_size=608, resolution=0.3):
         gt_path = os.path.join(syn_args.syn_plane_img_anno_dir,
                                '{}_{}_{}_annos_step{}'.format(syn_args.syn_display_type, cities[i], streets[i],
                                                               step_size))
-        rgb_files = np.sort(glob.glob(os.path.join(rgb_path, '*.{}'.format(IMG_FORMAT))))
+        rgb_files = np.sort(glob.glob(os.path.join(rgb_path, '*{}'.format(IMG_FORMAT))))
         rgb_names = [os.path.basename(f) for f in rgb_files]
 
-        gt_files = np.sort(glob.glob(os.path.join(gt_path, '*.{}'.format(IMG_FORMAT))))
+        gt_files = np.sort(glob.glob(os.path.join(gt_path, '*{}'.format(IMG_FORMAT))))
         gt_names = [os.path.basename(f) for f in gt_files]
 
         for ix, f in enumerate(rgb_files):
@@ -202,6 +202,29 @@ def rename_images_groundtruth(cities, streets, tile_size=608, resolution=0.3):
         for ix, f in enumerate(gt_files):
             new_name = gt_names[ix].replace(gt_suffix, '')
             os.rename(f, os.path.join(gt_path, new_name))
+
+
+def rename_folder(dir):
+    folder_names = os.listdir(dir)
+    for f in folder_names:
+        src_name = syn_args.syn_display_type[:-1] + '_'
+        dst_name = syn_args.syn_display_type + '_'
+        os.rename(os.path.join(dir, f), os.path.join(dir, f.replace(src_name, dst_name)))
+
+
+def rename_color_texture_groundtruth(tile_size=608, resolution=0.3):
+    cl_prefix = 'color_'
+    tx_prefix = 'texture_'
+    step_size = tile_size * resolution
+    gt_path = os.path.join(syn_args.syn_plane_img_anno_dir,
+                           'syn_color_francisco_200_annos_step{}'.format(step_size))
+
+    gt_files = np.sort(glob.glob(os.path.join(gt_path, '*{}'.format(IMG_FORMAT))))
+    gt_names = [os.path.basename(f) for f in gt_files]
+
+    for ix, f in enumerate(gt_files):
+        new_name = gt_names[ix].replace(tx_prefix, cl_prefix)
+        os.rename(f, os.path.join(gt_path, new_name))
 
 
 def merge_clean_origin_syn_image_files(file_path, cities, streets, tile_size=608, resolution=0.3, white_thresh=0.5):
@@ -239,18 +262,18 @@ def merge_clean_origin_syn_image_files(file_path, cities, streets, tile_size=608
     for i in range(len(cities)):
         image_path = os.path.join(file_path,
                                   image_folder_name.format(syn_args.syn_display_type, cities[i], streets[i], step))
-        image_files = np.sort(glob.glob(os.path.join(image_path, '*.{}'.format(IMG_FORMAT))))
+        image_files = np.sort(glob.glob(os.path.join(image_path, '*{}'.format(IMG_FORMAT))))
         for img in image_files:
             shutil.copy(img, des_img_path)
 
         lbl_path = os.path.join(file_path,
                                 label_folder_name.format(syn_args.syn_display_type, cities[i], streets[i], step))
-        lbl_files = np.sort(glob.glob(os.path.join(lbl_path, '*.{}'.format(IMG_FORMAT))))
+        lbl_files = np.sort(glob.glob(os.path.join(lbl_path, '*{}'.format(IMG_FORMAT))))
 
         for lbl in lbl_files:
             shutil.copy(lbl, des_lbl_path)
 
-    all_images = np.sort(glob.glob(os.path.join(des_img_path, '*.{}'.format(IMG_FORMAT))))
+    all_images = np.sort(glob.glob(os.path.join(des_img_path, '*{}'.format(IMG_FORMAT))))
     for ix, f in enumerate(all_images):
         img = io.imread(f)
         img = color.rgb2gray(img)
@@ -287,7 +310,7 @@ def group_object_annotation_and_draw_bbox():
 
     gbc.get_object_bbox_after_group(lbl_path, save_txt_path, class_label=0, min_region=syn_args.min_region,
                                     link_r=syn_args.link_r)
-    gt_files = np.sort(glob.glob(os.path.join(lbl_path, '*.{}'.format(IMG_FORMAT))))
+    gt_files = np.sort(glob.glob(os.path.join(lbl_path, '*{}'.format(IMG_FORMAT))))
     bbox_folder_name = 'minr{}_linkr{}_{}_all_annos_with_bbox_step{}'.format(syn_args.min_region, syn_args.link_r,
                                                                              syn_args.syn_display_type, step)
     save_bbx_path = os.path.join(syn_args.syn_plane_gt_bbox_dir, bbox_folder_name)
@@ -303,42 +326,67 @@ def group_object_annotation_and_draw_bbox():
         gbc.plot_img_with_bbx(g, txt_file, save_bbx_path)
 
 
+def draw_bbx_on_rgb_images():
+    step = syn_args.tile_size * syn_args.resolution
+    img_folder_name = '{}_all_images_step{}'.format(syn_args.syn_display_type, step)
+    img_path = os.path.join(syn_args.syn_plane_img_anno_dir, img_folder_name)
+    img_files = np.sort(glob.glob(os.path.join(img_path, '*{}'.format(IMG_FORMAT))))
+    img_names = [os.path.basename(f) for f in img_files]
+
+    txt_folder_name = 'minr{}_linkr{}_{}_all_annos_txt_step{}'.format(syn_args.min_region, syn_args.link_r,
+                                                                      syn_args.syn_display_type, step)
+    txt_path = os.path.join(syn_args.syn_plane_txt_dir, txt_folder_name)
+
+    bbox_folder_name = 'minr{}_linkr{}_{}_all_images_with_bbox_step{}'.format(syn_args.min_region, syn_args.link_r,
+                                                                              syn_args.syn_display_type, step)
+    save_bbx_path = os.path.join(syn_args.syn_plane_gt_bbox_dir, bbox_folder_name)
+    if not os.path.exists(save_bbx_path):
+        os.makedirs(save_bbx_path)
+    else:
+        shutil.rmtree(save_bbx_path)
+        os.makedirs(save_bbx_path)
+
+    for ix, f in enumerate(img_files):
+        txt_file = os.path.join(txt_path, img_names[ix].replace(IMG_FORMAT, TXT_FORMAT))
+        gbc.plot_img_with_bbx(f, txt_file, save_bbx_path)
+
+
 def clean_annos_txt_copy_imgs_files():
     step = syn_args.tile_size * syn_args.resolution
     src_dir = os.path.join(syn_args.syn_plane_txt_dir,
                            'minr{}_linkr{}_{}_all_annos_txt_step{}'.format(syn_args.min_region, syn_args.link_r,
                                                                            syn_args.syn_display_type, step))
-    src_files = glob.glob(os.path.join(src_dir, '*.{}'.format(TXT_FORMAT)))
+    src_files = glob.glob(os.path.join(src_dir, '*{}'.format(TXT_FORMAT)))
 
     img_folder_name = '{}_all_images_step{}'.format(syn_args.syn_display_type, step)
     lbl_folder_name = '{}_all_annos_step{}'.format(syn_args.syn_display_type, step)
     img_path = os.path.join(syn_args.syn_plane_img_anno_dir, img_folder_name)
     lbl_path = os.path.join(syn_args.syn_plane_img_anno_dir, lbl_folder_name)
-    if not os.path.exists(syn_args.annos_save_dir):
-        os.mkdir(syn_args.annos_save_dir)
+    if not os.path.exists(syn_args.syn_annos_save_dir):
+        os.mkdir(syn_args.syn_annos_save_dir)
     else:
-        shutil.rmtree(syn_args.annos_save_dir)
-        os.mkdir(syn_args.annos_save_dir)
+        shutil.rmtree(syn_args.syn_annos_save_dir)
+        os.mkdir(syn_args.syn_annos_save_dir)
 
     for sf in src_files:
         if is_non_zero_file(sf):
-            shutil.copy(sf, syn_args.annos_save_dir)
+            shutil.copy(sf, syn_args.syn_annos_save_dir)
         else:
-            os.remove(os.path.join(lbl_path, sf.split('/')[-1].replace('.{}'.format(TXT_FORMAT),
-                                                                       '.{}'.format(IMG_FORMAT))))
-            os.remove(os.path.join(img_path, sf.split('/')[-1].replace('.{}'.format(TXT_FORMAT),
-                                                                       '.{}'.format(IMG_FORMAT))))
+            os.remove(os.path.join(lbl_path, sf.split('/')[-1].replace(TXT_FORMAT,
+                                                                       IMG_FORMAT)))
+            os.remove(os.path.join(img_path, sf.split('/')[-1].replace(TXT_FORMAT,
+                                                                       IMG_FORMAT)))
             os.remove(sf)
     ####------- copy to images data folder
-    all_images = np.sort(glob.glob(os.path.join(img_path, '*.{}'.format(IMG_FORMAT))))
-    if not os.path.exists(syn_args.annos_save_dir):
-        os.mkdir(syn_args.images_save_dir)
+    all_images = np.sort(glob.glob(os.path.join(img_path, '*{}'.format(IMG_FORMAT))))
+    if not os.path.exists(syn_args.syn_annos_save_dir):
+        os.mkdir(syn_args.syn_images_save_dir)
     else:
-        shutil.rmtree(syn_args.images_save_dir)
-        os.mkdir(syn_args.images_save_dir)
+        shutil.rmtree(syn_args.syn_images_save_dir)
+        os.mkdir(syn_args.syn_images_save_dir)
 
     for f in all_images:
-        shutil.copy(f, syn_args.images_save_dir)
+        shutil.copy(f, syn_args.syn_images_save_dir)
 
 
 # def group_object_annotation_and_draw_bbox():
@@ -397,7 +445,7 @@ def clean_annos_txt_copy_imgs_files():
 #                 if is_non_zero_file(sf):
 #                     shutil.copy(sf, dst_dir)
 #                     if copy:
-#                         shutil.copy(sf, syn_args.annos_save_dir)
+#                         shutil.copy(sf, syn_args.syn_annos_save_dir)
 #                 else:
 #                     os.remove(os.path.join(img_path, sf.split('/')[-1].replace('.{}'.format(TXT_FORMAT),
 #                                                                                '.{}'.format(IMG_FORMAT))))
@@ -416,7 +464,7 @@ def clean_annos_txt_copy_imgs_files():
 #             for sf in src_files:
 #                 shutil.copy(sf, dst_dir)
 #                 if copy:
-#                     shutil.copy(sf, syn_args.images_save_dir)
+#                     shutil.copy(sf, syn_args.syn_images_save_dir)
 
 
 def get_syn_args():
@@ -433,18 +481,21 @@ def get_syn_args():
     parser.add_argument("--syn_plane_gt_bbox_dir", type=str, help="gt images with bbox of synthetic airplanes",
                         default='/media/lab/Yang/data/synthetic_data/Airplanes_gt_bbox/{}/')
 
-    parser.add_argument("--images_save_dir", type=str, help="rgb images of synthetic airplanes",
+    parser.add_argument("--syn_images_save_dir", type=str, help="rgb images of synthetic airplanes",
                         default='/media/lab/Yang/data/xView_YOLO/images/{}_{}/')
-    parser.add_argument("--annos_save_dir", type=str, help="gt of synthetic airplanes",
+    parser.add_argument("--syn_annos_save_dir", type=str, help="gt of synthetic airplanes",
                         default='/media/lab/Yang/data/xView_YOLO/labels/{}/{}_{}_cls_xcycwh/')
-    parser.add_argument("--txt_save_dir", type=str, help="gt related files of synthetic airplanes",
+    parser.add_argument("--syn_txt_save_dir", type=str, help="gt related files of synthetic airplanes",
                         default='/media/lab/Yang/data/xView_YOLO/labels/{}/{}_{}_cls/')
 
-    parser.add_argument("--data_save_dir", type=str, help="to save data files",
+    parser.add_argument("--data_xview_dir", type=str, help="to save data files",
+                        default='/media/lab/Yang/code/yolov3/data_xview/{}_cls/')
+
+    parser.add_argument("--syn_data_list_dir", type=str, help="to syn data list files",
                         default='/media/lab/Yang/code/yolov3/data_xview/{}_{}_cls/')
 
     parser.add_argument("--results_dir", type=str, help="to save category files",
-                        default='/media/lab/Yang/code/yolov3/result_output/{}_{}_cls/')
+                        default='/media/lab/Yang/code/yolov3/result_output/{}_cls/{}_{}/')
 
     parser.add_argument("--cat_sample_dir", type=str, help="to save figures",
                         default='/media/lab/Yang/data/xView_YOLO/cat_samples/')
@@ -460,10 +511,10 @@ def get_syn_args():
     parser.add_argument("--seed", type=int, default=1024, help="random seed")
     parser.add_argument("--tile_size", type=int, default=608, help="image size")  # 300 416
 
-    parser.add_argument("--syn_display_type", type=str, default='syn_texture',
-                        help="syn_texture, syn_color, syn_mixed, syn (match 0)")
-    parser.add_argument("--syn_ratio", type=float, default=0.25,
-                        help="ratio of synthetic data: 0.25, 0.5, 0.75, 1.0  0")
+    parser.add_argument("--syn_display_type", type=str, default='syn',
+                        help="syn_texture, syn_color, syn_mixed, syn_color0, syn_texture0, syn (match 0)")  # ######*********************change
+    parser.add_argument("--syn_ratio", type=float, default=0,
+                        help="ratio of synthetic data: 0.25, 0.5, 0.75, 1.0  0")  # ######*********************change
 
     parser.add_argument("--min_region", type=int, default=100, help="the smallest #pixels (area) to form an object")
     parser.add_argument("--link_r", type=int, default=15,
@@ -480,25 +531,32 @@ def get_syn_args():
 
     syn_args.cities = literal_eval(syn_args.cities)
     syn_args.streets = literal_eval(syn_args.streets)
-    syn_args.images_save_dir = syn_args.images_save_dir.format(syn_args.tile_size, syn_args.syn_display_type)
-    syn_args.annos_save_dir = syn_args.annos_save_dir.format(syn_args.tile_size, syn_args.syn_display_type,
-                                                             syn_args.class_num)
-    syn_args.txt_save_dir = syn_args.txt_save_dir.format(syn_args.tile_size, syn_args.syn_display_type,
-                                                         syn_args.class_num)
 
-    if not os.path.exists(syn_args.images_save_dir):
-        os.makedirs(syn_args.images_save_dir)
+    syn_args.data_xview_dir = syn_args.data_xview_dir.format(syn_args.class_num)
+    syn_args.syn_images_save_dir = syn_args.syn_images_save_dir.format(syn_args.tile_size, syn_args.syn_display_type)
+    syn_args.syn_annos_save_dir = syn_args.syn_annos_save_dir.format(syn_args.tile_size, syn_args.syn_display_type,
+                                                                     syn_args.class_num)
+    syn_args.syn_txt_save_dir = syn_args.syn_txt_save_dir.format(syn_args.tile_size, syn_args.syn_display_type,
+                                                                 syn_args.class_num)
+    syn_args.results_dir = syn_args.results_dir.format(syn_args.class_num, syn_args.syn_display_type,
+                                                       syn_args.syn_ratio)
 
-    if not os.path.exists(syn_args.annos_save_dir):
-        os.makedirs(syn_args.annos_save_dir)
+    if not os.path.exists(syn_args.syn_images_save_dir):
+        os.makedirs(syn_args.syn_images_save_dir)
 
-    if not os.path.exists(syn_args.txt_save_dir):
-        os.makedirs(syn_args.txt_save_dir)
+    if not os.path.exists(syn_args.syn_annos_save_dir):
+        os.makedirs(syn_args.syn_annos_save_dir)
+
+    if not os.path.exists(syn_args.syn_txt_save_dir):
+        os.makedirs(syn_args.syn_txt_save_dir)
+
+    if not os.path.exists(syn_args.results_dir):
+        os.makedirs(syn_args.results_dir)
 
     if syn_args.syn_ratio:
-        syn_args.data_save_dir = syn_args.data_save_dir.format(syn_args.syn_display_type, syn_args.class_num)
-        if not os.path.exists(syn_args.data_save_dir):
-            os.mkdir(syn_args.data_save_dir)
+        syn_args.syn_data_list_dir = syn_args.syn_data_list_dir.format(syn_args.syn_display_type, syn_args.class_num)
+        if not os.path.exists(syn_args.syn_data_list_dir):
+            os.mkdir(syn_args.syn_data_list_dir)
 
     syn_args.syn_plane_img_anno_dir = syn_args.syn_plane_img_anno_dir.format(syn_args.syn_display_type)
     syn_args.syn_plane_txt_dir = syn_args.syn_plane_txt_dir.format(syn_args.syn_display_type)
@@ -553,12 +611,25 @@ if __name__ == "__main__":
     # rename_images_groundtruth(syn_args.cities, syn_args.streets, syn_args.tile_size, syn_args.resolution)
 
     '''
-    remove labels that contain more than 80% white pixels
+    rename francisco syn_color ground truth
+    '''
+    # rename_color_texture_groundtruth(syn_args.tile_size, syn_args.resolution)
+
+    '''
+    rename folder
+    syn_texture_ --> syn_texture0_
+    '''
+    # rename_folder(syn_args.syn_plane_img_anno_dir)
+    # rename_folder(syn_args.syn_plane_txt_dir)
+    # rename_folder(syn_args.syn_plane_gt_bbox_dir)
+
+    '''
+    remove labels that contain more than 50% white pixels (next time for 20%)
     clean up useless images
     '''
-    # white_thresh = 0.5
-    # merge_clean_origin_syn_image_files(syn_args.syn_plane_img_anno_dir, syn_args.cities, syn_args.streets,
-    #                                    syn_args.tile_size, syn_args.resolution, white_thresh)
+    white_thresh = 0.5
+    merge_clean_origin_syn_image_files(syn_args.syn_plane_img_anno_dir, syn_args.cities, syn_args.streets,
+                                       syn_args.tile_size, syn_args.resolution, white_thresh)
 
     '''
     group annotation files, generate bbox for each object, 
@@ -573,23 +644,30 @@ if __name__ == "__main__":
     # clean_annos_txt_copy_imgs_files()
 
     '''
+    check bbox for each image files
+    draw image with gt bbox 
+    '''
+    # draw_bbx_on_rgb_images()
+
+    '''
     analyze synthetic data distribution
     '''
     # catid = 0
     # whr_thres = 4  # 3
     # px_thresh = 6  # 4
-    # # txt_path = syn_args.annos_save_dir
+    # # txt_path = syn_args.syn_annos_save_dir
     # step = syn_args.tile_size * syn_args.resolution
     # json_number_file = os.path.join(syn_args.syn_plane_txt_dir,
     #                                 '{}_number_of_cat_{}_to_imagenumber_map_inputsize{}.json'.format(
     #                                     syn_args.syn_display_type, catid, syn_args.tile_size))
     # json_name_file = os.path.join(syn_args.syn_plane_txt_dir,
-    #                               '{}_number_of_cat_{}_to_imagetxt_map_inputsize{}.json'.format(syn_args.syn_display_type,
-    #                                                                                             catid, syn_args.tile_size))
+    #                               '{}_number_of_cat_{}_to_imagetxt_map_inputsize{}.json'.format(
+    #                                   syn_args.syn_display_type,
+    #                                   catid, syn_args.tile_size))
     # for i in range(len(syn_args.cities)):
     #     txt_path = os.path.join(syn_args.syn_plane_txt_dir,
     #                             'minr{}_linkr{}_{}_all_annos_txt_step{}'.format(syn_args.min_region, syn_args.link_r,
-    #                                                                         syn_args.syn_display_type, step))
+    #                                                                             syn_args.syn_display_type, step))
     #
     #     analyze_category_distribution_by_catid(catid, txt_path, json_number_file, json_name_file, px_thresh, whr_thres)
 
@@ -599,9 +677,11 @@ if __name__ == "__main__":
     # catid = 0
     # png_name = '{}_cat_{}_nubmers_imagesnumber_dis.png'.format(syn_args.syn_display_type, catid)
     # cat_distribution_map = json.load(open(os.path.join(syn_args.syn_plane_txt_dir,
-    #                          '{}_number_of_cat_{}_to_imagenumber_map_inputsize{}.json'.format(syn_args.syn_display_type, catid, syn_args.tile_size))))
+    #                                                    '{}_number_of_cat_{}_to_imagenumber_map_inputsize{}.json'.format(
+    #                                                        syn_args.syn_display_type, catid, syn_args.tile_size))))
     #
-    # draw_bar_of_image_numbers_for_certain_number_of_planes(png_name, cat_distribution_map, legend='{}'.format(syn_args.syn_display_type))
+    # draw_bar_of_image_numbers_for_certain_number_of_planes(png_name, cat_distribution_map,
+    #                                                        legend=syn_args.syn_display_type)
 
     ''''
     compare xview and synthetic aircraft distribution

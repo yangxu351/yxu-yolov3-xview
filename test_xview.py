@@ -42,12 +42,12 @@ def get_opt():
     parser.add_argument('--weights_dir', type=str, default='weights/{}_cls/{}_{}/', help='to save weights path')
     parser.add_argument('--result_dir', type=str, default='result_output/{}_cls/{}_{}/', help='to save result files path')
     parser.add_argument('--writer_dir', type=str, default='writer_output/{}_cls/{}_{}/', help='*events* path')
-    parser.add_argument("--syn_ratio", type=float, default=0.75, help="ratio of synthetic data: 0 0.25, 0.5, 0.75, 1.0")
-    parser.add_argument('--syn_display_type', type=str, default='syn_texture', help='syn, syn_texture, syn_color')
+    parser.add_argument("--syn_ratio", type=float, default=0.5, help="ratio of synthetic data: 0 0.25, 0.5, 0.75")
+    parser.add_argument('--syn_display_type', type=str, default='syn_texture0', help='syn_texture0, syn_color0, syn_texture, syn_color, syn_mixed, syn')
 
     parser.add_argument('--conf-thres', type=float, default=0.001, help='object confidence threshold')
     parser.add_argument('--iou-thres', type=float, default=0.5, help='IOU threshold for NMS')
-    parser.add_argument('--save-json', action='store_true', help='save a cocoapi-compatible JSON results file')
+    parser.add_argument('--save_json', action='store_true', help='save a cocoapi-compatible JSON results file')
     parser.add_argument('--task', default='test', help="'test', 'study', 'benchmark'")
     parser.add_argument('--device', default='', help='device id (i.e. 0 or 0,1) or cpu')
     opt = parser.parse_args()
@@ -55,7 +55,7 @@ def get_opt():
 
     opt.cfg = opt.cfg.format(opt.class_num)
 
-    opt.save_json = opt.save_json or any([x in opt.data for x in ['xview_{}_{}.data'.format(opt.syn_display_type, opt.syn_ratio)]])
+    opt.save_json = True # opt.save_json or any([x in opt.data for x in ['xview_{}_{}.data'.format(opt.syn_display_type, opt.syn_ratio)]])
     opt.weights_dir = opt.weights_dir.format(opt.class_num, opt.syn_display_type, opt.syn_ratio)
     opt.writer_dir = opt.writer_dir.format(opt.class_num, opt.syn_display_type, opt.syn_ratio)
     opt.data = opt.data.format(opt.class_num, opt.syn_display_type, opt.syn_ratio)
@@ -64,14 +64,22 @@ def get_opt():
     opt.label_dir = opt.label_dir + '{}/{}_cls/{}_{}/'.format(opt.img_size, opt.class_num, opt.syn_display_type, opt.syn_ratio)
     return opt
 
+#fixme
+# def get_val_imgid_by_name(image_name, opt=None):
+#     image_id_name_maps = json.load(
+#         open(os.path.join(opt.label_dir, 'all_image_ids_names_dict_{}cls.json'.format(opt.class_num))))
+#     img_ids = [int(k) for k in image_id_name_maps.keys()]
+#     img_names = [v for v in image_id_name_maps.values()]
+#     return img_ids[img_names.index(image_name)]
 
-def get_val_imgid_by_name(image_name, opt=None):
-    image_id_name_maps = json.load(
-        open(os.path.join(opt.label_dir, 'all_image_ids_names_dict_{}cls.json'.format(opt.class_num))))
-    img_ids = [int(k) for k in image_id_name_maps.keys()]
-    img_names = [v for v in image_id_name_maps.values()]
-    return img_ids[img_names.index(image_name)]
 
+def get_val_imgid_by_name(path, name):
+    # print(path)
+    val_files = pd.read_csv(path, header=None).to_numpy()
+    # print('val_files 0', val_files[0])
+    val_names = [os.path.basename(vf[0]) for vf in val_files]
+    img_id = val_names.index(name)
+    return img_id
 
 def test(cfg,
          data,
@@ -201,21 +209,24 @@ def test(cfg,
                 # fixme
                 # print('paths[si]', paths[si]) #  /media/lab/Yang/data/xView_YOLO/images/608/1094_11.jpg
                 # image_id = int(Path(paths[si]).stem.split('_')[-1])
-                #fixme
-                # image_name = paths[si].split('/')[-1]
-                # image_id = get_val_imgid_by_name(image_name, opt)
+
                 image_name = paths[si].split('/')[-1]
-                image_id = si
+                image_id = get_val_imgid_by_name(path, image_name)
 
                 box = pred[:, :4].clone()  # xyxy
                 scale_coords(imgs[si].shape[1:], box, shapes[si][0], shapes[si][1])  # to original shape
                 box = xyxy2xywh(box)  # xywh
                 box[:, :2] -= box[:, 2:] / 2  # xy center to top-left corner # xtlytlwh
                 for di, d in enumerate(pred):
-                    jdict.append({'image_id': image_id,
+                    #fixme
+                    # jdict.append({'image_id': image_id,
+                    #               'category_id': xview_classes[int(d[5])],
+                    #               'bbox': [floatn(x, 3) for x in box[di]],
+                    #               'score': floatn(d[4], 5)})  # conf
+                    jdict.append({'image_name': image_name, # image_id,
                                   'category_id': xview_classes[int(d[5])],
                                   'bbox': [floatn(x, 3) for x in box[di]],
-                                  'score': floatn(d[4], 5)})  # conf
+                                  'score': floatn(d[4], 5)})
 
             # Assign all predictions as incorrect
             correct = torch.zeros(len(pred), niou, dtype=torch.bool)

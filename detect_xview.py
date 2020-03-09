@@ -7,6 +7,7 @@ from utils.utils_xview import *
 from utils.torch_utils import *
 from ast import literal_eval
 
+
 def detect(save_img=False):
     img_size = (320, 192) if ONNX_EXPORT else opt.img_size  # (320, 192) or (416, 256) or (608, 352) for (height, width)
     # out, source, weights, half, view_img, save_txt = opt.output, opt.source, opt.weights, opt.half, opt.view_img, opt.save_txt
@@ -133,7 +134,7 @@ def detect(save_img=False):
                             file.write(('%g ' * 6 + '\n') % (*xyxy, cls, conf))
 
                     if save_img or view_img:  # Add bbox to image
-                        label = '%.2f %s' % (names[int(cls)], conf)
+                        label = '%s %.2f' % (names[int(cls)], conf)
                         plot_one_box(xyxy, im0, label=label, color=colors[int(cls)])
 
             # Print time (inference + NMS)
@@ -182,7 +183,7 @@ if __name__ == '__main__':
 
     parser.add_argument('--class_num', type=int, default=1, help='class number') # 60
     parser.add_argument("--syn_ratio", type=float, default=0.25, help="ratio of synthetic data: 0 0.25, 0.5, 0.75, 1.0")
-    parser.add_argument('--syn_display_type', type=str, default='syn_texture', help='syn, syn_texture, syn_color')
+    parser.add_argument('--syn_display_type', type=str, default='syn_color', help='syn, syn_texture, syn_color')
 
     parser.add_argument('--conf-thres', type=float, default=0.3, help='object confidence threshold')
     parser.add_argument('--iou-thres', type=float, default=0.5, help='IOU threshold for NMS')

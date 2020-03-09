@@ -1133,8 +1133,9 @@ def get_fp_fn_separtely_by_cat_ids(cat_ids, iou_thres=0.5, score_thres=0.3, whr_
 
 
 def get_fp_fn_list(cat_ids, img_name, img_id, result_list, confusion_matrix=None, iou_thres=0.5, score_thres=0.3,
-                   whr_thres=3):
+                   px_thres=6, whr_thres=4):
     ''' ground truth '''
+    args = get_args()
     good_gt_list = []
     df_lbl = pd.read_csv(args.annos_save_dir + img_name.replace('.jpg', '.txt'), delimiter=' ', header=None)
     df_lbl.iloc[:, 1:] = df_lbl.iloc[:, 1:] * args.input_size
@@ -1148,7 +1149,7 @@ def get_fp_fn_list(cat_ids, img_name, img_id, result_list, confusion_matrix=None
         for dx in range(df_lbl_rare.shape[0]):
             w, h = df_lbl_rare[dx, 3] - df_lbl_rare[dx, 1], df_lbl_rare[dx, 4] - df_lbl_rare[dx, 2]
             whr = np.maximum(w / (h + 1e-16), h / (w + 1e-16))
-            if whr <= whr_thres and w >= 4 and h >= 4:
+            if whr <= whr_thres and w >= px_thres and h >= px_thres:
                 good_gt_list.append(df_lbl_rare[dx, :])
     gt_boxes = []
     if good_gt_list:
@@ -1246,7 +1247,7 @@ def get_fp_fn_list(cat_ids, img_name, img_id, result_list, confusion_matrix=None
     return fp_list, fn_list
 
 
-def get_confusion_matrix(cat_ids, iou_thres=0.5, score_thres=0.3, whr_thres=3):
+def get_confusion_matrix(cat_ids, iou_thres=0.5, score_thres=0.3, px_thres=4, whr_thres=3):
     '''
     https://github.com/svpino/tf_object_detection_cm/blob/83cb8a1cf3a5abd24b18a5fc79b5ce99e8a9b317/confusion_matrix.py#L37
     '''
@@ -1293,7 +1294,7 @@ def get_confusion_matrix(cat_ids, iou_thres=0.5, score_thres=0.3, whr_thres=3):
 
         # fixme
         fp_list, fn_list = get_fp_fn_list(cat_ids, img_name, img_id, result_list, confusion_matrix, iou_thres,
-                                          score_thres, whr_thres)
+                                          score_thres, px_thres, whr_thres)
 
         rcids = []
         img = cv2.imread(args.images_save_dir + img_name)

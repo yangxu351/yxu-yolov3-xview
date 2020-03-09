@@ -1,0 +1,9 @@
+train=./data_xview/1_cls/xview_syn_texture_0.5/xview_syn_texture_0.5_train_img.txt
+train_label=./data_xview/1_cls/xview_syn_texture_0.5/xview_syn_texture_0.5_train_lbl.txt
+syn_0_xview_number=344
+classes=1
+valid=./data_xview/1_cls/xviewval_img.txt
+valid_label=./data_xview/1_cls/xviewval_lbl.txt
+names=./data_xview/1_cls/xview.names
+backup=backup/
+eval=xview

@@ -5,12 +5,14 @@ import os
 import pandas as pd
 from ast import literal_eval
 from matplotlib import pyplot as plt
+import cv2
 import json
 import shutil
 from utils.data_process_distribution_vis_util import process_wv_coco_for_yolo_patches_no_trnval as pwv
 from utils.xview_synthetic_util import preprocess_synthetic_data_distribution as pps
+from utils.utils_xview import coord_iou
 
-IMG_SUFFIX = '.jpg'
+IMG_SUFFIX = '.png'
 TXT_SUFFIX = '.txt'
 
 
@@ -18,8 +20,8 @@ def combine_xview_syn_by_ratio(syn_ratio, separate=False):
     syn_args = pps.get_syn_args()
     args = pwv.get_args()
     # print(os.path.join(syn_args.data_save_dir, '{}_{}_img.txt'.format(syn_args.syn_display_type, syn_args.class_num)))
-    syn_img_txt = pd.read_csv(open(os.path.join(syn_args.data_save_dir, '{}_{}_img.txt'.format(syn_args.syn_display_type, syn_args.class_num))), header=None).to_numpy()
-    syn_lbl_txt = pd.read_csv(open(os.path.join(syn_args.data_save_dir, '{}_{}_lbl.txt'.format(syn_args.syn_display_type, syn_args.class_num))), header=None).to_numpy()
+    syn_img_txt = pd.read_csv(open(os.path.join(syn_args.syn_data_list_dir, '{}_{}_img.txt'.format(syn_args.syn_display_type, syn_args.class_num))), header=None).to_numpy()
+    syn_lbl_txt = pd.read_csv(open(os.path.join(syn_args.syn_data_list_dir, '{}_{}_lbl.txt'.format(syn_args.syn_display_type, syn_args.class_num))), header=None).to_numpy()
     syn_total_num = syn_img_txt.shape[0]
     np.random.seed(syn_args.seed)
     perm_indices = np.random.permutation(syn_total_num)
@@ -29,8 +31,12 @@ def combine_xview_syn_by_ratio(syn_ratio, separate=False):
     xview_lbl_txt = pd.read_csv(open(os.path.join(args.data_save_dir, 'xviewtrain_lbl.txt')), header=None).to_numpy()
     xview_trn_num = xview_img_txt.shape[0]
 
-    f_img = open(os.path.join(args.data_save_dir, 'xview_{}_{}_train_img.txt'.format(syn_args.syn_display_type, syn_ratio)), 'w')
-    f_lbl = open(os.path.join(args.data_save_dir, 'xview_{}_{}_train_lbl.txt'.format(syn_args.syn_display_type, syn_ratio)), 'w')
+    xview_syn_trn_txt_list_dir = os.path.join(args.data_save_dir, 'xview_{}_{}'.format(syn_args.syn_display_type, syn_ratio))
+    if not os.path.exists(xview_syn_trn_txt_list_dir):
+        os.mkdir(xview_syn_trn_txt_list_dir)
+
+    f_img = open(os.path.join(xview_syn_trn_txt_list_dir, 'xview_{}_{}_train_img.txt'.format(syn_args.syn_display_type, syn_ratio)), 'w')
+    f_lbl = open(os.path.join(xview_syn_trn_txt_list_dir, 'xview_{}_{}_train_lbl.txt'.format(syn_args.syn_display_type, syn_ratio)), 'w')
 
     for ix in range(xview_trn_num):
         f_img.write("%s\n" % xview_img_txt[ix, 0])
@@ -42,18 +48,63 @@ def combine_xview_syn_by_ratio(syn_ratio, separate=False):
     f_img.close()
     f_lbl.close()
 
-    shutil.copy(os.path.join(args.data_save_dir, 'xview_{}_{}_train_img.txt'.format(syn_args.syn_display_type, syn_ratio)),
-                os.path.join(args.data_list_save_dir, 'xview_{}_{}_train_img.txt'.format(syn_args.syn_display_type, syn_ratio)))
-    shutil.copy(os.path.join(args.data_save_dir, 'xview_{}_{}_train_lbl.txt'.format(syn_args.syn_display_type, syn_ratio)),
-                os.path.join(args.data_list_save_dir, 'xview_{}_{}_train_lbl.txt'.format(syn_args.syn_display_type, syn_ratio)))
+    xview_syn_data_list_dir = os.path.join(args.data_list_save_dir, 'xview_{}_{}'.format(syn_args.syn_display_type, syn_ratio))
+    if not os.path.exists(xview_syn_data_list_dir):
+        os.mkdir(xview_syn_data_list_dir)
+    shutil.copy(os.path.join(xview_syn_trn_txt_list_dir, 'xview_{}_{}_train_img.txt'.format(syn_args.syn_display_type, syn_ratio)),
+                os.path.join(xview_syn_data_list_dir, 'xview_{}_{}_train_img.txt'.format(syn_args.syn_display_type, syn_ratio)))
+    shutil.copy(os.path.join(xview_syn_trn_txt_list_dir, 'xview_{}_{}_train_lbl.txt'.format(syn_args.syn_display_type, syn_ratio)),
+                os.path.join(xview_syn_data_list_dir, 'xview_{}_{}_train_lbl.txt'.format(syn_args.syn_display_type, syn_ratio)))
+
+
+def mv_list():
+    '''
+    move the *.txt to des dir if necessary
+    :return:
+    '''
+    syn_args = pps.get_syn_args()
+    args = pwv.get_args()
+    srs = [0.25, 0.5, 0.75]
+    for syn_ratio in srs:
+        xview_syn_trn_txt_list_dir = os.path.join(args.data_save_dir, 'xview_{}_{}'.format(syn_args.syn_display_type, syn_ratio))
+        if not os.path.exists(xview_syn_trn_txt_list_dir):
+            os.mkdir(xview_syn_trn_txt_list_dir)
+        xview_syn_data_list_dir = os.path.join(args.data_list_save_dir, 'xview_{}_{}'.format(syn_args.syn_display_type, syn_ratio))
+        if not os.path.exists(xview_syn_data_list_dir):
+            os.mkdir(xview_syn_data_list_dir)
+        f_img = os.path.join(args.data_save_dir, 'xview_{}_{}_train_img.txt'.format(syn_args.syn_display_type, syn_ratio))
+        f_lbl = os.path.join(args.data_save_dir, 'xview_{}_{}_train_lbl.txt'.format(syn_args.syn_display_type, syn_ratio))
+        f_data = os.path.join(args.data_save_dir, 'xview_{}_{}.data'.format(syn_args.syn_display_type, syn_ratio))
+        t_img = os.path.join(xview_syn_trn_txt_list_dir, 'xview_{}_{}_train_img.txt'.format(syn_args.syn_display_type, syn_ratio))
+        t_lbl = os.path.join(xview_syn_trn_txt_list_dir, 'xview_{}_{}_train_lbl.txt'.format(syn_args.syn_display_type, syn_ratio))
+        t_data = os.path.join(xview_syn_trn_txt_list_dir, 'xview_{}_{}.data'.format(syn_args.syn_display_type, syn_ratio))
+        if os.path.exists(f_img):
+            shutil.move(f_img, t_img)
+        if os.path.exists(f_lbl):
+            shutil.move(f_lbl, t_lbl)
+        if os.path.exists(f_data):
+            shutil.move(f_data, t_data)
+
+        xview_syn_data_list_dir = os.path.join(args.data_list_save_dir, 'xview_{}_{}'.format(syn_args.syn_display_type, syn_ratio))
+        if not os.path.exists(xview_syn_data_list_dir):
+            os.mkdir(xview_syn_data_list_dir)
+
+        src_img_txt = os.path.join(args.data_list_save_dir, 'xview_{}_{}_train_img.txt'.format(syn_args.syn_display_type, syn_ratio))
+        src_lbl_txt = os.path.join(args.data_list_save_dir, 'xview_{}_{}_train_lbl.txt'.format(syn_args.syn_display_type, syn_ratio))
+        dst_img_txt = os.path.join(args.data_list_save_dir, 'xview_{}_{}'.format(syn_args.syn_display_type, syn_ratio), 'xview_{}_{}_train_img.txt'.format(syn_args.syn_display_type, syn_ratio))
+        dst_lbl_txt = os.path.join(args.data_list_save_dir, 'xview_{}_{}'.format(syn_args.syn_display_type, syn_ratio), 'xview_{}_{}_train_lbl.txt'.format(syn_args.syn_display_type, syn_ratio))
+        if os.path.exists(src_img_txt):
+            shutil.move(src_img_txt, dst_img_txt)
+        if os.path.exists(src_lbl_txt):
+            shutil.move(src_lbl_txt, dst_lbl_txt)
 
 
 def collect_syn_data(data_name):
     syn_args = pps.get_syn_args()
-    images_save_dir = syn_args.images_save_dir
-    txt_save_dir = syn_args.txt_save_dir
-    data_save_dir = syn_args.data_save_dir
-    lbl_path = syn_args.annos_save_dir
+    images_save_dir = syn_args.syn_images_save_dir
+    txt_save_dir = syn_args.syn_txt_save_dir
+    data_save_dir = syn_args.syn_data_list_dir
+    lbl_path = syn_args.syn_annos_save_dir
 
     all_files = glob.glob(images_save_dir + '*'+IMG_SUFFIX)
     num_files = len(all_files)
@@ -76,18 +127,18 @@ def collect_syn_data(data_name):
                     os.path.join(data_save_dir, '{}_lbl.txt'.format(data_name)))
 
 
-def create_xview_syn_data(sr):
+def create_xview_syn_data(dt, sr):
     args = pwv.get_args()
     syn_args = pps.get_syn_args()
     if sr:
-        data_txt = open(os.path.join(args.data_save_dir, 'xview_{}_{}.data'.format(syn_args.syn_display_type, sr)), 'w')
-        data_txt.write('train=./data_xview/{}_cls/xview_{}_{}_train_img.txt\n'.format(syn_args.class_num, syn_args.syn_display_type, sr))
-        data_txt.write('train_label=./data_xview/{}_cls/xview_{}_{}_train_lbl.txt\n'.format(syn_args.class_num, syn_args.syn_display_type, sr))
+        data_txt = open(os.path.join(args.data_save_dir, 'xview_{}_{}'.format(dt, sr), 'xview_{}_{}.data'.format(dt, sr)), 'w')
+        data_txt.write('train=./data_xview/{}_cls/xview_{}_{}/xview_{}_{}_train_img.txt\n'.format(syn_args.class_num, dt, sr, dt, sr))
+        data_txt.write('train_label=./data_xview/{}_cls/xview_{}_{}/xview_{}_{}_train_lbl.txt\n'.format(syn_args.class_num, dt, sr, dt, sr))
     else: # sr==0
-        syn_args.syn_display_type = 'syn'
-        data_txt = open(os.path.join(args.data_save_dir, 'xview_{}_{}.data'.format(syn_args.syn_display_type, sr)), 'w')
-        data_txt.write('train=./data_xview/{}_cls/xviewtrain_img.txt\n'.format(syn_args.class_num, syn_args.syn_display_type, sr))
-        data_txt.write('train_label=./data_xview/{}_cls/xviewtrain_lbl.txt\n'.format(syn_args.class_num, syn_args.syn_display_type, sr))
+        dt = 'syn'
+        data_txt = open(os.path.join(args.data_save_dir, 'xview_{}_{}.data'.format(dt, sr)), 'w')
+        data_txt.write('train=./data_xview/{}_cls/xviewtrain_img.txt\n'.format(syn_args.class_num, dt, sr))
+        data_txt.write('train_label=./data_xview/{}_cls/xviewtrain_lbl.txt\n'.format(syn_args.class_num, dt, sr))
 
     df = pd.read_csv(os.path.join(args.data_save_dir, 'xviewtrain_img.txt'), header=None)
     data_txt.write('syn_0_xview_number=%s\n' % str(df.shape[0]))
@@ -98,6 +149,7 @@ def create_xview_syn_data(sr):
     data_txt.write('backup=backup/\n')
     data_txt.write('eval=xview')
     data_txt.close()
+
 
 if __name__ == "__main__":
 
@@ -133,7 +185,6 @@ if __name__ == "__main__":
     backup xview-plane dataset 
     clean xview-plane dataset with certain constraints
     '''
-    # args = pwv.get_args()
     # catid = 0
     # whr_thres = 4  # 3
     # px_thres = 6  # 4
@@ -160,18 +211,24 @@ if __name__ == "__main__":
     # collect_syn_data(data_name)
 
     '''
-    combine xview & synthetic dataset [0.25, 0.5, 0.75, 1.0]
+    combine xview & synthetic dataset [0.25, 0.5, 0.75]
     '''
-    # syn_ratio = [0.25, 0.5, 0.75, 1.0]
+    # syn_ratio = [0.25, 0.5, 0.75]
     # for sr in syn_ratio:
     #     combine_xview_syn_by_ratio(sr)
+
+    '''move the *.txt to des dir if necessary'''
+    # mv_list()
 
     ''''
     create xview_syn_texture_0.25.data
     '''
-    syn_ratio = [0,  0.25, 0.5, 0.75, 1.0]
-    for sr in syn_ratio:
-        create_xview_syn_data(sr)
+    # syn_ratio = [0.25, 0.5, 0.75]
+    # display_type = ['syn_texture', 'syn_color', 'syn_mixed', 'syn_texture0', 'syn_color0']
+    # for dt in display_type:
+    #     for sr in syn_ratio:
+    #         create_xview_syn_data(dt, sr)
 
-    # sr = 0
-    # create_xview_syn_data(sr)
+    # create_xview_syn_data('syn', 0)
+
+
