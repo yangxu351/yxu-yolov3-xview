@@ -268,10 +268,7 @@ def train():
         # pbar = tqdm(enumerate(dataloader), total=nb)  # progress bar
         # for i, (imgs, targets, paths, _) in pbar:
 
-        # pbar = tqdm(enumerate(gen_data.__next__()), total=nb)
-
         gen_data = infi_loop(dataloader)
-        # for (imgs, targets, paths) in next(gen_data):  # in pbar # batch -------------------------------------------------------------?????????????
         for i in range(nb):
             imgs, targets, paths = next(gen_data)
             ni = i + nb * epoch  # number integrated batches (since train start)
@@ -416,7 +413,7 @@ def train():
     #     if opt.bucket:
     #         os.system('gsutil cp %s %s gs://%s' % (fresults, opt.weights_dir + flast, opt.bucket))
 
-    plot_results(result_dir=opt.result_dir, png_name='results_{}_{}.png'.format(opt.syn_display_type, opt.syn_ratio))  # save as results.png
+    plot_results(result_dir=opt.result_dir, png_name='results_{}_{}.png'.format(opt.syn_display_type, opt.syn_ratio), class_num=opt.class_num)  # save as results.png
     print('%g epochs completed in %.3f hours.\n' % (epoch - start_epoch + 1, (time.time() - t0) / 3600))
     dist.destroy_process_group() if torch.cuda.device_count() > 1 else None
     torch.cuda.empty_cache()
@@ -460,8 +457,7 @@ def get_opt():
     # parser.add_argument('--json_file', type=str, default='/media/lab/Yang/data/xView_YOLO/', help='*.json path')
     # parser.add_argument('--label_dir', type=str, default='/media/lab/Yang/data/xView_YOLO/labels/', help='*.json path')
 
-    parser.add_argument('--rect', action='sto'
-                                         're_true', help='rectangular training')
+    parser.add_argument('--rect', action='store_true', help='rectangular training')
     parser.add_argument('--resume', action='store_true', default=False, help='resume training from last.pt')
     parser.add_argument('--nosave', action='store_true', help='only save final checkpoint')
     parser.add_argument('--notest', action='store_true', help='only test final epoch')
@@ -485,17 +481,17 @@ if __name__ == '__main__':
     # display_type = ['syn'] #'syn_mixed',
     # syn_ratio = [0]  # 0.75, 0.5,
     display_type = ['syn_texture0'] # ', 'syn_color0'
-    syn_ratio = [0.5]
+    syn_ratio = [0.75]
     for dt in display_type:
         for sr in syn_ratio:
             opt = get_opt()
             opt.syn_display_type = dt
             opt.syn_ratio = sr
             opt.cfg = opt.cfg.format(opt.class_num)
-            opt.weights_dir = opt.weights_dir.format(opt.class_num, opt.syn_display_type, opt.syn_ratio)
-            opt.writer_dir = opt.writer_dir.format(opt.class_num, opt.syn_display_type, opt.syn_ratio)
+            opt.weights_dir = opt.weights_dir.format(opt.class_num, opt.syn_display_type, opt.syn_ratio) + '/{}/'.format(time.strftime('%Y-%m-%d_%H.%M', time.localtime()))
+            opt.writer_dir = opt.writer_dir.format(opt.class_num, opt.syn_display_type, opt.syn_ratio) + '/{}/'.format(time.strftime('%Y-%m-%d_%H.%M', time.localtime()))
             opt.data = opt.data.format(opt.class_num, opt.syn_display_type, opt.syn_ratio, opt.syn_display_type, opt.syn_ratio)
-            opt.result_dir = opt.result_dir.format(opt.class_num, opt.syn_display_type, opt.syn_ratio)
+            opt.result_dir = opt.result_dir.format(opt.class_num, opt.syn_display_type, opt.syn_ratio) + '/{}/'.format(time.strftime('%Y-%m-%d_%H.%M', time.localtime()))
             # opt.json_file = opt.json_file + '{}/{}_cls/{}_{}/'.format(opt.img_size, opt.class_num, opt.syn_display_type, opt.syn_ratio)
             # opt.label_dir = opt.label_dir + '{}/{}_cls/{}_{}/'.format(opt.img_size, opt.class_num, opt.syn_display_type, opt.syn_ratio)
             results_file = os.path.join(opt.result_dir, 'results_{}_{}.txt'.format(opt.syn_display_type, opt.syn_ratio))
