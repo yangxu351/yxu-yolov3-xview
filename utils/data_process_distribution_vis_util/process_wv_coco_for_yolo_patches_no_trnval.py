@@ -34,6 +34,7 @@ import shutil
 import cv2
 import seaborn as sn
 import json
+from utils.object_score_util import get_bbox_coords_from_annos_with_object_score as gbc
 
 """
   A script that processes xView imagery. 
@@ -300,6 +301,55 @@ def clean_backup_xview_plane_with_constraints(catid, px_thres=6, whr_thres=4):
             os.remove(f)
             continue
         df_txt.to_csv(f, header=False, index=False, sep=' ')
+
+
+def check_xview_plane_drops():
+    args = get_args()
+    before_path = args.annos_save_dir[:-1] + '_backup/'
+    txt_path = '/media/lab/Yang/data/xView_YOLO/labels/{}'.format(args.input_size)
+    before_constrain = os.listdir(before_path)
+    after_constrain = os.listdir(args.annos_save_dir)
+    drop_list = [f for f in before_constrain if f not in after_constrain]
+    drop_rgb_dir = os.path.join(txt_path, '1_cls_drop', 'rgb')
+    if not os.path.exists(drop_rgb_dir):
+        os.makedirs(drop_rgb_dir)
+    drop_rgb_bbx_dir = os.path.join(txt_path, '1_cls_drop', 'rgb_bbx')
+    if not os.path.exists(drop_rgb_bbx_dir):
+        os.makedirs(drop_rgb_bbx_dir)
+    drop_lbl_dir = os.path.join(txt_path, '1_cls_drop', 'lbl')
+    if not os.path.exists(drop_lbl_dir):
+        os.makedirs(drop_lbl_dir)
+    xview_all_img_dir = '/media/lab/Yang/data/xView_YOLO/images/{}/'.format(args.input_size)
+    for f in drop_list:
+        shutil.copy(os.path.join(before_path, f), os.path.join(drop_lbl_dir, f))
+        im = f.replace('.txt', '.jpg')
+        shutil.copy(os.path.join(xview_all_img_dir, im),
+                    os.path.join(drop_rgb_dir, im))
+
+        gbc.plot_img_with_bbx(os.path.join(drop_rgb_dir, im), os.path.join(before_path, f), drop_rgb_bbx_dir)
+
+
+def recover_xview_val_list():
+    '''
+    recover xview val list with constriants of px_theres=4, whr_thres=3
+    :return:
+    '''
+    lbl_path = '/media/lab/Yang/data/xView_YOLO/labels/608/1_cls_xcycwh_backup/'
+    all_files = glob.glob(lbl_path + '*.txt')
+    all_names = [os.path.basename(v) for v in all_files]
+    txt_save_dir = '/media/lab/Yang/data/xView_YOLO/labels/608/1_cls/data_list/Feb_backup/first_data_set_backup/'
+    val_img_txt = open(os.path.join(txt_save_dir, 'xview_val_img.txt'), 'w')
+    val_lbl_txt = open(os.path.join(txt_save_dir, 'xview_val_lbl.txt'), 'w')
+
+    trn_lbl_list = pd.read_csv('/media/lab/Yang/code/yolov3/data_xview/1_cls/first_data_set_backup/xview_train_lbl.txt', header=None).loc[:, 0]
+    trn_lbl_names = [os.path.basename(f) for f in trn_lbl_list]
+    val_lbl_name = [v for v in all_names if v not in trn_lbl_names]
+    img_path = '/media/lab/Yang/data/xView_YOLO/images/608/'
+    for v in val_lbl_name:
+        val_lbl_txt.write('%s\n' % os.path.join(lbl_path, v))
+        val_img_txt.write('%s\n' % os.path.join(img_path, v.replace('.txt', '.jpg')))
+    val_lbl_txt.close()
+    val_img_txt.close()
 
 
 def create_xview_names(file_name='xview'):

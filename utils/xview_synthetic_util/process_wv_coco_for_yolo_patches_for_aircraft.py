@@ -10,10 +10,73 @@ import json
 import shutil
 from utils.data_process_distribution_vis_util import process_wv_coco_for_yolo_patches_no_trnval as pwv
 from utils.xview_synthetic_util import preprocess_synthetic_data_distribution as pps
+from utils.object_score_util import get_bbox_coords_from_annos_with_object_score as gbc
 from utils.utils_xview import coord_iou
 
 IMG_SUFFIX = '.png'
 TXT_SUFFIX = '.txt'
+
+
+def check_difference_of_first_second_dataset():
+    new_val = pd.read_csv('/data_xview/1_cls/second_dataset_backup/xviewval_img.txt', header=None)
+    new_val = list(new_val.loc[:, 0])
+    new_vname = [os.path.basename(f) for f in new_val]
+    new_val_lbl = pd.read_csv('/data_xview/1_cls/second_dataset_backup/xviewval_lbl.txt', header=None)
+    new_val_lbl = list(new_val_lbl.loc[:, 0])
+
+    new_trn = pd.read_csv('/data_xview/1_cls/second_dataset_backup/xviewtrain_img.txt', header=None)
+    new_trn = list(new_trn.loc[:, 0])
+    new_tname = [os.path.basename(f) for f in new_trn]
+    new_trn_lbl = pd.read_csv('/data_xview/1_cls/second_dataset_backup/xviewtrain_lbl.txt', header=None)
+    new_trn_lbl = list(new_trn_lbl.loc[:, 0])
+
+    old_val = pd.read_csv('/media/lab/Yang/code/yolov3/data_xview/1_cls/first_data_set_backup/xview_val_img.txt', header=None)
+    old_val = list(old_val.loc[:, 0])
+    old_vname = [os.path.basename(f) for f in old_val]
+    old_val_lbl = pd.read_csv('/media/lab/Yang/code/yolov3/data_xview/1_cls/first_data_set_backup/xview_val_lbl.txt', header=None)
+    old_val_lbl = list(old_val_lbl.loc[:, 0])
+
+    old_trn = pd.read_csv('/media/lab/Yang/code/yolov3/data_xview/1_cls/first_data_set_backup/xview_train_img.txt', header=None)
+    old_trn = list(old_trn.loc[:, 0])
+    old_tname = [os.path.basename(f) for f in old_trn]
+    old_trn_lbl = pd.read_csv('/media/lab/Yang/code/yolov3/data_xview/1_cls/first_data_set_backup/xview_train_lbl.txt', header=None)
+    old_trn_lbl = list(old_trn_lbl.loc[:, 0])
+
+    only_old_v = [v for v in old_vname if v not in new_vname]
+    only_old_t = [t for t in old_tname if t not in new_tname]
+    only_new_v = [v for v in new_vname if v not in old_vname]
+    only_new_t = [t for t in new_tname if t not in old_tname]
+    print('only_old_v', len(only_old_v))
+    print('only_old_t', len(only_old_t))
+    print('only_new_v', len(only_new_v))
+    print('only_new_t', len(only_new_t))
+
+    data_dir = '/media/lab/Yang/data/xView_YOLO/labels/608/1_cls_drop/'
+    only_old_t_dir = os.path.join(data_dir, 'only_in_old_trn')
+    if not os.path.exists(only_old_t_dir):
+        os.mkdir(only_old_t_dir)
+    only_old_v_dir = os.path.join(data_dir, 'only_in_old_val')
+    if not os.path.exists(only_old_v_dir):
+        os.mkdir(only_old_v_dir)
+    only_new_t_dir = os.path.join(data_dir, 'only_in_new_trn')
+    if not os.path.exists(only_new_t_dir):
+        os.mkdir(only_new_t_dir)
+    only_new_v_dir = os.path.join(data_dir, 'only_in_new_val')
+    if not os.path.exists(only_new_v_dir):
+        os.mkdir(only_new_v_dir)
+
+    for v in only_old_t:
+        # shutil.copy(old_trn[old_tname.index(v)], os.path.join(only_old_t_dir, v))
+        gbc.plot_img_with_bbx(old_trn[old_tname.index(v)], old_trn_lbl[old_tname.index(v)], only_old_t_dir)
+    for v in only_old_v:
+        # shutil.copy(old_val[old_vname.index(v)], os.path.join(only_old_v_dir, v))
+        gbc.plot_img_with_bbx(old_val[old_vname.index(v)], old_val_lbl[old_vname.index(v)], only_old_v_dir)
+    for v in only_new_t:
+        # shutil.copy(new_trn[new_tname.index(v)], os.path.join(only_new_t_dir, v))
+        gbc.plot_img_with_bbx(new_trn[new_tname.index(v)], new_trn_lbl[new_tname.index(v)], only_new_t_dir)
+    for v in only_new_v:
+        # shutil.copy(new_val[new_vname.index(v)], os.path.join(only_new_v_dir, v))
+        gbc.plot_img_with_bbx(new_val[new_vname.index(v)], new_val_lbl[new_vname.index(v)], only_new_v_dir)
 
 
 def combine_xview_syn_by_ratio(syn_ratio, separate=False):
@@ -182,13 +245,31 @@ if __name__ == "__main__":
     # pwv.remove_duplicate_gt_bbx(cat_id, syn = True)
 
     '''
-    backup xview-plane dataset 
+    backup xview-plane dataset ***********
     clean xview-plane dataset with certain constraints
     '''
     # catid = 0
     # whr_thres = 4  # 3
     # px_thres = 6  # 4
     # pwv.clean_backup_xview_plane_with_constraints(catid, px_thres, whr_thres)
+
+    '''
+    check xview aireplane dropped images
+    '''
+    # pwv.check_xview_plane_drops()
+
+    '''
+    recover xview val list with constriants of px_theres=4, whr_thres=3
+    regenerate_xview_val_list
+    '''
+    # pwv.recover_xview_val_list()
+
+
+    '''
+    check difference of first and second dataset
+    '''
+    # check_difference_of_first_second_dataset()
+
 
     '''
     create xview.names 
