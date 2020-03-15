@@ -469,6 +469,7 @@ def compute_loss(p, targets, model):  # predictions, targets, model
     ft = torch.cuda.FloatTensor if p[0].is_cuda else torch.Tensor
     lcls, lbox, lobj = ft([0]), ft([0]), ft([0])
     tcls, tbox, indices, anchor_vec = build_targets(model, targets)
+
     h = model.hyp  # hyperparameters
     arc = model.arc  # # (default, uCE, uBCE) detection architectures
     red = 'sum'  # Loss reduction (sum or mean)
@@ -501,7 +502,17 @@ def compute_loss(p, targets, model):  # predictions, targets, model
             pxy = torch.sigmoid(ps[:, 0:2])  # pxy = pxy * s - (s - 1) / 2,  s = 1.5  (scale_xy)
             pwh = torch.exp(ps[:, 2:4]).clamp(max=1E3) * anchor_vec[i]
             pbox = torch.cat((pxy, pwh), 1)  # predicted box
-            giou = bbox_iou(pbox.t(), tbox[i], x1y1x2y2=False, GIoU=True)  # giou computation
+            #fixme
+            # giou = bbox_iou(pbox.t(), tbox[i], x1y1x2y2=False, GIoU=True)  # giou computation
+            # print(giou)
+            # exit(0)
+            # print('tbox[i].size----', tbox[i].size)
+            # print('tbox[i]----', tbox[i])
+            if len(tbox[i].size()):
+                giou = bbox_iou(pbox.t(), tbox[i], x1y1x2y2=False, GIoU=True)  # giou computation
+            else:
+                giou = torch.zeros_like(tbox[i])
+            # print('giou----', giou)
             lbox += (1.0 - giou).sum() if red == 'sum' else (1.0 - giou).mean()  # giou loss
             # print('b, a, gj, gi', b, a, gj, gi)
             tobj[b, a, gj, gi] = giou.detach().type(tobj.dtype)
@@ -550,6 +561,11 @@ def compute_loss(p, targets, model):  # predictions, targets, model
 
 
 def build_targets(model, targets):
+    '''
+    :param model:
+    :param targets:
+    :return: tcls, tbox, indices, anchor_vec
+    '''
     # targets = [image, class, x, y, w, h]
 
     nt = len(targets)
@@ -1011,6 +1027,7 @@ def plot_images(imgs, targets, paths=None, fname='images.jpg'):
     # Plots training images overlaid with targets
     imgs = imgs.cpu().numpy()
     targets = targets.cpu().numpy()
+
     #fixme
     # targets = targets[targets[:, 1] == 2]  # plot only one class
 
@@ -1020,7 +1037,10 @@ def plot_images(imgs, targets, paths=None, fname='images.jpg'):
     ns = np.ceil(bs ** 0.5)  # number of subplots
 
     for i in range(bs):
-        boxes = xywh2xyxy(targets[targets[:, 0] == i, 2:6]).T
+        #fixme skip target is null
+        if not targets[i].shape[0]:
+            continue
+        boxes = xywh2xyxy(targets[targets[:, 0]==i, 2:6]).T
         boxes[[0, 2]] *= w
         boxes[[1, 3]] *= h
         plt.subplot(ns, ns, i + 1).imshow(imgs[i].transpose(1, 2, 0))

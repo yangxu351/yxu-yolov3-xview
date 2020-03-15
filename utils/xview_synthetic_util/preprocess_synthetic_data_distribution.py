@@ -389,84 +389,6 @@ def clean_annos_txt_copy_imgs_files():
         shutil.copy(f, syn_args.syn_images_save_dir)
 
 
-# def group_object_annotation_and_draw_bbox():
-#     '''
-#     group annotation files, generate bbox for each object,
-#
-#     and draw bbox for each ground truth files
-#     '''
-#     step = syn_args.tile_size * syn_args.resolution
-#     for i in range(len(syn_args.cities)):
-#         folder_name = '{}_{}_{}_annos_step{}'.format(syn_args.syn_display_type, syn_args.cities[i], syn_args.streets[i],
-#                                                      step)
-#         lbl_path = os.path.join(syn_args.syn_plane_img_anno_dir, folder_name)
-#         save_txt_path = os.path.join(syn_args.syn_plane_txt_dir,
-#                                      'minr{}_linkr{}_{}'.format(syn_args.min_region, syn_args.link_r, folder_name))
-#         if not os.path.exists(save_txt_path):
-#             os.makedirs(save_txt_path)
-#         gbc.get_object_bbox_after_group(lbl_path, save_txt_path, class_label=0, min_region=syn_args.min_region,
-#                                         link_r=syn_args.link_r)
-#
-#         gt_files = np.sort(glob.glob(os.path.join(lbl_path, '*.{}'.format(IMG_FORMAT))))
-#         save_bbx_path = os.path.join(syn_args.syn_plane_gt_bbox_dir,
-#                                      'minr{}_linkr{}_{}'.format(syn_args.min_region, syn_args.link_r, folder_name))
-#         if not os.path.exists(save_bbx_path):
-#             os.makedirs(save_bbx_path)
-#         for g in gt_files:
-#             gt_name = g.split('/')[-1]
-#             txt_name = gt_name.replace(IMG_FORMAT, TXT_FORMAT)
-#             txt_file = os.path.join(save_txt_path, txt_name)
-#             # if not is_non_zero_file(txt_file):
-#             #     # os.remove(g)
-#             #     os.remove(txt_file)
-#             #     continue
-#             # else:
-#             gbc.plot_img_with_bbx(g, txt_file, save_bbx_path)
-
-
-# def merge_txt_or_rgb_files(merge_type='txt', copy=True):
-#     step = syn_args.tile_size * syn_args.resolution
-#     if merge_type == 'txt':
-#         dst_dir = os.path.join(syn_args.syn_plane_txt_dir,
-#                                'minr{}_linkr{}_{}_all_annos_step{}'.format(syn_args.min_region, syn_args.link_r,
-#                                                                            syn_args.syn_display_type, step))
-#         if not os.path.exists(dst_dir):
-#             os.mkdir(dst_dir)
-#
-#         for i in range(len(syn_args.cities)):
-#             folder_name = 'minr{}_linkr{}_{}_{}_{}_annos_step{}'.format(syn_args.min_region, syn_args.link_r,
-#                                                                         syn_args.syn_display_type, syn_args.cities[i],
-#                                                                         syn_args.streets[i], step)
-#             src_files = glob.glob(os.path.join(syn_args.syn_plane_txt_dir, folder_name, '*.{}'.format(TXT_FORMAT)))
-#             img_folder_name = '{}_{}_{}_images_step{}'.format(syn_args.syn_display_type, syn_args.cities[i],
-#                                                               syn_args.streets[i], step)
-#             img_path = os.path.join(syn_args.syn_plane_img_anno_dir, img_folder_name)
-#             for sf in src_files:
-#                 if is_non_zero_file(sf):
-#                     shutil.copy(sf, dst_dir)
-#                     if copy:
-#                         shutil.copy(sf, syn_args.syn_annos_save_dir)
-#                 else:
-#                     os.remove(os.path.join(img_path, sf.split('/')[-1].replace('.{}'.format(TXT_FORMAT),
-#                                                                                '.{}'.format(IMG_FORMAT))))
-#                     os.remove(sf)
-#                     continue
-#     else:  # rgb
-#         dst_dir = os.path.join(syn_args.syn_plane_img_anno_dir,
-#                                '{}_all_images_step{}'.format(syn_args.syn_display_type, step))
-#         if not os.path.exists(dst_dir):
-#             os.mkdir(dst_dir)
-#
-#         for i in range(len(syn_args.cities)):
-#             folder_name = '{}_{}_{}_images_step{}'.format(syn_args.syn_display_type, syn_args.cities[i],
-#                                                           syn_args.streets[i], step)
-#             src_files = glob.glob(os.path.join(syn_args.syn_plane_img_anno_dir, folder_name, '*.{}'.format(IMG_FORMAT)))
-#             for sf in src_files:
-#                 shutil.copy(sf, dst_dir)
-#                 if copy:
-#                     shutil.copy(sf, syn_args.syn_images_save_dir)
-
-
 def get_syn_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--json_filepath", type=str, help="Filepath to GEOJSON coordinate file",
@@ -511,9 +433,11 @@ def get_syn_args():
     parser.add_argument("--seed", type=int, default=1024, help="random seed")
     parser.add_argument("--tile_size", type=int, default=608, help="image size")  # 300 416
 
-    parser.add_argument("--syn_display_type", type=str, default='syn',
-                        help="syn_texture, syn_color, syn_mixed, syn_color0, syn_texture0, syn (match 0)")  # ######*********************change
-    parser.add_argument("--syn_ratio", type=float, default=0,
+    # #####*********************change
+    parser.add_argument("--syn_display_type", type=str, default='syn_texture',
+                        help="syn_texture, syn_color, syn_mixed,  syn (match 0)")  #syn_color0, syn_texture0,
+    # ######*********************change
+    parser.add_argument("--syn_ratio", type=float, default=0.25,
                         help="ratio of synthetic data: 0.25, 0.5, 0.75, 1.0  0")  # ######*********************change
 
     parser.add_argument("--min_region", type=int, default=100, help="the smallest #pixels (area) to form an object")

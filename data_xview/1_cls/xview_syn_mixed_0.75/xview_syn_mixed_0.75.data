@@ -1,6 +1,6 @@
 train=./data_xview/1_cls/xview_syn_mixed_0.75/xview_syn_mixed_0.75_train_img.txt
 train_label=./data_xview/1_cls/xview_syn_mixed_0.75/xview_syn_mixed_0.75_train_lbl.txt
-syn_0_xview_number=344
+syn_0_xview_number=374
 classes=1
 valid=./data_xview/1_cls/xviewval_img.txt
 valid_label=./data_xview/1_cls/xviewval_lbl.txt

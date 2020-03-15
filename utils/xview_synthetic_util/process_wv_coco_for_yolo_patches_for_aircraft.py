@@ -79,7 +79,7 @@ def check_difference_of_first_second_dataset():
         gbc.plot_img_with_bbx(new_val[new_vname.index(v)], new_val_lbl[new_vname.index(v)], only_new_v_dir)
 
 
-def combine_xview_syn_by_ratio(syn_ratio, separate=False):
+def combine_xview_syn_by_ratio(syn_ratio):
     syn_args = pps.get_syn_args()
     args = pwv.get_args()
     # print(os.path.join(syn_args.data_save_dir, '{}_{}_img.txt'.format(syn_args.syn_display_type, syn_args.class_num)))
@@ -248,28 +248,25 @@ if __name__ == "__main__":
     backup xview-plane dataset ***********
     clean xview-plane dataset with certain constraints
     '''
-    # catid = 0
     # whr_thres = 4  # 3
     # px_thres = 6  # 4
-    # pwv.clean_backup_xview_plane_with_constraints(catid, px_thres, whr_thres)
+    # pwv.clean_backup_xview_plane_with_constraints(px_thres, whr_thres)
 
-    '''
+    ''' if necessary
     check xview aireplane dropped images
     '''
     # pwv.check_xview_plane_drops()
 
-    '''
+    ''' if necessary
     recover xview val list with constriants of px_theres=4, whr_thres=3
     regenerate_xview_val_list
     '''
     # pwv.recover_xview_val_list()
 
-
-    '''
+    ''' if necessary
     check difference of first and second dataset
     '''
     # check_difference_of_first_second_dataset()
-
 
     '''
     create xview.names 
@@ -293,19 +290,22 @@ if __name__ == "__main__":
 
     '''
     combine xview & synthetic dataset [0.25, 0.5, 0.75]
+    change syn_display_type manually ***
     '''
     # syn_ratio = [0.25, 0.5, 0.75]
     # for sr in syn_ratio:
     #     combine_xview_syn_by_ratio(sr)
 
-    '''move the *.txt to des dir if necessary'''
+    '''
+    move the *.txt to des dir if necessary
+    '''
     # mv_list()
 
     ''''
     create xview_syn_texture_0.25.data
     '''
     # syn_ratio = [0.25, 0.5, 0.75]
-    # display_type = ['syn_texture', 'syn_color', 'syn_mixed', 'syn_texture0', 'syn_color0']
+    # display_type = ['syn_texture', 'syn_color', 'syn_mixed']
     # for dt in display_type:
     #     for sr in syn_ratio:
     #         create_xview_syn_data(dt, sr)

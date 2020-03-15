@@ -271,12 +271,11 @@ def create_chips_and_txt_geojson_2_json(syn=False):
     json.dump(trn_instance, open(json_file, 'w'), ensure_ascii=False, indent=2, cls=MyEncoder)
 
 
-def clean_backup_xview_plane_with_constraints(catid, px_thres=6, whr_thres=4):
+def clean_backup_xview_plane_with_constraints(px_thres=6, whr_thres=4):
     '''
     backupu *.txt first
     then remove labels with some constraints
-    :param catid:
-    :param px_thres:
+    :param px_thres: each edge length must be larger than px_thres
     :param whr_thres:
     :return:
     '''
@@ -288,18 +287,27 @@ def clean_backup_xview_plane_with_constraints(catid, px_thres=6, whr_thres=4):
         for f in txt_files:
             shutil.copy(f, backup_path)
     for f in txt_files:
-        if not pps.is_non_zero_file(f):
-            os.remove(f)
-            continue
-        df_txt = pd.read_csv(f, header=None, delimiter=' ')
-        for i in df_txt.index:
-            bbx = df_txt.loc[i, 1:] * args.input_size
-            bbx_wh = max(bbx.loc[3]/bbx.loc[4], bbx.loc[4]/bbx.loc[3])
-            if bbx.loc[3] <= px_thres or bbx.loc[4] <= px_thres or bbx_wh > whr_thres:
-                df_txt = df_txt.drop(i)
-        if df_txt.empty:
-            os.remove(f)
-            continue
+        #fixme second data process  # keep the zero label files --> to ensure the robust of the detector
+        # if not pps.is_non_zero_file(f):
+        #     os.remove(f)
+        #     continue
+        if pps.is_non_zero_file(f):
+            df_txt = pd.read_csv(f, header=None, delimiter=' ')
+            for i in df_txt.index:
+                bbx = df_txt.loc[i, 1:] * args.input_size
+                bbx_wh = max(bbx.loc[3]/bbx.loc[4], bbx.loc[4]/bbx.loc[3])
+                if bbx.loc[3] <= px_thres or bbx.loc[4] <= px_thres or bbx_wh > whr_thres:
+                    df_txt = df_txt.drop(i)
+        #fixme # keep the zero label files --> to ensure the robust of the detector
+        # if not pps.is_non_zero_file(f) or df_txt.empty:
+        #     df_txt = open(f, 'w')
+        #     df_txt.write('%d %d %d %.8f %.8f\n' % (0, 0, 0, (1/args.input_size), (1/args.input_size))) # catid, xc, yc, w, h
+        #     df_txt.close()
+
+            #fixme second data process
+            # os.remove(f)
+            # continue
+        # else:
         df_txt.to_csv(f, header=False, index=False, sep=' ')
 
 
@@ -1903,7 +1911,6 @@ if __name__ == "__main__":
     # cat_ids = np.arange(0, 6).tolist()
     # for cat_id in cat_ids:
     #     check_duplicate_gt_bbx_for_60_classes(cat_id, iou_thres, px_thres, whr_thres)
-
 
     '''
     remove duplicate ground truth bbox by cat_id
