@@ -190,13 +190,45 @@ def collect_syn_data(data_name):
                     os.path.join(data_save_dir, '{}_lbl.txt'.format(data_name)))
 
 
-def create_xview_syn_data(dt, sr):
+
+def create_mismatch_syn_labels(mis_ratio, ratio=0.25, trial=3):
+    cat_distribution_map_syn = json.load(open(os.path.join(args.syn_plane_txt_dir,
+                                                           '{}_number_of_cat_0_to_imagenumber_map_inputsize{}.json'.format(
+                                                               args.syn_display_type, args.tile_size))))
+    plane_number = np.sum([v for v in cat_distribution_map_syn.values()])
+    display_type = ['syn_texture', 'syn_color', 'syn_mixed']
+    xview_num = 374
+    for mr in mis_ratio:
+        for dt in display_type:
+            df_lbl = pd.read_csv(os.path.join(args.data_xview_dir, 'xview_{}_{}'.format(dt, ratio), 'xview_{}_{}_train_lbl.txt'.format(dt, ratio)), header=None)
+            syn_num = df_lbl.shape[0] - xview_num
+            mis_num = int(plane_number*mr)
+            np.random.seed(args.seed)
+            syn_rdn_indices = np.random.permutation(syn_num)
+            syn_files = list(df_lbl.loc[xview_num:, 0])
+            for t in range(trial):
+                save_txt_dir = '/media/lab/Yang/data/xView_YOLO/labels/608/syn_1_cls_xcycwh_mismatch/{}_{}_mismatch{}_{}/'.format(dt, ratio, mr, t)
+                if not os.path.exists(save_txt_dir):
+                    os.makedirs(save_txt_dir)
+                for i in range(mis_num):
+                    syn_f = syn_files[syn_rdn_indices[i]]
+                    df_txt = pd.read_csv(syn_f, header=None, sep=' ')
+                    file_name = os.path.basename(syn_files[syn_rdn_indices[i]])
+                    df_txt.drop(df_txt.index[np.random.randint(0, df_txt.shape[0])])
+                    df_txt.to_csv(os.path.join(save_txt_dir, file_name), header=None, index=None, sep=' ')
+
+                    df_lbl.loc[df_lbl.loc[df_lbl[0] == syn_f].index, 0] = os.path.join(save_txt_dir, file_name)
+                df_lbl.to_csv(os.path.join(args.data_xview_dir, 'xview_{}_{}'.format(dt, ratio), 'xview_{}_{}_train_lbl_mismatch{}_{}.txt'.format(dt, ratio, mr, t)),
+                              header=None, index=None)
+
+
+def create_xview_syn_data(dt, sr, comments=''):
     args = pwv.get_args()
     syn_args = pps.get_syn_args()
     if sr:
-        data_txt = open(os.path.join(args.data_save_dir, 'xview_{}_{}'.format(dt, sr), 'xview_{}_{}.data'.format(dt, sr)), 'w')
+        data_txt = open(os.path.join(args.data_save_dir, 'xview_{}_{}'.format(dt, sr), 'xview_{}_{}{}.data'.format(dt, sr, comments)), 'w')
         data_txt.write('train=./data_xview/{}_cls/xview_{}_{}/xview_{}_{}_train_img.txt\n'.format(syn_args.class_num, dt, sr, dt, sr))
-        data_txt.write('train_label=./data_xview/{}_cls/xview_{}_{}/xview_{}_{}_train_lbl.txt\n'.format(syn_args.class_num, dt, sr, dt, sr))
+        data_txt.write('train_label=./data_xview/{}_cls/xview_{}_{}/xview_{}_{}_train_lbl{}.txt\n'.format(syn_args.class_num, dt, sr, dt, sr, comments))
     else: # sr==0
         dt = 'syn'
         data_txt = open(os.path.join(args.data_save_dir, 'xview_{}_{}.data'.format(dt, sr)), 'w')
@@ -297,6 +329,14 @@ if __name__ == "__main__":
     #     combine_xview_syn_by_ratio(sr)
 
     '''
+    create mismatch syn labels 
+    '''
+    # trial = 3
+    # mis_ratio = [0.025, 0.05] # mismatch_ratio
+    # ratio = 0.25 # syn ratio
+    # create_mismatch_syn_labels(mis_ratio, ratio, trial)
+
+    '''
     move the *.txt to des dir if necessary
     '''
     # mv_list()
@@ -311,5 +351,21 @@ if __name__ == "__main__":
     #         create_xview_syn_data(dt, sr)
 
     # create_xview_syn_data('syn', 0)
+
+    # syn_ratio = 0.25
+    # display_type = ['syn_texture', 'syn_color', 'syn_mixed']
+    # mis_ratio = [0.025, 0.05]
+    # trial = 3
+    # for i in range(trial):
+    #     for dt in display_type:
+    #         for mr in mis_ratio:
+    #             comments = '_mismatch{}_{}'.format(mr, i)
+    #             create_xview_syn_data(dt, syn_ratio, comments)
+
+
+
+
+
+
 
 

@@ -58,14 +58,14 @@ def get_object_bbox_after_group(label_path, save_path, class_label=0, min_region
         f_txt.close()
 
 
-def plot_img_with_bbx(img_file, lbl_file, save_path):
+def plot_img_with_bbx(img_file, lbl_file, save_path, label_index=False):
     if not is_non_zero_file(lbl_file):
         # print(is_non_zero_file(lbl_file))
         return
     img = cv2.imread(img_file) # h, w, c
     h, w = img.shape[:2]
 
-    df_lbl = pd.read_csv(lbl_file, header=None, delimiter=' ').to_numpy()
+    df_lbl = pd.read_csv(lbl_file, header=None, delimiter=' ').to_numpy() # delimiter , error_bad_lines=False
     df_lbl[:, 1] = df_lbl[:, 1]*w
     df_lbl[:, 3] = df_lbl[:, 3]*w
 
@@ -80,13 +80,19 @@ def plot_img_with_bbx(img_file, lbl_file, save_path):
     # print(df_lbl.shape[0])
     # df_lbl_uni = np.unique(df_lbl[:, 1:],axis=0)
     # print('after unique ', df_lbl_uni.shape[0])
+
     for ix in range(df_lbl.shape[0]):
         cat_id = int(df_lbl[ix, 0])
         gt_bbx = df_lbl[ix, 1:].astype(np.int64)
         img = cv2.rectangle(img, (gt_bbx[0], gt_bbx[1]), (gt_bbx[2], gt_bbx[3]), (255, 0, 0), 2)
-        cv2.putText(img, text='{}'.format(cat_id), org=(gt_bbx[0] + 10, gt_bbx[1] + 10),
+        pl = ''
+        if label_index:
+            pl = '{}'.format(ix)
+        else:
+             pl = '{}'.format(cat_id)
+        cv2.putText(img, text=pl, org=(gt_bbx[0] + 10, gt_bbx[1] + 10),
                     fontFace=cv2.FONT_HERSHEY_SIMPLEX,
-                    fontScale=0.5, thickness=1, lineType=cv2.LINE_AA, color=(0, 0, 255))
+                    fontScale=0.5, thickness=1, lineType=cv2.LINE_AA, color=(0, 255, 255))
     cv2.imwrite(os.path.join(save_path, img_file.split('/')[-1]), img)
 
 

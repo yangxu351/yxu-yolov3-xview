@@ -65,7 +65,7 @@ def get_val_imgid_by_name(name):
     return img_id
 
 
-def check_prd_gt_iou_xview_syn(dt, sr, image_name, comments, score_thres=0.3, iou_thres=0.5, px_thres=6, whr_thres=4):
+def check_prd_gt_iou_xview_syn(dt, sr, image_name, comments, txt_path, score_thres=0.3, iou_thres=0.5, px_thres=6, whr_thres=4):
     '''
     Note that there is possible some lower iou may cover the lager iou computed previously, remember to keep the larger iou
     :param image_name:
@@ -78,17 +78,21 @@ def check_prd_gt_iou_xview_syn(dt, sr, image_name, comments, score_thres=0.3, io
     args = pwv.get_args()
     #fixme
     # results_dir = syn_args.results_dir.format(syn_args.class_num, dt, sr)
-    results_dir = glob.glob(os.path.join(syn_args.results_dir.format(syn_args.class_num, dt, sr), '*' + comments))[0]
+    if comments:
+        suffix = comments[:12]
+    else:
+        suffix = comments
+    results_dir = glob.glob(os.path.join(syn_args.results_dir.format(syn_args.class_num, dt, sr), '*' + suffix))[0]
 
     # fixme
     # img_id = get_val_imgid_by_name(image_name)
     img = cv2.imread(args.images_save_dir + image_name)
     img_size = img.shape[0]
     good_gt_list = []
-    if pps.is_non_zero_file(args.annos_save_dir + image_name.replace('.jpg', TXT_SUFFIX)):
-        gt_cat = pd.read_csv(args.annos_save_dir + image_name.replace('.jpg', TXT_SUFFIX), header=None, delimiter=' ')
+    if pps.is_non_zero_file(os.path.join(txt_path, image_name.replace('.jpg', TXT_SUFFIX))):
+        gt_cat = pd.read_csv(os.path.join(txt_path, image_name.replace('.jpg', TXT_SUFFIX)), header=None, delimiter=' ')
         gt_cat = gt_cat.to_numpy()
-        gt_cat[:, 1:] = gt_cat[:, 1:] * img_size
+        gt_cat[:, 1:5] = gt_cat[:, 1:5] * img_size
         gt_cat[:, 1] = gt_cat[:, 1] - gt_cat[:, 3] / 2
         gt_cat[:, 2] = gt_cat[:, 2] - gt_cat[:, 4] / 2
         gt_cat[:, 3] = gt_cat[:, 1] + gt_cat[:, 3]
@@ -113,6 +117,10 @@ def check_prd_gt_iou_xview_syn(dt, sr, image_name, comments, score_thres=0.3, io
     for g in good_gt_list:
         g_bbx = [int(x) for x in g[1:]]
         img = cv2.rectangle(img, (g_bbx[0], g_bbx[1]), (g_bbx[2], g_bbx[3]), (0, 255, 255), 2)  # yellow
+        if len(g_bbx) == 5:
+            cv2.putText(img, text='{}'.format(g_bbx[4]), org=(g_bbx[0] + 10, g_bbx[1] + 20),
+                        fontFace=cv2.FONT_HERSHEY_SIMPLEX,
+                        fontScale=0.5, thickness=1, lineType=cv2.LINE_AA, color=(0, 255, 255))  # yellow
 
     p_iou = {}  # to keep the larger iou
 
@@ -196,10 +204,14 @@ def plot_val_results_iou_comp(comments=''):
     fig.show()
 
 
-def get_fp_fn_list_airplane(dt, sr, comments='', catid=0, iou_thres=0.5, score_thres=0.3, px_thres=6, whr_thres=4):
+def get_fp_fn_list_airplane(dt, sr, comments='', with_model=False, catid=0, iou_thres=0.5, score_thres=0.3, px_thres=6, whr_thres=4):
     ''' ground truth '''
     if comments:
-        results_dir = glob.glob(os.path.join(syn_args.results_dir.format(syn_args.class_num, dt, sr), '*' + comments))[0]
+        if with_model:
+            suffix = comments[:12]
+        else:
+            suffix = comments
+        results_dir = glob.glob(os.path.join(syn_args.results_dir.format(syn_args.class_num, dt, sr), '*' + suffix))[0]
     else:
         results_dir = syn_args.results_dir.format(syn_args.class_num, dt, sr)
 
@@ -213,7 +225,11 @@ def get_fp_fn_list_airplane(dt, sr, comments='', catid=0, iou_thres=0.5, score_t
     print('len result_list', len(result_list))
     del result_allcat_list
 
-    val_labels = pd.read_csv(os.path.join(syn_args.data_xview_dir, 'xviewval_lbl.txt'), header=None)
+    if with_model:
+        val_lbl_txt = 'xviewval_lbl_with_model.txt'
+    else:
+        val_lbl_txt = 'xviewval_lbl.txt'
+    val_labels = pd.read_csv(os.path.join(syn_args.data_xview_dir, val_lbl_txt), header=None)
     img_name_2_fp_list_maps = {}
     img_name_2_fn_list_maps = {}
     for ix, vl in enumerate(val_labels.iloc[:, 0]):
@@ -227,7 +243,7 @@ def get_fp_fn_list_airplane(dt, sr, comments='', catid=0, iou_thres=0.5, score_t
         good_gt_list = []
         if is_non_zero_file(vl):
             df_lbl = pd.read_csv(vl, header=None, delimiter=' ')
-            df_lbl.iloc[:, 1:] = df_lbl.iloc[:, 1:] * syn_args.tile_size
+            df_lbl.iloc[:, 1:5] = df_lbl.iloc[:, 1:5] * syn_args.tile_size
             df_lbl.iloc[:, 1] = df_lbl.iloc[:, 1] - df_lbl.iloc[:, 3] / 2
             df_lbl.iloc[:, 2] = df_lbl.iloc[:, 2] - df_lbl.iloc[:, 4] / 2
             df_lbl.iloc[:, 3] = df_lbl.iloc[:, 1] + df_lbl.iloc[:, 3]
@@ -241,8 +257,10 @@ def get_fp_fn_list_airplane(dt, sr, comments='', catid=0, iou_thres=0.5, score_t
         gt_boxes = []
         if good_gt_list:
             good_gt_arr = np.array(good_gt_list)
-            gt_boxes = good_gt_arr[:, 1:]  # x1y1x2y2
+            gt_boxes = good_gt_arr[:, 1:5]  # x1y1x2y2
             gt_classes = good_gt_arr[:, 0]
+            if with_model:
+                gt_models = good_gt_arr[:, -1]
 
         prd_list = [rx for rx in result_list if rx['image_name'] == img_name]
         prd_lbl_list = []
@@ -302,6 +320,8 @@ def get_fp_fn_list_airplane(dt, sr, comments='', catid=0, iou_thres=0.5, score_t
                 c_box_iou = [gt_classes[i]]
                 c_box_iou.extend(gt_boxes[i])
                 c_box_iou.append(0)  # [cat_id, box[0:4], iou]
+                if with_model:
+                    c_box_iou.append(gt_models[i])
                 img_name_2_fn_list_maps[img_name].append(c_box_iou)
 
         for j in range(len(dt_boxes)):
@@ -336,11 +356,11 @@ def get_fp_fn_list_airplane(dt, sr, comments='', catid=0, iou_thres=0.5, score_t
     json.dump(img_name_2_fn_list_maps, open(fn_json_file, 'w'), ensure_ascii=False, indent=2, cls=MyEncoder)
 
 
-def plot_val_img_with_fp_fn_bbox(dt, sr):
+def plot_val_img_with_fp_fn_bbox(dt, sr, comments='', with_model=False):
     fp_fn_list_dir = os.path.join(args.txt_save_dir,
-                                  'val_img_2_fp_fn_list/{}_{}/'.format(dt, sr))
+                                  'val_img_2_fp_fn_list', comments, '{}_{}'.format(dt, sr))
     img_fp_fn_bbox_path = os.path.join(args.cat_sample_dir,
-                                       'val_img_with_fp_fn_bbox/{}_{}/'.format(dt,
+                                       'val_img_with_fp_fn_bbox', comments, '{}_{}'.format(dt,
                                                                                sr))
     if not os.path.exists(img_fp_fn_bbox_path):
         os.makedirs(img_fp_fn_bbox_path)
@@ -364,9 +384,10 @@ def plot_val_img_with_fp_fn_bbox(dt, sr):
             gr_bx = [int(x) for x in gr[1:-1]]
             img = cv2.rectangle(img, (gr_bx[0], gr_bx[1]), (gr_bx[2], gr_bx[3]), fn_color, 2)  # w1, h1, w2, h2
             # img = pwv.drawrect(img, (gr_bx[0], gr_bx[1]), (gr_bx[2], gr_bx[3]), fn_color, thickness=2, style='dotted')
-            cv2.putText(img, text=str(int(gr[0])), org=(gr_bx[2] - 8, gr_bx[3] - 5),
-                        fontFace=cv2.FONT_HERSHEY_SIMPLEX,
-                        fontScale=0.5, thickness=1, lineType=cv2.LINE_AA, color=(0, 255, 255))
+            if with_model:
+                cv2.putText(img, text=str(int(gr[-1])), org=(gr_bx[2] - 8, gr_bx[3] - 5),
+                            fontFace=cv2.FONT_HERSHEY_SIMPLEX,
+                            fontScale=0.5, thickness=1, lineType=cv2.LINE_AA, color=(0, 255, 255))
         for px, pr in enumerate(fp_list):
             pr_bx = [int(x) for x in pr[1:-1]]
             img = cv2.rectangle(img, (pr_bx[0], pr_bx[1]), (pr_bx[2], pr_bx[3]), fp_color, 2)
@@ -581,14 +602,14 @@ def draw_bar_compare_fp_fn_number_by_syn_ratio(r, comments=''):
     plt.show()
 
 
-def look_for_reduced_fp_fn_in_image(syn_display_type, syn_ratio):
-    fp_fn_0_dir = os.path.join(args.txt_save_dir, 'val_img_2_fp_fn_list/syn_0/')
+def look_for_reduced_fp_fn_in_image(syn_display_type, syn_ratio, comments=''):
+    fp_fn_0_dir = os.path.join(args.txt_save_dir, 'val_img_2_fp_fn_list', comments, 'syn_0')
     fp_0_file = json.load(open(os.path.join(fp_fn_0_dir, 'xViewval_syn_0_img_2_fp_maps.json')))
     fn_0_file = json.load(open(os.path.join(fp_fn_0_dir, 'xViewval_syn_0_img_2_fn_maps.json')))
     fp_0_list = [k for k in fp_0_file.keys() if fp_0_file.get(k)]
     fn_0_list = [k for k in fn_0_file.keys() if fn_0_file.get(k)]
 
-    fp_fn_tx_path = os.path.join(args.txt_save_dir, 'val_img_2_fp_fn_list/{}_{}/'.format(syn_display_type, syn_ratio))
+    fp_fn_tx_path = os.path.join(args.txt_save_dir, 'val_img_2_fp_fn_list', comments, '{}_{}'.format(syn_display_type, syn_ratio))
     fp_tx_file = json.load(
         open(os.path.join(fp_fn_tx_path, 'xViewval_{}_{}_img_2_fp_maps.json'.format(syn_display_type, syn_ratio))))
     fn_tx_file = json.load(
@@ -596,20 +617,20 @@ def look_for_reduced_fp_fn_in_image(syn_display_type, syn_ratio):
     fp_tx_list = [k for k in fp_tx_file.keys() if fp_tx_file.get(k)]
     fn_tx_list = [k for k in fn_tx_file.keys() if fn_tx_file.get(k)]
 
-    fp_only_in_syn_path = os.path.join(args.cat_sample_dir, 'reduced_fp_fn',
+    fp_only_in_syn_path = os.path.join(args.cat_sample_dir, 'reduced_fp_fn',  comments,
                                        'fp_only_in_{}_{}_not_in_xview'.format(syn_display_type, syn_ratio))
     if os.path.exists(fp_only_in_syn_path):
         shutil.rmtree(fp_only_in_syn_path)
     os.makedirs(fp_only_in_syn_path)
-    fn_only_in_syn_path = os.path.join(args.cat_sample_dir, 'reduced_fp_fn',
+    fn_only_in_syn_path = os.path.join(args.cat_sample_dir, 'reduced_fp_fn',  comments,
                                        'fn_only_in_{}_{}_not_in_xview'.format(syn_display_type, syn_ratio))
     if os.path.exists(fn_only_in_syn_path):
         shutil.rmtree(fn_only_in_syn_path)
     os.makedirs(fn_only_in_syn_path)
 
-    fp_only_in_syn0_path = os.path.join(args.cat_sample_dir, 'reduced_fp_fn',
+    fp_only_in_syn0_path = os.path.join(args.cat_sample_dir, 'reduced_fp_fn',  comments,
                                         'fp_only_in_xview_not_in_{}_{}'.format(syn_display_type, syn_ratio))
-    fn_only_in_syn0_path = os.path.join(args.cat_sample_dir, 'reduced_fp_fn',
+    fn_only_in_syn0_path = os.path.join(args.cat_sample_dir, 'reduced_fp_fn',  comments,
                                         'fn_only_in_xview_not_in_{}_{}'.format(syn_display_type, syn_ratio))
     if os.path.exists(fp_only_in_syn0_path):
         shutil.rmtree(fp_only_in_syn0_path)
@@ -618,10 +639,9 @@ def look_for_reduced_fp_fn_in_image(syn_display_type, syn_ratio):
         shutil.rmtree(fn_only_in_syn0_path)
     os.makedirs(fn_only_in_syn0_path)
     syn_src_dir = os.path.join(args.cat_sample_dir,
-                               'val_img_with_fp_fn_bbox/{}_{}/'.format(syn_display_type,
-                                                                       syn_ratio))
+                               'val_img_with_fp_fn_bbox', comments, '{}_{}'.format(syn_display_type, syn_ratio))
     syn0_src_dir = os.path.join(args.cat_sample_dir,
-                                'val_img_with_fp_fn_bbox/syn_0/')
+                                'val_img_with_fp_fn_bbox', comments, 'syn_0')
 
     fp_only_in_syn0_list = [p for p in fp_0_list if p not in fp_tx_list]
     fn_only_in_syn0_list = [n for n in fn_0_list if n not in fn_tx_list]
@@ -730,18 +750,22 @@ if __name__ == "__main__":
 
     # score_thres = 0.3
     # iou_thres = 0.5
-    # val_labels = pd.read_csv(os.path.join(syn_args.data_xview_dir, 'xviewval_lbl.txt'), header=None)
-    # display_type = ['syn_color'] # ['syn_texture', 'syn_color', 'syn_mixed'], 'syn_texture0', 'syn_color0']
-    # syn_ratio = [0.25] # [0.25, 0.5, 0.75]
+    # # val_labels = pd.read_csv(os.path.join(syn_args.data_xview_dir, 'xviewval_lbl.txt'), header=None)
+    # val_labels = pd.read_csv(os.path.join(syn_args.data_xview_dir, 'xviewval_lbl_with_model.txt'), header=None)
+    # display_type = ['syn_color', 'syn_texture', 'syn_mixed'] # , 'syn_texture0', 'syn_color0']
+    # syn_ratio = [0.25, 0.5, 0.75]
     # # display_type = ['syn']
     # # syn_ratio = [0]
-    # comments = '38bbox_giou0'
+    # # comments = ''
+    # # comments = '38bbox_giou0'
+    # comments = '38bbox_giou0_with_model'
     # for dt in display_type:
     #     for sr in syn_ratio:
     #         val_iou_map = {}
     #         for ix, vl in enumerate(val_labels.iloc[:, 0]):
+    #             txt_path = vl.split(os.path.basename(vl))[0]
     #             img_name = os.path.basename(vl).replace(TXT_SUFFIX, IMG_SUFFIX)
-    #             iou_list = check_prd_gt_iou_xview_syn(dt, sr, img_name, comments, score_thres, iou_thres)
+    #             iou_list = check_prd_gt_iou_xview_syn(dt, sr, img_name, comments, txt_path, score_thres, iou_thres)
     #             val_iou_map[ix] = iou_list
     #
     #         val_iou_path = os.path.join(args.txt_save_dir, 'val_result_iou_map', comments)
@@ -757,6 +781,7 @@ if __name__ == "__main__":
     '''
     # comments = ''
     # comments = '38bbox_giou0'
+    # comments = '38bbox_giou0_with_model'
     # plot_val_results_iou_comp(comments)
 
     '''
@@ -767,15 +792,18 @@ if __name__ == "__main__":
     # whr_thres = 4
     # iou_thres = 0.5
     # catid = 0
-    # display_type = ['syn_texture', 'syn_color', 'syn_mixed'] #  ['syn_texture', 'syn_color', 'syn_mixed'] , 'syn_texture0', 'syn_color0']
-    # syn_ratio = [0.25, 0.5, 0.75] #  [0.25, 0.5, 0.75]
-    # # display_type = ['syn']
-    # # syn_ratio = [0]
+    # # display_type = ['syn_texture', 'syn_color', 'syn_mixed'] #  ['syn_texture', 'syn_color', 'syn_mixed'] , 'syn_texture0', 'syn_color0']
+    # # syn_ratio = [0.25, 0.5, 0.75] #  [0.25, 0.5, 0.75]
+    # display_type = ['syn']
+    # syn_ratio = [0]
     # # comments = ''
-    # comments = '38bbox_giou0'
+    # # comments = '38bbox_giou0'
+    # with_model=True
+    # comments = '38bbox_giou0_with_model'
+    #
     # for dt in display_type:
     #     for sr in syn_ratio:
-    #         get_fp_fn_list_airplane(dt, sr, comments, catid, iou_thres, score_thres, px_thres, whr_thres)
+    #         get_fp_fn_list_airplane(dt, sr, comments, with_model, catid, iou_thres, score_thres, px_thres, whr_thres)
 
     '''
     plot val images with fp fn bbox
@@ -784,9 +812,13 @@ if __name__ == "__main__":
     # syn_ratio = [0.25, 0.5, 0.75]
     # display_type = ['syn']
     # syn_ratio = [0]
+    # # # comments = ''
+    # # comments = '38bbox_giou0'
+    # with_model = True
+    # comments = '38bbox_giou0_with_model'
     # for dt in display_type:
     #     for sr in syn_ratio:
-    #         plot_val_img_with_fp_fn_bbox(dt, sr)
+    #         plot_val_img_with_fp_fn_bbox(dt, sr, comments, with_model)
 
     '''
     statistic number of FP and number of FN
@@ -794,22 +826,26 @@ if __name__ == "__main__":
     '''
     # # comments = ''
     # comments = '38bbox_giou0'
+    # comments = '38bbox_giou0_with_model'
     # draw_bar_compare_fp_fn_number_of_different_syn_ratio(comments)
 
     # syn_ratios = [0.25, 0.5, 0.75]
     # # comments = ''
-    # comments = '38bbox_giou0'
+    # # comments = '38bbox_giou0'
+    # comments = '38bbox_giou0_with_model'
     # for r in syn_ratios:
     #     draw_bar_compare_fp_fn_number_by_syn_ratio(r, comments)
 
     '''
     look for the reduced fp and fn bbox
     '''
+    # # comments = ''
+    # comments = '38bbox_giou0'
     # display_type = ['syn_texture', 'syn_color', 'syn_mixed']  # , 'syn_texture0', 'syn_color0']
     # syn_ratio = [0.25, 0.5, 0.75]
     # for dt in display_type:
     #     for sr in syn_ratio:
-    #         look_for_reduced_fp_fn_in_image(dt, sr)
+    #         look_for_reduced_fp_fn_in_image(dt, sr, comments)
 
     '''
     plot val images with gt prd bbox
