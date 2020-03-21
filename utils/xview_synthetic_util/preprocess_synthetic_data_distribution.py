@@ -434,6 +434,21 @@ def clean_annos_txt_copy_imgs_files():
         shutil.copy(f, syn_args.syn_images_save_dir)
 
 
+def generate_syn_texture_syn_colr_label_with_model_based_on_syn_color():
+    color_path = '/media/lab/Yang/data/xView_YOLO/labels/608/syn_color_1_cls_xcycwh_model/'
+    color_files = np.sort(glob.glob(os.path.join(color_path, '*.txt')))
+    texture_path = '/media/lab/Yang/data/xView_YOLO/labels/608/syn_texture_1_cls_xcycwh_model/'
+    if not os.path.exists(texture_path):
+        os.mkdir(texture_path)
+    mixed_path = '/media/lab/Yang/data/xView_YOLO/labels/608/syn_mixed_1_cls_xcycwh_model/'
+    if not os.path.exists(mixed_path):
+        os.mkdir(mixed_path)
+
+    txt_names = [os.path.basename(f) for f in color_files]
+    for cn in txt_names:
+        shutil.copy(os.path.join(color_path, cn), os.path.join(texture_path, cn.replace('color_', 'texture_')))
+        shutil.copy(os.path.join(color_path, cn), os.path.join(mixed_path, cn.replace('color_', 'mixed_')))
+
 
 def plot_img_with_bbx_model_id(img_file, lbl_file, save_path):
     if not is_non_zero_file(lbl_file):
@@ -473,22 +488,6 @@ def plot_img_with_bbx_model_id(img_file, lbl_file, save_path):
     cv2.imwrite(os.path.join(save_path, img_file.split('/')[-1]), img)
 
 
-def generate_syn_texture_syn_colr_label_with_model_based_on_syn_color():
-    color_path = '/media/lab/Yang/data/xView_YOLO/labels/608/syn_color_1_cls_xcycwh_model/'
-    color_files = np.sort(glob.glob(os.path.join(color_path, '*.txt')))
-    texture_path = '/media/lab/Yang/data/xView_YOLO/labels/608/syn_texture_1_cls_xcycwh_model/'
-    if not os.path.exists(texture_path):
-        os.mkdir(texture_path)
-    mixed_path = '/media/lab/Yang/data/xView_YOLO/labels/608/syn_mixed_1_cls_xcycwh_model/'
-    if not os.path.exists(mixed_path):
-        os.mkdir(mixed_path)
-
-    txt_names = [os.path.basename(f) for f in color_files]
-    for cn in txt_names:
-        shutil.copy(os.path.join(color_path, cn), os.path.join(texture_path, cn.replace('color_', 'texture_')))
-        shutil.copy(os.path.join(color_path, cn), os.path.join(mixed_path, cn.replace('color_', 'mixed_')))
-
-
 def check_img_with_bbox_with_indices_model_id():
     color_path = '/media/lab/Yang/data/xView_YOLO/labels/608/syn_color_1_cls_xcycwh_model/'
     texture_path = '/media/lab/Yang/data/xView_YOLO/labels/608/syn_texture_1_cls_xcycwh_model/'
@@ -514,89 +513,6 @@ def check_img_with_bbox_with_indices_model_id():
 
     for mn in mimg_names:
         plot_img_with_bbx_model_id(os.path.join(mimg_path, mn), os.path.join(mixed_path, mn.replace(IMG_FORMAT, TXT_FORMAT)), save_m_path)
-
-
-def generate_new_xview_lbl_with_model_id(type='val'):
-    '''
-    generate new xview train val annotations (with model id)
-    generate new xview train val list
-    :return:
-    '''
-    args = pwv.get_args()
-    ori_val_lbl_txt = os.path.join(args.data_save_dir, 'xview{}_lbl.txt'.format(type))
-    df_ori_val = pd.read_csv(ori_val_lbl_txt, header=None)
-    ori_val_names = [os.path.basename(f) for f in df_ori_val.loc[:, 0]]
-
-    xview_val_lbl_with_model_name = 'xview{}_with_model_lbl.txt'.format(type)
-    xview_val_lbl_with_model_txt = open(os.path.join(args.data_save_dir, xview_val_lbl_with_model_name), 'w')
-
-    des_val_lbl_path = '/media/lab/Yang/data/xView_YOLO/labels/608/1_cls_xcycwh_only_model/'
-    if not os.path.exists(des_val_lbl_path):
-        os.mkdir(des_val_lbl_path)
-
-    src_lbl_path = '/media/lab/Yang/data/xView_YOLO/labels/608/1_cls_xcycwh_model/'
-
-    for name in ori_val_names:
-        src_lbl_file = os.path.join(src_lbl_path, name)
-        if not is_non_zero_file(src_lbl_file):
-            shutil.copy(src_lbl_file, os.path.join(des_val_lbl_path, name))
-            xview_val_lbl_with_model_txt.write('%s\n' % os.path.join(des_val_lbl_path, name))
-            continue
-
-        colomns = np.arange(0, 6)
-        src_lbl = pd.read_csv(src_lbl_file, header=None, sep=' ', names=colomns)
-        des_lbl_txt = open(os.path.join(des_val_lbl_path, name), 'w')
-
-        for i in range(src_lbl.shape[0]):
-            if np.isnan(src_lbl.iloc[i, -1]):
-                continue
-            else:
-                des_lbl_txt.write("%d %.8f %.8f %.8f %.8f %d\n" % (src_lbl.iloc[i, 0], src_lbl.iloc[i, 1], src_lbl.iloc[i, 2], src_lbl.iloc[i, 3], src_lbl.iloc[i, 4], src_lbl.iloc[i, 5]))
-        des_lbl_txt.close()
-        xview_val_lbl_with_model_txt.write('%s\n' % os.path.join(des_val_lbl_path, name))
-    xview_val_lbl_with_model_txt.close()
-    shutil.copy(os.path.join(args.data_save_dir, xview_val_lbl_with_model_name), os.path.join(args.data_list_save_dir, xview_val_lbl_with_model_name))
-
-
-def generate_new_syn_lbl_with_model_id():
-    '''
-    generate new syn annotations (with model id)
-    generate new syn  list
-    :return:
-    '''
-    ori_val_lbl_txt = os.path.join(syn_args.syn_data_list_dir, '{}_{}_lbl.txt'.format(syn_args.syn_display_type, syn_args.class_num))
-    df_ori_val = pd.read_csv(ori_val_lbl_txt, header=None)
-    ori_val_names = [os.path.basename(f) for f in df_ori_val.loc[:, 0]]
-
-    xview_val_lbl_with_model_name = '{}_{}_with_model_lbl.txt'.format(syn_args.syn_display_type, syn_args.class_num)
-    xview_val_lbl_with_model_txt = open(os.path.join(syn_args.syn_data_list_dir, xview_val_lbl_with_model_name), 'w')
-
-    des_val_lbl_path = '/media/lab/Yang/data/xView_YOLO/labels/608/{}_{}_cls_xcycwh_only_model/'.format(syn_args.syn_display_type, syn_args.class_num)
-    if not os.path.exists(des_val_lbl_path):
-        os.mkdir(des_val_lbl_path)
-
-    src_lbl_path = '/media/lab/Yang/data/xView_YOLO/labels/608/{}_{}_cls_xcycwh_model/'.format(syn_args.syn_display_type, syn_args.class_num)
-
-    for name in ori_val_names:
-        src_lbl_file = os.path.join(src_lbl_path, name)
-        if not is_non_zero_file(src_lbl_file):
-            shutil.copy(src_lbl_file, os.path.join(des_val_lbl_path, name))
-            xview_val_lbl_with_model_txt.write('%s\n' % os.path.join(des_val_lbl_path, name))
-            continue
-
-        colomns = np.arange(0, 6)
-        src_lbl = pd.read_csv(src_lbl_file, header=None, sep=' ', names=colomns)
-        des_lbl_txt = open(os.path.join(des_val_lbl_path, name), 'w')
-
-        for i in range(src_lbl.shape[0]):
-            if np.isnan(src_lbl.iloc[i, -1]):
-                continue
-            else:
-                des_lbl_txt.write("%d %.8f %.8f %.8f %.8f %d\n" % (src_lbl.iloc[i, 0], src_lbl.iloc[i, 1], src_lbl.iloc[i, 2], src_lbl.iloc[i, 3], src_lbl.iloc[i, 4], src_lbl.iloc[i, 5]))
-        des_lbl_txt.close()
-        xview_val_lbl_with_model_txt.write('%s\n' % os.path.join(des_val_lbl_path, name))
-    xview_val_lbl_with_model_txt.close()
-    # shutil.copy(os.path.join(args.data_save_dir, xview_val_lbl_with_model_name), os.path.join(args.data_list_save_dir, xview_val_lbl_with_model_name))
 
 
 def get_syn_args():
@@ -644,7 +560,7 @@ def get_syn_args():
     parser.add_argument("--tile_size", type=int, default=608, help="image size")  # 300 416
 
     # #####*********************change
-    parser.add_argument("--syn_display_type", type=str, default='syn_texture',
+    parser.add_argument("--syn_display_type", type=str, default='syn_texture0',
                         help="syn_texture, syn_color, syn_mixed,  syn (match 0)")  #syn_color0, syn_texture0,
     # ######*********************change
     parser.add_argument("--syn_ratio", type=float, default=0.25,
@@ -843,20 +759,11 @@ if __name__ == "__main__":
     # compare_bar_of_image_numbers_for_certain_number_of_planes(png_name, cat_distribution_map, cat_distribution_map_syn)
 
 
-    '''
-    add model id to annotation txt files
-    generate syn_texture syn_mixed label with 3 model ids according to syn_color
-    check model id,  bbox on rgb images 
-    '''
-    # generate_syn_texture_syn_colr_label_with_model_based_on_syn_color()
-    # check_img_with_bbox_with_indices_model_id()
 
-    '''
-    generate new xviewval_lbl_with_model.txt
-    '''
-    # type = 'train'
-    # # type = 'val'
-    # generate_new_xview_lbl_with_model_id(type)
 
-    generate_new_syn_lbl_with_model_id()
+
+
+
+
+
 

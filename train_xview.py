@@ -443,7 +443,7 @@ def get_opt(dt, sr, comments=''):
     parser.add_argument('--accumulate', type=int, default=4, help='batches to accumulate before optimizing')
     parser.add_argument('--cfg', type=str, default='cfg/yolov3-spp-{}cls_syn.cfg', help='*.cfg path')
     if sr ==0:
-        parser.add_argument('--data', type=str, default='data_xview/{}_cls/xview_{}_{}.data', help='*.data path')
+        parser.add_argument('--data', type=str, default='data_xview/{}_cls/xview_{}_{}{}.data', help='*.data path')
     else:
         parser.add_argument('--data', type=str, default='data_xview/{}_cls/xview_{}_{}/xview_{}_{}{}.data', help='*.data path')
     parser.add_argument('--writer_dir', type=str, default='writer_output/{}_cls/{}_{}/', help='*events* path')
@@ -476,105 +476,109 @@ def get_opt(dt, sr, comments=''):
 
 
 if __name__ == '__main__':
-    display_type = ['syn_texture'] # , 'syn_color', 'syn_mixed'
+    display_type = ['syn_texture', 'syn_color', 'syn_mixed']
     # syn_ratio = [0.25, 0.5, 0.75]
     # display_type = ['syn'] #'syn_mixed',
     # syn_ratio = [0]  # 0.75, 0.5,
     # display_type = ['syn_color'] #'syn_mixed',
-    syn_ratio = [0.25]  # 0.75, 0.5,
-    trial = 3
-    mis_ratio = [0.025, 0.05]
+
+    syn_ratio = [0.25, 0.5, 0.75]
+    # trial = 3
+    # mis_ratio = [0.025, 0.05]
+    # for dt in display_type:
+    #     for sr in syn_ratio:
+    #         for mr in mis_ratio:
+    #             for i in range(trial):
     for dt in display_type:
         for sr in syn_ratio:
-            for mr in mis_ratio:
-                for i in range(trial):
-                    opt = get_opt(dt, sr)
-                    opt.cfg = opt.cfg.format(opt.class_num)
-                    time_marker = time.strftime('%Y-%m-%d_%H.%M', time.localtime())
-                    #fixme
-                    # comments = ''
-                    # comments = '_38bbox_000wh'
-                    # comments = '_38bbox_giou0'
-                    comments = '_mismatch{}_{}'.format(mr, i)
-                    opt.weights_dir = opt.weights_dir.format(opt.class_num, opt.syn_display_type, opt.syn_ratio) + '{}/'.format(time_marker + comments)
-                    opt.writer_dir = opt.writer_dir.format(opt.class_num, opt.syn_display_type, opt.syn_ratio) + '{}/'.format(time_marker + comments)
-                    opt.data = opt.data.format(opt.class_num, opt.syn_display_type, opt.syn_ratio, opt.syn_display_type, opt.syn_ratio, comments)
-                    opt.result_dir = opt.result_dir.format(opt.class_num, opt.syn_display_type, opt.syn_ratio) + '{}/'.format(time_marker + comments)
-                    results_file = os.path.join(opt.result_dir, 'results_{}_{}.txt'.format(opt.syn_display_type, opt.syn_ratio))
-                    last = os.path.join(opt.weights_dir, 'last_{}_{}.pt'.format(opt.syn_display_type, opt.syn_ratio))
-                    best = os.path.join(opt.weights_dir, 'best_{}_{}.pt'.format(opt.syn_display_type, opt.syn_ratio))
-                    # opt.name = '_{}_{}'.format(opt.syn_display_type, opt.syn_ratio)
-                    if not os.path.exists(opt.weights_dir):
-                        os.makedirs(opt.weights_dir)
+            opt = get_opt(dt, sr)
+            opt.cfg = opt.cfg.format(opt.class_num)
+            time_marker = time.strftime('%Y-%m-%d_%H.%M', time.localtime())
+            #fixme
+            # comments = ''
+            # comments = '_38bbox_000wh'
+            # comments = '_38bbox_giou0'
+            # comments = '_mismatch{}_{}'.format(mr, i)
+            comments = '_with_model'
+            opt.weights_dir = opt.weights_dir.format(opt.class_num, opt.syn_display_type, opt.syn_ratio) + '{}/'.format(time_marker + comments)
+            opt.writer_dir = opt.writer_dir.format(opt.class_num, opt.syn_display_type, opt.syn_ratio) + '{}/'.format(time_marker + comments)
+            opt.data = opt.data.format(opt.class_num, opt.syn_display_type, opt.syn_ratio, opt.syn_display_type, opt.syn_ratio, comments)
+            opt.result_dir = opt.result_dir.format(opt.class_num, opt.syn_display_type, opt.syn_ratio) + '{}/'.format(time_marker + comments)
+            results_file = os.path.join(opt.result_dir, 'results_{}_{}.txt'.format(opt.syn_display_type, opt.syn_ratio))
+            last = os.path.join(opt.weights_dir, 'last_{}_{}.pt'.format(opt.syn_display_type, opt.syn_ratio))
+            best = os.path.join(opt.weights_dir, 'best_{}_{}.pt'.format(opt.syn_display_type, opt.syn_ratio))
+            # opt.name = '_{}_{}'.format(opt.syn_display_type, opt.syn_ratio)
+            if not os.path.exists(opt.weights_dir):
+                os.makedirs(opt.weights_dir)
 
-                    if not os.path.exists(opt.writer_dir):
-                        os.makedirs(opt.writer_dir)
+            if not os.path.exists(opt.writer_dir):
+                os.makedirs(opt.writer_dir)
 
-                    if not os.path.exists(opt.result_dir):
-                        os.makedirs(opt.result_dir)
+            if not os.path.exists(opt.result_dir):
+                os.makedirs(opt.result_dir)
 
-                    opt.weights = last if opt.resume else opt.weights
-                    print(opt)
-                    device = torch_utils.select_device(opt.device, apex=mixed_precision, batch_size=opt.batch_size)
-                    if device.type == 'cpu':
-                        mixed_precision = False
+            opt.weights = last if opt.resume else opt.weights
+            print(opt)
+            device = torch_utils.select_device(opt.device, apex=mixed_precision, batch_size=opt.batch_size)
+            if device.type == 'cpu':
+                mixed_precision = False
 
-                    # scale hyp['obj'] by img_size (evolved at 320)
-                    # hyp['obj'] *= opt.img_size / 320.
+            # scale hyp['obj'] by img_size (evolved at 320)
+            # hyp['obj'] *= opt.img_size / 320.
 
-                    tb_writer = None
-                    if not opt.evolve:  # Train normally
-                        try:
-                            # Start Tensorboard with "tensorboard --logdir=runs", view at http://localhost:6006/
-                            from torch.utils.tensorboard import SummaryWriter
-                            tb_writer = SummaryWriter(log_dir=opt.writer_dir)
-                        except:
-                            pass
+            tb_writer = None
+            if not opt.evolve:  # Train normally
+                try:
+                    # Start Tensorboard with "tensorboard --logdir=runs", view at http://localhost:6006/
+                    from torch.utils.tensorboard import SummaryWriter
+                    tb_writer = SummaryWriter(log_dir=opt.writer_dir)
+                except:
+                    pass
 
-                        prebias()  # optional
-                        train()  # train normally
-                        # plot_results(result_dir=opt.result_dir, png_name='results_{}_{}.png'.format(opt.syn_display_type, opt.syn_ratio))
-                    else:  # Evolve hyperparameters (optional)
-                        opt.notest = True  # only test final epoch
-                        opt.nosave = True  # only save final checkpoint
-                        if opt.bucket:
-                            os.system('gsutil cp gs://%s/evolve.txt .' % opt.bucket)  # download evolve.txt if exists
+                prebias()  # optional
+                train()  # train normally
+                # plot_results(result_dir=opt.result_dir, png_name='results_{}_{}.png'.format(opt.syn_display_type, opt.syn_ratio))
+            else:  # Evolve hyperparameters (optional)
+                opt.notest = True  # only test final epoch
+                opt.nosave = True  # only save final checkpoint
+                if opt.bucket:
+                    os.system('gsutil cp gs://%s/evolve.txt .' % opt.bucket)  # download evolve.txt if exists
 
-                        for _ in range(1):  # generations to evolve
-                            if os.path.exists('evolve.txt'):  # if evolve.txt exists: select best hyps and mutate
-                                # Select parent(s)
-                                x = np.loadtxt('evolve.txt', ndmin=2)
-                                parent = 'weighted'  # parent selection method: 'single' or 'weighted'
-                                if parent == 'single' or len(x) == 1:
-                                    x = x[fitness(x).argmax()]
-                                elif parent == 'weighted':  # weighted combination
-                                    n = min(10, x.shape[0])  # number to merge
-                                    x = x[np.argsort(-fitness(x))][:n]  # top n mutations
-                                    w = fitness(x) - fitness(x).min()  # weights
-                                    x = (x[:n] * w.reshape(n, 1)).sum(0) / w.sum()  # new parent
-                                for i, k in enumerate(hyp.keys()):
-                                    hyp[k] = x[i + 7]
+                for _ in range(1):  # generations to evolve
+                    if os.path.exists('evolve.txt'):  # if evolve.txt exists: select best hyps and mutate
+                        # Select parent(s)
+                        x = np.loadtxt('evolve.txt', ndmin=2)
+                        parent = 'weighted'  # parent selection method: 'single' or 'weighted'
+                        if parent == 'single' or len(x) == 1:
+                            x = x[fitness(x).argmax()]
+                        elif parent == 'weighted':  # weighted combination
+                            n = min(10, x.shape[0])  # number to merge
+                            x = x[np.argsort(-fitness(x))][:n]  # top n mutations
+                            w = fitness(x) - fitness(x).min()  # weights
+                            x = (x[:n] * w.reshape(n, 1)).sum(0) / w.sum()  # new parent
+                        for i, k in enumerate(hyp.keys()):
+                            hyp[k] = x[i + 7]
 
-                                # Mutate
-                                np.random.seed(int(time.time()))
-                                s = np.random.random() * 0.15  # sigma
-                                g = [1, 1, 1, 1, 1, 1, 1, 0, .1, 1, 1, 1, 1, 1, 1, 1, 1, 1]  # gains
-                                for i, k in enumerate(hyp.keys()):
-                                    x = (np.random.randn() * s * g[i] + 1) ** 2.0  # plt.hist(x.ravel(), 300)
-                                    hyp[k] *= float(x)  # vary by sigmas
+                        # Mutate
+                        np.random.seed(int(time.time()))
+                        s = np.random.random() * 0.15  # sigma
+                        g = [1, 1, 1, 1, 1, 1, 1, 0, .1, 1, 1, 1, 1, 1, 1, 1, 1, 1]  # gains
+                        for i, k in enumerate(hyp.keys()):
+                            x = (np.random.randn() * s * g[i] + 1) ** 2.0  # plt.hist(x.ravel(), 300)
+                            hyp[k] *= float(x)  # vary by sigmas
 
-                            # Clip to limits
-                            keys = ['lr0', 'iou_t', 'momentum', 'weight_decay', 'hsv_s', 'hsv_v', 'translate', 'scale', 'fl_gamma']
-                            limits = [(1e-5, 1e-2), (0.00, 0.70), (0.60, 0.98), (0, 0.001), (0, .9), (0, .9), (0, .9), (0, .9), (0, 3)]
-                            for k, v in zip(keys, limits):
-                                hyp[k] = np.clip(hyp[k], v[0], v[1])
+                    # Clip to limits
+                    keys = ['lr0', 'iou_t', 'momentum', 'weight_decay', 'hsv_s', 'hsv_v', 'translate', 'scale', 'fl_gamma']
+                    limits = [(1e-5, 1e-2), (0.00, 0.70), (0.60, 0.98), (0, 0.001), (0, .9), (0, .9), (0, .9), (0, .9), (0, 3)]
+                    for k, v in zip(keys, limits):
+                        hyp[k] = np.clip(hyp[k], v[0], v[1])
 
-                            # Train mutation
-                            prebias()
-                            results = train()
+                    # Train mutation
+                    prebias()
+                    results = train()
 
-                            # Write mutation results
-                            print_mutation(hyp, results, opt.bucket)
+                    # Write mutation results
+                    print_mutation(hyp, results, opt.bucket)
 
-                            # Plot results
-                            # plot_evolution_results(hyp)
+                    # Plot results
+                    # plot_evolution_results(hyp)

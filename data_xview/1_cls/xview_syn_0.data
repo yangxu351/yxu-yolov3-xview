@@ -1,5 +1,5 @@
+train_label=./data_xview/1_cls/xviewtrain_lblsyn.txt
 train=./data_xview/1_cls/xviewtrain_img.txt
-train_label=./data_xview/1_cls/xviewtrain_lbl.txt
 syn_0_xview_number=374
 classes=1
 valid=./data_xview/1_cls/xviewval_img.txt

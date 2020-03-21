@@ -371,12 +371,15 @@ def create_xview_names(file_name='xview'):
     f_txt.close()
 
 
-def split_trn_val_with_chips(data_name='xview'):
+def split_trn_val_with_chips(data_name='xview', comments=''):
     args = get_args()
 
     txt_save_dir = args.data_list_save_dir
     data_save_dir = args.data_save_dir
-    lbl_path = args.annos_save_dir
+    if comments:
+        lbl_path = args.annos_save_dir[:-1] + comments + '/'
+    else:
+        lbl_path = args.annos_save_dir
     images_save_dir = args.images_save_dir
     all_files = glob.glob(lbl_path + '*.txt')
 
@@ -385,10 +388,10 @@ def split_trn_val_with_chips(data_name='xview'):
     np.random.seed(args.seed)
     perm_files = np.random.permutation(all_files)
 
-    trn_img_txt = open(os.path.join(txt_save_dir, '{}train_img.txt'.format(data_name)), 'w')
-    trn_lbl_txt = open(os.path.join(txt_save_dir, '{}train_lbl.txt'.format(data_name)), 'w')
-    val_img_txt = open(os.path.join(txt_save_dir, '{}val_img.txt'.format(data_name)), 'w')
-    val_lbl_txt = open(os.path.join(txt_save_dir, '{}val_lbl.txt'.format(data_name)), 'w')
+    trn_img_txt = open(os.path.join(txt_save_dir, '{}train_img{}.txt'.format(data_name, comments)), 'w')
+    trn_lbl_txt = open(os.path.join(txt_save_dir, '{}train_lbl{}.txt'.format(data_name, comments)), 'w')
+    val_img_txt = open(os.path.join(txt_save_dir, '{}val_img{}.txt'.format(data_name, comments)), 'w')
+    val_lbl_txt = open(os.path.join(txt_save_dir, '{}val_lbl{}.txt'.format(data_name, comments)), 'w')
 
     for i in range(trn_num):
         trn_lbl_txt.write("%s\n" % perm_files[i])
@@ -408,14 +411,14 @@ def split_trn_val_with_chips(data_name='xview'):
     val_img_txt.close()
     val_lbl_txt.close()
 
-    shutil.copyfile(os.path.join(txt_save_dir, '{}train_img.txt'.format(data_name)),
-                    os.path.join(data_save_dir, '{}train_img.txt'.format(data_name)))
-    shutil.copyfile(os.path.join(txt_save_dir, '{}train_lbl.txt'.format(data_name)),
-                    os.path.join(data_save_dir, '{}train_lbl.txt'.format(data_name)))
-    shutil.copyfile(os.path.join(txt_save_dir, '{}val_img.txt'.format(data_name)),
-                    os.path.join(data_save_dir, '{}val_img.txt'.format(data_name)))
-    shutil.copyfile(os.path.join(txt_save_dir, '{}val_lbl.txt'.format(data_name)),
-                    os.path.join(data_save_dir, '{}val_lbl.txt'.format(data_name)))
+    shutil.copyfile(os.path.join(txt_save_dir, '{}train_img{}.txt'.format(data_name, comments)),
+                    os.path.join(data_save_dir, '{}train_img{}.txt'.format(data_name, comments)))
+    shutil.copyfile(os.path.join(txt_save_dir, '{}train_lbl{}.txt'.format(data_name, comments)),
+                    os.path.join(data_save_dir, '{}train_lbl{}.txt'.format(data_name, comments)))
+    shutil.copyfile(os.path.join(txt_save_dir, '{}val_img{}.txt'.format(data_name, comments)),
+                    os.path.join(data_save_dir, '{}val_img{}.txt'.format(data_name, comments)))
+    shutil.copyfile(os.path.join(txt_save_dir, '{}val_lbl{}.txt'.format(data_name, comments)),
+                    os.path.join(data_save_dir, '{}val_lbl{}.txt'.format(data_name, comments)))
 
 
 def split_trn_val_with_tifs():
@@ -1929,8 +1932,10 @@ if __name__ == "__main__":
     split train:val randomly split chips
     default split
     '''
+    # comments = ''
+    # comments = '_px4whr3'
     # data_name = 'xview'
-    # split_trn_val_with_chips(data_name)
+    # split_trn_val_with_chips(data_name, comments)
 
 
     '''

@@ -272,10 +272,16 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
         with open(path, 'r') as f:
             self.img_files = [x.replace('/', os.sep) for x in f.read().splitlines()  # os-agnostic
                               if os.path.splitext(x)[-1].lower() in img_formats]
+            # img_names = [os.path.basename(f) for f in self.img_files]
         #fixme---lbl_formats
         with open(label_path, 'r') as f:
             self.lbl_files = [x.replace('/', os.sep) for x in f.read().splitlines()  # os-agnostic
                               if os.path.splitext(x)[-1].lower() in lbl_formats]
+        # self.lbl_files = []
+        # with open(label_path, 'r') as f:
+        #     lbl_path = os.path.dirname(f.readline())
+        # for im in img_names:
+        #     self.lbl_files.append(os.path.join(lbl_path, im))
 
         self.label_files = self.lbl_files
         n = len(self.img_files)
@@ -348,8 +354,11 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
                     #     l = np.array([x.split() for x in f.read().splitlines()], dtype=np.float32)
                     # print(file)
                     df_txt = pd.read_csv(file, header=None, delimiter=' ')
+                    #fixme
                     l = df_txt.to_numpy()
                     # print(l.shape)
+                    l = l[:, :5]
+
                 except:
                     nm += 1  # print('missing labels for image %s' % self.img_files[i])  # file missing
                     continue
