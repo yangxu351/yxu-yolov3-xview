@@ -561,7 +561,7 @@ def get_syn_args():
 
     # #####*********************change
     parser.add_argument("--syn_display_type", type=str, default='syn_texture0',
-                        help="syn_texture, syn_color, syn_mixed,  syn (match 0)")  #syn_color0, syn_texture0,
+                        help="syn_texture, syn_color, syn_mixed,  syn (match 0)")  # syn_color0, syn_texture0,
     # ######*********************change
     parser.add_argument("--syn_ratio", type=float, default=0.25,
                         help="ratio of synthetic data: 0.25, 0.5, 0.75, 1.0  0")  # ######*********************change
@@ -697,7 +697,7 @@ if __name__ == "__main__":
     check bbox for each image files
     draw image with gt bbox 
     '''
-    # draw_bbx_on_rgb_images()
+    draw_bbx_on_rgb_images()
 
     '''
     draw rgb with gt bbox and gt indices

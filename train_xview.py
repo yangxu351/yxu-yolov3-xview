@@ -476,7 +476,7 @@ def get_opt(dt, sr, comments=''):
 
 
 if __name__ == '__main__':
-    display_type = ['syn_texture', 'syn_color', 'syn_mixed']
+    # display_type = ['syn_texture', 'syn_color', 'syn_mixed']
     # syn_ratio = [0.25, 0.5, 0.75]
     # display_type = ['syn'] #'syn_mixed',
     # syn_ratio = [0]  # 0.75, 0.5,
@@ -489,6 +489,8 @@ if __name__ == '__main__':
     #     for sr in syn_ratio:
     #         for mr in mis_ratio:
     #             for i in range(trial):
+
+    display_type = ['syn_texture0', 'syn_color0']
     for dt in display_type:
         for sr in syn_ratio:
             opt = get_opt(dt, sr)
@@ -499,7 +501,8 @@ if __name__ == '__main__':
             # comments = '_38bbox_000wh'
             # comments = '_38bbox_giou0'
             # comments = '_mismatch{}_{}'.format(mr, i)
-            comments = '_with_model'
+            # comments = '_with_model'
+            comments = '_px4whr3'
             opt.weights_dir = opt.weights_dir.format(opt.class_num, opt.syn_display_type, opt.syn_ratio) + '{}/'.format(time_marker + comments)
             opt.writer_dir = opt.writer_dir.format(opt.class_num, opt.syn_display_type, opt.syn_ratio) + '{}/'.format(time_marker + comments)
             opt.data = opt.data.format(opt.class_num, opt.syn_display_type, opt.syn_ratio, opt.syn_display_type, opt.syn_ratio, comments)

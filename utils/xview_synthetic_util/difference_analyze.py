@@ -6,8 +6,7 @@ from glob import glob
 from skimage.color import rgb2gray
 from skimage import io
 import shutil
-
-
+import pandas as pd
 
 
 def compare_overlap():
@@ -436,6 +435,7 @@ def compare_first_second_dataset():
         plt.tight_layout()
         fig.savefig(os.path.join(tx0_save_dir, tx0.replace('texture_', '')))
 
+
 if __name__ == "__main__":
     # display_type = ['syn_texture', 'syn_color', 'syn_mixed']
     # # display_type = ['syn_texture0', 'syn_color0']
@@ -448,4 +448,19 @@ if __name__ == "__main__":
     # two = True
     # compare_images_after_combine(two)
 
-    compare_first_second_dataset()
+    # compare_first_second_dataset()
+
+    '''
+    check the different data selected in dataset1 and dataset2
+    '''
+    tex0_files = '/media/lab/Yang/code/yolov3/data_xview/1_cls/first_data_set_backup/xview_syn_texture_0.25_train_lbl.txt'
+    # tex1_files = '/media/lab/Yang/code/yolov3/data_xview/1_cls/xview_syn_texture0_0.25/xview_syn_texture0_0.25_train_lbl_px4whr3.txt'
+    tex1_files = '/media/lab/Yang/code/yolov3/data_xview/1_cls/xview_syn_texture_0.25/xview_syn_texture_0.25_train_lbl.txt'
+    df_tex0 = pd.read_csv(tex0_files, header=None)
+    df_tex1 = pd.read_csv(tex1_files, header=None)
+    tex0_names = [os.path.basename(f) for f in df_tex0.loc[:, 0]]
+    tex1_names = [os.path.basename(f) for f in df_tex1.loc[:, 0]]
+    if np.all(tex0_names == tex1_names):
+        print(True)
+    else:
+        print(False)
