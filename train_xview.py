@@ -482,7 +482,7 @@ if __name__ == '__main__':
     # syn_ratio = [0]  # 0.75, 0.5,
     # display_type = ['syn_color'] #'syn_mixed',
 
-    syn_ratio = [0.25, 0.5, 0.75]
+    # syn_ratio = [0.25, 0.5, 0.75]
     # trial = 3
     # mis_ratio = [0.025, 0.05]
     # for dt in display_type:
@@ -490,7 +490,8 @@ if __name__ == '__main__':
     #         for mr in mis_ratio:
     #             for i in range(trial):
 
-    display_type = ['syn_texture0', 'syn_color0']
+    display_type = ['syn_texture0'] # , 'syn_color0']
+    syn_ratio = [0.75]
     for dt in display_type:
         for sr in syn_ratio:
             opt = get_opt(dt, sr)
