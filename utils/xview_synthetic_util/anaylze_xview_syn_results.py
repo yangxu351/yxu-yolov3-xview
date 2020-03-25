@@ -15,8 +15,8 @@ from utils.data_process_distribution_vis_util import process_wv_coco_for_yolo_pa
 from utils.utils_xview import coord_iou
 from utils.xview_synthetic_util import preprocess_synthetic_data_distribution as pps
 
-IMG_SUFFIX = '.jpg'
-# IMG_SUFFIX = '.png'
+# IMG_SUFFIX = '.jpg'
+IMG_SUFFIX = '.png'
 TXT_SUFFIX = '.txt'
 
 
@@ -65,8 +65,8 @@ def get_val_imgid_by_name(name):
     return img_id
 
 
-def check_prd_gt_iou_xview_syn(dt, sr, image_name, comments, mid=None, txt_path=None, score_thres=0.3, iou_thres=0.5, px_thres=6,
-                               whr_thres=4):
+def check_prd_gt_iou_xview_syn(dt, sr, image_name, comments, txt_path=None, score_thres=0.3, iou_thres=0.5, px_thres=6,
+                               whr_thres=4, mid=None):
     '''
     Note that there is possible some lower iou may cover the lager iou computed previously, remember to keep the larger iou
     :param image_name:
@@ -80,19 +80,24 @@ def check_prd_gt_iou_xview_syn(dt, sr, image_name, comments, mid=None, txt_path=
     syn_args = get_part_syn_args()
     # fixme
     # results_dir = syn_args.results_dir.format(syn_args.class_num, dt, sr)
-    if comments:
+    if '_with_model' in comments:
         suffix = comments[:12]
+        img_dir = args.images_save_dir
+    elif comments == 'syn_only':
+        suffix = comments
+        img_dir = syn_args.syn_images_save_dir.format(syn_args.tile_size, dt)
     else:
         suffix = comments
+        img_dir = args.images_save_dir
     results_dir = glob.glob(os.path.join(syn_args.results_dir.format(syn_args.class_num, dt, sr), '*' + suffix))[0]
 
     # fixme
     # img_id = get_val_imgid_by_name(image_name)
-    img = cv2.imread(args.images_save_dir + image_name)
+    img = cv2.imread(os.path.join(img_dir, image_name))
     img_size = img.shape[0]
     good_gt_list = []
-    if pps.is_non_zero_file(os.path.join(txt_path, image_name.replace('.jpg', TXT_SUFFIX))):
-        gt_cat = pd.read_csv(os.path.join(txt_path, image_name.replace('.jpg', TXT_SUFFIX)), header=None, delimiter=' ')
+    if pps.is_non_zero_file(os.path.join(txt_path, image_name.replace(IMG_SUFFIX, TXT_SUFFIX))):
+        gt_cat = pd.read_csv(os.path.join(txt_path, image_name.replace(IMG_SUFFIX, TXT_SUFFIX)), header=None, delimiter=' ')
         gt_cat = gt_cat.to_numpy()
         gt_cat[:, 1:5] = gt_cat[:, 1:5] * img_size
         gt_cat[:, 1] = gt_cat[:, 1] - gt_cat[:, 3] / 2
@@ -175,9 +180,6 @@ def check_prd_gt_iou_xview_syn(dt, sr, image_name, comments, mid=None, txt_path=
 def plot_val_results_iou_comp(comments=''):
     val_iou_path = os.path.join(args.txt_save_dir, 'val_result_iou_map', comments)
 
-    display_type = ['syn']
-    syn_ratio = [0]
-
     syn0_iou_json_file = os.path.join(val_iou_path, 'xViewval_syn_0_iou.json')
     syn0_iou_map = json.load(open(syn0_iou_json_file))
     syn0_iou_list = []
@@ -218,6 +220,7 @@ def plot_val_results_iou_comp(comments=''):
 def get_fp_fn_list_airplane(dt, sr, comments='', with_model=False, catid=0, iou_thres=0.5, score_thres=0.3, px_thres=6,
                             whr_thres=4):
     ''' ground truth '''
+    syn_args = get_part_syn_args()
     if comments:
         if with_model:
             suffix = comments[:12]
@@ -237,8 +240,11 @@ def get_fp_fn_list_airplane(dt, sr, comments='', with_model=False, catid=0, iou_
     print('len result_list', len(result_list))
     del result_allcat_list
 
-    val_lbl_txt = 'xviewval_lbl{}.txt'.format(comments)
-    val_labels = pd.read_csv(os.path.join(syn_args.data_xview_dir, val_lbl_txt), header=None)
+    if comments == 'syn_only':
+        val_lbl_txt = os.path.join(syn_args.syn_data_list_dir.format(dt, syn_args.class_num), '{}_{}_val_lbl.txt'.format(dt, syn_args.class_num))
+    else:
+        val_lbl_txt = os.path.join(syn_args.data_xview_dir, 'xviewval_lbl{}.txt'.format(comments))
+    val_labels = pd.read_csv(val_lbl_txt, header=None)
     img_name_2_fp_list_maps = {}
     img_name_2_fn_list_maps = {}
     for ix, vl in enumerate(val_labels.iloc[:, 0]):
@@ -352,39 +358,51 @@ def get_fp_fn_list_airplane(dt, sr, comments='', with_model=False, catid=0, iou_
                 c_box_iou.append(0)  # [cat_id, box[0:4], iou]
                 img_name_2_fp_list_maps[img_name].append(c_box_iou)
 
-    save_dir = os.path.join(args.txt_save_dir,
+    save_dir = os.path.join(syn_args.data_txt_dir,
                             'val_img_2_fp_fn_list', comments, '{}_{}/'.format(dt, sr))
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
-    fp_json_file = os.path.join(save_dir,
-                                'xViewval_{}_{}_img_2_fp_maps.json'.format(dt, sr))  # topleft
+    if comments == 'syn_only':
+        fp_json_name = '{}_{}_val_img_2_fp_maps.json'.format(dt, sr)
+    else:
+        fp_json_name =  'xViewval_{}_{}_img_2_fp_maps.json'.format(dt, sr)
+    fp_json_file = os.path.join(save_dir, fp_json_name)  # topleft
     json.dump(img_name_2_fp_list_maps, open(fp_json_file, 'w'), ensure_ascii=False, indent=2, cls=MyEncoder)
 
-    fn_json_file = os.path.join(save_dir,
-                                'xViewval_{}_{}_img_2_fn_maps.json'.format(dt, sr))  # topleft
+    if comments == 'syn_only':
+        fn_json_name = '{}_{}_val_img_2_fn_maps.json'.format(dt, sr)
+    else:
+        fn_json_name = 'xViewval_{}_{}_img_2_fn_maps.json'.format(dt, sr)
+    fn_json_file = os.path.join(save_dir, fn_json_name)  # topleft
     json.dump(img_name_2_fn_list_maps, open(fn_json_file, 'w'), ensure_ascii=False, indent=2, cls=MyEncoder)
 
 
 def plot_val_img_with_fp_fn_bbox(dt, sr, comments='', with_model=False):
-    fp_fn_list_dir = os.path.join(args.txt_save_dir,
+    syn_args = get_part_syn_args()
+    fp_fn_list_dir = os.path.join(syn_args.data_txt_dir,
                                   'val_img_2_fp_fn_list', comments, '{}_{}'.format(dt, sr))
-    img_fp_fn_bbox_path = os.path.join(args.cat_sample_dir,
+    img_fp_fn_bbox_path = os.path.join(syn_args.cat_sample_dir,
                                        'val_img_with_fp_fn_bbox', comments, '{}_{}'.format(dt,
                                                                                            sr))
     if not os.path.exists(img_fp_fn_bbox_path):
         os.makedirs(img_fp_fn_bbox_path)
 
-    fp_maps = json.load(open(os.path.join(fp_fn_list_dir,
-                                          'xViewval_{}_{}_img_2_fp_maps.json'.format(dt,
-                                                                                     sr))))
-    fn_maps = json.load(open(os.path.join(fp_fn_list_dir,
-                                          'xViewval_{}_{}_img_2_fn_maps.json'.format(dt,
-                                                                                     sr))))
+    if comments == 'syn_only':
+        fp_json_name = '{}_{}_val_img_2_fp_maps.json'.format(dt, sr)
+        fn_json_name = '{}_{}_val_img_2_fn_maps.json'.format(dt, sr)
+        img_dir = syn_args.syn_images_save_dir.format(syn_args.tile_size, dt)
+    else:
+        fp_json_name = 'xViewval_{}_{}_img_2_fp_maps.json'.format(dt, sr)
+        fn_json_name = 'xViewval_{}_{}_img_2_fn_maps.json'.format(dt, sr)
+        img_dir = args.images_save_dir
+
+    fp_maps = json.load(open(os.path.join(fp_fn_list_dir, fn_json_name)))
+    fn_maps = json.load(open(os.path.join(fp_fn_list_dir, fp_json_name)))
     fp_color = (0, 0, 255)  # Red
     fn_color = (255, 0, 0)  # Blue
     img_names = [k for k in fp_maps.keys()]
     for name in img_names:
-        img = cv2.imread(os.path.join(args.images_save_dir, name))
+        img = cv2.imread(os.path.join(img_dir, name))
         fp_list = fp_maps[name]
         fn_list = fn_maps[name]
         if not fp_list and not fn_list:
@@ -405,7 +423,6 @@ def plot_val_img_with_fp_fn_bbox(dt, sr, comments='', with_model=False):
                         fontFace=cv2.FONT_HERSHEY_SIMPLEX,
                         fontScale=0.5, thickness=1, lineType=cv2.LINE_AA, color=(0, 255, 0))
         cv2.imwrite(os.path.join(img_fp_fn_bbox_path, name), img)
-
 
 
 def draw_bar_compare_fp_fn_number_of_different_syn_ratio(comments=''):
@@ -477,17 +494,17 @@ def draw_bar_compare_fp_fn_number_of_different_syn_ratio(comments=''):
     plt.show()
 
 
-
-def plot_val_img_with_gt_prd_bbox(dt, sr, catid=0, score_thres=0.3, px_thres=6, whr_thres=4):
-    gt_prd_bbx_save_dir = os.path.join(args.cat_sample_dir,
+def plot_val_img_with_gt_prd_bbox(dt, sr, catid=0, score_thres=0.3, px_thres=6, whr_thres=4, comments=''):
+    syn_args = get_part_syn_args()
+    gt_prd_bbx_save_dir = os.path.join(syn_args.cat_sample_dir,
                                        'val_img_with_gt_prd_objscore_bbx/{}_{}/'.format(dt, sr))
     if not os.path.exists(gt_prd_bbx_save_dir):
         os.makedirs(gt_prd_bbx_save_dir)
-
-    results_dir = syn_args.results_dir.format(syn_args.class_num, dt, sr)
+    results_dir = glob.glob(os.path.join(syn_args.results_dir.format(syn_args.class_num, dt, sr), '*' + comments))[0]
+    # results_dir = syn_args.results_dir.format(syn_args.class_num, dt, sr)
     if not os.path.exists(results_dir):
         os.makedirs(results_dir)
-    result_json_file = results_dir + 'results_{}_{}.json'.format(dt, sr)
+    result_json_file = os.path.join(results_dir, 'results_{}_{}.json'.format(dt, sr))
     result_allcat_list = json.load(open(result_json_file))
     result_list = []
     # #fixme filter, and rare_result_allcat_list contains rare_cat_ids, rare_img_id_list and object score larger than score_thres
@@ -499,11 +516,16 @@ def plot_val_img_with_gt_prd_bbox(dt, sr, catid=0, score_thres=0.3, px_thres=6, 
 
     prd_color = (255, 255, 0)
     gt_color = (0, 255, 255)  # yellow
-
-    val_labels = pd.read_csv(os.path.join(args.data_save_dir, 'xviewval_lbl.txt'), header=None)
+    if comments == 'syn_only':
+        lbl_file = os.path.join(syn_args.syn_data_list_dir.format(dt, syn_args.class_num), '{}_{}_val_lbl.txt'.format(dt, syn_args.class_num))
+        img_dir = syn_args.syn_images_save_dir.format(syn_args.tile_size, dt)
+    else:
+        lbl_file = os.path.join(args.data_save_dir, 'xviewval_lbl.txt')
+        img_dir = args.images_save_dir
+    val_labels = pd.read_csv(lbl_file, header=None)
     for ix, vl in enumerate(val_labels.iloc[:, 0]):
         img_name = os.path.basename(vl).replace(TXT_SUFFIX, IMG_SUFFIX)
-        img = cv2.imread((os.path.join(args.images_save_dir, img_name)))
+        img = cv2.imread((os.path.join(img_dir, img_name)))
         good_gt_list = []
         df_lbl = pd.read_csv(vl, header=None, delimiter=' ')
         df_lbl.iloc[:, 1:] = df_lbl.iloc[:, 1:] * syn_args.tile_size
@@ -740,6 +762,9 @@ def get_part_syn_args():
     parser.add_argument("--syn_txt_save_dir", type=str, help="gt related files of synthetic airplanes",
                         default='/media/lab/Yang/data/xView_YOLO/labels/{}/{}_{}_cls/')
 
+    parser.add_argument("--data_txt_dir", type=str, help="to save txt files",
+                        default='/media/lab/Yang/data/xView_YOLO/labels/{}/{}_cls/')
+
     parser.add_argument("--data_xview_dir", type=str, help="to save data files",
                         default='/media/lab/Yang/code/yolov3/data_xview/{}_cls/')
 
@@ -750,7 +775,7 @@ def get_part_syn_args():
                         default='/media/lab/Yang/code/yolov3/result_output/{}_cls/{}_{}/')
 
     parser.add_argument("--cat_sample_dir", type=str, help="to save figures",
-                        default='/media/lab/Yang/data/xView_YOLO/cat_samples/')
+                        default='/media/lab/Yang/data/xView_YOLO/cat_samples/{}/{}_cls/')
 
     parser.add_argument("--val_percent", type=float, default=0.20,
                         help="Percent to split into validation (ie .25 = val set is 25% total)")
@@ -781,6 +806,8 @@ def get_part_syn_args():
                         help="the  #streets of synthetic  cities ")
     syn_args = parser.parse_args()
     syn_args.data_xview_dir = syn_args.data_xview_dir.format(syn_args.class_num)
+    syn_args.data_txt_dir = syn_args.data_txt_dir.format(syn_args.tile_size, syn_args.class_num)
+    syn_args.cat_sample_dir = syn_args.cat_sample_dir.format(syn_args.tile_size, syn_args.class_num)
     return syn_args
 
 
@@ -804,10 +831,10 @@ if __name__ == "__main__":
     # val_labels = pd.read_csv(os.path.join(syn_args.data_xview_dir, 'xviewval_lbl.txt'), header=None)
     # display_type = ['syn_color', 'syn_texture', 'syn_mixed'] # , 'syn_texture0', 'syn_color0']
     # syn_ratio = [0.25, 0.5, 0.75]
-    # # display_type = ['syn']
-    # # syn_ratio = [0]
-    # # comments = ''
-    # # comments = '38bbox_giou0'
+    # display_type = ['syn']
+    # syn_ratio = [0]
+    # comments = ''
+    # comments = '38bbox_giou0'
     # comments = '38bbox_giou0_with_model'
     # for dt in display_type:
     #     for sr in syn_ratio:
@@ -823,6 +850,7 @@ if __name__ == "__main__":
     #             os.makedirs(val_iou_path)
     #         iou_json_file = os.path.join(val_iou_path, 'xViewval_{}_{}_iou.json'.format(dt, sr))  # topleft
     #         json.dump(val_iou_map, open(iou_json_file, 'w'), ensure_ascii=False, indent=2, cls=MyEncoder)
+
 
     '''
     plot IOU distribution
@@ -917,6 +945,10 @@ if __name__ == "__main__":
     mismatch 2.5%, 5% on syn_*_0.25 3 trials
     '''
     # plot_mMAP_for_mismatches()
+
+
+
+
 
 
 

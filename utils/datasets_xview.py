@@ -450,8 +450,9 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
 
         hyp = self.hyp
         #fixme
-        # mosaic = True and self.augment  # load 4 images at a time into a mosaic (only during training)
-        mosaic = False  # load 4 images at a time into a mosaic (only during training)
+        mosaic = True and self.augment  # load 4 images at a time into a mosaic (only during training)
+        #fixme
+        # mosaic = False
         if mosaic:
             # Load mosaic
             img, labels = load_mosaic(self, index)
@@ -486,6 +487,9 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
                     labels[:, 2] = ratio[1] * h * (x[:, 2] - x[:, 4] / 2) + pad[1]  # pad height
                     labels[:, 3] = ratio[0] * w * (x[:, 1] + x[:, 3] / 2) + pad[0]
                     labels[:, 4] = ratio[1] * h * (x[:, 2] + x[:, 4] / 2) + pad[1]
+                #fixme ************* to deal with empty label files
+                else:
+                    labels = np.zeros((0, 5), dtype=np.float32) # ****** deal with empty label files
 
         if self.augment:
             # Augment imagespace
@@ -614,7 +618,7 @@ def load_mosaic(self, index):
                 labels[:, 3] = w * (x[:, 1] + x[:, 3] / 2) + padw
                 labels[:, 4] = h * (x[:, 2] + x[:, 4] / 2) + padh
             else:
-                labels = np.zeros((0, 5), dtype=np.float32)
+                labels = np.zeros((0, 5), dtype=np.float32) # ****** deal with empty label files
             labels4.append(labels)
 
     # Concat/clip labels

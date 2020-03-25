@@ -508,11 +508,12 @@ def compute_loss(p, targets, model):  # predictions, targets, model
             # exit(0)
             # print('tbox[i].size----', tbox[i].size)
             # print('tbox[i]----', tbox[i])
+            #fixme
             if len(tbox[i].size()):
                 giou = bbox_iou(pbox.t(), tbox[i], x1y1x2y2=False, GIoU=True)  # giou computation
             else:
                 giou = torch.zeros_like(tbox[i])
-            # print('giou----', giou)
+                print('giou----', giou)
             lbox += (1.0 - giou).sum() if red == 'sum' else (1.0 - giou).mean()  # giou loss
             # print('b, a, gj, gi', b, a, gj, gi)
             tobj[b, a, gj, gi] = giou.detach().type(tobj.dtype)

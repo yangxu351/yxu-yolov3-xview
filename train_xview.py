@@ -435,15 +435,17 @@ def prebias():
         opt.prebias = False  # disable prebias
 
 
-def get_opt(dt, sr, comments=''):
+def get_opt(dt, sr=None, comments=''):
     parser = argparse.ArgumentParser()
     parser.add_argument('--epochs', type=int, default=180)  # 500200 batches at bs 16, 117263 images = 273 epochs
     parser.add_argument('--batch-size', type=int, default=8)  # effective bs = batch_size * accumulate = 16 * 4 = 64
 
     parser.add_argument('--accumulate', type=int, default=4, help='batches to accumulate before optimizing')
     parser.add_argument('--cfg', type=str, default='cfg/yolov3-spp-{}cls_syn.cfg', help='*.cfg path')
-    if sr ==0:
+    if sr == 0:
         parser.add_argument('--data', type=str, default='data_xview/{}_cls/xview_{}_{}{}.data', help='*.data path')
+    elif comments == '_syn_only':
+        parser.add_argument('--data', type=str, default='data_xview/{}_cls/{}_syn_only.data', help='*.data path')
     else:
         parser.add_argument('--data', type=str, default='data_xview/{}_cls/xview_{}_{}/xview_{}_{}{}.data', help='*.data path')
     parser.add_argument('--writer_dir', type=str, default='writer_output/{}_cls/{}_{}/', help='*events* path')
@@ -457,8 +459,8 @@ def get_opt(dt, sr, comments=''):
     parser.add_argument('--img_size', type=int, default=608, help='inference size (pixels)') # 416 608
     parser.add_argument('--class_num', type=int, default=1, help='class number') # 60 6 1
 
-    parser.add_argument('--rect', action='store_true', help='rectangular training')
-    parser.add_argument('--resume', action='store_true', default=False, help='resume training from last.pt')
+    parser.add_argument('--rect', default=True, action='store_true', help='rectangular training')
+    parser.add_argument('--resume', default=False,  action='store_true', help='resume training from last.pt')
     parser.add_argument('--nosave', action='store_true', help='only save final checkpoint')
     parser.add_argument('--notest', action='store_true', help='only test final epoch')
     parser.add_argument('--evolve', action='store_true', help='evolve hyperparameters')
@@ -490,27 +492,42 @@ if __name__ == '__main__':
     #         for mr in mis_ratio:
     #             for i in range(trial):
 
-    display_type = ['syn_texture0'] # , 'syn_color0']
-    syn_ratio = [0.75]
+    # display_type = ['syn_texture0'] # , 'syn_color0']
+    # syn_ratio = [0.75]
+
+    display_type = ['syn_background']
+    syn_ratio = [ 0.3] # , 0.2, 0.1]
+    #fixme
+    # comments = ''
+    # comments = '_38bbox_000wh'
+    # comments = '_38bbox_giou0'
+    # comments = '_mismatch{}_{}'.format(mr, i)
+    # comments = '_with_model'
+    # comments = '_px4whr3'
+    # comments = '_syn_only'
+    # comments = '_px6whr4_bbox0'
+    comments = '_px6whr4_rect_mosaic'
     for dt in display_type:
         for sr in syn_ratio:
-            opt = get_opt(dt, sr)
+            opt = get_opt(dt, sr, comments)
+            # opt = get_opt(dt, comments=comments)
             opt.cfg = opt.cfg.format(opt.class_num)
             time_marker = time.strftime('%Y-%m-%d_%H.%M', time.localtime())
-            #fixme
-            # comments = ''
-            # comments = '_38bbox_000wh'
-            # comments = '_38bbox_giou0'
-            # comments = '_mismatch{}_{}'.format(mr, i)
-            # comments = '_with_model'
-            comments = '_px4whr3'
+            # time_marker = '2020-03-25_08.12'
             opt.weights_dir = opt.weights_dir.format(opt.class_num, opt.syn_display_type, opt.syn_ratio) + '{}/'.format(time_marker + comments)
             opt.writer_dir = opt.writer_dir.format(opt.class_num, opt.syn_display_type, opt.syn_ratio) + '{}/'.format(time_marker + comments)
-            opt.data = opt.data.format(opt.class_num, opt.syn_display_type, opt.syn_ratio, opt.syn_display_type, opt.syn_ratio, comments)
-            opt.result_dir = opt.result_dir.format(opt.class_num, opt.syn_display_type, opt.syn_ratio) + '{}/'.format(time_marker + comments)
-            results_file = os.path.join(opt.result_dir, 'results_{}_{}.txt'.format(opt.syn_display_type, opt.syn_ratio))
-            last = os.path.join(opt.weights_dir, 'last_{}_{}.pt'.format(opt.syn_display_type, opt.syn_ratio))
-            best = os.path.join(opt.weights_dir, 'best_{}_{}.pt'.format(opt.syn_display_type, opt.syn_ratio))
+            if comments == '_syn_only':
+                opt.data = opt.data.format(opt.class_num, opt.syn_display_type)
+                opt.result_dir = opt.result_dir.format(opt.class_num, opt.syn_display_type, comments) + '{}/'.format(time_marker + comments)
+                results_file = os.path.join(opt.result_dir, 'results_{}_{}.txt'.format(opt.syn_display_type, comments))
+                last = os.path.join(opt.weights_dir, 'last_{}_{}.pt'.format(opt.syn_display_type, comments))
+                best = os.path.join(opt.weights_dir, 'best_{}_{}.pt'.format(opt.syn_display_type, comments))
+            else:
+                opt.data = opt.data.format(opt.class_num, opt.syn_display_type, opt.syn_ratio, opt.syn_display_type, opt.syn_ratio, comments)
+                opt.result_dir = opt.result_dir.format(opt.class_num, opt.syn_display_type, opt.syn_ratio) + '{}/'.format(time_marker + comments)
+                results_file = os.path.join(opt.result_dir, 'results_{}_{}.txt'.format(opt.syn_display_type, opt.syn_ratio))
+                last = os.path.join(opt.weights_dir, 'last_{}_{}.pt'.format(opt.syn_display_type, opt.syn_ratio))
+                best = os.path.join(opt.weights_dir, 'best_{}_{}.pt'.format(opt.syn_display_type, opt.syn_ratio))
             # opt.name = '_{}_{}'.format(opt.syn_display_type, opt.syn_ratio)
             if not os.path.exists(opt.weights_dir):
                 os.makedirs(opt.weights_dir)

@@ -11,7 +11,7 @@ import shutil
 from utils.data_process_distribution_vis_util import process_wv_coco_for_yolo_patches_no_trnval as pwv
 from utils.xview_synthetic_util import preprocess_synthetic_data_distribution as pps
 from utils.object_score_util import get_bbox_coords_from_annos_with_object_score as gbc
-from utils.utils_xview import coord_iou
+from utils.xview_synthetic_util import anaylze_xview_syn_results as axs
 
 IMG_SUFFIX = '.png'
 TXT_SUFFIX = '.txt'
@@ -162,7 +162,7 @@ def mv_list():
             shutil.move(src_lbl_txt, dst_lbl_txt)
 
 
-def collect_syn_data(data_name):
+def collect_syn_data(data_name, comments=''):
     syn_args = pps.get_syn_args()
     images_save_dir = syn_args.syn_images_save_dir
     txt_save_dir = syn_args.syn_txt_save_dir
@@ -176,8 +176,8 @@ def collect_syn_data(data_name):
     all_files = glob.glob(images_save_dir + '*' + suffix)
     num_files = len(all_files)
 
-    img_txt = open(os.path.join(txt_save_dir, '{}_img.txt'.format(data_name)), 'w')
-    lbl_txt = open(os.path.join(txt_save_dir, '{}_lbl.txt'.format(data_name)), 'w')
+    img_txt = open(os.path.join(txt_save_dir, '{}_img{}.txt'.format(data_name, comments)), 'w')
+    lbl_txt = open(os.path.join(txt_save_dir, '{}_lbl{}.txt'.format(data_name, comments)), 'w')
 
     for i in range(num_files):
         img_txt.write("%s\n" % all_files[i])
@@ -192,6 +192,52 @@ def collect_syn_data(data_name):
                     os.path.join(data_save_dir, '{}_img.txt'.format(data_name)))
     shutil.copyfile(os.path.join(txt_save_dir, '{}_lbl.txt'.format(data_name)),
                     os.path.join(data_save_dir, '{}_lbl.txt'.format(data_name)))
+
+
+def split_syn_trn_val(display_type='syn_texture'):
+    syn_args = axs.get_part_syn_args()
+    data_dir = syn_args.syn_data_list_dir.format(display_type, syn_args.class_num)
+    syn_all_img_files = pd.read_csv(os.path.join(data_dir, '{}_{}_img.txt'.format(display_type, syn_args.class_num)), header=None).to_numpy()
+    syn_all_lbl_files = pd.read_csv(os.path.join(data_dir, '{}_{}_lbl.txt'.format(display_type, syn_args.class_num)), header=None).to_numpy()
+
+    val_num = np.int(syn_all_img_files.shape[0] * syn_args.val_percent)
+    np.random.seed(syn_args.seed)
+    all_indices = np.random.permutation(syn_all_img_files.shape[0])
+
+    trn_img_txt = open(os.path.join(data_dir, '{}_{}_train_img.txt'.format(display_type, syn_args.class_num )), 'w')
+    trn_lbl_txt = open(os.path.join(data_dir, '{}_{}_train_lbl.txt'.format(display_type, syn_args.class_num)), 'w')
+
+    val_img_txt = open(os.path.join(data_dir, '{}_{}_val_img.txt'.format(display_type, syn_args.class_num)), 'w')
+    val_lbl_txt = open(os.path.join(data_dir, '{}_{}_val_lbl.txt'.format(display_type, syn_args.class_num)), 'w')
+
+    for i in all_indices[:val_num]:
+        val_img_txt.write('%s\n' % syn_all_img_files[i, 0])
+        val_lbl_txt.write('%s\n' % syn_all_lbl_files[i, 0])
+    val_img_txt.close()
+    val_lbl_txt.close()
+    for j in all_indices[val_num:]:
+        trn_img_txt.write('%s\n' % syn_all_img_files[j, 0])
+        trn_lbl_txt.write('%s\n' % syn_all_lbl_files[j, 0])
+    trn_img_txt.close()
+    trn_lbl_txt.close()
+
+
+def create_syn_data(dt, comments='syn_only'):
+    syn_args = axs.get_part_syn_args()
+    data_dir = syn_args.syn_data_list_dir.format(dt, syn_args.class_num)
+    data_txt = open(os.path.join(syn_args.data_xview_dir, '{}_{}.data'.format(dt, comments)), 'w')
+    data_txt.write('train=./data_xview/{}_{}_cls/{}_{}_train_img.txt\n'.format(dt, syn_args.class_num, dt, syn_args.class_num))
+    data_txt.write('train_label=./data_xview/{}_{}_cls/{}_{}_train_lbl.txt\n'.format(dt, syn_args.class_num, dt, syn_args.class_num))
+
+    df = pd.read_csv(os.path.join(data_dir, '{}_{}_train_img.txt'.format(dt, syn_args.class_num)), header=None) # **********
+    data_txt.write('syn_0_xview_number=%d\n' % df.shape[0]) #fixme **********
+    data_txt.write('classes=%s\n' % str(syn_args.class_num))
+    data_txt.write('valid=./data_xview/{}_{}_cls/{}_{}_val_img.txt\n'.format(dt, syn_args.class_num, dt, syn_args.class_num))
+    data_txt.write('valid_label=./data_xview/{}_{}_cls/{}_{}_val_lbl.txt\n'.format(dt, syn_args.class_num, dt, syn_args.class_num))
+    data_txt.write('names=./data_xview/{}_cls/xview.names\n'.format(syn_args.class_num))
+    data_txt.write('backup=backup/\n')
+    data_txt.write('eval={}'.format(dt))
+    data_txt.close()
 
 
 def create_mismatch_syn_labels(mis_ratio, ratio=0.25, trial=3):
@@ -225,13 +271,16 @@ def create_mismatch_syn_labels(mis_ratio, ratio=0.25, trial=3):
                               header=None, index=None)
 
 
-def create_xview_syn_data(dt, sr, comments=''):
+def create_xview_syn_data(dt, sr, comments='', trn_comments=False):
     args = pwv.get_args()
     syn_args = pps.get_syn_args()
     if sr:
+        cmts = ''
+        if trn_comments:
+            cmts = comments
         data_txt = open(os.path.join(args.data_save_dir, 'xview_{}_{}'.format(dt, sr), 'xview_{}_{}{}.data'.format(dt, sr, comments)), 'w')
-        data_txt.write('train=./data_xview/{}_cls/xview_{}_{}/xview_{}_{}_train_img{}.txt\n'.format(syn_args.class_num, dt, sr, dt, sr, comments))
-        data_txt.write('train_label=./data_xview/{}_cls/xview_{}_{}/xview_{}_{}_train_lbl{}.txt\n'.format(syn_args.class_num, dt, sr, dt, sr, comments))
+        data_txt.write('train=./data_xview/{}_cls/xview_{}_{}/xview_{}_{}_train_img{}.txt\n'.format(syn_args.class_num, dt, sr, dt, sr, cmts))
+        data_txt.write('train_label=./data_xview/{}_cls/xview_{}_{}/xview_{}_{}_train_lbl{}.txt\n'.format(syn_args.class_num, dt, sr, dt, sr, cmts))
 
     else: # sr==0
         dt = 'syn'
@@ -239,7 +288,7 @@ def create_xview_syn_data(dt, sr, comments=''):
         data_txt.write('train_label=./data_xview/{}_cls/xviewtrain_lbl{}.txt\n'.format(syn_args.class_num, dt, sr, comments))
         data_txt.write('train=./data_xview/{}_cls/xviewtrain_img{}.txt\n'.format(syn_args.class_num, dt, sr, comments))
 
-    df = pd.read_csv(os.path.join(args.data_save_dir, 'xviewtrain_img.txt'), header=None)
+    df = pd.read_csv(os.path.join(args.data_save_dir, 'xviewtrain_img{}.txt'.format(comments)), header=None)
     data_txt.write('syn_0_xview_number=%s\n' % str(df.shape[0]))
     data_txt.write('classes=%s\n' % str(syn_args.class_num))
     data_txt.write('valid=./data_xview/{}_cls/xviewval_img{}.txt\n'.format(syn_args.class_num, comments))
@@ -315,8 +364,11 @@ if __name__ == "__main__":
     split train:val randomly split chips
     default split 
     '''
+    # comments = ''
+    # comments = '_px4whr3'
+    # comments = '_px6whr4_giou0'
     # data_name = 'xview'
-    # pwv.split_trn_val_with_chips(data_name)
+    # pwv.split_trn_val_with_chips(data_name, comments)
 
     '''
     collect all syn images and txt into one file
@@ -331,7 +383,17 @@ if __name__ == "__main__":
     # comments=''
     # comments = '_with_model'
     # comments = '_px4whr3'
+    # comments = '_px6whr4_giou0'
     # syn_ratio = [0.25, 0.5, 0.75]
+    # for sr in syn_ratio:
+    #     combine_xview_syn_by_ratio(sr, comments)
+
+    '''
+    combine xview & synthetic dataset [0.1, 0.2, 0.3]
+    for syn_background
+    '''
+    # comments = '_px6whr4_giou0'
+    # syn_ratio = [0.1, 0.2, 0.3]
     # for sr in syn_ratio:
     #     combine_xview_syn_by_ratio(sr, comments)
 
@@ -352,15 +414,17 @@ if __name__ == "__main__":
     create xview_syn_texture_0.25.data
     '''
     # comments = ''
-    # display_type = ['syn_texture', 'syn_color', 'syn_mixed']
-    # comments = '_px4whr3'
+    display_type = ['syn_texture', 'syn_color', 'syn_mixed']
+    # # comments = '_px4whr3'
+    # comments = '_px6whr4'
+    comments = '_px6whr4_giou0'
     # display_type = ['syn_texture0', 'syn_color0']
     # syn_ratio = [0.25, 0.5, 0.75]
     # for dt in display_type:
     #     for sr in syn_ratio:
-    #         create_xview_syn_data(dt, sr, comments)
+    #         create_xview_syn_data(dt, sr, comments, trn_comments=False)
 
-    # create_xview_syn_data('syn', 0, comments)
+    create_xview_syn_data('syn', 0, comments)
 
     ''''
     create xview_syn_texture_0.25_mismatches*.data
@@ -386,6 +450,26 @@ if __name__ == "__main__":
     #         create_xview_syn_data(dt, sr, comments)
 
     # create_xview_syn_data('syn', 0)
+
+    # syn_ratio = [0.1, 0.2, 0.3]
+    # comments = '_px6whr4_giou0'
+    # for sr in syn_ratio:
+    #     create_xview_syn_data('syn_background', sr, comments)
+
+    '''
+    split train and validation for syn_*_1_cls syn_only
+    '''
+    # display_types = ['syn_texture', 'syn_color', 'syn_mixed']
+    # for dt in display_types:
+    #     split_syn_trn_val(dt)
+
+    '''
+    create *.data syn_only
+    '''
+    # comments = 'syn_only'
+    # display_types = ['syn_texture', 'syn_color', 'syn_mixed']
+    # for dt in display_types:
+    #     create_syn_data(dt, comments)
 
 
 

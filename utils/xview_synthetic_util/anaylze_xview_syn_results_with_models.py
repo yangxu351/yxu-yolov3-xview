@@ -481,7 +481,7 @@ if __name__ == "__main__":
     #             for ix, vl in enumerate(val_labels.iloc[:, 0]):
     #                 txt_path = vl.split(os.path.basename(vl))[0]
     #                 img_name = os.path.basename(vl).replace(TXT_SUFFIX, IMG_SUFFIX)
-    #                 iou_list = axs.check_prd_gt_iou_xview_syn(dt, sr, img_name, comments, mid, txt_path, score_thres, iou_thres)
+    #                 iou_list = axs.check_prd_gt_iou_xview_syn(dt, sr, img_name, comments, txt_path, score_thres, iou_thres, mid)
     #                 val_iou_map[ix] = iou_list
     #
     #             val_iou_path = os.path.join(args.txt_save_dir, 'val_result_iou_map', comments, 'model_{}'.format(mid))
@@ -507,8 +507,8 @@ if __name__ == "__main__":
     statistic model Number 
     '''
     # type = 'training'
-    type = 'Validation'
-    statistic_model_number(type)
+    # type = 'Validation'
+    # statistic_model_number(type)
 
     '''
     val gt and prd results TP FN NMS

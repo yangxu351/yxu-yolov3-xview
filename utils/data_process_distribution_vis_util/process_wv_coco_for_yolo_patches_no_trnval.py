@@ -1933,9 +1933,10 @@ if __name__ == "__main__":
     default split
     '''
     # comments = ''
-    comments = '_px4whr3'
-    data_name = 'xview'
-    split_trn_val_with_chips(data_name, comments)
+    # comments = '_px4whr3'
+    # comments = '_px6whr4_giou0'
+    # data_name = 'xview'
+    # split_trn_val_with_chips(data_name, comments)
 
 
     '''
