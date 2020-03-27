@@ -15,7 +15,7 @@ from utils.data_process_distribution_vis_util import process_wv_coco_for_yolo_pa
 from utils.utils_xview import coord_iou
 from utils.xview_synthetic_util import preprocess_synthetic_data_distribution as pps
 
-# IMG_SUFFIX = '.jpg'
+IMG_SUFFIX0 = '.jpg'
 IMG_SUFFIX = '.png'
 TXT_SUFFIX = '.txt'
 
@@ -65,7 +65,7 @@ def get_val_imgid_by_name(name):
     return img_id
 
 
-def check_prd_gt_iou_xview_syn(dt, sr, image_name, comments, txt_path=None, score_thres=0.3, iou_thres=0.5, px_thres=6,
+def check_prd_gt_iou_xview_syn(dt, sr, image_name, comments='', txt_path=None, score_thres=0.3, iou_thres=0.5, px_thres=6,
                                whr_thres=4, mid=None):
     '''
     Note that there is possible some lower iou may cover the lager iou computed previously, remember to keep the larger iou
@@ -89,15 +89,16 @@ def check_prd_gt_iou_xview_syn(dt, sr, image_name, comments, txt_path=None, scor
     else:
         suffix = comments
         img_dir = args.images_save_dir
-    results_dir = glob.glob(os.path.join(syn_args.results_dir.format(syn_args.class_num, dt, sr), '*' + suffix))[0]
+    #fixme [0] [-1]
+    results_dir = glob.glob(os.path.join(syn_args.results_dir.format(syn_args.class_num, dt, sr), '*' + suffix))[-1]
 
     # fixme
     # img_id = get_val_imgid_by_name(image_name)
     img = cv2.imread(os.path.join(img_dir, image_name))
     img_size = img.shape[0]
     good_gt_list = []
-    if pps.is_non_zero_file(os.path.join(txt_path, image_name.replace(IMG_SUFFIX, TXT_SUFFIX))):
-        gt_cat = pd.read_csv(os.path.join(txt_path, image_name.replace(IMG_SUFFIX, TXT_SUFFIX)), header=None, delimiter=' ')
+    if pps.is_non_zero_file(os.path.join(txt_path, image_name.replace(IMG_SUFFIX0, TXT_SUFFIX))):
+        gt_cat = pd.read_csv(os.path.join(txt_path, image_name.replace(IMG_SUFFIX0, TXT_SUFFIX)), header=None, delimiter=' ')
         gt_cat = gt_cat.to_numpy()
         gt_cat[:, 1:5] = gt_cat[:, 1:5] * img_size
         gt_cat[:, 1] = gt_cat[:, 1] - gt_cat[:, 3] / 2
@@ -177,10 +178,12 @@ def check_prd_gt_iou_xview_syn(dt, sr, image_name, comments, txt_path=None, scor
     return [v for v in p_iou.values()]
 
 
-def plot_val_results_iou_comp(comments=''):
+def plot_val_results_iou_comp(comments='', display_type=[], syn_ratio=[]):
     val_iou_path = os.path.join(args.txt_save_dir, 'val_result_iou_map', comments)
-
-    syn0_iou_json_file = os.path.join(val_iou_path, 'xViewval_syn_0_iou.json')
+    if display_type[0] == 'syn_background':
+        syn0_iou_json_file = os.path.join(val_iou_path, 'xViewval_{}_0_iou.json'.format(display_type[0]))
+    else:
+        syn0_iou_json_file = os.path.join(val_iou_path, 'xViewval_syn_0_iou.json')
     syn0_iou_map = json.load(open(syn0_iou_json_file))
     syn0_iou_list = []
     for v in syn0_iou_map.values():
@@ -188,9 +191,8 @@ def plot_val_results_iou_comp(comments=''):
             syn0_iou_list.extend(v)
 
     colors = ['orange', 'm', 'g']
-    display_type = ['syn_texture', 'syn_color', 'syn_mixed']  # , 'syn_texture0', 'syn_color0']
-    syn_ratio = [0.25, 0.5, 0.75]
-    fig, axs = plt.subplots(3, 3, figsize=(15, 8), sharex=True, sharey=True)
+
+    fig, axs = plt.subplots(len(syn_ratio), len(display_type), figsize=(15, 8), sharex=True, sharey=True)
     for ix, sr in enumerate(syn_ratio):
         for jx, dt in enumerate(display_type):
             iou_json_file = os.path.join(val_iou_path, 'xViewval_{}_{}_iou.json'.format(dt, sr))
@@ -201,14 +203,22 @@ def plot_val_results_iou_comp(comments=''):
             for v in iou_map.values():
                 if len(v):
                     iou_list.extend(v)
-            axs[ix, jx].hist(syn0_iou_list, bins=10, histtype="bar", alpha=0.75, density=True, label='syn_0')
-            axs[ix, jx].hist(iou_list, bins=10, histtype="bar", alpha=0.75, color=colors[jx], density=True,
-                             label='{}_{}'.format(dt, sr))  # facecolor='g',
-            axs[ix, jx].grid(True)
-            axs[ix, jx].legend()
-            axs[0, jx].set_title(dt)
-            axs[2, jx].set_xlabel('IOU')
-        axs[ix, 0].set_ylabel('Number of Images')
+            if len(display_type) > 1:
+                axs[ix, jx].hist(syn0_iou_list, bins=10, histtype="bar", alpha=0.75, density=True, label='syn_0')
+                axs[ix, jx].hist(iou_list, bins=10, histtype="bar", alpha=0.75, color=colors[jx], density=True,
+                                 label='{}_{}'.format(dt, sr))  # facecolor='g',
+                axs[ix, jx].grid(True)
+                axs[ix, jx].legend()
+                axs[0, jx].set_title(dt)
+                axs[2, jx].set_xlabel('IOU')
+            else:
+                axs[ix].hist(syn0_iou_list, bins=10, histtype="bar", alpha=0.75, density=True, label='syn_0')
+                axs[ix].hist(iou_list, bins=10, histtype="bar", alpha=0.75, color=colors[jx], density=True,
+                                 label='{}_{}'.format(dt, sr))  # facecolor='g',
+                axs[ix].grid(True)
+                axs[ix].legend()
+                axs[ix].set_xlabel('IOU')
+        axs[ix].set_ylabel('Number of Images')
     fig.suptitle('Val Results IoU Comparison ' + comments, fontsize=20)
     save_dir = os.path.join(args.txt_save_dir, 'val_result_iou_map', 'figures', comments)
     if not os.path.exists(save_dir):
@@ -217,8 +227,8 @@ def plot_val_results_iou_comp(comments=''):
     fig.show()
 
 
-def get_fp_fn_list_airplane(dt, sr, comments='', with_model=False, catid=0, iou_thres=0.5, score_thres=0.3, px_thres=6,
-                            whr_thres=4):
+def get_fp_fn_list_airplane(dt, sr, comments='', catid=0, iou_thres=0.5, score_thres=0.3, px_thres=6,
+                            whr_thres=4, with_model=False):
     ''' ground truth '''
     syn_args = get_part_syn_args()
     if comments:
@@ -226,7 +236,9 @@ def get_fp_fn_list_airplane(dt, sr, comments='', with_model=False, catid=0, iou_
             suffix = comments[:12]
         else:
             suffix = comments
-        results_dir = glob.glob(os.path.join(syn_args.results_dir.format(syn_args.class_num, dt, sr), '*' + suffix))[0]
+        #fixme
+        # results_dir = glob.glob(os.path.join(syn_args.results_dir.format(syn_args.class_num, dt, sr), '*' + suffix))[0]
+        results_dir = glob.glob(os.path.join(syn_args.results_dir.format(syn_args.class_num, dt, sr), '*' + suffix))[-1]
     else:
         results_dir = syn_args.results_dir.format(syn_args.class_num, dt, sr)
 
@@ -242,13 +254,15 @@ def get_fp_fn_list_airplane(dt, sr, comments='', with_model=False, catid=0, iou_
 
     if comments == 'syn_only':
         val_lbl_txt = os.path.join(syn_args.syn_data_list_dir.format(dt, syn_args.class_num), '{}_{}_val_lbl.txt'.format(dt, syn_args.class_num))
-    else:
+    elif not comments: # comments == ''
         val_lbl_txt = os.path.join(syn_args.data_xview_dir, 'xviewval_lbl{}.txt'.format(comments))
+    else:
+        val_lbl_txt = os.path.join(syn_args.data_xview_dir, 'xviewval_lbl_{}.txt'.format(comments))
     val_labels = pd.read_csv(val_lbl_txt, header=None)
     img_name_2_fp_list_maps = {}
     img_name_2_fn_list_maps = {}
     for ix, vl in enumerate(val_labels.iloc[:, 0]):
-        img_name = os.path.basename(vl).replace(TXT_SUFFIX, IMG_SUFFIX)
+        img_name = os.path.basename(vl).replace(TXT_SUFFIX, IMG_SUFFIX0)
         # if img_name == '1585_2.jpg':
         #     print(img_name)
         # if img_name =='2518_2.jpg':
@@ -425,7 +439,7 @@ def plot_val_img_with_fp_fn_bbox(dt, sr, comments='', with_model=False):
         cv2.imwrite(os.path.join(img_fp_fn_bbox_path, name), img)
 
 
-def draw_bar_compare_fp_fn_number_of_different_syn_ratio(comments=''):
+def draw_bar_compare_fp_fn_number_of_different_syn_ratio(comments='', syn_ratios=[0.25, 0.5, 0.75]):
     fp_fn_0_dir = os.path.join(args.txt_save_dir, 'val_img_2_fp_fn_list', comments, 'syn_0')
     fp_0_file = json.load(open(os.path.join(fp_fn_0_dir, 'xViewval_syn_0_img_2_fp_maps.json')))
     fn_0_file = json.load(open(os.path.join(fp_fn_0_dir, 'xViewval_syn_0_img_2_fn_maps.json')))
@@ -437,10 +451,11 @@ def draw_bar_compare_fp_fn_number_of_different_syn_ratio(comments=''):
         os.mkdir(save_dir)
     x = [1, 3, 5, 7, 9, 11]
     xlabels = ['FP ratio=0.25', 'FP ratio=0.5', 'FP ratio=0.75', 'FN ratio=0.25', 'FN ratio=0.5', 'FN ratio=0.75']
+    xlabels = ['FP ratio=0.1', 'FP ratio=0.2', 'FP ratio=0.3', 'FN ratio=0.1', 'FN ratio=0.2', 'FN ratio=0.3']
     plt.rcParams['figure.figsize'] = (10.0, 8.0)
     fig, ax = plt.subplots(1, 1)
     width = 0.3
-    syn_ratios = [0.25, 0.5, 0.75]
+
     for ix, r in enumerate(syn_ratios):
         fp_fn_tx_path = os.path.join(args.txt_save_dir, 'val_img_2_fp_fn_list', comments,
                                      '{}_{}'.format('syn_texture', r))
@@ -491,6 +506,50 @@ def draw_bar_compare_fp_fn_number_of_different_syn_ratio(comments=''):
     plt.tight_layout(pad=0.4, w_pad=3.0, h_pad=3.0)
     plt.grid()
     plt.savefig(os.path.join(save_dir, 'cmp_fp_fn_syn0_vs_syn_clr_tx_mx.jpg'))
+    plt.show()
+
+
+def draw_bar_compare_fp_fn_number_of_different_syn_ratio_for_syn_background(comments='', dt='syn_background', syn_ratios=[0.1, 0.2, 0.3]):
+    fp_fn_0_dir = os.path.join(args.txt_save_dir, 'val_img_2_fp_fn_list', comments, '{}_0'.format(dt))
+    fp_0_file = json.load(open(os.path.join(fp_fn_0_dir, 'xViewval_{}_0_img_2_fp_maps.json'.format(dt))))
+    fn_0_file = json.load(open(os.path.join(fp_fn_0_dir, 'xViewval_{}_0_img_2_fn_maps.json'.format(dt))))
+    fp_0_num = len([v for v in fp_0_file.values() if v])
+    fn_0_num = len([v for v in fn_0_file.values() if v])
+
+    save_dir = os.path.join(args.txt_save_dir, 'val_img_2_fp_fn_list', 'figures', comments)
+    if not os.path.exists(save_dir):
+        os.mkdir(save_dir)
+    width = 0.3
+    x0 = 1
+    x = [x0+width, x0+2*width, x0+3*width, x0+4*width, x0+5*width, x0+6*width, x0+7*width, x0+8*width]
+    xlabels = ['FP', '', '', '', '', 'FN']
+    plt.rcParams['figure.figsize'] = (10.0, 8.0)
+    fig, ax = plt.subplots(1, 1)
+
+    rects_syn_0 = ax.bar([x[0] - width, x[0 + 5] - width], [fp_0_num, fn_0_num], width, label='{}={}'.format(dt, 0))
+    autolabel(ax, rects_syn_0, x, xlabels, [fp_0_num, fn_0_num], rotation=0)
+
+    for ix, r in enumerate(syn_ratios):
+        fp_fn_tx_path = os.path.join(args.txt_save_dir, 'val_img_2_fp_fn_list', comments,
+                                     '{}_{}'.format(dt, r))
+        fp_tx_file = json.load(
+            open(os.path.join(fp_fn_tx_path, 'xViewval_{}_{}_img_2_fp_maps.json'.format(dt, r))))
+        fn_tx_file = json.load(
+            open(os.path.join(fp_fn_tx_path, 'xViewval_{}_{}_img_2_fn_maps.json'.format(dt, r))))
+        fp_tx_num = len([k for k in fp_tx_file.keys() if fp_tx_file.get(k)])
+        fn_tx_num = len([k for k in fn_tx_file.keys() if fn_tx_file.get(k)])
+
+        rects_syn_clr = ax.bar([x[ix], x[ix + 5]], [fp_tx_num, fn_tx_num], width,
+                               label='{}={}'.format(dt, r))  # , label=labels
+        autolabel(ax, rects_syn_clr, x, xlabels, [fp_tx_num, fp_tx_num], rotation=0)
+
+    ax.legend()
+    ylabel = "Number"
+    plt.title('', literal_eval(syn_args.font2))
+    plt.ylabel(ylabel, literal_eval(syn_args.font2))
+    plt.tight_layout(pad=0.4, w_pad=3.0, h_pad=3.0)
+    plt.grid()
+    plt.savefig(os.path.join(save_dir, 'cmp_fp_fn_syn0_vs_syn_background.jpg'))
     plt.show()
 
 
@@ -785,7 +844,7 @@ def get_part_syn_args():
                         default="{'family': 'serif', 'weight': 'normal', 'size': 13}")
 
     parser.add_argument("--class_num", type=int, default=1, help="Number of Total Categories")  # 60  6
-    parser.add_argument("--seed", type=int, default=1024, help="random seed")
+    parser.add_argument("--seed", type=int, default=17, help="random seed") #fixme -- 1024 17
     parser.add_argument("--tile_size", type=int, default=608, help="image size")  # 300 416
 
     parser.add_argument("--syn_display_type", type=str, default='syn_texture',
@@ -828,20 +887,27 @@ if __name__ == "__main__":
 
     # score_thres = 0.3
     # iou_thres = 0.5
-    # val_labels = pd.read_csv(os.path.join(syn_args.data_xview_dir, 'xviewval_lbl.txt'), header=None)
-    # display_type = ['syn_color', 'syn_texture', 'syn_mixed'] # , 'syn_texture0', 'syn_color0']
-    # syn_ratio = [0.25, 0.5, 0.75]
-    # display_type = ['syn']
-    # syn_ratio = [0]
-    # comments = ''
-    # comments = '38bbox_giou0'
-    # comments = '38bbox_giou0_with_model'
+    # # val_labels = pd.read_csv(os.path.join(syn_args.data_xview_dir, 'xviewval_lbl.txt'), header=None)
+    # # display_type = ['syn_color', 'syn_texture', 'syn_mixed'] # , 'syn_texture0', 'syn_color0']
+    # # syn_ratio = [0.25, 0.5, 0.75]
+    # # display_type = ['syn']
+    # # syn_ratio = [0]
+    # # comments = ''
+    # # comments = '38bbox_giou0'
+    # # comments = '38bbox_giou0_with_model'
+    # display_type = ['syn_background'] # , 'syn_texture0', 'syn_color0']
+    # syn_ratio = [0, 0.1, 0.2, 0.3]
+    # comments = 'px6whr4_ng0'
+    # if comments:
+    #     val_labels = pd.read_csv(os.path.join(syn_args.data_xview_dir, 'xviewval_lbl_{}.txt'.format(comments)), header=None)
+    # else:
+    #     val_labels = pd.read_csv(os.path.join(syn_args.data_xview_dir, 'xviewval_lbl{}.txt'.format(comments)), header=None)
     # for dt in display_type:
     #     for sr in syn_ratio:
     #         val_iou_map = {}
     #         for ix, vl in enumerate(val_labels.iloc[:, 0]):
     #             txt_path = vl.split(os.path.basename(vl))[0]
-    #             img_name = os.path.basename(vl).replace(TXT_SUFFIX, IMG_SUFFIX)
+    #             img_name = os.path.basename(vl).replace(TXT_SUFFIX, IMG_SUFFIX0)
     #             iou_list = check_prd_gt_iou_xview_syn(dt, sr, img_name, comments, txt_path, score_thres, iou_thres)
     #             val_iou_map[ix] = iou_list
     #
@@ -857,10 +923,15 @@ if __name__ == "__main__":
     x-axis: IoU 
     y-axis: Number of Images
     '''
-    # comments = ''
-    # comments = '38bbox_giou0'
-    # comments = '38bbox_giou0_with_model'
-    # plot_val_results_iou_comp(comments)
+    # # display_type = ['syn_texture', 'syn_color', 'syn_mixed']  # , 'syn_texture0', 'syn_color0']
+    # # syn_ratio = [0.25, 0.5, 0.75]
+    # display_type = ['syn_background']  # , 'syn_texture0', 'syn_color0']
+    # syn_ratio = [ 0.1, 0.2, 0.3]
+    # # comments = ''
+    # # comments = '38bbox_giou0'
+    # # comments = '38bbox_giou0_with_model'
+    # comments = 'px6whr4_ng0'
+    # plot_val_results_iou_comp(comments, display_type, syn_ratio)
 
     '''
     val gt and prd results FP FN NMS
@@ -870,50 +941,62 @@ if __name__ == "__main__":
     # whr_thres = 4
     # iou_thres = 0.5
     # catid = 0
-    # # display_type = ['syn_texture', 'syn_color', 'syn_mixed'] #  ['syn_texture', 'syn_color', 'syn_mixed'] , 'syn_texture0', 'syn_color0']
-    # # syn_ratio = [0.25, 0.5, 0.75] #  [0.25, 0.5, 0.75]
-    # display_type = ['syn']
-    # syn_ratio = [0]
+    # # # display_type = ['syn_texture', 'syn_color', 'syn_mixed'] #  ['syn_texture', 'syn_color', 'syn_mixed'] , 'syn_texture0', 'syn_color0']
+    # # # syn_ratio = [0.25, 0.5, 0.75] #  [0.25, 0.5, 0.75]
+    # # # display_type = ['syn']
+    # # # syn_ratio = [0]
+    # display_type = ['syn_background']  # , 'syn_texture0', 'syn_color0']
+    # syn_ratio = [0, 0.1, 0.2, 0.3]
+    #
     # # comments = ''
     # # comments = '38bbox_giou0'
-    # with_model=True
-    # comments = '38bbox_giou0_with_model'
+    # # with_model=True
+    # # comments = '38bbox_giou0_with_model'
+    # comments = 'px6whr4_ng0'
     #
     # for dt in display_type:
     #     for sr in syn_ratio:
-    #         get_fp_fn_list_airplane(dt, sr, comments, with_model, catid, iou_thres, score_thres, px_thres, whr_thres)
+    #         get_fp_fn_list_airplane(dt, sr, comments, catid, iou_thres, score_thres, px_thres, whr_thres)
 
     '''
     plot val images with fp fn bbox
     '''
+    # with_model = True
+    # comments = '38bbox_giou0_with_model'
     # display_type = ['syn_texture', 'syn_color', 'syn_mixed'] #, 'syn_texture0', 'syn_color0']
     # syn_ratio = [0.25, 0.5, 0.75]
     # display_type = ['syn']
     # syn_ratio = [0]
-    # # # comments = ''
-    # # comments = '38bbox_giou0'
-    # with_model = True
-    # comments = '38bbox_giou0_with_model'
+    # # comments = ''
+    # comments = '38bbox_giou0'
+    # comments = 'px6whr4_ng0'
+    # display_type = ['syn_background']  # , 'syn_texture0', 'syn_color0']
+    # syn_ratio = [0, 0.1, 0.2, 0.3]
     # for dt in display_type:
     #     for sr in syn_ratio:
-    #         plot_val_img_with_fp_fn_bbox(dt, sr, comments, with_model)
+    #         plot_val_img_with_fp_fn_bbox(dt, sr, comments)
 
 
     '''
     statistic number of FP and number of FN
     see if the synthtetic data reduce the FP and FN 
     '''
+    # syn_ratios = [0.25, 0.5, 0.75]
     # # comments = ''
     # comments = '38bbox_giou0'
     # comments = '38bbox_giou0_with_model'
-    # draw_bar_compare_fp_fn_number_of_different_syn_ratio(comments)
+    # draw_bar_compare_fp_fn_number_of_different_syn_ratio(comments, syn_ratio)
+
+    # comments = 'px6whr4_ng0'
+    # syn_ratio = [0.1, 0.2, 0.3]
+    # dt = 'syn_background'
+    # draw_bar_compare_fp_fn_number_of_different_syn_ratio_for_syn_background(comments, dt, syn_ratio)
 
     # syn_ratios = [0.25, 0.5, 0.75]
     # # comments = ''
     # # comments = '38bbox_giou0'
     # comments = '38bbox_giou0_with_model'
-    # for r in syn_ratios:
-    #     draw_bar_compare_fp_fn_number_by_syn_ratio(r, comments)
+
 
 
 

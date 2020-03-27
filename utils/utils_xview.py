@@ -503,17 +503,17 @@ def compute_loss(p, targets, model):  # predictions, targets, model
             pwh = torch.exp(ps[:, 2:4]).clamp(max=1E3) * anchor_vec[i]
             pbox = torch.cat((pxy, pwh), 1)  # predicted box
             #fixme
-            # giou = bbox_iou(pbox.t(), tbox[i], x1y1x2y2=False, GIoU=True)  # giou computation
+            giou = bbox_iou(pbox.t(), tbox[i], x1y1x2y2=False, GIoU=True)  # giou computation
             # print(giou)
             # exit(0)
             # print('tbox[i].size----', tbox[i].size)
             # print('tbox[i]----', tbox[i])
             #fixme
-            if len(tbox[i].size()):
-                giou = bbox_iou(pbox.t(), tbox[i], x1y1x2y2=False, GIoU=True)  # giou computation
-            else:
-                giou = torch.zeros_like(tbox[i])
-                print('giou----', giou)
+            # if len(tbox[i].size()):
+            #     giou = bbox_iou(pbox.t(), tbox[i], x1y1x2y2=False, GIoU=True)  # giou computation
+            # else:
+            #     giou = torch.zeros_like(tbox[i])
+            #     print('giou----', giou)
             lbox += (1.0 - giou).sum() if red == 'sum' else (1.0 - giou).mean()  # giou loss
             # print('b, a, gj, gi', b, a, gj, gi)
             tobj[b, a, gj, gi] = giou.detach().type(tobj.dtype)
@@ -551,11 +551,18 @@ def compute_loss(p, targets, model):  # predictions, targets, model
     lbox *= h['giou']
     lobj *= h['obj']
     lcls *= h['cls']
+    #fixme
+    # if red == 'sum' and ng > 0:
+    #     bs = tobj.shape[0]  # batch size
+    #     lbox *= 3 / ng
+    #     lobj *= 3 / (6300 * bs) * 2  # 3 / np * 2 # ?????
+    #     lcls *= 3 / ng / model.nc
     if red == 'sum':
         bs = tobj.shape[0]  # batch size
-        lbox *= 3 / ng
         lobj *= 3 / (6300 * bs) * 2  # 3 / np * 2 # ?????
-        lcls *= 3 / ng / model.nc
+        if ng:
+            lcls *= 3 / ng / model.nc
+            lbox *= 3 / ng
 
     loss = lbox + lobj + lcls
     return loss, torch.cat((lbox, lobj, lcls, loss)).detach()

@@ -556,7 +556,7 @@ def get_syn_args():
                         default="{'family': 'serif', 'weight': 'normal', 'size': 13}")
 
     parser.add_argument("--class_num", type=int, default=1, help="Number of Total Categories")  # 60  6
-    parser.add_argument("--seed", type=int, default=1024, help="random seed")
+    parser.add_argument("--seed", type=int, default=17, help="random seed") #fixme  1024 17
     parser.add_argument("--tile_size", type=int, default=608, help="image size")  # 300 416
 
     # #####*********************change

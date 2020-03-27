@@ -21,6 +21,12 @@
 storage.googleapis.com
 runs/*
 data/*
+
+##added by Yang Xu
+writer_output/*
+result_output/*
+weights/*
+
 !data/samples/zidane.jpg
 !data/samples/bus.jpg
 !data/coco.names

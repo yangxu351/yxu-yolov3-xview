@@ -377,7 +377,11 @@ def split_trn_val_with_chips(data_name='xview', comments=''):
     txt_save_dir = args.data_list_save_dir
     data_save_dir = args.data_save_dir
     if comments:
-        lbl_path = args.annos_save_dir[:-1] + comments + '/'
+        comments = comments.format(args.seed)
+        lbl_path = args.annos_save_dir[:-1] + comments.split('_seed')[0] + '/'
+        data_save_dir = os.path.join(data_save_dir, comments[1:])
+        if not os.path.exists(data_save_dir):
+            os.makedirs(data_save_dir)
     else:
         lbl_path = args.annos_save_dir
     images_save_dir = args.images_save_dir
@@ -1825,7 +1829,7 @@ def get_args():
     parser.add_argument("-ft2", "--font2", type=str, help="legend font",
                         default="{'family': 'serif', 'weight': 'normal', 'size': 13}")
     parser.add_argument("--class_num", type=int, default=1, help="Number of Total Categories")  # 60  6 1
-    parser.add_argument("--seed", type=int, default=1024, help="random seed")
+    parser.add_argument("--seed", type=int, default=17, help="random seed") #fixme ---- 1024 17
     parser.add_argument("--input_size", type=int, default=608, help="Number of Total Categories")  # 300 416
 
     parser.add_argument("--rare", type=bool, default=False,
@@ -1936,7 +1940,7 @@ if __name__ == "__main__":
     # comments = '_px4whr3'
     # comments = '_px6whr4_giou0'
     # data_name = 'xview'
-    # split_trn_val_with_chips(data_name, comments)
+    split_trn_val_with_chips(data_name, comments)
 
 
     '''

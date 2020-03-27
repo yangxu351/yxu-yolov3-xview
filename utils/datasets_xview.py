@@ -450,9 +450,9 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
 
         hyp = self.hyp
         #fixme
-        mosaic = True and self.augment  # load 4 images at a time into a mosaic (only during training)
+        # mosaic = True and self.augment  # load 4 images at a time into a mosaic (only during training)
         #fixme
-        # mosaic = False
+        mosaic = False
         if mosaic:
             # Load mosaic
             img, labels = load_mosaic(self, index)
