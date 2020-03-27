@@ -114,7 +114,6 @@ def get_part_syn_args():
                         default="{'family': 'serif', 'weight': 'normal', 'size': 13}")
 
     parser.add_argument("--class_num", type=int, default=1, help="Number of Total Categories")  # 60  6
-    parser.add_argument("--seed", type=int, default=1024, help="random seed")
     parser.add_argument("--tile_size", type=int, default=608, help="image size")  # 300 416
 
     parser.add_argument("--syn_display_type", type=str, default='syn_background',

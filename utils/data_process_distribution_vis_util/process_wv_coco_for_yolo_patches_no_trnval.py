@@ -1829,7 +1829,7 @@ def get_args():
     parser.add_argument("-ft2", "--font2", type=str, help="legend font",
                         default="{'family': 'serif', 'weight': 'normal', 'size': 13}")
     parser.add_argument("--class_num", type=int, default=1, help="Number of Total Categories")  # 60  6 1
-    parser.add_argument("--seed", type=int, default=17, help="random seed") #fixme ---- 1024 17
+    parser.add_argument("--seed", type=int, default=1024, help="random seed") #fixme ---- 1024 17
     parser.add_argument("--input_size", type=int, default=608, help="Number of Total Categories")  # 300 416
 
     parser.add_argument("--rare", type=bool, default=False,

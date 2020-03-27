@@ -1046,7 +1046,7 @@ def plot_images(imgs, targets, paths=None, fname='images.jpg'):
 
     for i in range(bs):
         #fixme skip target is null
-        if not targets[i].shape[0]:
+        if i >= targets.shape[0] or not targets[i].shape[0]:
             continue
         boxes = xywh2xyxy(targets[targets[:, 0]==i, 2:6]).T
         boxes[[0, 2]] *= w

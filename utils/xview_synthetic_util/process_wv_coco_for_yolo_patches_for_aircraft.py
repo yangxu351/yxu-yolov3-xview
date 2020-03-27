@@ -461,9 +461,9 @@ if __name__ == "__main__":
     # comments = ''
     # comments = '_px4whr3'
     # comments = '_px6whr4_ng0'
-    # comments = '_px6whr4_ng0_seed{}'
-    # data_name = 'xview'
-    # pwv.split_trn_val_with_chips(data_name, comments)
+    comments = '_px6whr4_ng0_seed{}'
+    data_name = 'xview'
+    pwv.split_trn_val_with_chips(data_name, comments)
 
 
     '''
