@@ -2,8 +2,9 @@ import glob
 import numpy as np
 import argparse
 import os
-from skimage import io, color
+import pandas as pd
 from ast import literal_eval
+import seaborn as sns
 from matplotlib import pyplot as plt
 import json
 import shutil
@@ -14,61 +15,7 @@ IMG_FORMAT = '.png'
 TXT_FORMAT = '.txt'
 
 
-def merge_clean_origin_syn_bkg_image_files(file_path, cities, streets, tile_size=608, resolution=0.3, white_thresh=0.5):
-    '''
-    merge all the origin synthetic data into one folder
-    then remove rgb images those contain more than white_thresh*100% white pixels
-    :param file_path:
-    :param cities:
-    :param streets:
-    :param tile_size:
-    :param resolution:
-    :return:
-    '''
-    step = tile_size * resolution
-    image_folder_name = '{}_{}_{}_images_step{}'
-
-    new_img_folder = '{}_all_images_step{}'.format(syn_args.syn_display_type, step)
-    new_lbl_folder = '{}_all_annos_step{}'.format(syn_args.syn_display_type, step)
-    des_img_path = os.path.join(file_path, new_img_folder)
-    des_lbl_path = os.path.join(file_path, new_lbl_folder)
-    if not os.path.exists(des_img_path):
-        os.mkdir(des_img_path)
-    else:
-        shutil.rmtree(des_img_path)
-        os.mkdir(des_img_path)
-    if not os.path.exists(des_lbl_path):
-        os.mkdir(des_lbl_path)
-    else:
-        shutil.rmtree(des_lbl_path)
-        os.mkdir(des_lbl_path)
-
-    for i in range(len(cities)):
-        image_path = os.path.join(file_path,
-                                  image_folder_name.format(syn_args.syn_display_type, cities[i], streets[i], step))
-        image_files = np.sort(glob.glob(os.path.join(image_path, '*{}'.format(IMG_FORMAT))))
-        for img in image_files:
-            shutil.copy(img, des_img_path)
-
-    all_images = np.sort(glob.glob(os.path.join(des_img_path, '*{}'.format(IMG_FORMAT))))
-    for ix, f in enumerate(all_images):
-        img = io.imread(f)
-        img = color.rgb2gray(img)
-        white_num = np.sum(img == 1)
-        white_ratio = white_num / img.shape[0] / img.shape[1]
-
-        if white_ratio > white_thresh:
-            os.remove(f)
-        else:
-            shutil.copy(f, os.path.join(syn_args.syn_images_save_dir, os.path.basename(f)))
-
-            txt_name = os.path.basename(f).replace(IMG_FORMAT, TXT_FORMAT)
-            f_txt = open(os.path.join(des_lbl_path, txt_name), 'w')
-            f_txt.close()
-            shutil.copy(os.path.join(des_lbl_path, txt_name), os.path.join(syn_args.syn_annos_save_dir, txt_name))
-
-
-def get_part_syn_args():
+def get_part_syn_args(dt, sr):
     parser = argparse.ArgumentParser()
 
     parser.add_argument("--syn_bkg_img_anno_dir", type=str, help="images and annotations of synthetic airplanes",
@@ -112,10 +59,8 @@ def get_part_syn_args():
     parser.add_argument("--class_num", type=int, default=1, help="Number of Total Categories")  # 60  6
     parser.add_argument("--tile_size", type=int, default=608, help="image size")  # 300 416
 
-    parser.add_argument("--syn_display_type", type=str, default='syn_background',
+    parser.add_argument("--syn_display_type", type=str, default=dt,
                         help="syn_background")  # ######*********************change
-    parser.add_argument("--syn_ratio", type=float, default=0.75,
-                        help="ratio of synthetic data: 0.25, 0.5, 0.75, 1.0  0")  # ######*********************change
 
     parser.add_argument("--min_region", type=int, default=100, help="the smallest #pixels (area) to form an object")
     parser.add_argument("--link_r", type=int, default=15,
@@ -134,29 +79,84 @@ def get_part_syn_args():
     syn_args.data_xview_dir = syn_args.data_xview_dir.format(syn_args.class_num)
     syn_args.data_txt_dir = syn_args.data_txt_dir.format(syn_args.tile_size, syn_args.class_num)
     syn_args.cat_sample_dir = syn_args.cat_sample_dir.format(syn_args.tile_size, syn_args.class_num)
-    if not os.path.exists(syn_args.data_xview_dir):
-        os.makedirs(syn_args.data_xview_dir)
-    if not os.path.exists(syn_args.data_txt_dir):
-        os.makedirs(syn_args.data_txt_dir)
-    if not os.path.exists(syn_args.cat_sample_dir):
-        os.makedirs(syn_args.cat_sample_dir)
 
     syn_args.syn_images_save_dir = syn_args.syn_images_save_dir.format(syn_args.tile_size, syn_args.syn_display_type)
     syn_args.syn_annos_save_dir = syn_args.syn_annos_save_dir.format(syn_args.tile_size, syn_args.syn_display_type, syn_args.class_num)
     syn_args.syn_txt_save_dir = syn_args.syn_txt_save_dir.format(syn_args.tile_size, syn_args.syn_display_type, syn_args.class_num)
-    if not os.path.exists(syn_args.syn_images_save_dir):
-        os.makedirs(syn_args.syn_images_save_dir)
-    if not os.path.exists(syn_args.syn_txt_save_dir):
-        os.makedirs(syn_args.syn_txt_save_dir)
-    if not os.path.exists(syn_args.syn_annos_save_dir):
-        os.makedirs(syn_args.syn_annos_save_dir)
 
     return syn_args
 
 
 if __name__ == '__main__':
-    syn_args = get_part_syn_args()
+    # ('%10s' * 2 + '%10.3g' * 6) % (
+    #                 '%g/%g' % (epoch, epochs - 1), '%.3gG' % mem, *mloss, len(targets), img_size)
+    # P, R, mAP, F1, test_losses=(GIoU, obj, cls)
 
-    white_thresh = 0.5
-    merge_clean_origin_syn_bkg_image_files(syn_args.syn_bkg_img_anno_dir, syn_args.cities, syn_args.streets,
-                                            syn_args.tile_size, syn_args.resolution, white_thresh)
+    map_comp = np.zeros((4, 2))
+    dt = 'syn_background'
+    comments = '_px6whr4_ng0_seed1024'
+    syn_ratio = [0, 0.1, 0.2, 0.3]
+    step = 171
+    for ix, sr in enumerate(syn_ratio):
+        syn_args = get_part_syn_args(dt, sr)
+        syn_args.results_dir = syn_args.results_dir.format(syn_args.class_num, syn_args.syn_display_type, sr)
+        result_file = np.sort(glob.glob(os.path.join(syn_args.results_dir, '*' + comments.split('_seed')[0], 'results_{}_{}.txt'.format(syn_args.syn_display_type, sr))))[-1]
+        map_comp[ix, 0] = np.loadtxt(result_file, usecols=[10])[step] # 0, 1,  2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+
+    comments1 = '_px6whr4_ng0_seed17'
+    for jx, sr in enumerate(syn_ratio):
+        syn_args = get_part_syn_args(dt, sr)
+        syn_args.results_dir = syn_args.results_dir.format(syn_args.class_num, syn_args.syn_display_type, sr)
+        result_file = np.sort(glob.glob(os.path.join(syn_args.results_dir, '*' + comments1, 'results_{}_{}.txt'.format(syn_args.syn_display_type, sr))))[-1]
+        map_comp[jx, 1] = np.loadtxt(result_file, usecols=[10])[step] # 0, 1,  2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+
+    comments2 = '_px6whr4_ng0_seed1024_mosaic_rect'
+    for ix, sr in enumerate(syn_ratio):
+        syn_args = get_part_syn_args(dt, sr)
+        syn_args.results_dir = syn_args.results_dir.format(syn_args.class_num, syn_args.syn_display_type, sr)
+        result_file = np.sort(glob.glob(os.path.join(syn_args.results_dir, '*' + comments2.split('_seed')[0], 'results_{}_{}.txt'.format(syn_args.syn_display_type, sr))))[-1]
+        map_comp[ix, 0] = np.loadtxt(result_file, usecols=[10])[step] # 0, 1,  2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+
+    comments3 = '_px6whr4_ng0_seed17_mosaic_rect'
+    for jx, sr in enumerate(syn_ratio):
+        syn_args = get_part_syn_args(dt, sr)
+        syn_args.results_dir = syn_args.results_dir.format(syn_args.class_num, syn_args.syn_display_type, sr)
+        result_file = np.sort(glob.glob(os.path.join(syn_args.results_dir, '*' + comments3, 'results_{}_{}.txt'.format(syn_args.syn_display_type, sr))))[-1]
+        map_comp[jx, 1] = np.loadtxt(result_file, usecols=[10])[step] # 0, 1,  2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+
+    save_dir = os.path.join(syn_args.data_txt_dir, 'MAP_comp', dt)
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
+    df_map = pd.DataFrame(map_comp, columns=[comments[1:], comments1[1:]], index=syn_ratio)
+    df_map.to_csv(os.path.join(save_dir, '{}{}_VS_seed1024.csv'.format(dt, comments1)))
+    '''
+    syn_background_with_different_ratio (0, 0.1, 0.2, 0.3)
+    '''
+    boxplot = df_map.boxplot(column=[df_map.columns[0], df_map.columns[1]], return_type='axes')
+    boxplot.set_title('syn_background_with_different_ratio (0, 0.1, 0.2, 0.3)')
+    boxplot.set_xlabel('{}_seed'.format(dt))
+    boxplot.set_ylabel('MAP')
+    boxplot.figure.savefig(os.path.join(save_dir, '{}_different_ratio_boxplot.jpg'.format(dt, comments1)))
+    '''
+    syn_background_with_different_seed (1024, 17)
+    '''
+    # df_map = df_map.T
+    # boxplot = df_map.boxplot(column=[df_map.columns[0], df_map.columns[1], df_map.columns[2], df_map.columns[3]], return_type='axes')
+    # boxplot.set_title('{}_with_different_seed (1024, 17)'.format(dt))
+    # boxplot.set_xlabel('{}_ratio'.format(dt))
+    # boxplot.set_ylabel('MAP')
+    # boxplot.figure.savefig(os.path.join(save_dir, '{}_different_seed_boxplot.jpg'.format(dt, comments1)))
+
+    # fig, ax = plt.subplots()
+    # sns.barplot(x=df_map.columns[0], y=df_map.columns[1], data=df_map,  ax=ax)
+    # ax2 = ax.twinx()
+    # sns.barplot(x=df_map.columns[0], y=df_map.columns[2], data=df_map,  ax=ax2)
+
+    # sns.barplot(x=df_map.columns[0], y=df_map.columns[1], hue=df_map.columns[1], data=df_map, ax=ax, ci='sd', saturation=0.7)
+    # ax2 = ax.twinx()
+    # sns.barplot(x=df_map.columns[0], y=df_map.columns[2], hue=df_map.columns[2], data=df_map, ax=ax2, ci='sd', saturation=0.7)
+
+    # tips = sns.load_dataset("tips")
+    # df_map.plot.bar(x='syn_background_ratio', rot=0)
+    # df_map.boxplot()
+    # plt.boxplot(x=df_map.loc[:, 0], y=)

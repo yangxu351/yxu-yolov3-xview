@@ -192,10 +192,10 @@ def collect_syn_data(data_name, comments=''):
     img_txt.close()
     lbl_txt.close()
 
-    shutil.copyfile(os.path.join(txt_save_dir, '{}_img.txt'.format(data_name)),
-                    os.path.join(data_save_dir, '{}_img.txt'.format(data_name)))
-    shutil.copyfile(os.path.join(txt_save_dir, '{}_lbl.txt'.format(data_name)),
-                    os.path.join(data_save_dir, '{}_lbl.txt'.format(data_name)))
+    shutil.copyfile(os.path.join(txt_save_dir, '{}_img{}.txt'.format(data_name, comments)),
+                    os.path.join(data_save_dir, '{}_img{}.txt'.format(data_name, comments)))
+    shutil.copyfile(os.path.join(txt_save_dir, '{}_lbl{}.txt'.format(data_name, comments)),
+                    os.path.join(data_save_dir, '{}_lbl{}.txt'.format(data_name, comments)))
 
 
 def split_syn_trn_val(display_type='syn_texture'):
@@ -461,9 +461,9 @@ if __name__ == "__main__":
     # comments = ''
     # comments = '_px4whr3'
     # comments = '_px6whr4_ng0'
-    comments = '_px6whr4_ng0_seed{}'
-    data_name = 'xview'
-    pwv.split_trn_val_with_chips(data_name, comments)
+    # comments = '_px6whr4_ng0_seed{}'
+    # data_name = 'xview'
+    # pwv.split_trn_val_with_chips(data_name, comments)
 
 
     '''

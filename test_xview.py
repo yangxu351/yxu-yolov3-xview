@@ -27,7 +27,7 @@ class MyEncoder(json.JSONEncoder):
             return super(MyEncoder, self).default(obj)
 
 
-def get_opt():
+def get_opt(dt, sr, comments=''):
     parser = argparse.ArgumentParser(prog='test.py')
 
     parser.add_argument('--cfg', type=str, default='cfg/yolov3-spp-{}cls_syn.cfg', help='*.cfg path')
@@ -42,8 +42,8 @@ def get_opt():
     parser.add_argument('--weights_dir', type=str, default='weights/{}_cls/{}_{}/', help='to save weights path')
     parser.add_argument('--result_dir', type=str, default='result_output/{}_cls/{}_{}/', help='to save result files path')
     parser.add_argument('--writer_dir', type=str, default='writer_output/{}_cls/{}_{}/', help='*events* path')
-    parser.add_argument("--syn_ratio", type=float, default=0.5, help="ratio of synthetic data: 0 0.25, 0.5, 0.75")
-    parser.add_argument('--syn_display_type', type=str, default='syn_texture0', help='syn_texture0, syn_color0, syn_texture, syn_color, syn_mixed, syn')
+    parser.add_argument("--syn_ratio", type=float, default=sr, help="ratio of synthetic data: 0 0.25, 0.5, 0.75")
+    parser.add_argument('--syn_display_type', type=str, default=dt, help='syn_texture0, syn_color0, syn_texture, syn_color, syn_mixed, syn')
 
     parser.add_argument('--conf-thres', type=float, default=0.001, help='object confidence threshold')
     parser.add_argument('--iou-thres', type=float, default=0.5, help='IOU threshold for NMS')
@@ -80,6 +80,7 @@ def get_val_imgid_by_name(path, name):
     val_names = [os.path.basename(vf[0]) for vf in val_files]
     img_id = val_names.index(name)
     return img_id
+
 
 def test(cfg,
          data,
@@ -131,7 +132,10 @@ def test(cfg,
     niou = iouv.numel()
 
     # fixme
-    result_json_file = 'results_{}_{}.json'.format(opt.syn_display_type, opt.syn_ratio)
+    if opt.syn_ratio is None:
+        result_json_file = 'results{}.json'.format(opt.syn_display_type, opt.name)
+    else:
+        result_json_file = 'results_{}_{}.json'.format(opt.syn_display_type, opt.syn_ratio)
     gt_json_file = 'xViewval_{}_{}cls_{}_{}_xtlytlwh.json'.format(img_size, opt.class_num, opt.syn_display_type, opt.syn_ratio)
 
     # result_json_file = 'results_rare.json'
@@ -330,7 +334,9 @@ def test(cfg,
 
 
 if __name__ == '__main__':
-    opt = get_opt()
+    display_type = 'syn_background'
+    syn_ratio = 0.1
+    opt = get_opt(display_type, syn_ratio)
 
     if opt.task == 'test':  # task = 'test', 'study', 'benchmark'
         # Test
