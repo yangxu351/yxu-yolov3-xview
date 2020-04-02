@@ -371,13 +371,13 @@ def create_xview_names(file_name='xview'):
     f_txt.close()
 
 
-def split_trn_val_with_chips(data_name='xview', comments=''):
+def split_trn_val_with_chips(data_name='xview', comments='', seed=1024):
     args = get_args()
 
     txt_save_dir = args.data_list_save_dir
     data_save_dir = args.data_save_dir
     if comments:
-        comments = comments.format(args.seed)
+        comments = comments.format(seed)
         lbl_path = args.annos_save_dir[:-1] + comments.split('_seed')[0] + '/'
         data_save_dir = os.path.join(data_save_dir, comments[1:])
         if not os.path.exists(data_save_dir):
@@ -385,11 +385,11 @@ def split_trn_val_with_chips(data_name='xview', comments=''):
     else:
         lbl_path = args.annos_save_dir
     images_save_dir = args.images_save_dir
-    all_files = glob.glob(lbl_path + '*.txt')
+    all_files = np.sort(glob.glob(lbl_path + '*.txt'))
 
     num_files = len(all_files)
     trn_num = int(num_files * (1 - args.val_percent))
-    np.random.seed(args.seed)
+    np.random.seed(seed)
     perm_files = np.random.permutation(all_files)
 
     trn_img_txt = open(os.path.join(txt_save_dir, '{}train_img{}.txt'.format(data_name, comments)), 'w')

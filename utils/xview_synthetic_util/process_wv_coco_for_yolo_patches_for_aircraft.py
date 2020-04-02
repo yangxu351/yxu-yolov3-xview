@@ -79,10 +79,10 @@ def check_difference_of_first_second_dataset():
         gbc.plot_img_with_bbx(new_val[new_vname.index(v)], new_val_lbl[new_vname.index(v)], only_new_v_dir)
 
 
-def combine_xview_syn_by_ratio(dt, syn_ratio, comments=''):
+def combine_xview_syn_by_ratio(dt, syn_ratio, comments='', seed=1024):
     syn_args = get_part_syn_args(dt, syn_ratio)
     if comments:
-        comments = comments.format(syn_args.seed)
+        comments = comments.format(seed)
         data_xview_dir = os.path.join(syn_args.data_xview_dir, comments[1:])
     else:
         data_xview_dir = syn_args.data_xview_dir
@@ -90,7 +90,7 @@ def combine_xview_syn_by_ratio(dt, syn_ratio, comments=''):
     syn_img_txt = pd.read_csv(open(os.path.join(syn_args.syn_data_list_dir, '{}_{}_img.txt'.format(dt, syn_args.class_num))), header=None).to_numpy()
     syn_lbl_txt = pd.read_csv(open(os.path.join(syn_args.syn_data_list_dir, '{}_{}_lbl.txt'.format(dt, syn_args.class_num))), header=None).to_numpy()
     syn_total_num = syn_img_txt.shape[0]
-    np.random.seed(syn_args.seed)
+    np.random.seed(seed)
     perm_indices = np.random.permutation(syn_total_num)
     syn_ratio_num = np.int(syn_total_num*syn_ratio)
 
@@ -275,9 +275,9 @@ def create_mismatch_syn_labels(mis_ratio, ratio=0.25, trial=3):
                               header=None, index=None)
 
 
-def create_xview_syn_data(dt, sr, comments='', trn_comments=False):
+def create_xview_syn_data(dt, sr, comments='', trn_comments=False, seed=1024):
     syn_args = get_part_syn_args(dt, sr)
-    comments = comments.format(syn_args.seed)
+    comments = comments.format(seed)
     cmts = ''
     if sr:
         if trn_comments:
@@ -288,9 +288,8 @@ def create_xview_syn_data(dt, sr, comments='', trn_comments=False):
         data_txt.write('valid=./data_xview/{}_cls/{}/xviewval_img{}.txt\n'.format(syn_args.class_num, cmts[1:], comments))
         data_txt.write('valid_label=./data_xview/{}_cls/{}/xviewval_lbl{}.txt\n'.format(syn_args.class_num, cmts[1:], comments))
     elif sr == 0 and trn_comments: # sr==0
-        # dt = 'syn'
         cmts = comments
-        data_txt = open(os.path.join(syn_args.data_xview_dir, 'xview_{}_{}{}.data'.format(dt, sr, comments)), 'w')
+        data_txt = open(os.path.join(syn_args.data_xview_dir, comments[1:], 'xview_{}_{}{}.data'.format(dt, sr, comments)), 'w')
         data_txt.write('train_label=./data_xview/{}_cls/{}/xviewtrain_lbl{}.txt\n'.format(syn_args.class_num, comments[1:], comments))
         data_txt.write('train=./data_xview/{}_cls/{}/xviewtrain_img{}.txt\n'.format(syn_args.class_num, comments[1:], comments))
         data_txt.write('valid=./data_xview/{}_cls/{}/xviewval_img{}.txt\n'.format(syn_args.class_num, cmts[1:], comments))
@@ -460,10 +459,12 @@ if __name__ == "__main__":
     '''
     # comments = ''
     # comments = '_px4whr3'
+    # seed = 1024
     # comments = '_px6whr4_ng0'
+    # seed = 17
     # comments = '_px6whr4_ng0_seed{}'
     # data_name = 'xview'
-    # pwv.split_trn_val_with_chips(data_name, comments)
+    # pwv.split_trn_val_with_chips(data_name, comments, seed)
 
 
     '''
@@ -481,10 +482,11 @@ if __name__ == "__main__":
     # comments = '_px4whr3'
     # comments = '_px6whr4_ng0'
     # syn_ratio = [0.25, 0.5, 0.75]
+    # seed=1024
     # display_type = ['syn_texture', 'syn_color', 'syn_mixed']
     # for dt in display_type:
-        # for sr in syn_ratio:
-        #     combine_xview_syn_by_ratio(dt, sr, comments)
+    #     for sr in syn_ratio:
+    #         combine_xview_syn_by_ratio(dt, sr, comments, seed)
 
     '''
     create mismatch syn labels 
@@ -507,13 +509,15 @@ if __name__ == "__main__":
     # # comments = '_px4whr3'
     # comments = '_px6whr4'
     # comments = '_px6whr4_ng0'
+    # seed = 1024
     # display_type = ['syn_texture0', 'syn_color0']
     # syn_ratio = [0.25, 0.5, 0.75]
     # for dt in display_type:
     #     for sr in syn_ratio:
-    #         create_xview_syn_data(dt, sr, comments, trn_comments=False)
+    #         create_xview_syn_data(dt, sr, comments, trn_comments=False, seed=seed)
 
-    # create_xview_syn_data('syn', 0, comments)
+    # seed = 1024
+    # create_xview_syn_data('syn', 0, comments, seed=seed)
 
     ''''
     create xview_syn_texture_0.25_mismatches*.data
@@ -522,6 +526,7 @@ if __name__ == "__main__":
     # display_type = ['syn_texture', 'syn_color', 'syn_mixed']
     # mis_ratio = [0.025, 0.05]
     # trial = 3
+    # seed = 1024
     # for i in range(trial):
     #     for dt in display_type:
     #         for mr in mis_ratio:
@@ -534,10 +539,11 @@ if __name__ == "__main__":
     # display_type = ['syn_texture', 'syn_color', 'syn_mixed']
     # syn_ratio = [0.25, 0.5, 0.75]
     # comments = '_with_model'
+    # seed = 1024
     # for dt in display_type:
     #     for sr in syn_ratio:
     #         create_xview_syn_data(dt, sr, comments)
-
+    # seed = 1024
     # create_xview_syn_data('syn', 0)
 
     '''
@@ -547,8 +553,10 @@ if __name__ == "__main__":
     # comments = '_px6whr4_ng0_seed{}'
     # syn_ratio = [0.1, 0.2, 0.3]
     # dt = 'syn_background'
+    # seed = 1024
+    # seed = 17
     # for sr in syn_ratio:
-    #     combine_xview_syn_by_ratio(dt, sr, comments)
+    #     combine_xview_syn_by_ratio(dt, sr, comments, seed)
 
     ''''
     create xview_syn_background_*_px6whr4_ng0_seed{}.data
@@ -556,14 +564,18 @@ if __name__ == "__main__":
     '''
     # syn_ratio = [0.1, 0.2, 0.3]
     # # comments = '_px6whr4_ng0'
-    # comments = '_px6whr4_ng0_seed{}'
+    # seed = 1024
+    # seed = 17
+    # comments = '_px6whr4_ng0_seed{}'.format(17)
     # for sr in syn_ratio:
-    #     create_xview_syn_data('syn_background', sr, comments, trn_comments=True)
+    #     create_xview_syn_data('syn_background', sr, comments, trn_comments=True, seed)
 
     # comments = '_px6whr4_ng0'
-    comments = '_px6whr4_ng0_seed{}'
-    sr = 0
-    create_xview_syn_data('syn_background', sr, comments, trn_comments=True)
+    # seed = 1024
+    # comments = '_px6whr4_ng0_seed{}'
+    # seed = 17
+    # sr = 0
+    # create_xview_syn_data('syn_background', sr, comments, trn_comments=True, seed=seed)
 
     '''
     split train and validation for syn_*_1_cls syn_only

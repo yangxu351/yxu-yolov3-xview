@@ -1,5 +1,4 @@
 import argparse
-
 import torch.distributed as dist
 import torch.optim as optim
 import torch.optim.lr_scheduler as lr_scheduler
@@ -80,12 +79,8 @@ def train():
     accumulate = opt.accumulate  # effective bs = batch_size * accumulate = 16 * 4 = 64
     weights = opt.weights  # initial training weights
 
-    if 'pw' not in opt.arc:  # remove BCELoss positive weights
-        hyp['cls_pw'] = 1.
-        hyp['obj_pw'] = 1.
-
     # Initialize
-    init_seeds()
+    init_seeds(opt.seed)
     if opt.multi_scale:
         img_sz_min = round(img_size / 32 / 1.5)
         img_sz_max = round(img_size / 32 * 1.5)
@@ -415,6 +410,7 @@ def train():
 
 
 def prebias():
+
     # trains output bias layers for 1 epoch and creates new backbone
     if opt.prebias:
         # opt_0 = opt  # save settings
@@ -473,6 +469,7 @@ def get_opt(dt, sr=None, comments=''):
 
 
 if __name__ == '__main__':
+
     # display_type = ['syn_texture', 'syn_color', 'syn_mixed']
     # syn_ratio = [0.25, 0.5, 0.75]
     # display_type = ['syn'] #'syn_mixed',

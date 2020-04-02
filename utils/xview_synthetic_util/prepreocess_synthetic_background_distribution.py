@@ -7,7 +7,7 @@ from ast import literal_eval
 from matplotlib import pyplot as plt
 import json
 import shutil
-import cv2
+from utils.xview_synthetic_util import process_wv_coco_for_yolo_patches_for_aircraft as pwv
 
 IMG_FORMAT0 = '.jpg'
 IMG_FORMAT = '.png'
@@ -157,6 +157,40 @@ def get_part_syn_args():
 if __name__ == '__main__':
     syn_args = get_part_syn_args()
 
-    white_thresh = 0.5
-    merge_clean_origin_syn_bkg_image_files(syn_args.syn_bkg_img_anno_dir, syn_args.cities, syn_args.streets,
-                                            syn_args.tile_size, syn_args.resolution, white_thresh)
+    # white_thresh = 0.5
+    # merge_clean_origin_syn_bkg_image_files(syn_args.syn_bkg_img_anno_dir, syn_args.cities, syn_args.streets,
+    #                                         syn_args.tile_size, syn_args.resolution, white_thresh)
+
+    '''
+    xview with syn_background
+    split train:val randomly split chips
+    default split 
+    '''
+    # comments = '_px6whr4_ng0'
+    # seed = [3, 5, 9]
+    # data_name = 'xview'
+    # for s in seed:
+    #     comments = '_px6whr4_ng0_seed{}'.format(s)
+    #     pwv.split_trn_val_with_chips(data_name, comments, s)
+
+    '''
+    combine xview & syn_background dataset [0.1, 0.2, 0.3]
+    '''
+    # seed = [3, 5, 9]
+    # syn_ratio = [0.1, 0.2, 0.3]
+    # dt = 'syn_background'
+    # for s in seed:
+    #     comments = '_px6whr4_ng0_seed{}'.format(s)
+    #     for sr in syn_ratio:
+    #         pwv.combine_xview_syn_by_ratio(dt, sr, comments, seed=s)
+
+    ''''
+    create xview_syn_background_*_px6whr4_ng0_seed{}.data
+    xview_syn_background_*_px6whr4_ng0.data
+    '''
+    # comments = '_px6whr4_ng0_seed{}'
+    # seed = [3, 5, 9]
+    # syn_ratio = [0.1, 0.2, 0.3, 0]
+    # for s in seed:
+    #     for sr in syn_ratio:
+    #         pwv.create_xview_syn_data('syn_background', sr, comments, trn_comments=True, seed=s)

@@ -487,7 +487,7 @@ def compute_loss(p, targets, model):  # predictions, targets, model
     # Compute losses
     np, ng = 0, 0  # number grid points, targets
     for i, pi in enumerate(p):  # layer index, layer predictions
-        b, a, gj, gi = indices[i]  # image, anchor, gridy, gridx
+        b, a, gj, gi = indices[i]  # target image, anchor, gridy, gridx
         tobj = torch.zeros_like(pi[..., 0])  # target obj
         np += tobj.numel()
 
@@ -562,7 +562,7 @@ def compute_loss(p, targets, model):  # predictions, targets, model
     #     lcls *= 3 / ng / model.nc
     if red == 'sum':
         bs = tobj.shape[0]  # batch size
-        lobj *= 3 / (6300 * bs) * 2  # 3 / np * 2 # ?????
+        lobj *= 3 / (6300 * bs) * 2  # 3 / np * 2 # 22743 https://github.com/ultralytics/yolov3/issues/804 608/32x608/32=19x19 grid by 3 anchors for the first layer, 38x38 grid with 3 anchors for second, 76x76 grid with 3 anchors for third
         if ng:
             lcls *= 3 / ng / model.nc
             lbox *= 3 / ng
