@@ -489,10 +489,13 @@ def compute_loss(p, targets, model):  # predictions, targets, model
     for i, pi in enumerate(p):  # layer index, layer predictions
         b, a, gj, gi = indices[i]  # target image, anchor, gridy, gridx
         tobj = torch.zeros_like(pi[..., 0])  # target obj
+        # print('pi shape ', pi.shape) # pi shape  torch.Size([8, 3, 19, 19, 6])
+        # print('tobj size ', tobj.shape) # torch.Size([8, 3, 19, 19]) torch.Size([8, 3, 38, 38])  torch.Size([8, 3, 76, 76])
         np += tobj.numel()
 
         # Compute losses
         nb = len(b)
+        #fixme NOTE only compute loss for non empty labels
         if nb:  # number of targets
             ng += nb
             ps = pi[b, a, gj, gi]  # prediction subset corresponding to targets
@@ -533,6 +536,7 @@ def compute_loss(p, targets, model):  # predictions, targets, model
             # with open('targets.txt', 'a') as file:
             #     [file.write('%11.5g ' * 4 % tuple(x) + '\n') for x in torch.cat((txy[i], twh[i]), 1)]
 
+        #fixme lobj is also for non empty lables
         if 'default' in arc:  # separate obj and cls
             # print('tobj---', tobj.shape)
             # print('pi---', pi[..., 4].shape)
@@ -561,7 +565,9 @@ def compute_loss(p, targets, model):  # predictions, targets, model
     #     lobj *= 3 / (6300 * bs) * 2  # 3 / np * 2 # ?????
     #     lcls *= 3 / ng / model.nc
     if red == 'sum':
-        bs = tobj.shape[0]  # batch size
+
+        bs = tobj.shape[0]  # batch size 8
+
         lobj *= 3 / (6300 * bs) * 2  # 3 / np * 2 # 22743 https://github.com/ultralytics/yolov3/issues/804 608/32x608/32=19x19 grid by 3 anchors for the first layer, 38x38 grid with 3 anchors for second, 76x76 grid with 3 anchors for third
         if ng:
             lcls *= 3 / ng / model.nc

@@ -24,7 +24,7 @@ except:
 
 # Hyperparameters (results68: 59.2 mAP@0.5 yolov3-spp-416) https://github.com/ultralytics/yolov3/issues/310
 
-hyp = {'giou': 3.54,  # giou loss gain
+hyp = {'giou': 1.0, # 3.54,  # giou loss gain
        'cls': 37.4,  # cls loss gain
        'cls_pw': 1.0,  # cls BCELoss positive_weight
        'obj': 49.5,  # obj loss gain (*=img_size/320 if img_size != 320)
@@ -194,7 +194,7 @@ def train():
     if device.type != 'cpu' and torch.cuda.device_count() > 1:
         dist.init_process_group(backend='nccl',  # 'distributed backend'
                                 init_method='tcp://127.0.0.1:9999',  # distributed training init method
-                                world_size=1,  # number of nodes for distributed training
+                                world_size=1,  # default 1 number of nodes for distributed training
                                 rank=0)  # distributed training node rank
         #fixme
         model = torch.nn.parallel.DistributedDataParallel(model, find_unused_parameters=True)
@@ -424,13 +424,15 @@ def prebias():
         opt.prebias = False  # disable prebias
 
 
-def get_opt(dt, sr=None, comments=''):
+def get_opt(dt, sr=None, comments='', seed=0):
     parser = argparse.ArgumentParser()
     parser.add_argument('--epochs', type=int, default=180)  # 500200 batches at bs 16, 117263 images = 273 epochs
     parser.add_argument('--batch-size', type=int, default=8)  # effective bs = batch_size * accumulate = 16 * 4 = 64
 
     parser.add_argument('--accumulate', type=int, default=4, help='batches to accumulate before optimizing')
     parser.add_argument('--cfg', type=str, default='cfg/yolov3-spp-{}cls_syn.cfg', help='*.cfg path')
+
+    parser.add_argument('--seed', type=int, default=seed, help='seed')
     if sr == 0:
         parser.add_argument('--data', type=str, default='data_xview/{}_cls/{}/xview_{}_{}{}.data', help='*.data path')
     elif comments == '_syn_only':
@@ -450,7 +452,7 @@ def get_opt(dt, sr=None, comments=''):
     parser.add_argument('--img_size', type=int, default=608, help='inference size (pixels)') # 416 608
     parser.add_argument('--class_num', type=int, default=1, help='class number') # 60 6 1
 
-    parser.add_argument('--rect', default=True, action='store_true', help='rectangular training')
+    parser.add_argument('--rect', default=False, action='store_true', help='rectangular training')
     parser.add_argument('--resume', default=False,  action='store_true', help='resume training from last.pt')
     parser.add_argument('--nosave', action='store_true', help='only save final checkpoint')
     parser.add_argument('--notest', action='store_true', help='only test final epoch')
@@ -461,7 +463,7 @@ def get_opt(dt, sr=None, comments=''):
     parser.add_argument('--arc', type=str, default='default', help='yolo architecture')  # defaultpw, uCE, uBCE
     parser.add_argument('--prebias', action='store_true', help='pretrain model biases')
     parser.add_argument('--name', default='', help='renames results.txt to results_name.txt if supplied')
-    parser.add_argument('--device', default='0', help='device id (i.e. 0 or 0,1 or cpu)')
+    parser.add_argument('--device', default='0, 1', help='device id (i.e. 0 or 0,1 or cpu)')
     parser.add_argument('--adam', action='store_true', help='use adam optimizer')
     parser.add_argument('--var', type=float, help='debug variable')
     opt = parser.parse_args()
@@ -488,29 +490,33 @@ if __name__ == '__main__':
     # syn_ratio = [0.75]
 
     display_type = ['syn_background']
-    syn_ratio = [0.3, 0.2, 0.1] #
-    # syn_ratio = [0]
-    #fixme
-    # comments = ''
-    # comments = '_38bbox_000wh'
-    # comments = '_38bbox_giou0'
-    # comments = '_mismatch{}_{}'.format(mr, i)
-    # comments = '_with_model'
-    # comments = '_px4whr3'
-    # comments = '_syn_only'
-    # comments = '_px6whr4_giou0'
-    # comments = '_px6whr4_mosaic_rect'
-    # data_comments = '_px6whr4_ng0_seed17'
-    # dir_comments = '_px6whr4_ng0_seed17'
-    # data_comments = '_px6whr4_ng0_seed17'
-    # dir_comments = '_px6whr4_ng0_seed17_mosaic_rect'
+    # # syn_ratio = [0.3, 0.2, 0.1] #
+    syn_ratio = [0]
+    # #fixme
+    # # comments = ''
+    # # comments = '_38bbox_000wh'
+    # # comments = '_38bbox_giou0'
+    # # comments = '_mismatch{}_{}'.format(mr, i)
+    # # comments = '_with_model'
+    # # comments = '_px4whr3'
+    # # comments = '_syn_only'
+    # # comments = '_px6whr4_giou0'
+    # # comments = '_px6whr4_mosaic_rect'
+    # # data_comments = '_px6whr4_ng0_seed17'
+    # # dir_comments = '_px6whr4_ng0_seed17'
+    # # data_comments = '_px6whr4_ng0_seed17'
+    # # dir_comments = '_px6whr4_ng0_seed17_mosaic_rect'
     # data_comments = '_px6whr4_ng0'
     # dir_comments = '_px6whr4_ng0'
-    data_comments = '_px6whr4_ng0'
-    dir_comments = '_px6whr4_ng0_mosaic_rect'
+    # # data_comments = '_px6whr4_ng0'
+    # # dir_comments = '_px6whr4_ng0_mosaic_rect'
+    data_comments = '_px6whr4_ng0_seed1024'
+    dir_comments = '_px6whr4_ng0_hgiou1_seed1024'
+    # seed = 1024
+    seed = 0
     for dt in display_type:
         for sr in syn_ratio:
-            opt = get_opt(dt, sr, data_comments)
+            opt = get_opt(dt, sr, data_comments, seed)
             # opt = get_opt(dt, comments=comments)
             opt.cfg = opt.cfg.format(opt.class_num)
             time_marker = time.strftime('%Y-%m-%d_%H.%M', time.localtime())
@@ -534,7 +540,7 @@ if __name__ == '__main__':
                 results_file = os.path.join(opt.result_dir, 'results_{}_{}.txt'.format(opt.syn_display_type, opt.syn_ratio))
                 last = os.path.join(opt.weights_dir, 'last_{}_{}.pt'.format(opt.syn_display_type, opt.syn_ratio))
                 best = os.path.join(opt.weights_dir, 'best_{}_{}.pt'.format(opt.syn_display_type, opt.syn_ratio))
-            # opt.name = '_{}_{}'.format(opt.syn_display_type, opt.syn_ratio)
+            opt.name = '_{}_{}'.format(opt.syn_display_type, opt.syn_ratio)
             if not os.path.exists(opt.weights_dir):
                 os.makedirs(opt.weights_dir)
 
@@ -712,11 +718,17 @@ if __name__ == '__main__':
      ######*** xview_background_double_px6whr4_ng0
     '''
     # dt = 'xview'
-    # data_comments = 'background_double'
-    # dir_comments = '_xview_background_double_px6whr4_ng0_mosaic_rect'
+    # # seed = 1024
+    # seed = 17
+    # # data_comments = 'background_double'
+    # # dir_comments = '_xview_background_double_px6whr4_ng0_mosaic'
+    # # data_comments = 'background_double'
+    # # dir_comments = '_xview_background_double_px6whr4_hgiou1'
+    # data_comments = 'background_double_seed{}'.format(seed)
+    # dir_comments = '_xview_background_double_seed{}_px6whr4_hgiou1'.format(seed)
     # # data_comments = 'background_double_seed17'
-    # # dir_comments = '_xview_background_double_seed17_px6whr4_ng0_seed17_mosaic_rect'
-    # opt = get_opt(dt, None, data_comments)
+    # # dir_comments = '_xview_background_double_seed17_px6whr4_hgiou1_seed17_mosaic'
+    # opt = get_opt(dt, None, data_comments, seed)
     # # opt = get_opt(dt, comments=comments)
     # opt.cfg = opt.cfg.format(opt.class_num)
     # time_marker = time.strftime('%Y-%m-%d_%H.%M', time.localtime())
@@ -728,7 +740,7 @@ if __name__ == '__main__':
     # results_file = os.path.join(opt.result_dir, 'results_{}_{}.txt'.format(opt.syn_display_type, data_comments))
     # last = os.path.join(opt.weights_dir, 'last_{}_{}.pt'.format(opt.syn_display_type, data_comments))
     # best = os.path.join(opt.weights_dir, 'best_{}_{}.pt'.format(opt.syn_display_type, data_comments))
-    # opt.name = '_{}_{}'.format(opt.syn_display_type, data_comments)
+    # opt.name = '_{}'.format(data_comments)
     # if not os.path.exists(opt.weights_dir):
     #     os.makedirs(opt.weights_dir)
     #
@@ -799,6 +811,6 @@ if __name__ == '__main__':
     #
     #         # Write mutation results
     #         print_mutation(hyp, results, opt.bucket)
-    #
-    #         # Plot results
-    #         # plot_evolution_results(hyp)
+
+            # Plot results
+            # plot_evolution_results(hyp)

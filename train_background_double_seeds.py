@@ -20,7 +20,7 @@ warnings.filterwarnings("ignore")
 
 # Hyperparameters (results68: 59.2 mAP@0.5 yolov3-spp-416) https://github.com/ultralytics/yolov3/issues/310
 
-hyp = {'giou': 3.54,  # giou loss gain
+hyp = {'giou': 1.0,  # giou loss gain
        'cls': 37.4,  # cls loss gain
        'cls_pw': 1.0,  # cls BCELoss positive_weight
        'obj': 49.5,  # obj loss gain (*=img_size/320 if img_size != 320)
@@ -70,9 +70,9 @@ def train(opt):
     except:
         mixed_precision = False  # not installed
 
-    results_file = os.path.join(opt.result_dir, 'results_{}_{}.txt'.format(opt.syn_display_type, opt.syn_ratio))
-    last = os.path.join(opt.weights_dir, 'last_{}_{}.pt'.format(opt.syn_display_type, opt.syn_ratio))
-    best = os.path.join(opt.weights_dir, 'best_{}_{}.pt'.format(opt.syn_display_type, opt.syn_ratio))
+    results_file = os.path.join(opt.result_dir, 'results_{}.txt'.format(opt.syn_display_type))
+    last = os.path.join(opt.weights_dir, 'last_{}.pt'.format(opt.syn_display_type))
+    best = os.path.join(opt.weights_dir, 'best_{}.pt'.format(opt.syn_display_type))
     print(opt)
     device = torch_utils.select_device(opt.device, apex=mixed_precision, batch_size=opt.batch_size)
     if device.type == 'cpu':
@@ -319,7 +319,7 @@ def train(opt):
         elif not opt.notest or final_epoch:  # Calculate mAP
             # fixme
             is_xview = any([x in data for x in [
-                'xview_{}_{}.data'.format(opt.syn_display_type, opt.syn_ratio)]]) and model.nc == opt.class_num
+                'xview_{}.data'.format(opt.syn_display_type) ]]) and model.nc == opt.class_num
             results, maps = test.test(cfg,
                                       data,
                                       batch_size=batch_size * 2,
@@ -389,12 +389,12 @@ def train(opt):
     return results
 
 
-def get_opt(seed=0, dt='syn_background', sr=0):
+def get_opt(seed=0, dt='syn_background'):
     parser = argparse.ArgumentParser()
     parser.add_argument('--seed', type=int, default=seed, help='seed')
     parser.add_argument('--syn_display_type', type=str, default=dt,
                         help='syn_texture0, syn_color0, syn_texture, syn_color, syn_mixed, syn (match 0)')
-    parser.add_argument("--syn_ratio", type=float, default=sr, help="ratio of synthetic data: 0.1, 0.2, 0.3 0")
+    parser.add_argument("--syn_ratio", type=float, default=None, help="ratio of synthetic data: 0.1, 0.2, 0.3 0")
 
     parser.add_argument('--data', type=str, default='data_xview/{}_cls/{}/xview_{}_{}{}.data', help='*.data path')
     parser.add_argument('--epochs', type=int, default=180)  # 500200 batches at bs 16, 117263 images = 273 epochs
@@ -402,9 +402,9 @@ def get_opt(seed=0, dt='syn_background', sr=0):
 
     parser.add_argument('--accumulate', type=int, default=4, help='batches to accumulate before optimizing')
     parser.add_argument('--cfg', type=str, default='cfg/yolov3-spp-{}cls_syn.cfg', help='*.cfg path')
-    parser.add_argument('--writer_dir', type=str, default='writer_output/{}_cls/{}_{}/', help='*events* path')
-    parser.add_argument('--weights_dir', type=str, default='weights/{}_cls/{}_{}/', help='to save weights path')
-    parser.add_argument('--result_dir', type=str, default='result_output/{}_cls/{}_{}/',
+    parser.add_argument('--writer_dir', type=str, default='writer_output/{}_cls/xview_{}/', help='*events* path')
+    parser.add_argument('--weights_dir', type=str, default='weights/{}_cls/xview_{}/', help='to save weights path')
+    parser.add_argument('--result_dir', type=str, default='result_output/{}_cls/xview_{}/',
                         help='to save result files path')
 
     parser.add_argument('--multi_scale', action='store_true', help='adjust (67% - 150%) img_size every 10 batches')
@@ -429,37 +429,25 @@ def get_opt(seed=0, dt='syn_background', sr=0):
     return opt
 
 
-# fixme
-# def main():
-#     opt = get_opt()
-#     print(opt)
-
-
-def main(seed, dt='syn_background', sr=0):
-    opt = get_opt(seed, dt, sr)
-    data_comments = '_px6whr4_ng0_seed{}'.format(opt.seed)
-    dir_comments = '_px6whr4_ng0_seed{}'.format(opt.seed)
-
+def main(seed, dt='background_double'):
+    opt = get_opt(seed, dt)
+    print(opt)
     opt.cfg = opt.cfg.format(opt.class_num)
+    data_comments = 'px6whr4_hgiou1'
+    dir_comments = '_px6whr4_hgiou1'
+    opt.data = 'data_xview/{}_cls/xview_{}/xview_{}_{}.data'.format(opt.class_num, opt.syn_display_type,
+                                                                     opt.syn_display_type, data_comments)
+
     time_marker = time.strftime('%Y-%m-%d_%H.%M', time.localtime())
-    opt.weights_dir = opt.weights_dir.format(opt.class_num, opt.syn_display_type, opt.syn_ratio) + '{}/'.format(
+    opt.weights_dir = opt.weights_dir.format(opt.class_num, opt.syn_display_type) + '{}/'.format(
         time_marker + dir_comments)
-    opt.writer_dir = opt.writer_dir.format(opt.class_num, opt.syn_display_type, opt.syn_ratio) + '{}/'.format(
-        time_marker + dir_comments)
-
-    if opt.syn_ratio == 0 and data_comments:
-        opt.data = 'data_xview/{}_cls/{}/xview_{}_{}{}.data'.format(opt.class_num, data_comments[1:],
-                                                                    opt.syn_display_type, int(opt.syn_ratio),
-                                                                    data_comments)
-    else:
-        opt.data = 'data_xview/{}_cls/xview_{}_{}/xview_{}_{}{}.data'.format(opt.class_num, opt.syn_display_type,
-                                                                             opt.syn_ratio, opt.syn_display_type,
-                                                                             opt.syn_ratio, data_comments)
-
-    opt.result_dir = opt.result_dir.format(opt.class_num, opt.syn_display_type, opt.syn_ratio) + '{}/'.format(
+    opt.writer_dir = opt.writer_dir.format(opt.class_num, opt.syn_display_type) + '{}/'.format(
         time_marker + dir_comments)
 
-    opt.name = '_{}_{}'.format(opt.syn_display_type, opt.syn_ratio)
+    opt.result_dir = opt.result_dir.format(opt.class_num, opt.syn_display_type) + '{}/'.format(
+        time_marker + dir_comments)
+
+    opt.name = '_{}'.format(opt.syn_display_type)
     if not os.path.exists(opt.weights_dir):
         os.makedirs(opt.weights_dir)
 
@@ -477,23 +465,13 @@ def main(seed, dt='syn_background', sr=0):
 
 
 if __name__ == '__main__':
-    # main()
-    seeds = [9] # , 5, 3
-    display_type = 'syn_background'
-    syn_ratio = [0.1, 0] # 0.3, 0.2,
+
+    seeds = [17,1024] # 3, 5, 9, 5,
     for s in seeds:
-        for sr in syn_ratio:
-            try:
-                main(s, display_type, sr)
-            except:
-                print('excetion')
-                pass
+        try:
+            display_type = 'background_double_seed{}'.format(s)
+            main(s, display_type)
+        except:
+            print('excetion')
+            pass
 
-
-    # print(sys.argv)
-    # main(t=sys.argv[2], seed=sys.argv[4], dt=sys.argv[6], sr=sys.argv[8])
-#     trials = 3
-#     for t in range(trials):
-#         print(os.getcwd())
-#         os.system('python train_syn_background_seeds.py main %d' % t)
-#         print(sys.argv[0])

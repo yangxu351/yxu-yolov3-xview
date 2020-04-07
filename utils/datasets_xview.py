@@ -353,6 +353,7 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
                     # with open(file, 'r') as f:
                     #     l = np.array([x.split() for x in f.read().splitlines()], dtype=np.float32)
                     # print(file)
+                    #fixme if empty label file, will report an exception
                     df_txt = pd.read_csv(file, header=None, delimiter=' ')
                     #fixme
                     l = df_txt.to_numpy()
@@ -407,7 +408,8 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
                             b[[1, 3]] = np.clip(b[[1, 3]], 0, h)
                             assert cv2.imwrite(f, img[b[1]:b[3], b[0]:b[2]]), 'Failure extracting classifier boxes'
                 else:
-                    ne += 1  # print('empty labels for image %s' % self.img_files[i])  # file empty
+                    ne += 1
+                    print('empty labels for image %s' % self.img_files[i])  # file empty
                     # os.system("rm '%s' '%s'" % (self.img_files[i], self.label_files[i]))  # remove
                 pbar.desc = 'Caching labels (%g found, %g missing, %g empty, %g duplicate, for %g images)' % (
                     nf, nm, ne, nd, n)
@@ -480,17 +482,16 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
                     with open(label_path, 'r') as f:
                         x = np.array([x.split() for x in f.read().splitlines()], dtype=np.float32)
 
-                if x.size > 0:
+                if x.size > 0: #
                     # Normalized xywh to pixel xyxy format
                     labels = x.copy()
                     labels[:, 1] = ratio[0] * w * (x[:, 1] - x[:, 3] / 2) + pad[0]  # pad width
                     labels[:, 2] = ratio[1] * h * (x[:, 2] - x[:, 4] / 2) + pad[1]  # pad height
                     labels[:, 3] = ratio[0] * w * (x[:, 1] + x[:, 3] / 2) + pad[0]
                     labels[:, 4] = ratio[1] * h * (x[:, 2] + x[:, 4] / 2) + pad[1]
-                #fixme ************* to deal with empty label files
-                else:
-                    labels = np.zeros((0, 5), dtype=np.float32) # ****** deal with empty label files
-                    # labels = np.zeros((1, 5), dtype=np.float32)
+                # else:
+                #     #FIXME
+                #     labels = np.zeros((0, 5), dtype=np.float32) # ****** deal with empty label files
 
         if self.augment:
             # Augment imagespace
@@ -621,7 +622,6 @@ def load_mosaic(self, index):
             else:
                 #FIXME
                 labels = np.zeros((0, 5), dtype=np.float32) # ****** deal with empty label files
-                # labels = np.zeros((1, 5), dtype=np.float32)
             labels4.append(labels)
 
     # Concat/clip labels
