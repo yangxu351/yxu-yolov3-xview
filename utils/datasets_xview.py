@@ -361,7 +361,8 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
                     l = l[:, :5]
 
                 except:
-                    nm += 1  # print('missing labels for image %s' % self.img_files[i])  # file missing
+                    nm += 1
+                    # print('missing labels for image %s' % self.img_files[i])  # file missing
                     continue
 
                 if l.shape[0]:

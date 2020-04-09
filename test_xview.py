@@ -95,10 +95,13 @@ def test(cfg,
     niou = iouv.numel()
 
     # fixme
-    if opt.syn_ratio is None:
-        result_json_file = 'results_{}{}.json'.format(opt.syn_display_type, opt.name)
-    else:
-        result_json_file = 'results_{}_{}.json'.format(opt.syn_display_type, opt.syn_ratio)
+    # if opt.syn_ratio is None and not opt.syn_display_type:
+    #     result_json_file = 'results_{}.json'.format(opt.name)
+    # elif opt.syn_ratio is None and opt.syn_display_type:
+    #     result_json_file = 'results_{}{}.json'.format(opt.syn_display_type, opt.name)
+    # else:
+    #     result_json_file = 'results_{}_{}.json'.format(opt.syn_display_type, opt.syn_ratio)
+    result_json_file = 'results_{}.json'.format(opt.name)
     gt_json_file = 'xViewval_{}_{}cls_{}_{}_xtlytlwh.json'.format(img_size, opt.class_num, opt.syn_display_type, opt.syn_ratio)
 
     # result_json_file = 'results_rare.json'
@@ -265,7 +268,7 @@ def test(cfg,
         # print('imgIds', len(imgIds), 'sids', len(sids))
         imgIds = np.arange(len(output))
 
-        with open(opt.result_dir + result_json_file, 'w') as file:
+        with open(os.path.join(opt.result_dir, result_json_file), 'w') as file:
             # json.dump(jdict, file)
             json.dump(jdict, file, ensure_ascii=False, indent=2, cls=MyEncoder)
 
@@ -278,8 +281,8 @@ def test(cfg,
             # https://github.com/cocodataset/cocoapi/blob/master/PythonAPI/pycocoEvalDemo.ipynb
             # fixme
             # cocoGt = COCO(glob.glob('../coco/annotations/instances_val*.json')[0])  # initialize COCO ground truth api
-            cocoGt = COCO(opt.label_dir + gt_json_file)
-            cocoDt = cocoGt.loadRes(opt.result_dir + result_json_file)  # initialize COCO pred api
+            cocoGt = COCO(os.path.join(opt.label_dir, gt_json_file))
+            cocoDt = cocoGt.loadRes(os.path.join(opt.result_dir, result_json_file))  # initialize COCO pred api
 
             cocoEval = COCOeval(cocoGt, cocoDt, 'bbox')
             cocoEval.params.imgIds = imgIds  # [:32]  # only evaluate these images
@@ -296,14 +299,11 @@ def test(cfg,
     # return (mp, mr, map, mf1, *(loss / len(dataloader)).tolist())
 
 
-
-
-
 def get_opt(dt, sr, comments=''):
     parser = argparse.ArgumentParser(prog='test.py')
 
     parser.add_argument('--cfg', type=str, default='cfg/yolov3-spp-{}cls_syn.cfg', help='*.cfg path')
-    parser.add_argument('--data', type=str, default='data_xview/{}_cls/xview_{}_{}.data', help='*.data path')
+    parser.add_argument('--data', type=str, default='data_xview/{}_cls/{}/xview_{}_{}.data', help='*.data path')
     parser.add_argument('--weights', type=str, default='weights/{}_cls/{}_{}/best_{}_{}.pt', help='path to weights file')
 
     parser.add_argument('--batch-size', type=int, default=8, help='size of each image batch')
@@ -326,16 +326,9 @@ def get_opt(dt, sr, comments=''):
 
     opt = parser.parse_args()
     # opt.save_json = opt.save_json or any([x in opt.data for x in ['xview.data']])
-
+    opt.save_json = True
     opt.cfg = opt.cfg.format(opt.class_num)
 
-    opt.save_json = True # opt.save_json or any([x in opt.data for x in ['xview_{}_{}.data'.format(opt.syn_display_type, opt.syn_ratio)]])
-    opt.weights_dir = opt.weights_dir.format(opt.class_num, opt.syn_display_type, opt.syn_ratio if opt.syn_ratio is not None else comments)
-    opt.writer_dir = opt.writer_dir.format(opt.class_num, opt.syn_display_type, opt.syn_ratio if opt.syn_ratio is not None else comments)
-    opt.data = opt.data.format(opt.class_num, opt.syn_display_type, opt.syn_ratio if opt.syn_ratio is not None else comments)
-    opt.result_dir = opt.result_dir.format(opt.class_num, opt.syn_display_type, opt.syn_ratio if opt.syn_ratio is not None  else comments)
-    opt.weights = opt.weights.format(opt.class_num, opt.syn_display_type, opt.syn_ratio, opt.syn_display_type, opt.syn_ratio if opt.syn_ratio is not None  else comments)
-    opt.label_dir = opt.label_dir + '{}/{}_cls/{}_{}/'.format(opt.img_size, opt.class_num, opt.syn_display_type, opt.syn_ratio if opt.syn_ratio is not None  else comments)
     return opt
 
 
@@ -344,17 +337,100 @@ if __name__ == '__main__':
     # display_type = 'syn_background'
     # syn_ratio = 0.1
     # opt = get_opt(display_type, syn_ratio)
-    comments = 'syn_only'
-    display_type = ['syn_color', 'syn_texture', 'syn_mixed']
-    for dt in display_type:
-        opt = get_opt(dt, None, comments)
-        if opt.task == 'test':  # task = 'test', 'study', 'benchmark'
-            # Test
-            opt.data = '/media/lab/Yang/code/yolov3/data_xview/1_cls/xview_syn_background_0_px6whr4_ng0.data'
-            opt.weights = glob.glob(os.path.join(opt.weights_dir, '*_{}'.format(comments), 'best_{}_{}.pt'.format(dt, comments)))[0]
-            opt.name = dt
-            # opt.weights = glob.glob(os.path.join(opt.weights_dir, '*_{}'.format(comments), 'backup90.pt' ))[0]# 'best_{}_{}.pt'.format(dt, comments)))[0]
-            # opt.name = dt + '2'
+    # comments = 'syn_only'
+    # display_type = ['syn_color', 'syn_texture', 'syn_mixed']
+    # # for dt in display_type:
+    #     opt = get_opt(dt, None, comments)
+    #     opt.save_json = True # opt.save_json or any([x in opt.data for x in ['xview_{}_{}.data'.format(opt.syn_display_type, opt.syn_ratio)]])
+    #     opt.weights_dir = opt.weights_dir.format(opt.class_num, opt.syn_display_type, opt.syn_ratio if opt.syn_ratio is not None else comments)
+    #     opt.writer_dir = opt.writer_dir.format(opt.class_num, opt.syn_display_type, opt.syn_ratio if opt.syn_ratio is not None else comments)
+    #     opt.data = opt.data.format(opt.class_num, opt.syn_display_type, opt.syn_ratio if opt.syn_ratio is not None else comments)
+    #     opt.result_dir = opt.result_dir.format(opt.class_num, opt.syn_display_type, opt.syn_ratio if opt.syn_ratio is not None  else comments)
+    #     opt.weights = opt.weights.format(opt.class_num, opt.syn_display_type, opt.syn_ratio, opt.syn_display_type, opt.syn_ratio if opt.syn_ratio is not None  else comments)
+    #     opt.label_dir = opt.label_dir + '{}/{}_cls/{}_{}/'.format(opt.img_size, opt.class_num, opt.syn_display_type, opt.syn_ratio if opt.syn_ratio is not None  else comments)
+
+    #     if opt.task == 'test':  # task = 'test', 'study', 'benchmark'
+    #         # Test
+    #         opt.data = '/media/lab/Yang/code/yolov3/data_xview/1_cls/xview_syn_background_0_px6whr4_ng0.data'
+    #         opt.weights = glob.glob(os.path.join(opt.weights_dir, '*_{}*'.format(comments), 'best_{}_{}.pt'.format(dt, comments)))[0]
+    #         opt.name = dt
+    #         # opt.weights = glob.glob(os.path.join(opt.weights_dir, '*_{}'.format(comments), 'backup90.pt' ))[0]# 'best_{}_{}.pt'.format(dt, comments)))[0]
+    #         # opt.name = dt + '2'
+    #         test(opt.cfg,
+    #              opt.data,
+    #              opt.weights,
+    #              opt.batch_size,
+    #              opt.img_size,
+    #              opt.conf_thres,
+    #              opt.iou_thres,
+    #              opt.save_json, opt=opt)
+    #
+    #     elif opt.task == 'benchmark':
+    #         # mAPs at 320-608 at conf 0.5 and 0.7
+    #         y = []
+    #         for i in [320, 416, 512, 608]:
+    #             for j in [0.5, 0.7]:
+    #                 t = time.time()
+    #                 r = test(opt.cfg, opt.data, opt.weights, opt.batch_size, i, opt.conf_thres, j, opt.save_json)[0]
+    #                 y.append(r + (time.time() - t,))
+    #         np.savetxt(opt.result_dir + 'benchmark.txt', y, fmt='%10.4g')  # y = np.loadtxt('study.txt')
+    #
+    #     elif opt.task == 'study':
+    #         # Parameter study
+    #         y = []
+    #         x = np.arange(0.4, 0.9, 0.05)
+    #         for i in x:
+    #             t = time.time()
+    #             r = test(opt.cfg, opt.data, opt.weights, opt.batch_size, opt.img_size, opt.conf_thres, i, opt.save_json,
+    #                      opt=opt)
+    #             y.append(r + (time.time() - t,))
+    #         np.savetxt(opt.result_dir + 'study.txt', y, fmt='%10.4g')  # y = np.loadtxt('study.txt')
+    #
+    #         # Plot
+    #         fig, ax = plt.subplots(3, 1, figsize=(6, 6))
+    #         y = np.stack(y, 0)
+    #         ax[0].plot(x, y[:, 2], marker='.', label='mAP@0.5')
+    #         ax[0].set_ylabel('mAP')
+    #         ax[1].plot(x, y[:, 3], marker='.', label='mAP@0.5:0.95')
+    #         ax[1].set_ylabel('mAP')
+    #         ax[2].plot(x, y[:, -1], marker='.', label='time')
+    #         ax[2].set_ylabel('time (s)')
+    #         for i in range(3):
+    #             ax[i].legend()
+    #             ax[i].set_xlabel('iou_thr')
+    #         fig.tight_layout()
+    #         plt.savefig(opt.result_dir + 'study.jpg', dpi=200)
+
+    # from pycocotools.coco import COCO
+    # from pycocotools.cocoeval import COCOeval
+    # cocoGt = COCO(opt.label_dir + 'xViewval_{}_{}cls_xtlytlwh.json'.format(opt.img_size, opt.class_num))
+    # cocoDt = cocoGt.loadRes(opt.result_dir + 'results.json')  # initialize COCO pred api
+    # cocoEval = COCOeval(cocoGt, cocoDt, 'bbox')
+
+
+    '''
+    test for syn_xveiw_background_*
+    '''
+    import train_syn_xview_background_seeds_loop as tsl
+    comments = ['syn_xview_background_texture', 'syn_xview_background_color', 'syn_xview_background_mixed']
+    seeds = [3, 5]
+    #
+    #5  all        94       219    0.0699     0.466     0.175     0.122
+    for sd in seeds[:1]:
+        for cmt in comments[1:2]:
+            opt = tsl.get_opt(sd, cmt, False)
+            opt.result_dir = opt.result_dir.format(opt.class_num, opt.cmt, '{}_hgiou1_seed{}'.format('test_on_original', opt.seed))
+            if not os.path.exists(opt.result_dir):
+                os.mkdir(opt.result_dir)
+
+
+            opt.weights = glob.glob(os.path.join(opt.weights_dir.format(opt.class_num, cmt, '*_hgiou1_seed{}'.format(sd)), 'best_{}_seed{}.pt'.format(cmt, sd)))[-1]
+            # opt.weights = glob.glob(os.path.join(opt.weights_dir.format(opt.class_num, cmt, '*_hgiou1_seed{}'.format(sd)), 'backup170.pt'.format(cmt, sd)))[-1]
+            opt.data = 'data_xview/{}_cls/{}/{}_seed{}.data'.format(opt.class_num, 'px6whr4_ng0_seed{}'.format(sd), 'xview_syn_background_0_px6whr4_ng0', sd)
+            print(opt.data)
+            opt.name = 'seed{}_on_original'.format(opt.seed)
+            opt.task = 'test'
+            opt.save_json = True
             test(opt.cfg,
                  opt.data,
                  opt.weights,
@@ -364,47 +440,13 @@ if __name__ == '__main__':
                  opt.iou_thres,
                  opt.save_json, opt=opt)
 
-        elif opt.task == 'benchmark':
-            # mAPs at 320-608 at conf 0.5 and 0.7
-            y = []
-            for i in [320, 416, 512, 608]:
-                for j in [0.5, 0.7]:
-                    t = time.time()
-                    r = test(opt.cfg, opt.data, opt.weights, opt.batch_size, i, opt.conf_thres, j, opt.save_json)[0]
-                    y.append(r + (time.time() - t,))
-            np.savetxt(opt.result_dir + 'benchmark.txt', y, fmt='%10.4g')  # y = np.loadtxt('study.txt')
 
-        elif opt.task == 'study':
-            # Parameter study
-            y = []
-            x = np.arange(0.4, 0.9, 0.05)
-            for i in x:
-                t = time.time()
-                r = test(opt.cfg, opt.data, opt.weights, opt.batch_size, opt.img_size, opt.conf_thres, i, opt.save_json,
-                         opt=opt)
-                y.append(r + (time.time() - t,))
-            np.savetxt(opt.result_dir + 'study.txt', y, fmt='%10.4g')  # y = np.loadtxt('study.txt')
 
-            # Plot
-            fig, ax = plt.subplots(3, 1, figsize=(6, 6))
-            y = np.stack(y, 0)
-            ax[0].plot(x, y[:, 2], marker='.', label='mAP@0.5')
-            ax[0].set_ylabel('mAP')
-            ax[1].plot(x, y[:, 3], marker='.', label='mAP@0.5:0.95')
-            ax[1].set_ylabel('mAP')
-            ax[2].plot(x, y[:, -1], marker='.', label='time')
-            ax[2].set_ylabel('time (s)')
-            for i in range(3):
-                ax[i].legend()
-                ax[i].set_xlabel('iou_thr')
-            fig.tight_layout()
-            plt.savefig(opt.result_dir + 'study.jpg', dpi=200)
 
-    # from pycocotools.coco import COCO
-    # from pycocotools.cocoeval import COCOeval
-    # cocoGt = COCO(opt.label_dir + 'xViewval_{}_{}cls_xtlytlwh.json'.format(opt.img_size, opt.class_num))
-    # cocoDt = cocoGt.loadRes(opt.result_dir + 'results.json')  # initialize COCO pred api
-    # cocoEval = COCOeval(cocoGt, cocoDt, 'bbox')
+
+
+
+
 
     # img_names = [x.split('/')[-1] for x in dataloader.dataset.img_files]
     # img_id_maps = json.load(open(os.path.join(opt.label_dir, 'all_image_ids_names_dict_{}cls.json'.format(opt.class_num))))

@@ -177,7 +177,7 @@ def collect_syn_data(data_name, comments=''):
         suffix = '.jpg'
     else:
         suffix = IMG_SUFFIX
-    all_files = glob.glob(images_save_dir + '*' + suffix)
+    all_files = np.sort(glob.glob(images_save_dir + '*' + suffix))
     num_files = len(all_files)
 
     img_txt = open(os.path.join(txt_save_dir, '{}_img{}.txt'.format(data_name, comments)), 'w')
@@ -199,7 +199,7 @@ def collect_syn_data(data_name, comments=''):
 
 
 def split_syn_trn_val(display_type='syn_texture'):
-    syn_args = get_part_syn_args(dt, sr)
+    syn_args = get_part_syn_args(display_type, sr)
     data_dir = syn_args.syn_data_list_dir.format(display_type, syn_args.class_num)
     syn_all_img_files = pd.read_csv(os.path.join(data_dir, '{}_{}_img.txt'.format(display_type, syn_args.class_num)), header=None).to_numpy()
     syn_all_lbl_files = pd.read_csv(os.path.join(data_dir, '{}_{}_lbl.txt'.format(display_type, syn_args.class_num)), header=None).to_numpy()

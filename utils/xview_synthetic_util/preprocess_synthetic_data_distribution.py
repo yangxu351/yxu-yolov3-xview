@@ -242,7 +242,7 @@ def merge_clean_origin_syn_image_files(file_path, cities, streets, tile_size=608
     :param white_thresh:
     :return:
     '''
-    step = tile_size * resolution
+    step = syn_args.tile_size * syn_args.resolution
     image_folder_name = '{}_{}_{}_images_step{}'
     label_folder_name = '{}_{}_{}_annos_step{}'
 

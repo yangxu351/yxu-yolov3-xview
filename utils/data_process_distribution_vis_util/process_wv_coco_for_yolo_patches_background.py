@@ -15,12 +15,12 @@ def is_non_zero_file(fpath):
     return os.path.isfile(fpath) and os.path.getsize(fpath) > 0
 
 
-def get_xview_background_double_data(seed=1024):
+def get_xview_background_double_data(seed=1024, src_cmts='_px6whr4_ng0'):
     if seed == 1024:
         comments = '_xview_background_double'
     else:
         comments = '_xview_background_double_seed{}'.format(seed)
-    src_cmts = '_px6whr4_ng0'
+
     args = get_part_args(comments, seed)
 
     src_txt_dir = args.annos_save_dir.replace(comments, src_cmts)
@@ -47,7 +47,7 @@ def get_xview_background_double_data(seed=1024):
         shutil.copy(src_txt_files[j], os.path.join(args.annos_save_dir, txt_name))
 
 
-def collect_xview_data(data_name='xview_background_double', src_cmts='px6whr4_ng0', seed=1024):
+def collect_xview_data(seed=1024, data_name='xview_background_double', src_cmts='px6whr4_ng0'):
     comments = '_' + data_name
     xview_args = get_part_args(comments, seed)
     df_src_val = pd.read_csv(os.path.join(xview_args.data_save_dir.replace(data_name, src_cmts), 'xviewval_lbl_{}.txt'.format(src_cmts)), header=None)
@@ -109,9 +109,9 @@ def collect_xview_data(data_name='xview_background_double', src_cmts='px6whr4_ng
                     os.path.join(xview_args.data_list_save_dir, '{}_val_lbl.txt'.format(data_name)))
 
 
-def create_xview_data(src_cmts='px6whr4_ng0', comments='xview_background_double', seed=1024):
+def create_xview_data(seed=1024, src_cmts='px6whr4_ng0', dst_cmts='px6whr4_ng0', comments='xview_background_double'):
     xview_args = get_part_args('_' + comments, seed)
-    data_txt = open(os.path.join(xview_args.data_save_dir, '{}_{}.data'.format(comments, src_cmts)), 'w')
+    data_txt = open(os.path.join(xview_args.data_save_dir, '{}_{}.data'.format(comments, dst_cmts)), 'w')
     data_txt.write('train=./data_xview/{}_cls/{}/{}_train_img.txt\n'.format(xview_args.class_num, comments, comments))
     data_txt.write('train_label=./data_xview/{}_cls/{}/{}_train_lbl.txt\n'.format(xview_args.class_num, comments, comments))
 
@@ -125,8 +125,8 @@ def create_xview_data(src_cmts='px6whr4_ng0', comments='xview_background_double'
     data_txt.write('eval={}'.format(comments))
     data_txt.close()
 
-    shutil.copy(os.path.join(xview_args.data_save_dir, '{}_{}.data'.format(comments, src_cmts)),
-                os.path.join(xview_args.data_save_dir, '{}_{}_mosaic_rect.data'.format(comments, src_cmts)))
+    shutil.copy(os.path.join(xview_args.data_save_dir, '{}_{}.data'.format(comments, dst_cmts)),
+                os.path.join(xview_args.data_save_dir, '{}_{}_mosaic_rect.data'.format(comments, dst_cmts)))
 
 
 def get_part_args(comments='', seed=1024):
@@ -192,31 +192,48 @@ if __name__ == '__main__':
     # seed = 17
     # get_xview_background_double_data(seed)
 
+    seeds = [3, 5, 9]
+    for seed in seeds:
+        get_xview_background_double_data(seed)
+
     '''
     collect_xview_data
     '''
     # src_cmts = 'px6whr4_ng0'
     # seed = 1024
     # data_name = 'xview_background_double'
-    # collect_xview_data(data_name, src_cmts, seed=seed)
+    # collect_xview_data(seed=seed, data_name, src_cmts)
 
     # seed = 17
     # src_cmts = 'px6whr4_ng0_seed{}'.format(seed)
     # data_name = 'xview_background_double_seed{}'.format(seed)
-    # collect_xview_data(data_name, src_cmts, seed=seed)
+    # collect_xview_data(seed=seed, data_name, src_cmts)
+
+    # seeds = [3, 5, 9]
+    # for seed in seeds:
+    #     src_cmts = 'px6whr4_ng0'
+    #     data_name = 'xview_background_double_seed{}'.format(seed)
+    #     collect_xview_data(seed, data_name, src_cmts)
 
     '''
     create xview_background_double.data
     '''
-    # src_cmts = 'px6whr4_ng0'
+    # dst_cmts = src_cmts = 'px6whr4_ng0'
     # comments = 'xview_background_double'
     # seed = 1024
-    # create_xview_data(src_cmts, comments, seed)
+    # create_xview_data(seed, src_cmts, comments)
 
     # seed = 17
-    # src_cmts = 'px6whr4_ng0_seed{}'.format(seed)
+    # dst_cmts = src_cmts = 'px6whr4_ng0_seed{}'.format(seed)
     # comments = 'xview_background_double_seed{}'.format(seed)
-    # create_xview_data(src_cmts, comments, seed)
+    # create_xview_data(seed, src_cmts, comments)
+
+    seeds = [3, 5, 9]
+    for seed in seeds:
+        src_cmts = 'px6whr4_ng0'
+        dst_cmts = 'px6whr4_hgiou1'
+        comments = 'xview_background_double_seed{}'.format(seed)
+        create_xview_data(seed, src_cmts, dst_cmts, comments)
 
 
 

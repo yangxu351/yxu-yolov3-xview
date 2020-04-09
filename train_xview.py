@@ -80,7 +80,9 @@ def train():
     weights = opt.weights  # initial training weights
 
     # Initialize
-    init_seeds(opt.seed)
+    #fixme
+    # init_seeds(opt.seed)
+    init_seeds(0)
     if opt.multi_scale:
         img_sz_min = round(img_size / 32 / 1.5)
         img_sz_max = round(img_size / 32 * 1.5)
@@ -510,10 +512,12 @@ if __name__ == '__main__':
     # dir_comments = '_px6whr4_ng0'
     # # data_comments = '_px6whr4_ng0'
     # # dir_comments = '_px6whr4_ng0_mosaic_rect'
-    data_comments = '_px6whr4_ng0_seed1024'
-    dir_comments = '_px6whr4_ng0_hgiou1_seed1024'
+    # data_comments = '_px6whr4_ng0_seed1024'
+    # dir_comments = '_px6whr4_ng0_hgiou1_seed1024'
+    data_comments = '_px6whr4_ng0_seed17'
+    dir_comments = '_px6whr4_giou1_seed17'
     # seed = 1024
-    seed = 0
+    seed = 17
     for dt in display_type:
         for sr in syn_ratio:
             opt = get_opt(dt, sr, data_comments, seed)
