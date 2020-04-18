@@ -45,7 +45,15 @@ def get_object_bbox_after_group(label_path, save_path, class_label=0, min_region
             w = max_w - min_w
             h = max_h - min_h
             whr = np.maximum(w / (h + 1e-16), h / (w + 1e-16))
-            if w <= px_thresh or h <= px_thresh or whr > whr_thres:
+            if whr > whr_thres:
+                continue
+            elif min_w <= 0 and (w <= px_thresh or h <= px_thresh):
+                continue
+            elif min_h <= 0 and (w <= px_thresh or h <= px_thresh):
+                continue
+            elif max_w >= lbl.shape[1] -1  and (w <= px_thresh or h <= px_thresh):
+                continue
+            elif max_h >= lbl.shape[0] -1  and (w <= px_thresh or h <= px_thresh):
                 continue
             min_w = min_w / lbl.shape[1]
             min_h = min_h / lbl.shape[0]
@@ -53,6 +61,7 @@ def get_object_bbox_after_group(label_path, save_path, class_label=0, min_region
             h = h / lbl.shape[0]
             xc = min_w + w/2.
             yc = min_h + h/2.
+
 
             f_txt.write("%s %s %s %s %s\n" % (class_label, xc, yc, w, h))
         f_txt.close()
@@ -62,6 +71,7 @@ def plot_img_with_bbx(img_file, lbl_file, save_path, label_index=False):
     if not is_non_zero_file(lbl_file):
         # print(is_non_zero_file(lbl_file))
         return
+    # print(img_file)
     img = cv2.imread(img_file) # h, w, c
     h, w = img.shape[:2]
 
@@ -80,7 +90,6 @@ def plot_img_with_bbx(img_file, lbl_file, save_path, label_index=False):
     # print(df_lbl.shape[0])
     # df_lbl_uni = np.unique(df_lbl[:, 1:],axis=0)
     # print('after unique ', df_lbl_uni.shape[0])
-
     for ix in range(df_lbl.shape[0]):
         cat_id = int(df_lbl[ix, 0])
         gt_bbx = df_lbl[ix, 1:].astype(np.int64)
@@ -108,7 +117,7 @@ if __name__ == "__main__":
 
     img_file = '/object_score_utils/test/airplanes_berlin_200_76_GT.jpg'
 
-    lbl_file = '/media/lab/Yang/code/yolov3/utils_object_score/txt_xcycwh/' + 'minr{}_linkr{}_'.format(min_region, link_r) + 'airplanes_berlin_200_76_GT.txt'
+    lbl_file = '/media/lab/Yang/code/yolov3/utils_object_score/txt_xcycwh/' + 'minr{}_linkr{}_'.format(min_region, link_r)+ 'px6whr4_ng0_' + 'airplanes_berlin_200_76_GT.txt'
     save_path = '/object_score_utils/bbx_label/'
     plot_img_with_bbx(img_file, lbl_file, save_path)
 

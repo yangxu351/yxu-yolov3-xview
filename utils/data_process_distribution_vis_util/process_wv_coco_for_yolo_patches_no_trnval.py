@@ -271,44 +271,47 @@ def create_chips_and_txt_geojson_2_json(syn=False):
     json.dump(trn_instance, open(json_file, 'w'), ensure_ascii=False, indent=2, cls=MyEncoder)
 
 
-def clean_backup_xview_plane_with_constraints(px_thres=6, whr_thres=4):
+def clean_backup_xview_plane_with_constraints(px_thres=20, whr_thres=4):
     '''
     backupu *.txt first
     then remove labels with some constraints
-    :param px_thres: each edge length must be larger than px_thres
+    :param px_thres: each edge length must be larger than px_thres px_thres=6
     :param whr_thres:
     :return:
     '''
     args = get_args()
-    txt_files = np.sort(glob.glob(os.path.join(args.annos_save_dir, '*.txt')))
-    backup_path = args.annos_save_dir[:-1] + '_backup/'
+    txt_files = np.sort(glob.glob(os.path.join(args.annos_save_dir[:-1] + '_px{}whr{}/'.format(px_thres, whr_thres), '*.txt')))
+    backup_path = args.annos_save_dir[:-1] + '_px{}whr{}'.format(px_thres, whr_thres) + '_backup/'
     if not os.path.exists(backup_path):
         os.mkdir(backup_path)
         for f in txt_files:
             shutil.copy(f, backup_path)
     for f in txt_files:
-        #fixme second data process  # keep the zero label files --> to ensure the robust of the detector
-        # if not pps.is_non_zero_file(f):
-        #     os.remove(f)
-        #     continue
         if pps.is_non_zero_file(f):
-            df_txt = pd.read_csv(f, header=None, delimiter=' ')
+            df_txt = pd.read_csv(f, header=None, sep=' ')
             for i in df_txt.index:
                 bbx = df_txt.loc[i, 1:] * args.input_size
+                # print(bbx)
+                # exit(0)
+                # bbx_wh = max(bbx.loc[3]/bbx.loc[4] if bbx.loc[4] else bbx.loc[3], bbx.loc[4]/bbx.loc[3]  if bbx.loc[3] else bbx.loc[4])
+                if not bbx.loc[4] or not bbx.loc[3]:
+                    print(bbx)
+                    print(f)
                 bbx_wh = max(bbx.loc[3]/bbx.loc[4], bbx.loc[4]/bbx.loc[3])
-                if bbx.loc[3] <= px_thres or bbx.loc[4] <= px_thres or bbx_wh > whr_thres:
+                #fixme
+                # if bbx.loc[3] <= px_thres or bbx.loc[4] <= px_thres or bbx_wh > whr_thres:
+                #     df_txt = df_txt.drop(i)
+                xl = bbx.loc[1] - bbx.loc[3]/2
+                yl = bbx.loc[2] - bbx.loc[4]/2
+                xr = bbx.loc[1] + bbx.loc[3]/2
+                yr = bbx.loc[2] + bbx.loc[4]/2
+                if bbx_wh > whr_thres:
                     df_txt = df_txt.drop(i)
-        #fixme # keep the zero label files --> to ensure the robust of the detector
-        # if not pps.is_non_zero_file(f) or df_txt.empty:
-        #     df_txt = open(f, 'w')
-        #     df_txt.write('%d %d %d %.8f %.8f\n' % (0, 0, 0, (1/args.input_size), (1/args.input_size))) # catid, xc, yc, w, h
-        #     df_txt.close()
-
-            #fixme second data process
-            # os.remove(f)
-            # continue
-        # else:
-        df_txt.to_csv(f, header=False, index=False, sep=' ')
+                elif (xl==0 or xr==args.input_size-1) and (bbx.loc[3] <= px_thres or bbx.loc[4] <= px_thres):
+                    df_txt = df_txt.drop(i)
+                elif (yl==0 or yr==args.input_size-1) and (bbx.loc[3] <= px_thres or bbx.loc[4] <= px_thres):
+                    df_txt = df_txt.drop(i)
+            df_txt.to_csv(f, header=False, index=False, sep=' ')
 
 
 def check_xview_plane_drops():
@@ -374,16 +377,19 @@ def create_xview_names(file_name='xview'):
 def split_trn_val_with_chips(data_name='xview', comments='', seed=1024):
     args = get_args()
 
-    txt_save_dir = args.data_list_save_dir
     data_save_dir = args.data_save_dir
     if comments:
         comments = comments.format(seed)
+        txt_save_dir = args.data_list_save_dir + comments[1:] + '/'
+        if not os.path.exists(txt_save_dir):
+            os.makedirs(txt_save_dir)
         lbl_path = args.annos_save_dir[:-1] + comments.split('_seed')[0] + '/'
         data_save_dir = os.path.join(data_save_dir, comments[1:])
         if not os.path.exists(data_save_dir):
             os.makedirs(data_save_dir)
     else:
         lbl_path = args.annos_save_dir
+        txt_save_dir = args.data_list_save_dir
     images_save_dir = args.images_save_dir
     all_files = np.sort(glob.glob(lbl_path + '*.txt'))
 
@@ -1852,8 +1858,8 @@ def get_args():
     if not os.path.exists(args.annos_new_dir):
         os.makedirs(args.annos_new_dir)
 
-    if not os.path.exists(args.annos_save_dir):
-        os.makedirs(args.annos_save_dir)
+    # if not os.path.exists(args.annos_save_dir):
+    #     os.makedirs(args.annos_save_dir)
 
     if not os.path.exists(args.images_save_dir):
         os.makedirs(args.images_save_dir)
@@ -1940,7 +1946,7 @@ if __name__ == "__main__":
     # comments = '_px4whr3'
     # comments = '_px6whr4_giou0'
     # data_name = 'xview'
-    split_trn_val_with_chips(data_name, comments)
+    # split_trn_val_with_chips(data_name, comments)
 
 
     '''

@@ -275,33 +275,29 @@ def create_mismatch_syn_labels(mis_ratio, ratio=0.25, trial=3):
                               header=None, index=None)
 
 
-def create_xview_syn_data(dt, sr, comments='', trn_comments=False, seed=1024):
+def create_xview_syn_data(dt=None, sr=None, comments='',seed=1024):
     syn_args = get_part_syn_args(dt, sr)
     comments = comments.format(seed)
-    cmts = ''
     if sr:
-        if trn_comments:
-            cmts = comments
         data_txt = open(os.path.join(syn_args.data_xview_dir, 'xview_{}_{}'.format(dt, sr), 'xview_{}_{}{}.data'.format(dt, sr, comments)), 'w')
-        data_txt.write('train=./data_xview/{}_cls/xview_{}_{}/xview_{}_{}_train_img{}.txt\n'.format(syn_args.class_num, dt, sr, dt, sr, cmts))
-        data_txt.write('train_label=./data_xview/{}_cls/xview_{}_{}/xview_{}_{}_train_lbl{}.txt\n'.format(syn_args.class_num, dt, sr, dt, sr, cmts))
-        data_txt.write('valid=./data_xview/{}_cls/{}/xviewval_img{}.txt\n'.format(syn_args.class_num, cmts[1:], comments))
-        data_txt.write('valid_label=./data_xview/{}_cls/{}/xviewval_lbl{}.txt\n'.format(syn_args.class_num, cmts[1:], comments))
-    elif sr == 0 and trn_comments: # sr==0
-        cmts = comments
-        data_txt = open(os.path.join(syn_args.data_xview_dir, comments[1:], 'xview_{}_{}{}.data'.format(dt, sr, comments)), 'w')
+        data_txt.write('train=./data_xview/{}_cls/xview_{}_{}/xview_{}_{}_train_img{}.txt\n'.format(syn_args.class_num, dt, sr, dt, sr, comments))
+        data_txt.write('train_label=./data_xview/{}_cls/xview_{}_{}/xview_{}_{}_train_lbl{}.txt\n'.format(syn_args.class_num, dt, sr, dt, sr, comments))
+        data_txt.write('valid=./data_xview/{}_cls/{}/xviewval_img{}.txt\n'.format(syn_args.class_num, comments[1:], comments))
+        data_txt.write('valid_label=./data_xview/{}_cls/{}/xviewval_lbl{}.txt\n'.format(syn_args.class_num, comments[1:], comments))
+    elif sr is None and dt is None:
+        data_txt = open(os.path.join(syn_args.data_xview_dir, comments[1:], 'xview{}.data'.format(comments)), 'w')
         data_txt.write('train_label=./data_xview/{}_cls/{}/xviewtrain_lbl{}.txt\n'.format(syn_args.class_num, comments[1:], comments))
         data_txt.write('train=./data_xview/{}_cls/{}/xviewtrain_img{}.txt\n'.format(syn_args.class_num, comments[1:], comments))
-        data_txt.write('valid=./data_xview/{}_cls/{}/xviewval_img{}.txt\n'.format(syn_args.class_num, cmts[1:], comments))
-        data_txt.write('valid_label=./data_xview/{}_cls/{}/xviewval_lbl{}.txt\n'.format(syn_args.class_num, cmts[1:], comments))
+        data_txt.write('valid=./data_xview/{}_cls/{}/xviewval_img{}.txt\n'.format(syn_args.class_num, comments[1:], comments))
+        data_txt.write('valid_label=./data_xview/{}_cls/{}/xviewval_lbl{}.txt\n'.format(syn_args.class_num, comments[1:], comments))
     else:
         data_txt = open(os.path.join(syn_args.data_xview_dir, 'xview_{}_{}{}.data'.format(dt, sr, comments)), 'w')
         data_txt.write('train_label=./data_xview/{}_cls/xviewtrain_lbl{}.txt\n'.format(syn_args.class_num, comments))
         data_txt.write('train=./data_xview/{}_cls/xviewtrain_img{}.txt\n'.format(syn_args.class_num, comments))
-        data_txt.write('valid=./data_xview/{}_cls/xviewval_img{}.txt\n'.format(syn_args.class_num, cmts, comments))
-        data_txt.write('valid_label=./data_xview/{}_cls/xviewval_lbl{}.txt\n'.format(syn_args.class_num, cmts, comments))
+        data_txt.write('valid=./data_xview/{}_cls/xviewval_img{}.txt\n'.format(syn_args.class_num, comments))
+        data_txt.write('valid_label=./data_xview/{}_cls/xviewval_lbl{}.txt\n'.format(syn_args.class_num, comments))
 
-    df = pd.read_csv(os.path.join(syn_args.data_xview_dir, cmts[1:], 'xviewtrain_img{}.txt'.format(comments)), header=None)
+    df = pd.read_csv(os.path.join(syn_args.data_xview_dir, comments[1:], 'xviewtrain_img{}.txt'.format(comments)), header=None)
     data_txt.write('syn_0_xview_number=%s\n' % str(df.shape[0]))
     data_txt.write('classes=%s\n' % str(syn_args.class_num))
     data_txt.write('names=./data_xview/{}_cls/xview.names\n'.format(syn_args.class_num))
@@ -428,6 +424,10 @@ if __name__ == "__main__":
     '''
     # whr_thres = 4  # 3
     # px_thres = 6  # 4
+    # whr_thres = 4  # 3
+    # px_thres = 20  # 4
+    # whr_thres = 4  # 3
+    # px_thres = 23  # 4
     # pwv.clean_backup_xview_plane_with_constraints(px_thres, whr_thres)
 
     ''' if necessary
@@ -464,8 +464,27 @@ if __name__ == "__main__":
     # seed = 17
     # comments = '_px6whr4_ng0_seed{}'
     # data_name = 'xview'
-    # pwv.split_trn_val_with_chips(data_name, comments, seed)
 
+    # seed = 17
+    # seeds = [17, 1024, 3, 5, 9]
+    # comments = '_px20whr4_seed{}'
+    # seeds = [17, 5, 9]
+    # comments = '_px23whr4_seed{}'
+    # data_name = 'xview'
+    # for sd in seeds:
+    #     pwv.split_trn_val_with_chips(data_name, comments, sd)
+
+    '''
+    xview
+    create xview_* .data
+    default split 
+    '''
+    # seeds = [17, 1024, 3, 5, 9]
+    # comments = '_px20whr4_seed{}'
+    # seeds = [17, 5, 9]
+    # comments = '_px23whr4_seed{}'
+    # for sd in seeds:
+    #     create_xview_syn_data(comments=comments, seed=sd)
 
     '''
     collect all syn images and txt into one file

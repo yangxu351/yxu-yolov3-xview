@@ -493,7 +493,7 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
                 # else:
                 #     #FIXME
                 #     labels = np.zeros((0, 5), dtype=np.float32) # ****** deal with empty label files
-
+        # print(len(labels[0]))
         if self.augment:
             # Augment imagespace
             if not mosaic:

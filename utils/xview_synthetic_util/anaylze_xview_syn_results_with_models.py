@@ -109,11 +109,11 @@ def plot_val_results_iou_comp_with_model_id(mid, comments=''):
 
 
 def get_tp_fn_list_airplane_with_model(dt, sr, comments=[], mid=0, catid=0, iou_thres=0.5, score_thres=0.3,
-                                       px_thres=6, whr_thres=4):
+                                       px_thres=6, whr_thres=4, syn_cmt=''):
     ''' get TP FN of different 3d-models '''
-    results_dir = glob.glob(os.path.join(syn_args.results_dir.format(syn_args.class_num, dt, sr), '*' + comments[0]))[0]
 
-    result_json_file = os.path.join(results_dir, 'results_{}_{}.json'.format(dt, sr))
+    results_dir = glob.glob(os.path.join(syn_args.results_dir.format(syn_args.class_num, dt, sr), 'test_on*{}'.format(syn_cmt)))[0]
+    result_json_file = os.path.join(results_dir, 'results_{}_{}.json'.format(sr, 'on_original_model'))
     result_allcat_list = json.load(open(result_json_file))
     result_list = []
     # #fixme filter, and rare_result_allcat_list contains rare_cat_ids, rare_img_id_list and object score larger than score_thres
@@ -123,10 +123,11 @@ def get_tp_fn_list_airplane_with_model(dt, sr, comments=[], mid=0, catid=0, iou_
     print('len result_list', len(result_list))
     del result_allcat_list
 
-    val_lbl_txt = 'xviewval_lbl{}.txt'.format(comments[1])
-    val_labels = pd.read_csv(os.path.join(syn_args.data_xview_dir, val_lbl_txt), header=None)
+    val_lbl_txt = 'xviewval_lbl_{}_with_model.txt'.format(comments[0])
+    val_labels = pd.read_csv(os.path.join(syn_args.data_xview_dir, comments[0], val_lbl_txt), header=None)
     img_name_2_tp_list_maps = {}
     img_name_2_fn_list_maps = {}
+    gt_cnt = 0
     for ix, vl in enumerate(val_labels.iloc[:, 0]):
         img_name = os.path.basename(vl).replace(TXT_SUFFIX, IMG_SUFFIX)
         img_name_2_tp_list_maps[img_name] = []
@@ -145,12 +146,18 @@ def get_tp_fn_list_airplane_with_model(dt, sr, comments=[], mid=0, catid=0, iou_
                 whr = np.maximum(w / (h + 1e-16), h / (w + 1e-16))
                 if whr <= whr_thres and w >= px_thres and h >= px_thres and df_lbl[dx, 5] == mid:
                     good_gt_list.append(df_lbl[dx, :])
+        else:
+            continue
+        if not len(good_gt_list):
+            continue
         gt_boxes = []
         if good_gt_list:
             good_gt_arr = np.array(good_gt_list)
             gt_boxes = good_gt_arr[:, 1:5]  # x1y1x2y2
             gt_classes = good_gt_arr[:, 0]
             gt_models = good_gt_arr[:, -1]
+        # print('len of good gt ', len(good_gt_list))
+        # gt_cnt += len(good_gt_list)
 
         prd_list = [rx for rx in result_list if rx['image_name'] == img_name]
         prd_lbl_list = []
@@ -166,7 +173,6 @@ def get_tp_fn_list_airplane_with_model(dt, sr, comments=[], mid=0, catid=0, iou_
                 prd_lbl.extend([rx['score']])
                 prd_lbl_list.append(prd_lbl)
 
-        matches = []
         dt_boxes = []
         if prd_lbl_list:
             prd_lbl_arr = np.array(prd_lbl_list)
@@ -175,6 +181,7 @@ def get_tp_fn_list_airplane_with_model(dt, sr, comments=[], mid=0, catid=0, iou_
             dt_boxes = prd_lbl_arr[dt_scores >= score_thres][:, 1:-1]
             dt_classes = prd_lbl_arr[dt_scores >= score_thres][:, 0]
 
+        matches = []
         for i in range(len(gt_boxes)):
             for j in range(len(dt_boxes)):
                 iou = coord_iou(gt_boxes[i], dt_boxes[j])
@@ -197,7 +204,7 @@ def get_tp_fn_list_airplane_with_model(dt, sr, comments=[], mid=0, catid=0, iou_
 
             # Remove duplicate ground truths from the list.
             matches = matches[np.unique(matches[:, 0], return_index=True)[1]]
-
+        gt_cnt += len(gt_boxes)
         for i in range(len(gt_boxes)):
             if matches.shape[0] > 0 and matches[matches[:, 0] == i].shape[0] == 1:
                 mt_i = matches[matches[:, 0] == i][0].tolist()
@@ -209,7 +216,7 @@ def get_tp_fn_list_airplane_with_model(dt, sr, comments=[], mid=0, catid=0, iou_
                 c_box_iou.append(gt_models[i]) # [cat_id, box[0:4], iou, model_id]
                 img_name_2_tp_list_maps[img_name].append(c_box_iou)
             else:
-                # fixme
+                #fixme
                 # unique matches at most has one match for each ground truth
                 # 1. ground truth id deleted due to duplicate detections  --> FN
                 # 2. matches.shape[0] == 0 --> no matches --> FN
@@ -218,35 +225,48 @@ def get_tp_fn_list_airplane_with_model(dt, sr, comments=[], mid=0, catid=0, iou_
                 c_box_iou.append(0)
                 c_box_iou.append(gt_models[i]) # [cat_id, box[0:4], iou, model_id]
                 img_name_2_fn_list_maps[img_name].append(c_box_iou)
+    print('ground truth count ', gt_cnt)
+    tv = []
+    for v in img_name_2_tp_list_maps.values():
+        for vi in range(len(v)):
+            tv.append(v[vi])
+    fv = []
+    for v in img_name_2_fn_list_maps.values():
+        for vi in range(len(v)):
+            fv.append(v[vi])
+    print('tv ', len(tv), 'fv ', len(fv))
 
     save_dir = os.path.join(args.txt_save_dir,
-                            'val_img_2_tp_fn_list', comments[0] + comments[1], '{}_{}/'.format(dt, sr))
+                            'val_img_2_tp_fn_list', comments[0] + comments[1], '{}_{}{}/'.format(dt, sr, syn_cmt))
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
     tp_json_file = os.path.join(save_dir,
-                                'xViewval_{}_{}_img_2_tp_maps_model_{}.json'.format(dt, sr, mid))  # topleft
+                                'xViewval_{}_{}{}_img_2_tp_maps_model_{}.json'.format(dt, sr, syn_cmt, mid))  # topleft
     json.dump(img_name_2_tp_list_maps, open(tp_json_file, 'w'), ensure_ascii=False, indent=2, cls=MyEncoder)
 
     fn_json_file = os.path.join(save_dir,
-                                'xViewval_{}_{}_img_2_fn_maps_model_{}.json'.format(dt, sr, mid))  # topleft
+                                'xViewval_{}_{}{}_img_2_fn_maps_model_{}.json'.format(dt, sr, syn_cmt, mid))  # topleft
     json.dump(img_name_2_fn_list_maps, open(fn_json_file, 'w'), ensure_ascii=False, indent=2, cls=MyEncoder)
 
 
-def plot_val_img_with_tp_fn_bbox_with_model(dt, sr, comments='', mid=0):
+def plot_val_img_with_tp_fn_bbox_with_model(dt, sr, comments='', mid=0, syn_cmt=''):
     tp_fn_list_dir = os.path.join(args.txt_save_dir,
-                                  'val_img_2_tp_fn_list', comments, '{}_{}'.format(dt, sr))
+                                  'val_img_2_tp_fn_list', comments, '{}_{}{}/'.format(dt, sr, syn_cmt))
     img_tp_fn_bbox_path = os.path.join(args.cat_sample_dir,
-                                       'val_img_with_tp_fn_bbox', comments, '{}_{}'.format(dt, sr), 'model_{}'.format(mid))
+                                       'val_img_with_tp_fn_bbox', comments, '{}_{}{}/'.format(dt, sr, syn_cmt), 'model_{}'.format(mid))
     if not os.path.exists(img_tp_fn_bbox_path):
         os.makedirs(img_tp_fn_bbox_path)
 
     tp_maps = json.load(open(os.path.join(tp_fn_list_dir,
-                                          'xViewval_{}_{}_img_2_tp_maps_model_{}.json'.format(dt, sr, mid))))
+                                          'xViewval_{}_{}{}_img_2_tp_maps_model_{}.json'.format(dt, sr, syn_cmt, mid))))
     fn_maps = json.load(open(os.path.join(tp_fn_list_dir,
-                                          'xViewval_{}_{}_img_2_fn_maps_model_{}.json'.format(dt, sr, mid))))
+                                          'xViewval_{}_{}{}_img_2_fn_maps_model_{}.json'.format(dt, sr, syn_cmt, mid))))
     tp_color = (0, 255, 0)  # Green
     fn_color = (255, 0, 0)  # Blue
-    img_names = [k for k in tp_maps.keys()]
+    tp_img_names = [k for k in tp_maps.keys()]
+    fn_img_names = [k for k in fn_maps.keys()]
+    img_names = tp_img_names + [k for k in fn_img_names if k not in tp_img_names]
+    # print(len(img_names))
     for name in img_names:
         img = cv2.imread(os.path.join(args.images_save_dir, name))
         tp_list = tp_maps[name]
@@ -273,91 +293,225 @@ def plot_val_img_with_tp_fn_bbox_with_model(dt, sr, comments='', mid=0):
 
 
 def draw_bar_compare_tp_fn_number_of_different_syn_ratio(comments='', mid=0):
-    tp_fn_0_dir = os.path.join(args.txt_save_dir, 'val_img_2_tp_fn_list', comments, 'syn_0')
-    tp_0_file = json.load(open(os.path.join(tp_fn_0_dir, 'xViewval_syn_0_img_2_tp_maps_model_{}.json'.format(mid))))
-    fn_0_file = json.load(open(os.path.join(tp_fn_0_dir, 'xViewval_syn_0_img_2_fn_maps_model_{}.json'.format(mid))))
-    tp_0_num = len([v for v in tp_0_file.values() if v])
-    fn_0_num = len([v for v in fn_0_file.values() if v])
+    tp_fn_0_dir = os.path.join(args.txt_save_dir, 'val_img_2_tp_fn_list', comments[0] + '_with_model', comments[0])
+    tp_0_file = json.load(open(os.path.join(tp_fn_0_dir, 'xViewval_{}_img_2_tp_maps_model_{}.json'.format(comments[0], mid))))
+    fn_0_file = json.load(open(os.path.join(tp_fn_0_dir, 'xViewval_{}_img_2_fn_maps_model_{}.json'.format(comments[0], mid))))
+    tp_0 = []
+    for v in tp_0_file.values():
+        for vi in range(len(v)):
+            tp_0.append(v[vi])
+    fn_0 = []
+    for v in fn_0_file.values():
+        for vi in range(len(v)):
+            fn_0.append(v[vi])
+    tp_0_num = len(tp_0)
+    fn_0_num = len(fn_0)
 
-    save_dir = os.path.join(args.txt_save_dir, 'val_img_2_tp_fn_list', 'figures', comments)
+    save_dir = os.path.join(args.txt_save_dir, 'val_img_2_tp_fn_list', 'figures', comments[1])
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
     x = [1, 3, 5, 7, 9, 11]
-    xlabels = ['TP ratio=0.25', 'TP ratio=0.5', 'TP ratio=0.75', 'FN ratio=0.25', 'FN ratio=0.5', 'FN ratio=0.75']
+    xlabels = ['TP seed=17',  'FN seed=17']
     plt.rcParams['figure.figsize'] = (10.0, 8.0)
     fig, ax = plt.subplots(1, 1)
     width = 0.3
-    syn_ratios = [0.25, 0.5, 0.75]
-    for ix, r in enumerate(syn_ratios):
-        tp_fn_tx_path = os.path.join(args.txt_save_dir, 'val_img_2_tp_fn_list', comments,
-                                     '{}_{}'.format('syn_texture', r))
-        tp_tx_file = json.load(
-            open(os.path.join(tp_fn_tx_path, 'xViewval_{}_{}_img_2_tp_maps_model_{}.json'.format('syn_texture', r, mid))))
-        fn_tx_file = json.load(
-            open(os.path.join(tp_fn_tx_path, 'xViewval_{}_{}_img_2_fn_maps_model_{}.json'.format('syn_texture', r, mid))))
-        tp_tx_num = len([k for k in tp_tx_file.keys() if tp_tx_file.get(k)])
-        fn_tx_num = len([k for k in fn_tx_file.keys() if fn_tx_file.get(k)])
+    tp_fn_tx_path = os.path.join(args.txt_save_dir, 'val_img_2_tp_fn_list', comments[0] + '_with_model', comments[1])
+    tp_tx_file = json.load(
+        open(os.path.join(tp_fn_tx_path, 'xViewval_{}_img_2_tp_maps_model_{}.json'.format(comments[1], mid))))
+    fn_tx_file = json.load(
+        open(os.path.join(tp_fn_tx_path, 'xViewval_{}_img_2_fn_maps_model_{}.json'.format(comments[1],mid))))
+    tp_tx = []
+    for v in tp_tx_file.values():
+        for vi in range(len(v)):
+            tp_tx.append(v[vi])
+    fn_tx = []
+    for v in fn_tx_file.values():
+        for vi in range(len(v)):
+            fn_tx.append(v[vi])
+    tp_tx_num = len(tp_tx)
+    fn_tx_num = len(fn_tx)
 
-        tp_fn_clr_path = os.path.join(args.txt_save_dir, 'val_img_2_tp_fn_list', comments,
-                                      '{}_{}'.format('syn_color', r))
-        if not os.path.exists(tp_fn_clr_path):
-            os.makedirs(tp_fn_clr_path)
-        tp_clr_file = json.load(
-            open(os.path.join(tp_fn_clr_path, 'xViewval_{}_{}_img_2_tp_maps_model_{}.json'.format('syn_color', r, mid))))
-        fn_clr_file = json.load(
-            open(os.path.join(tp_fn_clr_path, 'xViewval_{}_{}_img_2_fn_maps_model_{}.json'.format('syn_color', r, mid))))
-        tp_clr_num = len([k for k in tp_clr_file.keys() if tp_clr_file.get(k)])
-        fn_clr_num = len([k for k in fn_clr_file.keys() if fn_clr_file.get(k)])
+        # tp_fn_clr_path = os.path.join(args.txt_save_dir, 'val_img_2_tp_fn_list', comments,
+        #                               '{}_{}'.format('syn_color', r))
+        # if not os.path.exists(tp_fn_clr_path):
+        #     os.makedirs(tp_fn_clr_path)
+        # tp_clr_file = json.load(
+        #     open(os.path.join(tp_fn_clr_path, 'xViewval_{}_{}_img_2_tp_maps_model_{}.json'.format('syn_color', r, mid))))
+        # fn_clr_file = json.load(
+        #     open(os.path.join(tp_fn_clr_path, 'xViewval_{}_{}_img_2_fn_maps_model_{}.json'.format('syn_color', r, mid))))
+        # tp_clr_num = len([k for k in tp_clr_file.keys() if tp_clr_file.get(k)])
+        # fn_clr_num = len([k for k in fn_clr_file.keys() if fn_clr_file.get(k)])
+        #
+        # tp_fn_mx_path = os.path.join(args.txt_save_dir, 'val_img_2_tp_fn_list', comments,
+        #                              '{}_{}'.format('syn_mixed', r))
+        # if not os.path.exists(tp_fn_mx_path):
+        #     os.makedirs(tp_fn_mx_path)
+        # tp_mx_file = json.load(
+        #     open(os.path.join(tp_fn_mx_path, 'xViewval_{}_{}_img_2_tp_maps_model_{}.json'.format('syn_mixed', r, mid))))
+        # fn_mx_file = json.load(
+        #     open(os.path.join(tp_fn_mx_path, 'xViewval_{}_{}_img_2_fn_maps_model_{}.json'.format('syn_mixed', r, mid))))
+        # tp_mx_num = len([k for k in tp_mx_file.keys() if tp_mx_file.get(k)])
+        # fn_mx_num = len([k for k in fn_mx_file.keys() if fn_mx_file.get(k)])
 
-        tp_fn_mx_path = os.path.join(args.txt_save_dir, 'val_img_2_tp_fn_list', comments,
-                                     '{}_{}'.format('syn_mixed', r))
-        if not os.path.exists(tp_fn_mx_path):
-            os.makedirs(tp_fn_mx_path)
-        tp_mx_file = json.load(
-            open(os.path.join(tp_fn_mx_path, 'xViewval_{}_{}_img_2_tp_maps_model_{}.json'.format('syn_mixed', r, mid))))
-        fn_mx_file = json.load(
-            open(os.path.join(tp_fn_mx_path, 'xViewval_{}_{}_img_2_fn_maps_model_{}.json'.format('syn_mixed', r, mid))))
-        tp_mx_num = len([k for k in tp_mx_file.keys() if tp_mx_file.get(k)])
-        fn_mx_num = len([k for k in fn_mx_file.keys() if fn_mx_file.get(k)])
+    rects_syn_0 = ax.bar([x[0] - width, x[1] - width], [tp_0_num, fn_0_num], width, label=comments[0])
+    autolabel(ax, rects_syn_0, x, xlabels, [tp_0_num, fn_0_num], rotation=0)
 
-        rects_syn_0 = ax.bar([x[ix] - width, x[ix + 3] - width], [tp_0_num, fn_0_num], width, label='syn_ratio=0')
-        autolabel(ax, rects_syn_0, x, xlabels, [tp_0_num, fn_0_num], rotation=0)
+        # rects_syn_clr = ax.bar([x[ix], x[ix + 3]], [tp_clr_num, fn_clr_num], width,
+        #                        label='syn_color_ratio={}'.format(r))  # , label=labels
+        # autolabel(ax, rects_syn_clr, x, xlabels, [tp_clr_num, fn_clr_num], rotation=0)
 
-        rects_syn_clr = ax.bar([x[ix], x[ix + 3]], [tp_clr_num, fn_clr_num], width,
-                               label='syn_color_ratio={}'.format(r))  # , label=labels
-        autolabel(ax, rects_syn_clr, x, xlabels, [tp_clr_num, fn_clr_num], rotation=0)
+    rects_syn_tx = ax.bar([x[0] + width, x[1] + width], [tp_tx_num, fn_tx_num], width,
+                          label=comments[1])  # , label=labels
+    autolabel(ax, rects_syn_tx, x, xlabels, [tp_tx_num, fn_tx_num], rotation=0)
 
-        rects_syn_tx = ax.bar([x[ix] + width, x[ix + 3] + width], [tp_tx_num, fn_tx_num], width,
-                              label='syn_texture_ratio={}'.format(r))  # , label=labels
-        autolabel(ax, rects_syn_tx, x, xlabels, [tp_tx_num, fn_tx_num], rotation=0)
-
-        rects_syn_mx = ax.bar([x[ix] + 2 * width, x[ix + 3] + 2 * width], [tp_mx_num, fn_mx_num], width,
-                              label='syn_mixed_ratio={}'.format(r))  # , label=labels
-        autolabel(ax, rects_syn_mx, x, xlabels, [tp_mx_num, fn_mx_num], rotation=0)
+        # rects_syn_mx = ax.bar([x[ix] + 2 * width, x[ix + 3] + 2 * width], [tp_mx_num, fn_mx_num], width,
+        #                       label='syn_mixed_ratio={}'.format(r))  # , label=labels
+        # autolabel(ax, rects_syn_mx, x, xlabels, [tp_mx_num, fn_mx_num], rotation=0)
 
     ax.legend()
     ylabel = "Number"
-    plt.title('{} 3-d Model {}'.format(comments, mid), literal_eval(syn_args.font2))
+    plt.title('{} 3-d Model {}'.format(comments[1], mid), literal_eval(syn_args.font2))
     plt.ylabel(ylabel, literal_eval(syn_args.font2))
     plt.tight_layout(pad=0.4, w_pad=3.0, h_pad=3.0)
     plt.grid()
-    plt.savefig(os.path.join(save_dir, 'cmp_tp_fn_syn0_vs_syn_clr_tx_mx_model_{}.jpg'.format(mid)))
+    plt.savefig(os.path.join(save_dir, 'cmp_tp_fn_{}_vs_{}_model_{}.jpg'.format(comments[0], comments[1], mid)))
+    plt.show()
+
+def draw_bar_compare_tp_fn_number_of_different_comments(comments='', mid=0, xview_cmt=''):
+    tp_fn_0_dir = os.path.join(args.txt_save_dir, 'val_img_2_tp_fn_list', comments[0] + '_with_model', comments[0])
+    tp_0_file = json.load(open(os.path.join(tp_fn_0_dir, 'xViewval_{}_img_2_tp_maps_model_{}.json'.format(comments[0], mid))))
+    fn_0_file = json.load(open(os.path.join(tp_fn_0_dir, 'xViewval_{}_img_2_fn_maps_model_{}.json'.format(comments[0], mid))))
+    tp_0 = []
+    for v in tp_0_file.values():
+        for vi in range(len(v)):
+            tp_0.append(v[vi])
+    fn_0 = []
+    for v in fn_0_file.values():
+        for vi in range(len(v)):
+            fn_0.append(v[vi])
+    tp_0_num = len(tp_0)
+    fn_0_num = len(fn_0)
+
+    save_dir = os.path.join(args.txt_save_dir, 'val_img_2_tp_fn_list', 'figures', comments[0])
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
+    x = [1, 3, 5, 7, 9, 11]
+    xlabels = ['TP seed=17',  'FN seed=17']
+    plt.rcParams['figure.figsize'] = (10.0, 8.0)
+    fig, ax = plt.subplots(1, 1)
+    width = 0.3
+    tp_fn_tx_path = os.path.join(args.txt_save_dir, 'val_img_2_tp_fn_list', comments[0] + '_with_model', comments[1] + xview_cmt)
+    tp_tx_file = json.load(
+        open(os.path.join(tp_fn_tx_path, 'xViewval_{}{}_img_2_tp_maps_model_{}.json'.format(comments[1], xview_cmt, mid))))
+    fn_tx_file = json.load(
+        open(os.path.join(tp_fn_tx_path, 'xViewval_{}{}_img_2_fn_maps_model_{}.json'.format(comments[1], xview_cmt, mid))))
+    tp_tx = []
+    for v in tp_tx_file.values():
+        for vi in range(len(v)):
+            tp_tx.append(v[vi])
+    fn_tx = []
+    for v in fn_tx_file.values():
+        for vi in range(len(v)):
+            fn_tx.append(v[vi])
+    tp_tx_num = len(tp_tx)
+    fn_tx_num = len(fn_tx)
+
+    # tp_fn_cl_path = os.path.join(args.txt_save_dir, 'val_img_2_tp_fn_list', comments[0] + '_with_model', comments[2])
+    # tp_cl_file = json.load(
+    #     open(os.path.join(tp_fn_cl_path, 'xViewval_{}_img_2_tp_maps_model_{}.json'.format(comments[2], mid))))
+    # fn_cl_file = json.load(
+    #     open(os.path.join(tp_fn_cl_path, 'xViewval_{}_img_2_fn_maps_model_{}.json'.format(comments[2],mid))))
+    # tp_cl = []
+    # for v in tp_cl_file.values():
+    #     for vi in range(len(v)):
+    #         tp_cl.append(v[vi])
+    # fn_cl = []
+    # for v in fn_cl_file.values():
+    #     for vi in range(len(v)):
+    #         fn_cl.append(v[vi])
+    # tp_cl_num = len(tp_cl)
+    # fn_cl_num = len(fn_cl)
+
+    rects_syn_0 = ax.bar([x[0] - width, x[1] - width], [tp_0_num, fn_0_num], width, label=comments[0])
+    autolabel(ax, rects_syn_0, x, xlabels, [tp_0_num, fn_0_num], rotation=0)
+
+    rects_syn_tx = ax.bar([x[0], x[1]], [tp_tx_num, fn_tx_num], width, label=comments[1] + xview_cmt)  # , label=labels
+    autolabel(ax, rects_syn_tx, x, xlabels, [tp_tx_num, fn_tx_num], rotation=0)
+
+    # rects_syn_clr = ax.bar([x[0] + width, x[1] + width], [tp_cl_num, fn_cl_num], width, label=comments[2] + xview_cmt)  # , label=labels
+    # autolabel(ax, rects_syn_clr, x, xlabels, [tp_cl_num, fn_cl_num], rotation=0)
+
+    ax.legend()
+    ylabel = "Number"
+    plt.title('{} Algorithms on 3-d Model {}'.format(len(comments), mid), literal_eval(syn_args.font2))
+    plt.ylabel(ylabel, literal_eval(syn_args.font2))
+    plt.tight_layout(pad=0.4, w_pad=3.0, h_pad=3.0)
+    plt.grid()
+    # plt.savefig(os.path.join(save_dir, 'cmp_tp_fn_{}_vs_{}_{}_model_{}.jpg'.format(comments[0], comments[1], comments[2], mid)))
+    plt.savefig(os.path.join(save_dir, 'cmp_tp_fn_{}_vs_{}_model_{}.jpg'.format(comments[0], comments[1]+xview_cmt, mid)))
     plt.show()
 
 
-def statistic_model_number(type='Validation'):
-    args = pwv.get_args()
-    if type == 'Validation':
-        val_lbl_file = '/media/lab/Yang/code/yolov3/data_xview/1_cls/xviewval_lbl_with_model.txt'
+def draw_bar_compare_tp_number_of_different_models(comments=[], mids=[], xview_cmt=['']):
+    save_dir = os.path.join(args.txt_save_dir, 'val_img_2_tp_fn_list', 'figures', comments[0])
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
+
+    xlabels = ['Model0', 'Model1', 'Model2', 'Model3']
+    plt.rcParams['figure.figsize'] = (10.0, 8.0)
+    fig, (axs1, axs2) = plt.subplots(2, 1) #,  sharex=True, sharey=True
+    x = np.array([1, 3, 5, 7])
+    width = 0.3
+    for cix, cmt in enumerate(comments):
+        tp_fn_tx_path = os.path.join(args.txt_save_dir, 'val_img_2_tp_fn_list',  comments[0] + '_with_model', cmt + xview_cmt[cix])
+        tp_num_arr = np.zeros((4), dtype=np.int)
+        fn_num_arr = np.zeros((4), dtype=np.int)
+        for mid in mids:
+            tp_tx_file = json.load(
+                open(os.path.join(tp_fn_tx_path, 'xViewval_{}{}_img_2_tp_maps_model_{}.json'.format(cmt, xview_cmt[cix], mid))))
+            fn_tx_file = json.load(
+                open(os.path.join(tp_fn_tx_path, 'xViewval_{}{}_img_2_fn_maps_model_{}.json'.format(cmt, xview_cmt[cix], mid))))
+            for v in tp_tx_file.values():
+                tp_num_arr[mid] += len(v)
+            for v in fn_tx_file.values():
+                fn_num_arr[mid] += len(v)
+        rects_syn_tp = axs1.bar(x + cix*width, tp_num_arr, width, label=cmt + xview_cmt[cix])  # , label=labels
+        autolabel(axs1, rects_syn_tp, x + cix*width, xlabels, tp_num_arr, rotation=0)
+
+        rects_syn_fn = axs2.bar(x + cix*width, fn_num_arr, width, label=cmt + xview_cmt[cix])  # , label=labels
+        autolabel(axs2, rects_syn_fn, x + cix*width, xlabels, fn_num_arr, rotation=0)
+
+    axs1.legend()
+    axs2.legend()
+    axs1.grid(True)
+    axs2.grid(True)
+    axs1.set_xlabel('TP', literal_eval(syn_args.font2))
+    axs2.set_xlabel('FN', literal_eval(syn_args.font2))
+    axs1.set_ylabel("Number", literal_eval(syn_args.font2))
+    axs2.set_ylabel("Number", literal_eval(syn_args.font2))
+    fig.suptitle('{} Algorithms of TP & RN on {} Models'.format(len(comments), len(mids)), fontsize=18)
+    if xview_cmt:
+        jpg_name = 'cmp_tp_fn_of_{}_algorithms_{}_*{}_on_{}_models.jpg'.format(len(comments), comments[1].split('_texture')[0], xview_cmt, len(mids))
+    else:
+        jpg_name = 'cmp_tp_fn_of_{}_algorithms_{}_*_on_{}_models.jpg'.format(len(comments), comments[1].split('_texture')[0], len(mids))
+    plt.savefig(os.path.join(save_dir, jpg_name))
+    plt.show()
+
+
+def statistic_model_number(type='validation', comments='px6whr4_ng0_seed17'):
+
+    # comments = '38bbox_giou0_with_model'
+    if type == 'validation':
+        val_lbl_file = '/media/lab/Yang/code/yolov3/data_xview/1_cls/{}/xviewval_lbl_{}_with_model.txt'.format(comments, comments)
         json_name = 'val_model_num_maps.json'
         png_name = 'val_number_3d-model.jpg'
     else:
-        val_lbl_file = '/media/lab/Yang/code/yolov3/data_xview/1_cls/xviewtrain_lbl_with_model.txt'
+        val_lbl_file = '/media/lab/Yang/code/yolov3/data_xview/1_cls/{}/xviewtrain_lbl_{}_with_model.txt'.format(comments, comments)
         json_name = 'trn_model_num_maps.json'
         png_name = 'trn_number_3d-model.jpg'
     df_val = pd.read_csv(val_lbl_file, header=None)
     Num = {}
-    comments = '38bbox_giou0_with_model'
+
     for f in df_val.loc[:, 0]:
         if not is_non_zero_file(f):
             continue
@@ -367,11 +521,16 @@ def statistic_model_number(type='Validation'):
                 Num[m] = 1
             else:
                 Num[m] += 1
-    json_file = os.path.join(args.txt_save_dir, 'val_result_iou_map', comments, json_name)
-    json.dump(Num, open(json_file,
+    json_dir = os.path.join(args.txt_save_dir, 'val_result_iou_map', comments)
+    if not os.path.exists(json_dir):
+        os.makedirs(json_dir)
+    json.dump(Num, open(os.path.join(json_dir, json_name),
                         'w'), ensure_ascii=False, indent=2, cls=MyEncoder)
 
     save_dir = os.path.join(args.txt_save_dir, 'val_result_iou_map', 'figures', comments)
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
+
     plt.rcParams['figure.figsize'] = (10.0, 8.0)
     fig, ax = plt.subplots(1, 1)
     width = 0.35
@@ -506,39 +665,168 @@ if __name__ == "__main__":
     '''
     statistic model Number 
     '''
-    # type = 'training'
-    # type = 'Validation'
-    # statistic_model_number(type)
+    # # type = 'training'
+    # type = 'validation'
+    # comments='px6whr4_ng0_seed17'
+    # # comments='px20whr4_seed17'
+    # statistic_model_number(type, comments)
 
     '''
     val gt and prd results TP FN NMS
     '''
     # score_thres = 0.3
-    # px_thres = 6
     # whr_thres = 4
     # iou_thres = 0.5
     # catid = 0
-    # display_type = ['syn_texture', 'syn_color', 'syn_mixed'] #  ['syn_texture', 'syn_color', 'syn_mixed'] , 'syn_texture0', 'syn_color0']
-    # syn_ratio = [0.25, 0.5, 0.75] #  [0.25, 0.5, 0.75]
-    # # display_type = ['syn']
-    # # syn_ratio = [0]
-    # # comments = ''
-    # # comments = '38bbox_giou0'
-    # model_ids = [0, 1, 2]
-    # comments = ['38bbox_giou0', '_with_model']
+    # model_ids = [0, 1, 2, 3]
+    # # px_thres = 6
+    # # # comments = ['px6whr4_ng0_seed17', '_with_model']
+    # # # display_type = ['px6whr4_ng0']
+    # px_thres = 20
+    # comments = ['px20whr4_seed17', '_with_model']
+    # display_type = ['px20whr4']
+    #
+    # syn_ratio = ['seed17']
     # for mid in model_ids:
     #     for dt in display_type:
     #         for sr in syn_ratio:
     #             get_tp_fn_list_airplane_with_model(dt, sr, comments, mid, catid, iou_thres, score_thres, px_thres, whr_thres)
     #             plot_val_img_with_tp_fn_bbox_with_model(dt, sr, comments[0] + comments[1], mid)
+
+    # score_thres = 0.3
+    # whr_thres = 4
+    # iou_thres = 0.5
+    # catid = 0
+    # model_ids = [0, 1, 2, 3]
+    # comments = ['px6whr4_ng0_seed17', '_with_model']
+    # px_thres = 6
+    # display_types = ['syn_xview_bkg_certain_models_texture', 'syn_xview_bkg_certain_models_color',
+    #                  'syn_xview_bkg_certain_models_mixed'] #
+    # syn_cmt = ''
+    # # comments = ['px20whr4_seed17', '_with_model']
+    # # px_thres = 20
+    # # display_types = ['syn_xview_bkg_px20whr4_certain_models_texture', 'syn_xview_bkg_px20whr4_certain_models_color',
+    # #                  'syn_xview_bkg_px20whr4_certain_models_mixed']
+    # syn_cmt = ''
+    # sr = 'seed17'
+    # for mid in model_ids:
+    #     for dt in display_types[:2]:
+    #         get_tp_fn_list_airplane_with_model(dt, sr, comments, mid, catid, iou_thres, score_thres, px_thres, whr_thres, syn_cmt)
+    #         plot_val_img_with_tp_fn_bbox_with_model(dt, sr, comments[0] + comments[1], mid, syn_cmt)
+
+
+
+    # # # px_thres = 6 ##*******
+    # # # comments = ['px6whr4_ng0_seed17', '_with_model']
+    # # # display_types = ['xview_syn_xview_bkg_texture']
+    # # # syn_cmt = '_1xSyn'
+    # # # comments = ['px6whr4_ng0_seed17', '_with_model']
+    # # # display_types = ['xview_syn_xview_bkg_texture', 'xview_syn_xview_bkg_color',
+    # # #                  'xview_syn_xview_bkg_mixed']
+    # # # syn_cmt = '_1xSyn'
+    # # px_thres = 6
+    # # comments = ['px6whr4_ng0_seed17', '_with_model']
+    # # display_types = ['xview_syn_xview_bkg_certain_models_texture', 'xview_syn_xview_bkg_certain_models_color',
+    # #                  'xview_syn_xview_bkg_certain_models_mixed']
+    # # syn_cmt = '_1xSyn'
+    # px_thres = 6
+    # comments = ['px6whr4_ng0_seed17', '_with_model']
+    # display_types = ['xview_syn_xview_bkg_certain_models_texture']
+    # # syn_cmt = '_1xSyn'
+    # syn_cmt = '_2xSyn'
+    # # # px_thres = 20 ##*******
+    # # # comments = ['px20whr4_seed17', '_with_model']
+    # # # display_types = ['xview_syn_xview_bkg_px20whr4_certain_models_texture', 'xview_syn_xview_bkg_px20whr4_certain_models_color',
+    # # #                  'xview_syn_xview_bkg_px20whr4_certain_models_mixed']
+    # # # syn_cmt = '_1xSyn'
+    # score_thres = 0.3
+    # whr_thres = 4
+    # iou_thres = 0.5
+    # catid = 0
+    # model_ids = [0, 1, 2, 3]
+    # sr = 'seed17'
+    # for mid in model_ids:
+    #     for dt in display_types[:1]:
+    #         get_tp_fn_list_airplane_with_model(dt, sr, comments, mid, catid, iou_thres, score_thres, px_thres, whr_thres, syn_cmt)
+    #         plot_val_img_with_tp_fn_bbox_with_model(dt, sr, comments[0] + comments[1], mid, syn_cmt)
+
+
     '''
     TP and FN
     compare
     '''
-    # model_ids = [0, 1, 2]
-    # comments = '38bbox_giou0_with_model'
+    # model_ids = [0, 1, 2, 3]
+    # comments = ['px6whr4_ng0_seed17', 'xview_syn_xview_bkg_texture_seed17']
+    # # comments = ['px6whr4_ng0_seed17', 'xview_syn_xview_bkg_certain_models_texture_seed17_1xSyn']
     # for mid in model_ids:
     #     draw_bar_compare_tp_fn_number_of_different_syn_ratio(comments, mid)
+
+    # model_ids = [0, 1, 2, 3]
+    # comments = ['px6whr4_ng0_seed17', 'syn_xview_bkg_texture_seed17', 'syn_xview_bkg_certain_models_texture_seed17_1xSyn']
+    # for mid in model_ids:
+    #     draw_bar_compare_tp_fn_number_of_different_comments(comments, mid)
+
+    # model_ids = [0, 1, 2, 3]
+    # comments = ['px6whr4_ng0_seed17', 'xview_syn_xview_bkg_texture_seed17',
+    # 'xview_syn_xview_bkg_certain_models_texture_seed17_1xSyn']
+    # for mid in model_ids:
+    #     draw_bar_compare_tp_fn_number_of_different_comments(comments, mid)
+
+    # model_ids = [0, 1, 2, 3]
+    # comments = ['px6whr4_ng0_seed17', 'syn_xview_bkg_certain_models_texture_seed17', 'syn_xview_bkg_certain_models_color_seed17']
+    # for mid in model_ids:
+    #     draw_bar_compare_tp_fn_number_of_different_comments(comments, mid)
+
+    # model_ids = [0, 1, 2, 3]
+    # comments = ['px20whr4_seed17', 'syn_xview_bkg_px20whr4_certain_models_texture_seed17',
+    #             'syn_xview_bkg_px20whr4_certain_models_color_seed17',
+    #             'syn_xview_bkg_px20whr4_certain_models_mixed_seed17']
+    # for mid in model_ids:
+    #     draw_bar_compare_tp_fn_number_of_different_comments(comments, mid)
+
+    # model_ids = [0, 1, 2, 3]
+    # comments = ['px20whr4_seed17', 'xview_syn_xview_bkg_px20whr4_certain_models_texture_seed17']
+    # xview_cmt = '_1xSyn'
+    # for mid in model_ids:
+    #     draw_bar_compare_tp_fn_number_of_different_comments(comments, mid, xview_cmt)
+
+    '''
+    TP and FN
+    compare all
+    '''
+    # comments = ['px6whr4_ng0_seed17',
+    #             'xview_syn_xview_bkg_texture_seed17',
+    #             'xview_syn_xview_bkg_color_seed17',
+    #             'xview_syn_xview_bkg_mixed_seed17']
+    # xview_cmt = ['', '_1xSyn', '_1xSyn', '_1xSyn']
+    # comments = ['px6whr4_ng0_seed17',
+    #             'xview_syn_xview_bkg_texture_seed17',
+    #             'xview_syn_xview_bkg_certain_models_texture_seed17']
+    # xview_cmt = ['', '_1xSyn', '_1xSyn']
+    # comments = ['px6whr4_ng0_seed17',
+    #             'syn_xview_bkg_certain_models_texture_seed17',
+    #             'syn_xview_bkg_certain_models_color_seed17']
+    # , 'syn_xview_bkg_certain_models_mixed_seed17'
+    # xview_cmt = ['', '', '']
+    comments = ['px6whr4_ng0_seed17',
+                'xview_syn_xview_bkg_certain_models_texture_seed17'
+                ,'xview_syn_xview_bkg_certain_models_texture_seed17']
+    # , 'xview_syn_xview_bkg_certain_models_mixed_seed17'
+    xview_cmt = ['', '_1xSyn', '_2xSyn']
+    # comments = ['px20whr4_seed17',
+    #             'syn_xview_bkg_px20whr4_certain_models_texture_seed17',
+    #             'syn_xview_bkg_px20whr4_certain_models_color_seed17',
+    #             'syn_xview_bkg_px20whr4_certain_models_mixed_seed17']
+    # xview_cmt = ['', '', '', '']
+    # comments = ['px20whr4_seed17',
+    #             'xview_syn_xview_bkg_px20whr4_certain_models_texture_seed17',
+    #             'xview_syn_xview_bkg_px20whr4_certain_models_color_seed17',
+    #             'xview_syn_xview_bkg_px20whr4_certain_models_mixed_seed17']
+    # xview_cmt = '['', _1xSyn', _1xSyn', _1xSyn']
+
+    model_ids = [0, 1, 2, 3]
+    draw_bar_compare_tp_number_of_different_models(comments, model_ids, xview_cmt)
+
 
     '''
     Compute mAP of different models

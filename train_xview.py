@@ -391,7 +391,7 @@ def train():
                 torch.save(chkpt, best)
 
             # Save backup every 10 epochs (optional)
-            if epoch > 0 and epoch % 10 == 0:
+            if epoch > 0 and epoch % 20 == 0: #epoch % 10 == 0
                 torch.save(chkpt, opt.weights_dir + 'backup%g.pt' % epoch)
 
             # Delete checkpoint
@@ -435,14 +435,14 @@ def get_opt(dt, sr=None, comments='', seed=0):
     parser.add_argument('--cfg', type=str, default='cfg/yolov3-spp-{}cls_syn.cfg', help='*.cfg path')
 
     parser.add_argument('--seed', type=int, default=seed, help='seed')
-    if sr == 0:
-        parser.add_argument('--data', type=str, default='data_xview/{}_cls/{}/xview_{}_{}{}.data', help='*.data path')
-    elif comments == '_syn_only':
-        parser.add_argument('--data', type=str, default='data_xview/{}_cls/{}_syn_only.data', help='*.data path')
-    elif 'background_double' in comments:
-        parser.add_argument('--data', type=str, default='data_xview/{}_cls/xview_{}/{}.data', help='*.data path')
-    else:
-        parser.add_argument('--data', type=str, default='data_xview/{}_cls/xview_{}_{}/xview_{}_{}{}.data', help='*.data path')
+    # if sr == 0:
+    #     parser.add_argument('--data', type=str, default='data_xview/{}_cls/{}/xview_{}_{}{}.data', help='*.data path')
+    # elif comments == '_syn_only':
+    #     parser.add_argument('--data', type=str, default='data_xview/{}_cls/{}_syn_only.data', help='*.data path')
+    # elif 'background_double' in comments:
+    #     parser.add_argument('--data', type=str, default='data_xview/{}_cls/xview_{}/{}.data', help='*.data path')
+    # else:
+    parser.add_argument('--data', type=str, default='data_xview/{}_cls/xview_{}_{}/xview_{}_{}{}.data', help='*.data path')
     parser.add_argument('--writer_dir', type=str, default='writer_output/{}_cls/{}_{}/', help='*events* path')
     parser.add_argument('--weights_dir', type=str, default='weights/{}_cls/{}_{}/', help='to save weights path')
     parser.add_argument('--result_dir', type=str, default='result_output/{}_cls/{}_{}/', help='to save result files path')
@@ -491,9 +491,9 @@ if __name__ == '__main__':
     # display_type = ['syn_texture0'] # , 'syn_color0']
     # syn_ratio = [0.75]
 
-    display_type = ['syn_background']
-    # # syn_ratio = [0.3, 0.2, 0.1] #
-    syn_ratio = [0]
+    # display_type = ['syn_background']
+    # # # syn_ratio = [0.3, 0.2, 0.1] #
+    # syn_ratio = [0]
     # #fixme
     # # comments = ''
     # # comments = '_38bbox_000wh'
@@ -514,9 +514,14 @@ if __name__ == '__main__':
     # # dir_comments = '_px6whr4_ng0_mosaic_rect'
     # data_comments = '_px6whr4_ng0_seed1024'
     # dir_comments = '_px6whr4_ng0_hgiou1_seed1024'
-    data_comments = '_px6whr4_ng0_seed17'
-    dir_comments = '_px6whr4_giou1_seed17'
+    # data_comments = '_px6whr4_ng0_seed17'
+    # dir_comments = '_px6whr4_giou1_seed17'
     # seed = 1024
+    # seed = 17
+    data_comments = '_px20whr4_seed17'
+    dir_comments = '_px20whr4_hgiou1_seed17'
+    display_type = [None]
+    syn_ratio = [None]
     seed = 17
     for dt in display_type:
         for sr in syn_ratio:
@@ -524,27 +529,42 @@ if __name__ == '__main__':
             # opt = get_opt(dt, comments=comments)
             opt.cfg = opt.cfg.format(opt.class_num)
             time_marker = time.strftime('%Y-%m-%d_%H.%M', time.localtime())
-            # time_marker = '2020-03-25_08.12'
-            opt.weights_dir = opt.weights_dir.format(opt.class_num, opt.syn_display_type, opt.syn_ratio) + '{}/'.format(time_marker + dir_comments)
-            opt.writer_dir = opt.writer_dir.format(opt.class_num, opt.syn_display_type, opt.syn_ratio) + '{}/'.format(time_marker + dir_comments)
+            opt.name = '_{}_{}'.format(opt.syn_display_type, opt.syn_ratio)
             if data_comments == '_syn_only':
-                opt.data = opt.data.format(opt.class_num, opt.syn_display_type)
+                opt.data = 'data_xview/{}_cls/{}_syn_only.data'.format(opt.class_num, opt.syn_display_type)
                 opt.result_dir = opt.result_dir.format(opt.class_num, opt.syn_display_type, data_comments) + '{}/'.format(time_marker + dir_comments)
                 results_file = os.path.join(opt.result_dir, 'results_{}_{}.txt'.format(opt.syn_display_type, data_comments))
+                opt.weights_dir = opt.weights_dir.format(opt.class_num, opt.syn_display_type, opt.syn_ratio) + '{}/'.format(time_marker + dir_comments)
+                opt.writer_dir = opt.writer_dir.format(opt.class_num, opt.syn_display_type, opt.syn_ratio) + '{}/'.format(time_marker + dir_comments)
                 last = os.path.join(opt.weights_dir, 'last_{}_{}.pt'.format(opt.syn_display_type, data_comments))
                 best = os.path.join(opt.weights_dir, 'best_{}_{}.pt'.format(opt.syn_display_type, data_comments))
             else:
-                if sr == 0 and not data_comments:
-                    opt.data = opt.data.format(opt.class_num, opt.syn_display_type, opt.syn_ratio, data_comments)
-                if sr == 0 and data_comments:
-                    opt.data = opt.data.format(opt.class_num, data_comments[1:], opt.syn_display_type, opt.syn_ratio, data_comments)
+                if not data_comments:
+                    opt.data = 'data_xview/{}_cls/{}/xview_{}_{}.data'.format(opt.class_num, opt.syn_display_type, opt.syn_ratio)
+                    opt.result_dir = opt.result_dir.format(opt.class_num, opt.syn_display_type, opt.syn_ratio) + '{}/'.format(time_marker + dir_comments)
+                    opt.weights_dir = opt.weights_dir.format(opt.class_num, opt.syn_display_type, opt.syn_ratio) + '{}/'.format(time_marker + dir_comments)
+                    opt.writer_dir = opt.writer_dir.format(opt.class_num, opt.syn_display_type, opt.syn_ratio) + '{}/'.format(time_marker + dir_comments)
+                    results_file = os.path.join(opt.result_dir, 'results_{}_{}.txt'.format(opt.syn_display_type, opt.syn_ratio))
+                    last = os.path.join(opt.weights_dir, 'last_{}_{}.pt'.format(opt.syn_display_type, opt.syn_ratio))
+                    best = os.path.join(opt.weights_dir, 'best_{}_{}.pt'.format(opt.syn_display_type, opt.syn_ratio))
+                if sr is None and data_comments:
+                    opt.data = 'data_xview/{}_cls/{}/xview{}.data'.format(opt.class_num, data_comments[1:], data_comments)
+                    opt.result_dir = 'result_output/{}_cls/{}/'.format(opt.class_num, data_comments[1:]) + '{}/'.format(time_marker + dir_comments)
+                    opt.weights_dir = 'weights/{}_cls/{}/'.format(opt.class_num, data_comments[1:]) + '{}/'.format(time_marker + dir_comments)
+                    opt.writer_dir = 'writer_output/{}_cls/{}/'.format(opt.class_num, data_comments[1:]) + '{}/'.format(time_marker + dir_comments)
+                    results_file = os.path.join(opt.result_dir, 'results{}.txt'.format(data_comments))
+                    last = os.path.join(opt.weights_dir, 'last{}.pt'.format(data_comments))
+                    best = os.path.join(opt.weights_dir, 'best{}.pt'.format(data_comments))
+                    opt.name = data_comments
                 else:
                     opt.data = opt.data.format(opt.class_num, opt.syn_display_type, opt.syn_ratio, opt.syn_display_type, opt.syn_ratio, data_comments)
-                opt.result_dir = opt.result_dir.format(opt.class_num, opt.syn_display_type, opt.syn_ratio) + '{}/'.format(time_marker + dir_comments)
-                results_file = os.path.join(opt.result_dir, 'results_{}_{}.txt'.format(opt.syn_display_type, opt.syn_ratio))
-                last = os.path.join(opt.weights_dir, 'last_{}_{}.pt'.format(opt.syn_display_type, opt.syn_ratio))
-                best = os.path.join(opt.weights_dir, 'best_{}_{}.pt'.format(opt.syn_display_type, opt.syn_ratio))
-            opt.name = '_{}_{}'.format(opt.syn_display_type, opt.syn_ratio)
+                    opt.result_dir = opt.result_dir.format(opt.class_num, opt.syn_display_type, opt.syn_ratio) + '{}/'.format(time_marker + dir_comments)
+                    opt.weights_dir = opt.weights_dir.format(opt.class_num, opt.syn_display_type, opt.syn_ratio) + '{}/'.format(time_marker + dir_comments)
+                    opt.writer_dir = opt.writer_dir.format(opt.class_num, opt.syn_display_type, opt.syn_ratio) + '{}/'.format(time_marker + dir_comments)
+                    results_file = os.path.join(opt.result_dir, 'results_{}_{}.txt'.format(opt.syn_display_type, opt.syn_ratio))
+                    last = os.path.join(opt.weights_dir, 'last_{}_{}.pt'.format(opt.syn_display_type, opt.syn_ratio))
+                    best = os.path.join(opt.weights_dir, 'best_{}_{}.pt'.format(opt.syn_display_type, opt.syn_ratio))
+
             if not os.path.exists(opt.weights_dir):
                 os.makedirs(opt.weights_dir)
 

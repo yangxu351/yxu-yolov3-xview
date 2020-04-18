@@ -168,7 +168,7 @@ def train(opt):
         for name, p in model.named_parameters():
             p.requires_grad = True if name.endswith('.bias') else False
     #fixme -- for x in [0.8, 0.9]
-    scheduler = lr_scheduler.MultiStepLR(optimizer, milestones=[round(opt.epochs * x) for x in [1]], gamma=0.1)
+    scheduler = lr_scheduler.MultiStepLR(optimizer, milestones=[round(opt.epochs * x) for x in  [0.8, 0.9]], gamma=0.1)
     scheduler.last_epoch = start_epoch - 1
 
     # Mixed precision training https://github.com/NVIDIA/apex
@@ -310,7 +310,7 @@ def train(opt):
         print(scheduler.get_lr())
         # #fixme ---
         if tb_writer:
-            tb_writer.add_scalar('lr', np.array(scheduler.get_lr())[0])
+            tb_writer.add_scalar('lr', np.array(scheduler.get_lr())[0], epoch)
 
 
         # Process epoch results
@@ -375,7 +375,7 @@ def train(opt):
                 torch.save(chkpt, best)
 
             # Save backup every 10 epochs (optional)
-            if epoch > 0 and epoch % 10 == 0:
+            if epoch > 0 and epoch % 20 == 0:
                 torch.save(chkpt, opt.weights_dir + 'backup%g.pt' % epoch)
 
             # Delete checkpoint
@@ -401,7 +401,7 @@ def get_opt(seed=1024, cmt='', Train=True, sr=None):
     parser.add_argument('--syn_ratio', type=float, default=sr, help='syn_ratio')
     parser.add_argument('--syn_display_type', type=str, default=None, help='syn_texture0, syn_color0, syn_texture, syn_color, syn_mixed, syn (match 0)')
     parser.add_argument('--data', type=str, default='', help='*.data path')
-    parser.add_argument('--epochs', type=int, default=180)  # 500200 batches at bs 16, 117263 images = 273 epochs
+    parser.add_argument('--epochs', type=int, default=220)  # 180 250  500200 batches at bs 16, 117263 images = 273 epochs
     parser.add_argument('--batch-size', type=int, default=8)  # effective bs = batch_size * accumulate = 16 * 4 = 64
 
     parser.add_argument('--accumulate', type=int, default=4, help='batches to accumulate before optimizing')
@@ -441,7 +441,7 @@ def get_opt(seed=1024, cmt='', Train=True, sr=None):
         # opt.weights_dir = opt.weights_dir.format(opt.class_num, opt.cmt, '{}_hgiou1_seed{}_'.format(time_marker, opt.seed))
         # opt.writer_dir = opt.writer_dir.format(opt.class_num, opt.cmt, '{}_hgiou1_seed{}'.format(time_marker, opt.seed))
         if sr is None:
-            opt.data = 'data_xview/{}_{}_cls_seed{}/{}_seed{}.data'.format(opt.cmt, opt.class_num, opt.seed, opt.cmt, opt.seed)
+            opt.data = 'data_xview/{}_{}_cls/{}_seed{}/{}_seed{}.data'.format(opt.cmt, opt.class_num, opt.cmt, opt.seed, opt.cmt, opt.seed)
             opt.weights_dir = opt.weights_dir.format(opt.class_num, opt.cmt, opt.seed, '{}_hgiou1_seed{}'.format(time_marker, opt.seed))
             opt.writer_dir = opt.writer_dir.format(opt.class_num, opt.cmt, opt.seed, '{}_hgiou1_seed{}'.format(time_marker, opt.seed))
             opt.result_dir = opt.result_dir.format(opt.class_num, opt.cmt, opt.seed, '{}_hgiou1_seed{}'.format(time_marker, opt.seed))
@@ -476,20 +476,31 @@ def get_opt(seed=1024, cmt='', Train=True, sr=None):
 
 if __name__ == '__main__':
     # main()
-    seeds = [1024]#, 5, 9, 1024, 3] #
+    # seeds = [17]#, 5, 9, 1024, 3] #   5, 9, 1024,
     # comments = ['syn_xview_background_texture', 'syn_xview_background_color', 'syn_xview_background_mixed']
     # comments = ['xview_syn_xview_bkg_texture', 'xview_syn_xview_bkg_color', 'xview_syn_xview_bkg_mixed']
     # syn_ratios = [1, 2]
-    comments = ['px6whr4_ng0']
-    syn_ratios = [0]
+    # comments = ['px6whr4_ng0']
+    # syn_ratios = [0]
+    # comments = ['syn_xview_bkg_certain_models_texture', 'syn_xview_bkg_certain_models_color', 'syn_xview_bkg_certain_models_mixed']
+    # syn_ratios = [None]
+    # comments = ['xview_syn_xview_bkg_certain_models_texture', 'xview_syn_xview_bkg_certain_models_color', 'xview_syn_xview_bkg_certain_models_mixed']
+    # syn_ratios = [2]
+    # comments = ['syn_xview_bkg_px20whr4_certain_models_texture', 'syn_xview_bkg_px20whr4_certain_models_color', 'syn_xview_bkg_px20whr4_certain_models_mixed']
+    # syn_ratios = [None]
+    # comments = ['xview_syn_xview_bkg_px20whr4_certain_models_texture', 'xview_syn_xview_bkg_px20whr4_certain_models_color', 'xview_syn_xview_bkg_px20whr4_certain_models_mixed']
+    # syn_ratios = [1]
+    comments = ['syn_xview_bkg_px23whr4_scale_models_texture', 'syn_xview_bkg_px23whr4_scale_models_color', 'syn_xview_bkg_px23whr4_scale_models_mixed']
+    syn_ratios = [None]
+    seeds = [17]
     for sd in seeds:
-        for cmt in comments:
+        for cmt in comments[2:]:
             for sr in syn_ratios:
                 # try:
                     # if (sd == 3 and cmt == 'syn_xview_background_texture'):
                     #     continue
                 opt = get_opt(sd, cmt, sr=sr)
-                if sr == 0:
+                if sr == 0 or sr is None:
                     results_file = os.path.join(opt.result_dir, 'results_{}_seed{}.txt'.format(opt.cmt, opt.seed))
                     last = os.path.join(opt.weights_dir, 'last_{}_seed{}.pt'.format(opt.cmt, opt.seed))
                     best = os.path.join(opt.weights_dir, 'best_{}_seed{}.pt'.format(opt.cmt, opt.seed))

@@ -36,11 +36,15 @@ def generate_new_xview_lbl_with_model_id(type='val', nonmatch=3):
             continue
 
         colomns = np.arange(0, 6)
-        src_lbl = pd.read_csv(f, header=None, sep=' ', names=colomns)
+        src_lbl = pd.read_csv(f, header=None, sep=' ', index_col=False, names=colomns)
         des_lbl_txt = open(os.path.join(des_val_lbl_path, name), 'w')
 
         for i in range(src_lbl.shape[0]):
-            des_lbl_txt.write("%d %.8f %.8f %.8f %.8f %d\n" % (src_lbl.iloc[i, 0], src_lbl.iloc[i, 1], src_lbl.iloc[i, 2], src_lbl.iloc[i, 3], src_lbl.iloc[i, 4], src_lbl.iloc[i, 5] if not np.isnan(src_lbl.iloc[i, 5]) else nonmatch))
+            if np.isnan(src_lbl.iloc[i, 5]):
+                modelid = nonmatch
+            else:
+                modelid = src_lbl.iloc[i, 5]
+            des_lbl_txt.write("%d %.8f %.8f %.8f %.8f %d\n" % (src_lbl.iloc[i, 0], src_lbl.iloc[i, 1], src_lbl.iloc[i, 2], src_lbl.iloc[i, 3], src_lbl.iloc[i, 4], modelid))
         des_lbl_txt.close()
         xview_val_lbl_with_model_txt.write('%s\n' % os.path.join(des_val_lbl_path, name))
     xview_val_lbl_with_model_txt.close()
@@ -75,7 +79,7 @@ def generate_new_syn_lbl_with_model_id(comments='', nonmatch=3):
             continue
 
         colomns = np.arange(0, 6)
-        src_lbl = pd.read_csv(src_lbl_file, header=None, sep=' ', names=colomns)
+        src_lbl = pd.read_csv(src_lbl_file, header=None, sep=' ', index_col=False, names=colomns) #fixme --- **** index_col=False ****
         des_lbl_txt = open(os.path.join(des_val_lbl_path, name), 'w')
 
         for i in range(src_lbl.shape[0]):
@@ -89,12 +93,61 @@ def generate_new_syn_lbl_with_model_id(comments='', nonmatch=3):
     # shutil.copy(os.path.join(args.data_save_dir, xview_val_lbl_with_model_name), os.path.join(args.data_list_save_dir, xview_val_lbl_with_model_name))
 
 
+
+def change_labels_from_px6whr4_to_px20whr4():
+    syn_args = pps.get_syn_args()
+    px_thres = 20
+    whr_thres = 4
+    label_path = '/media/lab/Yang/data/xView_YOLO/labels/608/1_cls_xcycwh_px20whr4_only_model/'
+
+    if not os.path.exists(label_path):
+        os.mkdir(label_path)
+    else:
+        shutil.rmtree(label_path)
+        os.mkdir(label_path)
+    src_files = glob.glob('/media/lab/Yang/data/xView_YOLO/labels/608/1_cls_xcycwh_only_model/*.txt')
+    for f in src_files:
+        shutil.copy(f, label_path)
+    label_files = np.sort(glob.glob(os.path.join(label_path, '*.txt')))
+    for lf in label_files:
+        if not pps.is_non_zero_file(lf):
+            continue
+        df_txt = pd.read_csv(lf, header=None, delimiter=' ')
+        # print('before ', df_txt.shape)
+        # if '1945_5.txt' in lf:
+        #     print(lf)
+        for ix in df_txt.index:
+            df_txt.loc[ix, 1:4] = df_txt.loc[ix, 1:4] * syn_args.tile_size
+            # whr = np.max(df_txt.loc[ix, 3] / df_txt.loc[ix, 4], df_txt.loc[ix, 4] / df_txt.loc[ix, 3])
+            whr = np.maximum(df_txt.loc[ix, 3] / df_txt.loc[ix, 4], df_txt.loc[ix, 4] / df_txt.loc[ix, 3])
+            if int(df_txt.loc[ix, 3]) <= px_thres or int(df_txt.loc[ix, 4]) <= px_thres or whr > whr_thres:
+                df_txt = df_txt.drop(ix)
+            else:
+                df_txt.loc[ix, 1:4] = df_txt.loc[ix, 1:4]/syn_args.tile_size
+        df_txt.to_csv(lf, header=False, index=False, sep=' ')
+
+    a = glob.glob('/media/lab/Yang/data/xView_YOLO/labels/608/1_cls_xcycwh_px20whr4/*.txt')
+    b = glob.glob('/media/lab/Yang/data/xView_YOLO/labels/608/1_cls_xcycwh_px20whr4_only_model/*.txt')
+
+    aa = []
+    bb = []
+    for i in range(len(a)):
+        if not pps.is_non_zero_file(a[i]):
+            aa.append(os.path.basename(a[i]))
+        if not pps.is_non_zero_file(b[i]):
+            bb.append(os.path.basename(b[i]))
+    ax = [x for x in aa if x not in bb]
+    bx = [x for x in bb if x not in aa]
+    print(ax)
+    print(bx)
+
+
 if __name__ == '__main__':
     '''
     generate new xviewval_lbl_with_model.txt
     '''
     # type = 'train'
-    # # type = 'val'
+    # type = 'val'
     # nonmatch = 3
     # generate_new_xview_lbl_with_model_id(type, nonmatch)
 
@@ -104,4 +157,20 @@ if __name__ == '__main__':
     # comments = '_with_model'
     # nonmatch = 3
     # generate_new_syn_lbl_with_model_id(comments, nonmatch)
+
+
+    '''
+    change labels from px6whr4 to px20whr4
+    '''
+    change_labels_from_px6whr4_to_px20whr4()
+
+    # ['1585_7.txt', '1945_5.txt']
+    # for bbx in ax:
+    #     df_a = pd.read_csv(os.path.join('/media/lab/Yang/data/xView_YOLO/labels/608/1_cls_xcycwh_px20whr4_only_model/', bbx), header=None, delimiter=' ').to_numpy()
+    #     df_a[:, 1:5] = df_a[:,1:5]*syn_args.tile_size
+    #     print(df_a)
+
+    # df_txt = pd.read_csv('/media/lab/Yang/data/xView_YOLO/labels/608/1_cls_xcycwh_only_model/1945_5.txt', header=None, sep=' ')
+    # df_txt.iloc[:, 1:5] = df_txt.iloc[:, 1:5] * syn_args.tile_size
+    # df_txt = df_txt[df_txt[:, 4]>20]
 

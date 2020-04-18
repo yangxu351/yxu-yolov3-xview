@@ -54,26 +54,35 @@ def is_non_zero_file(fpath):
     return os.path.isfile(fpath) and os.path.getsize(fpath) > 0
 
 
-def analyze_category_distribution_by_catid(catid, txt_path, json_number_file, json_name_file, px_thresh=6, whr_thres=4):
+def analyze_category_distribution(txt_path, json_number_file, json_name_file, px_thresh=6, whr_thres=4):
     txt_files = np.sort(glob.glob(os.path.join(txt_path, "*" + TXT_FORMAT)))
     plane_number_2_img_number_map = {}
     plane_number_2_txt_name_map = {}
     for i in range(len(txt_files)):
         if not is_non_zero_file(txt_files[i]):
             continue
-        df_txt = pd.read_csv(txt_files[i], header=None, delimiter=' ').to_numpy()
-        if catid not in np.unique(df_txt[:, 0]):
-            continue
-        df_txt = df_txt[df_txt[:, 0] == catid]
-        df_txt[:, 1:] = df_txt[:, 1:] * syn_args.tile_size
-        df_txt = df_txt[df_txt[:, 3] > px_thresh]
-        df_txt = df_txt[df_txt[:, 4] > px_thresh]
-        df_wh = np.vstack((df_txt[:, 3] / df_txt[:, 4], df_txt[:, 4] / df_txt[:, 3]))
-        df_txt = df_txt[np.max(df_wh, axis=0) <= whr_thres]
+
+        df_txt = pd.read_csv(txt_files[i], header=None, delimiter=' ')
+        for ix in df_txt.index:
+            df_txt.loc[ix, 1:] = df_txt.loc[ix, 1:] * syn_args.tile_size
+            whr = np.maximum(df_txt.loc[ix, 3] / df_txt.loc[ix, 4], df_txt.loc[ix, 4] / df_txt.loc[ix, 3])
+            if int(df_txt.loc[ix, 3]) <= px_thresh or int(df_txt.loc[ix, 4]) <= px_thresh or whr > whr_thres:
+                df_txt = df_txt.drop(ix)
+            else:
+                df_txt.loc[ix, 1:] = df_txt.loc[ix, 1:] / syn_args.tile_size
+        # df_txt = pd.read_csv(txt_files[i], header=None, delimiter=' ').to_numpy()
+        # df_txt[:, 1:] = df_txt[:, 1:] * syn_args.tile_size
+        # #fixme astype(np.int) ****
+        # df_txt[:, 1:] = df_txt[:, 1:].astype(np.int)
+        #
+        # df_txt = df_txt[df_txt[:, 3] > px_thresh]
+        # df_txt = df_txt[df_txt[:, 4] > px_thresh]
+        # df_wh = np.vstack((df_txt[:, 3] / df_txt[:, 4], df_txt[:, 4] / df_txt[:, 3]))
+        # df_txt = df_txt[np.max(df_wh, axis=0) <= whr_thres]
         # print(df_txt.shape)
         if df_txt.shape[0] == 0:
             continue
-        plane_number = np.count_nonzero(df_txt[:, 0] == catid)
+        plane_number = df_txt.shape[0]
         if plane_number not in plane_number_2_img_number_map.keys():
             plane_number_2_img_number_map[plane_number] = 1
             plane_number_2_txt_name_map[plane_number] = [txt_files[i].split('/')[-1]]
@@ -84,7 +93,7 @@ def analyze_category_distribution_by_catid(catid, txt_path, json_number_file, js
     json.dump(plane_number_2_txt_name_map, open(json_name_file, 'w'), ensure_ascii=False, indent=2, cls=MyEncoder)
 
 
-def draw_bar_of_image_numbers_for_certain_number_of_planes(png_name, cat_distribution_map, legend='xView'):
+def draw_bar_of_image_numbers_for_certain_number_of_planes(png_name, cat_distribution_map, legend='xView', syn=False):
     '''
     x-axis: the number of planes
     y-axis: the number of images
@@ -92,12 +101,18 @@ def draw_bar_of_image_numbers_for_certain_number_of_planes(png_name, cat_distrib
     :param cat_distribution_map:
     :return:
     '''
-    syn_args = get_syn_args()
+    if syn:
+        save_dir = syn_args.syn_plane_txt_dir + 'data_distribution_fig/'
+        args = syn_args
+    else: # xview
+        args = pwv.get_args()
+        save_dir = args.txt_save_dir + 'data_distribution_fig/'
+
     num_planes = np.array([int(k) for k in cat_distribution_map.keys()])
     num_planes_sort_indices = np.argsort(num_planes)
     num_images = np.array([v for v in cat_distribution_map.values()])
 
-    save_dir = syn_args.syn_txt_save_dir + 'data_distribution_fig/'
+
     if not os.path.exists(save_dir):
         os.mkdir(save_dir)
 
@@ -115,9 +130,9 @@ def draw_bar_of_image_numbers_for_certain_number_of_planes(png_name, cat_distrib
     ax.legend()
     xlabel = 'Number of Airplanes'
     ylabel = "Number of Images"
-    plt.title(title, literal_eval(syn_args.font2))
-    plt.ylabel(ylabel, literal_eval(syn_args.font2))
-    plt.xlabel(xlabel, literal_eval(syn_args.font2))
+    plt.title(title, literal_eval(args.font2))
+    plt.ylabel(ylabel, literal_eval(args.font2))
+    plt.xlabel(xlabel, literal_eval(args.font2))
     plt.tight_layout(pad=0.4, w_pad=3.0, h_pad=3.0)
     plt.grid()
     plt.savefig(os.path.join(save_dir, png_name))
@@ -144,7 +159,7 @@ def compare_bar_of_image_numbers_for_certain_number_of_planes(png_name, cat_dist
     num_images_syn = np.array([v for v in cat_distribution_map_syn.values()])
     num_images_syn = num_images_syn[num_planes_syn_sort_indices]
     syn_args = get_syn_args()
-    save_dir = syn_args.syn_txt_save_dir + 'data_distribution_fig/'
+    save_dir = syn_args.syn_plane_txt_dir + 'data_distribution_fig/'
     if not os.path.exists(save_dir):
         os.mkdir(save_dir)
 
@@ -292,7 +307,7 @@ def merge_clean_origin_syn_image_files(file_path, cities, streets, tile_size=608
             os.remove(os.path.join(des_lbl_path, fname))
 
 
-def group_object_annotation_and_draw_bbox():
+def group_object_annotation_and_draw_bbox(pxwhr='px6whr4_ng0', px_thres=20, whr_thres=4):
     '''
     group annotation files, generate bbox for each object,
 
@@ -301,7 +316,7 @@ def group_object_annotation_and_draw_bbox():
     step = syn_args.tile_size * syn_args.resolution
     folder_name = '{}_all_annos_step{}'.format(syn_args.syn_display_type, step)
     lbl_path = os.path.join(syn_args.syn_plane_img_anno_dir, folder_name)
-    txt_folder_name = 'minr{}_linkr{}_{}_all_annos_txt_step{}'.format(syn_args.min_region, syn_args.link_r,
+    txt_folder_name = 'minr{}_linkr{}_{}_{}_all_annos_txt_step{}'.format(syn_args.min_region, syn_args.link_r, pxwhr,
                                                                       syn_args.syn_display_type, step)
     save_txt_path = os.path.join(syn_args.syn_plane_txt_dir, txt_folder_name)
     if not os.path.exists(save_txt_path):
@@ -311,9 +326,9 @@ def group_object_annotation_and_draw_bbox():
         os.makedirs(save_txt_path)
 
     gbc.get_object_bbox_after_group(lbl_path, save_txt_path, class_label=0, min_region=syn_args.min_region,
-                                    link_r=syn_args.link_r)
+                                    link_r=syn_args.link_r, px_thresh=px_thres, whr_thres=whr_thres)
     gt_files = np.sort(glob.glob(os.path.join(lbl_path, '*{}'.format(IMG_FORMAT))))
-    bbox_folder_name = 'minr{}_linkr{}_{}_all_annos_with_bbox_step{}'.format(syn_args.min_region, syn_args.link_r,
+    bbox_folder_name = 'minr{}_linkr{}_{}_{}_all_annos_with_bbox_step{}'.format(syn_args.min_region, syn_args.link_r, pxwhr,
                                                                              syn_args.syn_display_type, step)
     save_bbx_path = os.path.join(syn_args.syn_plane_gt_bbox_dir, bbox_folder_name)
     if not os.path.exists(save_bbx_path):
@@ -328,18 +343,18 @@ def group_object_annotation_and_draw_bbox():
         gbc.plot_img_with_bbx(g, txt_file, save_bbx_path)
 
 
-def draw_bbx_on_rgb_images():
+def draw_bbx_on_rgb_images(pxwhr='px6whr4_ng0'):
     step = syn_args.tile_size * syn_args.resolution
     img_folder_name = '{}_all_images_step{}'.format(syn_args.syn_display_type, step)
     img_path = os.path.join(syn_args.syn_plane_img_anno_dir, img_folder_name)
     img_files = np.sort(glob.glob(os.path.join(img_path, '*{}'.format(IMG_FORMAT))))
     img_names = [os.path.basename(f) for f in img_files]
 
-    txt_folder_name = 'minr{}_linkr{}_{}_all_annos_txt_step{}'.format(syn_args.min_region, syn_args.link_r,
+    txt_folder_name = 'minr{}_linkr{}_{}_{}_all_annos_txt_step{}'.format(syn_args.min_region, syn_args.link_r, pxwhr,
                                                                       syn_args.syn_display_type, step)
     txt_path = os.path.join(syn_args.syn_plane_txt_dir, txt_folder_name)
 
-    bbox_folder_name = 'minr{}_linkr{}_{}_all_images_with_bbox_step{}'.format(syn_args.min_region, syn_args.link_r,
+    bbox_folder_name = 'minr{}_linkr{}_{}_{}_all_images_with_bbox_step{}'.format(syn_args.min_region, syn_args.link_r, pxwhr,
                                                                               syn_args.syn_display_type, step)
     save_bbx_path = os.path.join(syn_args.syn_plane_gt_bbox_dir, bbox_folder_name)
     if not os.path.exists(save_bbx_path):
@@ -353,7 +368,7 @@ def draw_bbx_on_rgb_images():
         gbc.plot_img_with_bbx(f, txt_file, save_bbx_path, label_index=False)
 
 
-def draw_bbx_on_rgb_images_with_indices(syn=True, dt='syn_texture'):
+def draw_bbx_on_rgb_images_with_indices(syn=True, dt='syn_texture', pxwhr='px6whr4_ng0'):
     if syn:
         step = syn_args.tile_size * syn_args.resolution
         img_folder_name = '{}_all_images_step{}'.format(dt, step)
@@ -361,11 +376,11 @@ def draw_bbx_on_rgb_images_with_indices(syn=True, dt='syn_texture'):
         files = np.sort(glob.glob(os.path.join(img_path, '*{}'.format(IMG_FORMAT))))
         file_names = [os.path.basename(f).replace(IMG_FORMAT, TXT_FORMAT) for f in files]
 
-        txt_folder_name = 'minr{}_linkr{}_{}_all_annos_txt_step{}'.format(syn_args.min_region, syn_args.link_r,
+        txt_folder_name = 'minr{}_linkr{}_{}_{}_all_annos_txt_step{}'.format(syn_args.min_region, syn_args.link_r, pxwhr,
                                                                           dt, step)
         txt_path = os.path.join(syn_args.syn_plane_txt_dir.replace('/' + syn_args.syn_display_type, '/' + dt), txt_folder_name)
 
-        bbox_folder_name = 'minr{}_linkr{}_{}_all_images_with_bbox_step{}_with_indices'.format(syn_args.min_region, syn_args.link_r,
+        bbox_folder_name = 'minr{}_linkr{}_{}_{}_all_images_with_bbox_step{}_with_indices'.format(syn_args.min_region, syn_args.link_r, pxwhr,
                                                                                                 dt, step)
         save_bbx_path = os.path.join(syn_args.syn_plane_gt_bbox_dir.replace('/' + syn_args.syn_display_type, '/' + dt), bbox_folder_name)
         if not os.path.exists(save_bbx_path):
@@ -399,7 +414,7 @@ def draw_bbx_on_rgb_images_with_indices(syn=True, dt='syn_texture'):
 def clean_annos_txt_copy_imgs_files():
     step = syn_args.tile_size * syn_args.resolution
     src_dir = os.path.join(syn_args.syn_plane_txt_dir,
-                           'minr{}_linkr{}_{}_all_annos_txt_step{}'.format(syn_args.min_region, syn_args.link_r,
+                           'minr{}_linkr{}_{}_{}_all_annos_txt_step{}'.format(syn_args.min_region, syn_args.link_r, pxwhr,
                                                                            syn_args.syn_display_type, step))
     src_files = glob.glob(os.path.join(src_dir, '*{}'.format(TXT_FORMAT)))
 
@@ -520,14 +535,19 @@ def get_syn_args():
     parser.add_argument("--json_filepath", type=str, help="Filepath to GEOJSON coordinate file",
                         default='/media/lab/Yang/data/xView/xView_train.geojson')
 
+    # parser.add_argument("--syn_plane_img_anno_dir", type=str, help="images and annotations of synthetic airplanes",
+    #                     default='/media/lab/Yang/data/synthetic_data/Airplanes/{}/')
+    # parser.add_argument("--syn_plane_txt_dir", type=str, help="txt labels of synthetic airplanes",
+    #                     default='/media/lab/Yang/data/synthetic_data/Airplanes_txt_xcycwh/{}/')
+    # parser.add_argument("--syn_plane_gt_bbox_dir", type=str, help="gt images with bbox of synthetic airplanes",
+    #                     default='/media/lab/Yang/data/synthetic_data/Airplanes_gt_bbox/{}/')
+
     parser.add_argument("--syn_plane_img_anno_dir", type=str, help="images and annotations of synthetic airplanes",
-                        default='/media/lab/Yang/data/synthetic_data/Airplanes/{}/')
-
+                        default='/media/lab/Yang/data/synthetic_data/syn_xview_bkg_certain_models_texture/')
     parser.add_argument("--syn_plane_txt_dir", type=str, help="txt labels of synthetic airplanes",
-                        default='/media/lab/Yang/data/synthetic_data/Airplanes_txt_xcycwh/{}/')
-
+                        default='/media/lab/Yang/data/synthetic_data/syn_xview_bkg_certain_models_txt_xcycwh/')
     parser.add_argument("--syn_plane_gt_bbox_dir", type=str, help="gt images with bbox of synthetic airplanes",
-                        default='/media/lab/Yang/data/synthetic_data/Airplanes_gt_bbox/{}/')
+                        default='/media/lab/Yang/data/synthetic_data/syn_xview_bkg_certain_models_gt_bbox/')
 
     parser.add_argument("--syn_images_save_dir", type=str, help="rgb images of synthetic airplanes",
                         default='/media/lab/Yang/data/xView_YOLO/images/{}_{}/')
@@ -560,13 +580,13 @@ def get_syn_args():
     parser.add_argument("--tile_size", type=int, default=608, help="image size")  # 300 416
 
     # #####*********************change
-    parser.add_argument("--syn_display_type", type=str, default='syn_texture',
+    parser.add_argument("--syn_display_type", type=str, default='texture',
                         help="syn_texture, syn_color, syn_mixed,  syn (match 0), syn_background")  # syn_color0, syn_texture0,
     # ######*********************change
     parser.add_argument("--syn_ratio", type=float, default=0.25,
                         help="ratio of synthetic data: 0.25, 0.5, 0.75, 1.0  0")  # ######*********************change
 
-    parser.add_argument("--min_region", type=int, default=100, help="the smallest #pixels (area) to form an object")
+    parser.add_argument("--min_region", type=int, default=300, help="100 the smallest #pixels (area) to form an object")
     parser.add_argument("--link_r", type=int, default=15,
                         help="the #pixels between two connected components to be grouped")
 
@@ -591,17 +611,17 @@ def get_syn_args():
     syn_args.results_dir = syn_args.results_dir.format(syn_args.class_num, syn_args.syn_display_type,
                                                        syn_args.syn_ratio)
 
-    if not os.path.exists(syn_args.syn_images_save_dir):
-        os.makedirs(syn_args.syn_images_save_dir)
-
-    if not os.path.exists(syn_args.syn_annos_save_dir):
-        os.makedirs(syn_args.syn_annos_save_dir)
-
-    if not os.path.exists(syn_args.syn_txt_save_dir):
-        os.makedirs(syn_args.syn_txt_save_dir)
-
-    if not os.path.exists(syn_args.results_dir):
-        os.makedirs(syn_args.results_dir)
+    # if not os.path.exists(syn_args.syn_images_save_dir):
+    #     os.makedirs(syn_args.syn_images_save_dir)
+    #
+    # if not os.path.exists(syn_args.syn_annos_save_dir):
+    #     os.makedirs(syn_args.syn_annos_save_dir)
+    #
+    # if not os.path.exists(syn_args.syn_txt_save_dir):
+    #     os.makedirs(syn_args.syn_txt_save_dir)
+    #
+    # if not os.path.exists(syn_args.results_dir):
+    #     os.makedirs(syn_args.results_dir)
 
     if syn_args.syn_ratio:
         syn_args.syn_data_list_dir = syn_args.syn_data_list_dir.format(syn_args.syn_display_type, syn_args.class_num)
@@ -632,27 +652,36 @@ if __name__ == "__main__":
     '''
     # args = pwv.get_args()
     # catid = 0
-    # whr_thres = 4  # 3
-    # px_thresh = 6  # 4
-    # txt_path = args.annos_save_dir
+    # # # whr_thres = 4  # 3
+    # # # px_thresh = 6 # 4
+    # # # comments = '_px{}whr{}_ng0'.format(px_thresh, whr_thres)
+    # whr_thres = 4 # 4  # 3
+    # px_thresh = 20 # 6 # 4
+    # comments = '_px{}whr{}'.format(px_thresh, whr_thres)
+    #
+    # txt_path = args.annos_save_dir[:-1] + comments + '/'
     # # txt_path = args.syn_plane_txt_dir
     # json_number_file = os.path.join(args.txt_save_dir,
-    #                                 'xView_number_of_cat_{}_to_imagenumber_map_inputsize{}.json'.format(catid,
-    #                                                                                                     args.tile_size))
+    #                                 'xView_number_of_cat_{}_to_imagenumber_map_inputsize{}{}.json'.format(catid, args.input_size, comments))
     # json_txt_file = os.path.join(args.txt_save_dir,
-    #                              'xView_number_of_cat_{}_to_imagetxt_map_inputsize{}.json'.format(catid,
-    #                                                                                               args.tile_size))
-    # analyze_category_distribution_by_catid(catid, txt_path, json_number_file, json_txt_file, px_thresh, whr_thres)
+    #                              'xView_number_of_cat_{}_to_imagetxt_map_inputsize{}{}.json'.format(catid, args.input_size, comments))
+    # analyze_category_distribution(txt_path, json_number_file, json_txt_file, px_thresh, whr_thres)
 
     '''
     plot count aircraft distribution
     '''
     # args = pwv.get_args()
     # catid = 0
-    # png_name = 'xView_cat_{}_nubmers_imagesnumber_dis.png'.format(catid)
+    # # whr_thres = 4  # 3
+    # # px_thresh = 6 # 4
+    # # comments = '_px{}whr{}_ng0'.format(px_thresh, whr_thres)
+    # whr_thres = 4 # 4  # 3
+    # px_thresh = 20 # 6 # 4
+    # comments = '_px{}whr{}'.format(px_thresh, whr_thres)
+    # png_name = 'xView_cat_{}_nubmers_imagesnumber_dis{}.png'.format(catid, comments)
     # cat_distribution_map = json.load(open(os.path.join(args.txt_save_dir,
-    #                                                    'xView_number_of_cat_{}_to_imagenumber_map_inputsize{}.json'.format(
-    #                                                        catid, args.tile_size))))
+    #                                                    'xView_number_of_cat_{}_to_imagenumber_map_inputsize{}{}.json'.format(catid,
+    #                                                        args.input_size, comments))))
     # draw_bar_of_image_numbers_for_certain_number_of_planes(png_name, cat_distribution_map, 'xView')
 
     '''
@@ -685,7 +714,13 @@ if __name__ == "__main__":
     group annotation files, generate bbox for each object, 
     and draw bbox for each ground truth files
     '''
-    # group_object_annotation_and_draw_bbox()
+    # pxwhr = '_px6whr4'
+    # px_thres=6
+    # whr_thres=4
+    # pxwhr = 'px20whr4'
+    # px_thres=20
+    # whr_thres=4
+    # group_object_annotation_and_draw_bbox(pxwhr, px_thres, whr_thres)
 
     '''
     remove non files (no labels) ***************
@@ -697,65 +732,79 @@ if __name__ == "__main__":
     check bbox for each image files
     draw image with gt bbox 
     '''
-    # draw_bbx_on_rgb_images()
+    # pxwhr='px6whr4_ng0'
+    # pxwhr='px20whr4'
+    # draw_bbx_on_rgb_images(pxwhr)
 
     '''
     draw rgb with gt bbox and gt indices
     '''
     # syn = False
-    # draw_bbx_on_rgb_images_with_indices(syn)
+    # pxwhr='px6whr4_ng0'
+    # pxwhr='px20whr4'
+    # draw_bbx_on_rgb_images_with_indices(syn, pxwhr)
 
+    # pxwhr='px6whr4_ng0'
+    # pxwhr='px20whr4'
     # syn = True
     # display_type = ['syn_texture', 'syn_color', 'syn_mixed']
     # for dt in display_type:
-    #     draw_bbx_on_rgb_images_with_indices(syn, dt)
+    #     draw_bbx_on_rgb_images_with_indices(syn, dt, pxwhr)
 
     '''
     analyze synthetic data distribution
     '''
     # catid = 0
-    # whr_thres = 4  # 3
-    # px_thresh = 6  # 4
+    # # whr_thres = 4  # 3
+    # # px_thresh = 6  # 4
+    # whr_thres = 4 # 4  # 3
+    # px_thresh = 20 # 6 # 4
+    # comments = '_px{}whr{}'.format(px_thresh, whr_thres)
     # # txt_path = syn_args.syn_annos_save_dir
     # step = syn_args.tile_size * syn_args.resolution
     # json_number_file = os.path.join(syn_args.syn_plane_txt_dir,
-    #                                 '{}_number_of_cat_{}_to_imagenumber_map_inputsize{}.json'.format(
-    #                                     syn_args.syn_display_type, catid, syn_args.tile_size))
+    #                                 '{}_number_of_cat_{}_to_imagenumber_map_inputsize{}{}.json'.format(
+    #                                     syn_args.syn_display_type, catid, syn_args.tile_size, comments))
     # json_name_file = os.path.join(syn_args.syn_plane_txt_dir,
-    #                               '{}_number_of_cat_{}_to_imagetxt_map_inputsize{}.json'.format(
+    #                               '{}_number_of_cat_{}_to_imagetxt_map_inputsize{}{}.json'.format(
     #                                   syn_args.syn_display_type,
-    #                                   catid, syn_args.tile_size))
-    # for i in range(len(syn_args.cities)):
-    #     txt_path = os.path.join(syn_args.syn_plane_txt_dir,
-    #                             'minr{}_linkr{}_{}_all_annos_txt_step{}'.format(syn_args.min_region, syn_args.link_r,
-    #                                                                             syn_args.syn_display_type, step))
+    #                                   catid, syn_args.tile_size, comments))
+    # txt_path = os.path.join(syn_args.syn_plane_txt_dir,
+    #                         'minr{}_linkr{}{}_{}_all_annos_txt_step{}'.format(syn_args.min_region, syn_args.link_r, comments,
+    #                                                                         syn_args.syn_display_type, step))
     #
-    #     analyze_category_distribution_by_catid(catid, txt_path, json_number_file, json_name_file, px_thresh, whr_thres)
+    # analyze_category_distribution(txt_path, json_number_file, json_name_file, px_thresh, whr_thres)
 
     '''
     plot synthetic data aircraft distribution
     '''
     # catid = 0
+    # whr_thres = 4 # 4  # 3
+    # px_thresh = 20 # 6 # 4
+    # comments = '_px{}whr{}'.format(px_thresh, whr_thres)
     # png_name = '{}_cat_{}_nubmers_imagesnumber_dis.png'.format(syn_args.syn_display_type, catid)
     # cat_distribution_map = json.load(open(os.path.join(syn_args.syn_plane_txt_dir,
-    #                                                    '{}_number_of_cat_{}_to_imagenumber_map_inputsize{}.json'.format(
-    #                                                        syn_args.syn_display_type, catid, syn_args.tile_size))))
+    #                                                    '{}_number_of_cat_{}_to_imagenumber_map_inputsize{}{}.json'.format(
+    #                                                        syn_args.syn_display_type, catid, syn_args.tile_size, comments))))
     #
     # draw_bar_of_image_numbers_for_certain_number_of_planes(png_name, cat_distribution_map,
-    #                                                        legend=syn_args.syn_display_type)
+    #                                                        legend=syn_args.syn_display_type + comments, syn=True)
 
     ''''
     compare xview and synthetic aircraft distribution
     '''
     # args = pwv.get_args()
     # catid = 0
-    # png_name = 'xview_vs_{}_cat_{}_nubmers_imagesnumber_dis.png'.format(syn_args.syn_display_type, catid)
+    # whr_thres = 4 # 4  # 3
+    # px_thresh = 20 # 6 # 4
+    # comments = '_px{}whr{}'.format(px_thresh, whr_thres)
+    # png_name = 'xview_vs_{}{}_cat_{}_nubmers_imagesnumber_dis.png'.format(syn_args.syn_display_type, comments, catid)
     # cat_distribution_map = json.load(open(os.path.join(args.txt_save_dir,
-    #                                                    'xView_number_of_cat_{}_to_imagenumber_map_inputsize{}.json'.format(
-    #                                                        catid, syn_args.tile_size))))
+    #                                                    'xView_number_of_cat_{}_to_imagenumber_map_inputsize{}{}.json'.format(
+    #                                                        catid, syn_args.tile_size, comments))))
     # cat_distribution_map_syn = json.load(open(os.path.join(syn_args.syn_plane_txt_dir,
-    #                                                        '{}_number_of_cat_{}_to_imagenumber_map_inputsize{}.json'.format(
-    #                                                            syn_args.syn_display_type, catid, syn_args.tile_size))))
+    #                                                        '{}_number_of_cat_{}_to_imagenumber_map_inputsize{}{}.json'.format(
+    #                                                            syn_args.syn_display_type, catid, syn_args.tile_size, comments))))
     # compare_bar_of_image_numbers_for_certain_number_of_planes(png_name, cat_distribution_map, cat_distribution_map_syn)
 
 
