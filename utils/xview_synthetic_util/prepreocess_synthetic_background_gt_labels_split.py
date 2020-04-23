@@ -7,7 +7,7 @@ from ast import literal_eval
 from matplotlib import pyplot as plt
 import json
 import shutil
-from utils.xview_synthetic_util import process_wv_coco_for_yolo_patches_for_aircraft as pwv
+from utils.xview_synthetic_util import process_wv_coco_for_yolo_patches_for_aircraft_split as pwv
 
 IMG_FORMAT0 = '.jpg'
 IMG_FORMAT = '.png'

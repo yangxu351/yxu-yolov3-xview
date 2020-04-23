@@ -253,7 +253,7 @@ def test(cfg,
     # Save JSON
     if save_json and map and len(jdict):
         # fixme
-        img_names = [x.split('/')[-1] for x in dataloader.dataset.img_files]
+        img_names = [os.path.basename(x) for x in dataloader.dataset.img_files]
         #fixme
         # img_id_maps = json.load(
         #     open(os.path.join(opt.label_dir, 'all_image_ids_names_dict_{}cls.json'.format(opt.class_num))))
@@ -411,7 +411,7 @@ if __name__ == '__main__':
     '''
     test for syn_xveiw_background_*  on original
     '''
-    # import train_syn_xview_background_seeds_loop as tsl
+    # import train_syn_xview_background_seeds_loop_1cls as tsl
     # # comments = ['syn_xview_background_texture', 'syn_xview_background_color', 'syn_xview_background_mixed']
     # comments = ['syn_xview_bkg_certain_models_texture', 'syn_xview_bkg_certain_models_color', 'syn_xview_bkg_certain_models_mixed']
     # # comments = ['syn_xview_bkg_px20whr4_certain_models_texture', 'syn_xview_bkg_px20whr4_certain_models_color', 'syn_xview_bkg_px20whr4_certain_models_mixed']
@@ -444,23 +444,25 @@ if __name__ == '__main__':
     '''
     test for syn_xveiw_background_*  on original
     '''
-    # import train_syn_xview_background_seeds_loop as tsl
+    # import train_syn_xview_background_seeds_loop_1cls as tsl
     # # comments = ['syn_xview_background_texture', 'syn_xview_background_color', 'syn_xview_background_mixed']
-    # comments = ['syn_xview_bkg_certain_models_texture', 'syn_xview_bkg_certain_models_color', 'syn_xview_bkg_certain_models_mixed']
+    # # comments = ['syn_xview_bkg_certain_models_texture', 'syn_xview_bkg_certain_models_color', 'syn_xview_bkg_certain_models_mixed']
     # # comments = ['syn_xview_bkg_px20whr4_certain_models_texture', 'syn_xview_bkg_px20whr4_certain_models_color', 'syn_xview_bkg_px20whr4_certain_models_mixed']
+    # comments = ['syn_xview_bkg_px23whr4_scale_models_texture', 'syn_xview_bkg_px23whr4_scale_models_color', 'syn_xview_bkg_px23whr4_scale_models_mixed']
     # seeds = [17]
     # #
     # #5  all        94       219    0.0699     0.466     0.175     0.122
     # for sd in seeds[:1]:
-    #     for cmt in comments[:2]:
+    #     for cmt in comments[:1]:
     #         opt = tsl.get_opt(sd, cmt, False)
     #         opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd , '{}_hgiou1_seed{}'.format('test_on_original', sd))
     #         if not os.path.exists(opt.result_dir):
     #             os.mkdir(opt.result_dir)
     #
-    #         opt.weights = glob.glob(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd, '*_hgiou1_seed{}'.format(sd)), 'best_{}_seed{}.pt'.format(cmt, sd)))[-1]
+    #         opt.weights = glob.glob(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd, '*_hgiou1_seed{}'.format(sd)), 'best_{}_seed{}.pt'.format(cmt, sd)))[0]
     #         # opt.data = 'data_xview/{}_cls/{}/{}_seed{}.data'.format(opt.class_num, 'px6whr4_ng0_seed{}'.format(sd), 'xview_px6whr4_ng0', sd)
-    #         opt.data = 'data_xview/{}_cls/{}/{}_seed{}.data'.format(opt.class_num, 'px20whr4_seed{}'.format(sd), 'xview_px20whr4', sd)
+    #         # opt.data = 'data_xview/{}_cls/{}/{}_seed{}.data'.format(opt.class_num, 'px20whr4_seed{}'.format(sd), 'xview_px20whr4', sd)
+    #         opt.data = 'data_xview/{}_cls/{}/{}_seed{}.data'.format(opt.class_num, 'px23whr4_seed{}'.format(sd), 'xview_px23whr4', sd)
     #         print(opt.data)
     #         opt.name = 'seed{}_on_original'.format(opt.seed)
     #         opt.task = 'test'
@@ -478,21 +480,26 @@ if __name__ == '__main__':
     '''
     test for syn_xveiw_background_*_with_model
     '''
-    # import train_syn_xview_background_seeds_loop as tsl
+    # import train_syn_xview_background_seeds_loop_1cls as tsl
     # # comments = ['syn_xview_background_texture', 'syn_xview_background_color', 'syn_xview_background_mixed']
-    # comments = ['syn_xview_bkg_certain_models_texture', 'syn_xview_bkg_certain_models_color', 'syn_xview_bkg_certain_models_mixed']
+    # # comments = ['syn_xview_bkg_certain_models_texture', 'syn_xview_bkg_certain_models_color', 'syn_xview_bkg_certain_models_mixed']
     # # comments = ['syn_xview_bkg_px20whr4_certain_models_texture', 'syn_xview_bkg_px20whr4_certain_models_color', 'syn_xview_bkg_px20whr4_certain_models_mixed']
+    # comments = ['syn_xview_bkg_px23whr4_scale_models_texture', 'syn_xview_bkg_px23whr4_scale_models_color', 'syn_xview_bkg_px23whr4_scale_models_mixed']
+    # # comments = ['syn_xview_bkg_px23whr4_small_models_color']
+    # # comments = ['syn_xview_bkg_px23whr4_small_fw_models_color']
+    # px_thres = 23
+    # whr_thres = 4
     # seeds = [17]
     # for sd in seeds:
-    #     for cmt in comments[:2]:
+    #     for cmt in comments:
     #         opt = tsl.get_opt(sd, cmt, False)
     #         opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd , '{}_hgiou1_seed{}_with_model'.format('test_on_original', sd))
     #         if not os.path.exists(opt.result_dir):
-    #             os.mkdir(opt.result_dir)
+    #             os.makedirs(opt.result_dir)
     #
     #         opt.weights = glob.glob(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd, '*_hgiou1_seed{}'.format(sd)), 'best_{}_seed{}.pt'.format(cmt, sd)))[-1]
     #         # opt.data = 'data_xview/{}_cls/{}/{}_seed{}_with_model.data'.format(opt.class_num, 'px6whr4_ng0_seed{}'.format(sd), 'xview_px6whr4_ng0', sd)
-    #         opt.data = 'data_xview/{}_cls/{}/{}_seed{}_with_model.data'.format(opt.class_num, 'px20whr4_seed{}'.format(sd), 'xview_px20whr4', sd)
+    #         opt.data = 'data_xview/{}_cls/{}/{}_seed{}_with_model.data'.format(opt.class_num, 'px{}whr{}_seed{}'.format(px_thres, whr_thres, sd), 'xview_px{}whr{}'.format(px_thres, whr_thres), sd)
     #         print(opt.data)
     #         opt.name = 'seed{}_on_original_model'.format(opt.seed)
     #         opt.task = 'test'
@@ -509,13 +516,18 @@ if __name__ == '__main__':
     '''
     test for xview_syn_xview_bkg_* with model
     '''
-    import train_syn_xview_background_seeds_loop as tsl
-    # comments = ['xview_syn_xview_bkg_texture', 'xview_syn_xview_bkg_color', 'xview_syn_xview_bkg_mixed']
-    comments = ['xview_syn_xview_bkg_certain_models_texture', 'xview_syn_xview_bkg_certain_models_color', 'xview_syn_xview_bkg_certain_models_mixed']
-    # comments = ['xview_syn_xview_bkg_px20whr4_certain_models_texture', 'xview_syn_xview_bkg_px20whr4_certain_models_color', 'xview_syn_xview_bkg_px20whr4_certain_models_mixed']
+    import train_syn_xview_background_seeds_loop_1cls as tsl
+    # # # comments = ['xview_syn_xview_bkg_texture', 'xview_syn_xview_bkg_color', 'xview_syn_xview_bkg_mixed']
+    # # # comments = ['xview_syn_xview_bkg_certain_models_texture', 'xview_syn_xview_bkg_certain_models_color', 'xview_syn_xview_bkg_certain_models_mixed']
+    # # # comments = ['xview_syn_xview_bkg_px20whr4_certain_models_texture', 'xview_syn_xview_bkg_px20whr4_certain_models_color', 'xview_syn_xview_bkg_px20whr4_certain_models_mixed']
+    # comments = ['xview_syn_xview_bkg_px23whr4_scale_models_texture', 'xview_syn_xview_bkg_px23whr4_scale_models_color', 'xview_syn_xview_bkg_px23whr4_scale_models_mixed']
+    # comments = [ 'xview_syn_xview_bkg_px23whr4_small_models_color', 'xview_syn_xview_bkg_px23whr4_small_models_mixed']
+    comments = [ 'xview_syn_xview_bkg_px23whr3_small_models_color', 'xview_syn_xview_bkg_px23whr3_small_models_mixed']
+    # comments = [ 'xview_syn_xview_bkg_px23whr3_6groups_models_color', 'xview_syn_xview_bkg_px23whr3_6groups_models_mixed']
+    # comments = [ 'xview_syn_xview_bkg_px23whr3_6groups2_models_color']
     sd=17
     #5  all   94       219    0.0699     0.466     0.175     0.122
-    for cmt in comments[:1]:
+    for cmt in comments:
         opt = tsl.get_opt(sd, cmt, False)
         # opt.result_dir = opt.result_dir.format(opt.class_num, opt.cmt, opt.seed, 'test_on_original_model_hgiou1_seed{}'.format(opt.seed))
         opt.result_dir = opt.result_dir.format(opt.class_num, opt.cmt, opt.seed, 'test_on_original_model_hgiou1_seed{}_1xSyn'.format(opt.seed))
@@ -526,7 +538,8 @@ if __name__ == '__main__':
         # opt.weights = glob.glob(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd,  '*_hgiou1_seed{}_2xSyn'.format(sd)), 'best_seed{}_2xSyn.pt'.format(sd)))[-1]
         # opt.data = 'data_xview/{}_cls/{}_seed{}/{}_seed{}_2xSyn_with_model.data'.format(opt.class_num, cmt, sd, cmt, sd)
         print(opt.weights_dir.format(opt.class_num, cmt, sd,  '*_hgiou1_seed{}_1xSyn'.format(sd)))
-        opt.weights = glob.glob(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd,  '*_hgiou1_seed{}_1xSyn'.format(sd)), 'best_seed{}_1xSyn.pt'.format(sd)))[-1]
+        # opt.weights = glob.glob(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd,  '*_hgiou1_seed{}_1xSyn'.format(sd)), 'best_seed{}_1xSyn.pt'.format(sd)))[-1]
+        opt.weights = glob.glob(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd,  '*_hgiou1_seed{}_1xSyn'.format(sd)), 'backup120.pt'.format(sd)))[-1]
         opt.data = 'data_xview/{}_cls/{}_seed{}/{}_seed{}_1xSyn_with_model.data'.format(opt.class_num, cmt, sd, cmt, sd)
         # opt.data = 'data_xview/{}_cls/{}_seed{}/{}_seed{}_with_model.data'.format(opt.class_num, cmt, sd, cmt, sd)
         print(opt.data)
@@ -545,9 +558,11 @@ if __name__ == '__main__':
     '''
     test for xview_px6whr4_ng0_* with model
     '''
-    # import train_syn_xview_background_seeds_loop as tsl
-    # comments = ['px6whr4_ng0']
+    # import train_syn_xview_background_seeds_loop_1cls as tsl
+    # # comments = ['px6whr4_ng0']
     # # comments = ['px20whr4']
+    # comments = ['px23whr4']
+    # # comments = ['px23whr3']
     # sd=17
     # #5  all   94       219    0.0699     0.466     0.175     0.122
     # for cmt in comments:
@@ -557,6 +572,7 @@ if __name__ == '__main__':
     #         os.mkdir(opt.result_dir)
     #     print(opt.weights_dir.format(opt.class_num, cmt, sd,  '*_hgiou1_seed{}'.format(sd)))
     #     opt.weights = glob.glob(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd,  '*_hgiou1_seed{}'.format(sd)), 'best_{}_seed{}.pt'.format(cmt, sd)))[-1]
+    #     # opt.weights = glob.glob(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd,  '*_hgiou1_seed{}'.format(sd)), 'backup200.pt'.format(cmt, sd)))[-1]
     #     # opt.data = 'data_xview/{}_cls/{}_seed{}/xview_{}_seed{}.data'.format(opt.class_num, cmt, sd, cmt, sd)
     #     opt.data = 'data_xview/{}_cls/{}_seed{}/xview_{}_seed{}_with_model.data'.format(opt.class_num, cmt, sd, cmt, sd)
     #     print(opt.data)

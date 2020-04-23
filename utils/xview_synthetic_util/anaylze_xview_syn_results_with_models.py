@@ -111,7 +111,7 @@ def plot_val_results_iou_comp_with_model_id(mid, comments=''):
 def get_tp_fn_list_airplane_with_model(dt, sr, comments=[], mid=0, catid=0, iou_thres=0.5, score_thres=0.3,
                                        px_thres=6, whr_thres=4, syn_cmt=''):
     ''' get TP FN of different 3d-models '''
-
+    # print(os.path.join(syn_args.results_dir.format(syn_args.class_num, dt, sr), 'test_on*{}'.format(syn_cmt)))
     results_dir = glob.glob(os.path.join(syn_args.results_dir.format(syn_args.class_num, dt, sr), 'test_on*{}'.format(syn_cmt)))[0]
     result_json_file = os.path.join(results_dir, 'results_{}_{}.json'.format(sr, 'on_original_model'))
     result_allcat_list = json.load(open(result_json_file))
@@ -457,15 +457,18 @@ def draw_bar_compare_tp_number_of_different_models(comments=[], mids=[], xview_c
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
 
-    xlabels = ['Model0', 'Model1', 'Model2', 'Model3']
+    # xlabels = ['Model0', 'Model1', 'Model2', 'Unlabeled']
+    # x = np.array([1, 3, 5, 7])
+    xlabels = ['Model0', 'Model1', 'Model2', 'Model3', 'Model4', 'Model5']
+    x = np.arange(1, 1+len(mids)*2, 2)
+
     plt.rcParams['figure.figsize'] = (10.0, 8.0)
     fig, (axs1, axs2) = plt.subplots(2, 1) #,  sharex=True, sharey=True
-    x = np.array([1, 3, 5, 7])
     width = 0.3
     for cix, cmt in enumerate(comments):
         tp_fn_tx_path = os.path.join(args.txt_save_dir, 'val_img_2_tp_fn_list',  comments[0] + '_with_model', cmt + xview_cmt[cix])
-        tp_num_arr = np.zeros((4), dtype=np.int)
-        fn_num_arr = np.zeros((4), dtype=np.int)
+        tp_num_arr = np.zeros((len(mids)), dtype=np.int)
+        fn_num_arr = np.zeros((len(mids)), dtype=np.int)
         for mid in mids:
             tp_tx_file = json.load(
                 open(os.path.join(tp_fn_tx_path, 'xViewval_{}{}_img_2_tp_maps_model_{}.json'.format(cmt, xview_cmt[cix], mid))))
@@ -665,39 +668,45 @@ if __name__ == "__main__":
     '''
     statistic model Number 
     '''
-    # # type = 'training'
+    # type = 'training'
     # type = 'validation'
-    # comments='px6whr4_ng0_seed17'
+    # # comments='px6whr4_ng0_seed17'
     # # comments='px20whr4_seed17'
+    # # comments='px23whr4_seed17'
+    # comments='px23whr3_seed17'
     # statistic_model_number(type, comments)
 
     '''
     val gt and prd results TP FN NMS
     '''
-    # score_thres = 0.3
+    # # # px_thres = 6
+    # # # # comments = ['px6whr4_ng0_seed17', '_with_model']
+    # # # # display_type = ['px6whr4_ng0']
+    # # px_thres = 20
+    # # comments = ['px20whr4_seed17', '_with_model']
+    # # display_type = ['px20whr4']
+    # px_thres = 23
     # whr_thres = 4
-    # iou_thres = 0.5
-    # catid = 0
-    # model_ids = [0, 1, 2, 3]
-    # # px_thres = 6
-    # # # comments = ['px6whr4_ng0_seed17', '_with_model']
-    # # # display_type = ['px6whr4_ng0']
-    # px_thres = 20
-    # comments = ['px20whr4_seed17', '_with_model']
-    # display_type = ['px20whr4']
+    # comments = ['px23whr4_seed17', '_with_model']
+    # display_type = ['px23whr4']
+    # px_thres = 23
+    # whr_thres = 3
+    # comments = ['px23whr3_seed17', '_with_model']
+    # display_type = ['px23whr3']
     #
     # syn_ratio = ['seed17']
+    # score_thres = 0.3
+    # iou_thres = 0.5
+    # catid = 0
+    # # model_ids = [0, 1, 2, 3]
+    # model_ids = [0, 1, 2, 3, 4, 5]
     # for mid in model_ids:
     #     for dt in display_type:
     #         for sr in syn_ratio:
     #             get_tp_fn_list_airplane_with_model(dt, sr, comments, mid, catid, iou_thres, score_thres, px_thres, whr_thres)
     #             plot_val_img_with_tp_fn_bbox_with_model(dt, sr, comments[0] + comments[1], mid)
 
-    # score_thres = 0.3
-    # whr_thres = 4
-    # iou_thres = 0.5
-    # catid = 0
-    # model_ids = [0, 1, 2, 3]
+
     # comments = ['px6whr4_ng0_seed17', '_with_model']
     # px_thres = 6
     # display_types = ['syn_xview_bkg_certain_models_texture', 'syn_xview_bkg_certain_models_color',
@@ -708,15 +717,27 @@ if __name__ == "__main__":
     # # display_types = ['syn_xview_bkg_px20whr4_certain_models_texture', 'syn_xview_bkg_px20whr4_certain_models_color',
     # #                  'syn_xview_bkg_px20whr4_certain_models_mixed']
     # syn_cmt = ''
+    # px_thres = 23
+    # comments = ['px23whr4_seed17', '_with_model']
+    # display_types = ['syn_xview_bkg_px23whr4_scale_models_texture',
+    #                 'syn_xview_bkg_px23whr4_scale_models_color',
+    #                 'syn_xview_bkg_px23whr4_scale_models_mixed']
+    #
     # sr = 'seed17'
+    # score_thres = 0.3
+    # whr_thres = 4
+    # iou_thres = 0.5
+    # catid = 0
+    # model_ids = [0, 1, 2, 3]
     # for mid in model_ids:
-    #     for dt in display_types[:2]:
+    #     for dt in display_types:
     #         get_tp_fn_list_airplane_with_model(dt, sr, comments, mid, catid, iou_thres, score_thres, px_thres, whr_thres, syn_cmt)
     #         plot_val_img_with_tp_fn_bbox_with_model(dt, sr, comments[0] + comments[1], mid, syn_cmt)
 
 
 
     # # # px_thres = 6 ##*******
+    # # # whr_thres = 4
     # # # comments = ['px6whr4_ng0_seed17', '_with_model']
     # # # display_types = ['xview_syn_xview_bkg_texture']
     # # # syn_cmt = '_1xSyn'
@@ -725,28 +746,50 @@ if __name__ == "__main__":
     # # #                  'xview_syn_xview_bkg_mixed']
     # # # syn_cmt = '_1xSyn'
     # # px_thres = 6
+    # # # whr_thres = 4
     # # comments = ['px6whr4_ng0_seed17', '_with_model']
     # # display_types = ['xview_syn_xview_bkg_certain_models_texture', 'xview_syn_xview_bkg_certain_models_color',
     # #                  'xview_syn_xview_bkg_certain_models_mixed']
     # # syn_cmt = '_1xSyn'
     # px_thres = 6
+    # # whr_thres = 4
     # comments = ['px6whr4_ng0_seed17', '_with_model']
     # display_types = ['xview_syn_xview_bkg_certain_models_texture']
     # # syn_cmt = '_1xSyn'
     # syn_cmt = '_2xSyn'
     # # # px_thres = 20 ##*******
+    # # # whr_thres = 4
     # # # comments = ['px20whr4_seed17', '_with_model']
     # # # display_types = ['xview_syn_xview_bkg_px20whr4_certain_models_texture', 'xview_syn_xview_bkg_px20whr4_certain_models_color',
     # # #                  'xview_syn_xview_bkg_px20whr4_certain_models_mixed']
     # # # syn_cmt = '_1xSyn'
+
+    # # px_thres = 23 ##*******
+    # # whr_thres = 4
+    # # comments = ['px23whr4_seed17', '_with_model']
+    # # display_types = ['xview_syn_xview_bkg_px23whr4_scale_models_texture', 'xview_syn_xview_bkg_px23whr4_scale_models_color',
+    # #                  'xview_syn_xview_bkg_px23whr4_scale_models_mixed']
+    # # syn_cmt = '_1xSyn'
+    # # px_thres = 23 ##*******
+    # # whr_thres = 4
+    # # comments = ['px23whr4_seed17', '_with_model']
+    # # display_types = ['xview_syn_xview_bkg_px23whr4_small_models_color',
+    # #                  'xview_syn_xview_bkg_px23whr4_small_models_mixed']
+    # syn_cmt = '_1xSyn'
+    # px_thres = 23 ##*******
+    # whr_thres = 3
+    # comments = ['px23whr3_seed17', '_with_model']
+    # display_types = ['xview_syn_xview_bkg_px23whr3_6groups_models_color',
+    #                  'xview_syn_xview_bkg_px23whr3_6groups_models_mixed']
+    # syn_cmt = '_1xSyn'
     # score_thres = 0.3
-    # whr_thres = 4
     # iou_thres = 0.5
     # catid = 0
-    # model_ids = [0, 1, 2, 3]
+    # # model_ids = [0, 1, 2, 3]
+    # model_ids = [0, 1, 2, 3, 4, 5]
     # sr = 'seed17'
     # for mid in model_ids:
-    #     for dt in display_types[:1]:
+    #     for dt in display_types:
     #         get_tp_fn_list_airplane_with_model(dt, sr, comments, mid, catid, iou_thres, score_thres, px_thres, whr_thres, syn_cmt)
     #         plot_val_img_with_tp_fn_bbox_with_model(dt, sr, comments[0] + comments[1], mid, syn_cmt)
 
@@ -808,11 +851,11 @@ if __name__ == "__main__":
     #             'syn_xview_bkg_certain_models_color_seed17']
     # , 'syn_xview_bkg_certain_models_mixed_seed17'
     # xview_cmt = ['', '', '']
-    comments = ['px6whr4_ng0_seed17',
-                'xview_syn_xview_bkg_certain_models_texture_seed17'
-                ,'xview_syn_xview_bkg_certain_models_texture_seed17']
-    # , 'xview_syn_xview_bkg_certain_models_mixed_seed17'
-    xview_cmt = ['', '_1xSyn', '_2xSyn']
+    # comments = ['px6whr4_ng0_seed17',
+    #             'xview_syn_xview_bkg_certain_models_texture_seed17'
+    #             ,'xview_syn_xview_bkg_certain_models_texture_seed17']
+    # # , 'xview_syn_xview_bkg_certain_models_mixed_seed17'
+    # xview_cmt = ['', '_1xSyn', '_2xSyn']
     # comments = ['px20whr4_seed17',
     #             'syn_xview_bkg_px20whr4_certain_models_texture_seed17',
     #             'syn_xview_bkg_px20whr4_certain_models_color_seed17',
@@ -822,10 +865,28 @@ if __name__ == "__main__":
     #             'xview_syn_xview_bkg_px20whr4_certain_models_texture_seed17',
     #             'xview_syn_xview_bkg_px20whr4_certain_models_color_seed17',
     #             'xview_syn_xview_bkg_px20whr4_certain_models_mixed_seed17']
-    # xview_cmt = '['', _1xSyn', _1xSyn', _1xSyn']
-
-    model_ids = [0, 1, 2, 3]
-    draw_bar_compare_tp_number_of_different_models(comments, model_ids, xview_cmt)
+    # xview_cmt = ['', '_1xSyn', '_1xSyn', '_1xSyn']
+    # comments = ['px23whr4_seed17',
+    #             'syn_xview_bkg_px23whr4_scale_models_texture_seed17',
+    #             'syn_xview_bkg_px23whr4_scale_models_color_seed17',
+    #             'syn_xview_bkg_px23whr4_scale_models_mixed_seed17']
+    # xview_cmt = ['', '', '', '']
+    # comments = ['px23whr4_seed17',
+    #             'xview_syn_xview_bkg_px23whr4_scale_models_texture_seed17',
+    #             'xview_syn_xview_bkg_px23whr4_scale_models_color_seed17',
+    #             'xview_syn_xview_bkg_px23whr4_scale_models_mixed_seed17']
+    # xview_cmt = ['', '_1xSyn', '_1xSyn', '_1xSyn']
+    # comments = ['px23whr4_seed17',
+    #             'xview_syn_xview_bkg_px23whr4_small_models_color_seed17',
+    #             'xview_syn_xview_bkg_px23whr4_small_models_mixed_seed17']
+    # xview_cmt = ['', '_1xSyn', '_1xSyn']
+    # comments = ['px23whr3_seed17',
+    #             'xview_syn_xview_bkg_px23whr3_6groups_models_color_seed17',
+    #             'xview_syn_xview_bkg_px23whr3_6groups_models_mixed_seed17']
+    # xview_cmt = ['', '_1xSyn', '_1xSyn']
+    # model_ids = [0, 1, 2, 3, 4, 5]
+    # # model_ids = [0, 1, 2, 3]
+    # draw_bar_compare_tp_number_of_different_models(comments, model_ids, xview_cmt)
 
 
     '''
@@ -853,6 +914,10 @@ if __name__ == "__main__":
     #
     # model_ids = [0, 1, 2]
     # for mid in model_ids:
+    # import torch
+    # a = torch.load('/media/lab/Yang/code/yolov3/weights/1_cls/xview_syn_xview_bkg_px23whr4_scale_models_texture_seed17/2020-04-18_10.07_hgiou1_seed17_1xSyn/backup160.pt')
+    # b = torch.load('/media/lab/Yang/code/yolov3/weights/1_cls/xview_syn_xview_bkg_px23whr4_scale_models_texture_seed17/2020-04-19_07.31_hgiou1_seed17_1xSyn/backup160.pt')
+    # print(a==b)
 
 
 

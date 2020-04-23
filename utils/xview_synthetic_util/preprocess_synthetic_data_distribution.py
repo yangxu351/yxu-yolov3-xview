@@ -530,7 +530,7 @@ def check_img_with_bbox_with_indices_model_id():
         plot_img_with_bbx_model_id(os.path.join(mimg_path, mn), os.path.join(mixed_path, mn.replace(IMG_FORMAT, TXT_FORMAT)), save_m_path)
 
 
-def get_syn_args():
+def get_syn_args(cmt=''):
     parser = argparse.ArgumentParser()
     parser.add_argument("--json_filepath", type=str, help="Filepath to GEOJSON coordinate file",
                         default='/media/lab/Yang/data/xView/xView_train.geojson')
@@ -542,12 +542,29 @@ def get_syn_args():
     # parser.add_argument("--syn_plane_gt_bbox_dir", type=str, help="gt images with bbox of synthetic airplanes",
     #                     default='/media/lab/Yang/data/synthetic_data/Airplanes_gt_bbox/{}/')
 
-    parser.add_argument("--syn_plane_img_anno_dir", type=str, help="images and annotations of synthetic airplanes",
-                        default='/media/lab/Yang/data/synthetic_data/syn_xview_bkg_certain_models_texture/')
-    parser.add_argument("--syn_plane_txt_dir", type=str, help="txt labels of synthetic airplanes",
-                        default='/media/lab/Yang/data/synthetic_data/syn_xview_bkg_certain_models_txt_xcycwh/')
-    parser.add_argument("--syn_plane_gt_bbox_dir", type=str, help="gt images with bbox of synthetic airplanes",
-                        default='/media/lab/Yang/data/synthetic_data/syn_xview_bkg_certain_models_gt_bbox/')
+    # parser.add_argument("--syn_plane_img_anno_dir", type=str, help="images and annotations of synthetic airplanes",
+    #                     default='/media/lab/Yang/data/synthetic_data/syn_xview_bkg_certain_models_texture/')
+    # parser.add_argument("--syn_plane_txt_dir", type=str, help="txt labels of synthetic airplanes",
+    #                     default='/media/lab/Yang/data/synthetic_data/syn_xview_bkg_certain_models_txt_xcycwh/')
+    # parser.add_argument("--syn_plane_gt_bbox_dir", type=str, help="gt images with bbox of synthetic airplanes",
+    #                     default='/media/lab/Yang/data/synthetic_data/syn_xview_bkg_certain_models_gt_bbox/')
+    #fixme
+    if cmt: # certain_models, scale_models
+        parser.add_argument("--syn_plane_img_anno_dir", type=str,
+                        help="Path to folder containing synthetic images and annos ",
+                        default='/media/lab/Yang/data/synthetic_data/syn_xview_bkg_{}'.format(cmt)+'_{}/')
+        parser.add_argument("--syn_plane_txt_dir", type=str, default='/media/lab/Yang/data/synthetic_data/syn_xview_bkg_{}_txt_xcycwh/'.format(cmt),
+                            help="syn xview txt")
+        parser.add_argument("--syn_plane_gt_bbox_dir", type=str, default='/media/lab/Yang/data/synthetic_data/syn_xview_bkg_{}_gt_bbox/'.format(cmt),
+                            help="syn xview txt related files")
+    else: # cmt == ''
+        parser.add_argument("--syn_plane_img_anno_dir", type=str,
+                            help="Path to folder containing synthetic images and annos ",
+                            default='/media/lab/Yang/data/synthetic_data/syn_xview_background_{}/')
+        parser.add_argument("--syn_plane_txt_dir", type=str, default='/media/lab/Yang/data/synthetic_data/syn_xview_background_txt_xcycwh',
+                            help="syn xview txt")
+        parser.add_argument("--syn_plane_gt_bbox_dir", type=str, default='/media/lab/Yang/data/synthetic_data/syn_xview_background_gt_bbox',
+                            help="syn xview txt related files")
 
     parser.add_argument("--syn_images_save_dir", type=str, help="rgb images of synthetic airplanes",
                         default='/media/lab/Yang/data/xView_YOLO/images/{}_{}/')
@@ -734,6 +751,7 @@ if __name__ == "__main__":
     '''
     # pxwhr='px6whr4_ng0'
     # pxwhr='px20whr4'
+    # pxwhr='px23whr4'
     # draw_bbx_on_rgb_images(pxwhr)
 
     '''

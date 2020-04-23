@@ -73,6 +73,19 @@ def create_syn_data(comment='syn_xview_background_texture', seed=1024):
     data_txt.close()
 
 
+def create_syn_data_with_model(comment='syn_xview_background_texture', seed=1024, base_cmt=''):
+    data_dir = syn_args.syn_data_list_dir.format( comment, syn_args.class_num, comment, seed)
+    dt = comment.split('_')[-1]
+    data_txt = open(os.path.join(data_dir, '{}_seed{}_data_with_model.data'.format(comment, seed)), 'w')
+    data_txt.write('classes=%s\n' % str(syn_args.class_num))
+    data_txt.write('valid=./data_xview/{}_cls/{}_seed{}/xviewval_img_{}_seed{}.txt\n'.format(syn_args.class_num, base_cmt, seed, base_cmt, seed))
+    data_txt.write('valid_label=./data_xview/{}_cls/{}_seed{}/xviewval_lbl_{}_seed{}_with_model.txt\n'.format(syn_args.class_num, base_cmt, seed, base_cmt, seed))
+    data_txt.write('names=./data_xview/{}_cls/xview.names\n'.format(syn_args.class_num))
+    data_txt.write('backup=backup/\n')
+    data_txt.write('eval={}'.format(dt))
+    data_txt.close()
+
+
 def split_syn_xview_background_trn_val_of_ratios(ratios, seed=1024, comment='xview_syn_xview_bkg_texture', base_cmt='px6whr4_ng0'):
     display_type = comment.split('_')[-1]
     data_dir = os.path.join(syn_args.data_xview_dir.format(syn_args.class_num), '{}_seed{}'.format(comment, seed))
@@ -120,12 +133,28 @@ def create_syn_data_by_ratio(ratio, comment='xview_syn_xview_bkg_texture', seed=
     data_txt.write('train_label=./data_xview/{}_cls/{}_seed{}/{}_train_lbl_seed{}_{}xSyn.txt\n'.format(syn_args.class_num, comment, seed, comment, seed, ratio))
 
      #fixme **********
-    # df = pd.read_csv(os.path.join(data_dir, '{}_train_img_seed{}.txt'.format(comment, seed)), header=None) # **********
-    data_txt.write('syn_0_xview_number=374\n')
+    xview_dir = os.path.join(syn_args.data_xview_dir.format(syn_args.class_num), '{}_seed{}'.format(base_cmt, seed))
+    df = pd.read_csv(os.path.join(xview_dir, 'xviewtrain_img_{}_seed{}.txt'.format(base_cmt, seed)), header=None) # **********
+    data_txt.write('syn_0_xview_number={}\n'.format(df.shape[0]))
     data_txt.write('classes=%s\n' % str(syn_args.class_num))
     os.path.join(syn_args.data_xview_dir, '{}_seed{}/xviewval_img_{}_seed{}.txt'.format(base_cmt, seed, base_cmt, seed))
     data_txt.write('valid=./data_xview/{}_cls/{}_seed{}/xviewval_img_{}_seed{}.txt\n'.format(syn_args.class_num, base_cmt, seed, base_cmt, seed))
     data_txt.write('valid_label=./data_xview/{}_cls/{}_seed{}/xviewval_lbl_{}_seed{}.txt\n'.format(syn_args.class_num, base_cmt, seed, base_cmt, seed))
+    data_txt.write('names=./data_xview/{}_cls/xview.names\n'.format(syn_args.class_num))
+    data_txt.write('backup=backup/\n')
+    data_txt.write('eval={}'.format(dt))
+    data_txt.close()
+
+
+def create_syn_data_by_ratio_with_model(ratio, comment='xview_syn_xview_bkg_texture', seed=1024, base_cmt='px6whr4_ng0'):
+    dt = comment.split('_')[-1]
+    data_dir = os.path.join(syn_args.data_xview_dir.format(syn_args.class_num), '{}_seed{}'.format(comment, seed))
+
+    data_txt = open(os.path.join(data_dir, '{}_seed{}_{}xSyn_with_model.data'.format(comment, seed, ratio)), 'w')
+    data_txt.write('classes=%s\n' % str(syn_args.class_num))
+    os.path.join(syn_args.data_xview_dir, '{}_seed{}/xviewval_img_{}_seed{}.txt'.format(base_cmt, seed, base_cmt, seed))
+    data_txt.write('valid=./data_xview/{}_cls/{}_seed{}/xviewval_img_{}_seed{}.txt\n'.format(syn_args.class_num, base_cmt, seed, base_cmt, seed))
+    data_txt.write('valid_label=./data_xview/{}_cls/{}_seed{}/xviewval_lbl_{}_seed{}_with_model.txt\n'.format(syn_args.class_num, base_cmt, seed, base_cmt, seed))
     data_txt.write('names=./data_xview/{}_cls/xview.names\n'.format(syn_args.class_num))
     data_txt.write('backup=backup/\n')
     data_txt.write('eval={}'.format(dt))
@@ -176,11 +205,17 @@ if __name__ == '__main__':
     # # pxwhr = 'px6whr4'
     # # comments = ['syn_xview_bkg_px20whr4_certain_models_texture', 'syn_xview_bkg_px20whr4_certain_models_color', 'syn_xview_bkg_px20whr4_certain_models_mixed']
     # # pxwhr = 'px20whr4'
-    # comments = ['syn_xview_bkg_px23whr4_scale_models_texture', 'syn_xview_bkg_px23whr4_scale_models_color', 'syn_xview_bkg_px23whr4_scale_models_mixed']
-    # pxwhr = 'px23whr4'
     # # seeds = [17, 1024, 5, 9, 3]
-    # seeds = [17, 5, 9] #, 1024, 3, 5, 9
-    # model_cmt = 'scale_models'
+    # # comments = ['syn_xview_bkg_px23whr4_scale_models_texture', 'syn_xview_bkg_px23whr4_scale_models_color', 'syn_xview_bkg_px23whr4_scale_models_mixed']
+    # # pxwhr = 'px23whr4'
+    # # seeds = [17, 5, 9] #, 1024, 3, 5, 9
+    # # model_cmt = 'scale_models'
+    # comments = ['syn_xview_bkg_px23whr4_small_models_color', 'syn_xview_bkg_px23whr4_small_models_mixed']
+    # comments = ['syn_xview_bkg_px23whr4_small_fw_models_color', 'syn_xview_bkg_px23whr4_small_fw_models_mixed']
+    # pxwhr = 'px23whr4'
+    # seeds = [17]
+    # # model_cmt = 'small_models'
+    # model_cmt = 'small_fw_models'
     # syn_args = get_syn_args(model_cmt)
     # for cmt in comments:
     #     for sd in seeds:
@@ -191,13 +226,34 @@ if __name__ == '__main__':
     # # seeds = [17]
     # # comments = ['syn_xview_bkg_px20whr4_certain_models_texture', 'syn_xview_bkg_px20whr4_certain_models_color', 'syn_xview_bkg_px20whr4_certain_models_mixed']
     # # seeds = [1024, 17, 3, 5, 9]
-    # comments = ['syn_xview_bkg_px23whr4_scale_models_texture', 'syn_xview_bkg_px23whr4_scale_models_color', 'syn_xview_bkg_px23whr4_scale_models_mixed']
-    # model_cmt = 'scale_models'
+    # # comments = ['syn_xview_bkg_px23whr4_scale_models_texture', 'syn_xview_bkg_px23whr4_scale_models_color', 'syn_xview_bkg_px23whr4_scale_models_mixed']
+    # # model_cmt = 'scale_models'
+    # # seeds = [17, 5, 9]
+    # # comments = ['syn_xview_bkg_px23whr4_small_models_color', 'syn_xview_bkg_px23whr4_small_models_mixed']
+    # comments = ['syn_xview_bkg_px23whr4_small_fw_models_color', 'syn_xview_bkg_px23whr4_small_fw_models_mixed']
+    # pxwhr = 'px23whr4'
+    # seeds = [17]
+    # # model_cmt = 'small_models'
+    # model_cmt = 'small_fw_models'
     # syn_args = get_syn_args(model_cmt)
-    # seeds = [17, 5, 9]
     # for cmt in comments:
     #     for sd in seeds:
     #         create_syn_data(cmt, sd)
+
+    # # comments = ['syn_xview_bkg_px23whr4_scale_models_texture', 'syn_xview_bkg_px23whr4_scale_models_color', 'syn_xview_bkg_px23whr4_scale_models_mixed']
+    # # seeds = [17, 5, 9]
+    # # model_cmt = 'scale_models'
+    # # comments = ['syn_xview_bkg_px23whr4_small_models_color', 'syn_xview_bkg_px23whr4_small_models_mixed']
+    # # seeds = [17]
+    # # model_cmt = 'small_models'
+    # comments = ['syn_xview_bkg_px23whr4_small_fw_models_color', 'syn_xview_bkg_px23whr4_small_fw_models_mixed']
+    # seeds = [17]
+    # model_cmt = 'small_fw_models'
+    # syn_args = get_syn_args(model_cmt)
+    # base_cmt = 'px23whr4'
+    # for cmt in comments:
+    #     for sd in seeds:
+    #         create_syn_data_with_model(cmt, sd, base_cmt)
 
     '''
     combine xview and synthetic 
@@ -209,11 +265,29 @@ if __name__ == '__main__':
     # # comments = ['xview_syn_xview_bkg_px20whr4_certain_models_texture', 'xview_syn_xview_bkg_px20whr4_certain_models_color', 'xview_syn_xview_bkg_px20whr4_certain_models_mixed']
     # # seeds = [17, 1024, 3, 5, 9]
     # # model_cmt = 'certain_models'
-    # model_cmt = 'scale_models'
+    # # model_cmt = 'scale_models'
+    # # comments = ['xview_syn_xview_bkg_px23whr4_scale_models_texture', 'xview_syn_xview_bkg_px23whr4_scale_models_color', 'xview_syn_xview_bkg_px23whr4_scale_models_mixed']
+    # # base_cmt = 'px23whr4'
+    # # seeds = [17, 5, 9]
+    # # comments = ['xview_syn_xview_bkg_px23whr4_small_models_color', 'xview_syn_xview_bkg_px23whr4_small_models_mixed']
+    # # seeds = [17]
+    # # model_cmt = 'small_models'
+    # # comments = ['xview_syn_xview_bkg_px23whr4_small_fw_models_color', 'xview_syn_xview_bkg_px23whr4_small_fw_models_mixed']
+    # # seeds = [17]
+    # # model_cmt = 'small_fw_models'
+    # # base_cmt = 'px23whr4'
+    # # comments = ['xview_syn_xview_bkg_px23whr3_6groups_models_color', 'xview_syn_xview_bkg_px23whr3_6groups_models_mixed']
+    # # seeds = [17]
+    # # model_cmt = '6groups_models'
+    # comments = ['xview_syn_xview_bkg_px23whr3_6groups2_models_color', 'xview_syn_xview_bkg_px23whr3_6groups2_models_mixed']
+    # seeds = [17]
+    # model_cmt = '6groups2_models'
+    # base_cmt = 'px23whr3'
+    # comments = ['xview_syn_xview_bkg_px23whr3_small_models_color', 'xview_syn_xview_bkg_px23whr3_small_models_mixed']
+    # seeds = [17]
+    # model_cmt = 'small_models'
+    # base_cmt = 'px23whr3'
     # syn_args = get_syn_args(model_cmt)
-    # comments = ['xview_syn_xview_bkg_px23whr4_scale_models_texture', 'xview_syn_xview_bkg_px23whr4_scale_models_color', 'xview_syn_xview_bkg_px23whr4_scale_models_mixed']
-    # base_cmt = 'px23whr4'
-    # seeds = [17, 5, 9]
     # syn_ratios = [1] # [1, 2]
     # for cmt in comments:
     #     for sd in seeds:
@@ -227,13 +301,66 @@ if __name__ == '__main__':
     # # comments = ['xview_syn_xview_bkg_px20whr4_certain_models_texture', 'xview_syn_xview_bkg_px20whr4_certain_models_color', 'xview_syn_xview_bkg_px20whr4_certain_models_mixed']
     # # seeds = [17, 1024, 3, 5, 9]
     # # model_cmt = 'certain_models'
-    # model_cmt = 'scale_models'
+    # # model_cmt = 'scale_models'
+    # # comments = ['xview_syn_xview_bkg_px23whr4_scale_models_texture', 'xview_syn_xview_bkg_px23whr4_scale_models_color', 'xview_syn_xview_bkg_px23whr4_scale_models_mixed']
+    # # base_cmt = 'px23whr4'
+    # # seeds = [17, 5, 9]
+    # # comments = ['xview_syn_xview_bkg_px23whr4_small_models_color', 'xview_syn_xview_bkg_px23whr4_small_models_mixed']
+    # # seeds = [17]
+    # # model_cmt = 'small_models'
+    # # base_cmt = 'px23whr4'
+    # # comments = ['xview_syn_xview_bkg_px23whr4_small_fw_models_color', 'xview_syn_xview_bkg_px23whr4_small_fw_models_mixed']
+    # # seeds = [17]
+    # # model_cmt = 'small_fw_models'
+    # # base_cmt = 'px23whr4'
+    # # comments = ['xview_syn_xview_bkg_px23whr3_6groups_models_color', 'xview_syn_xview_bkg_px23whr3_6groups_models_mixed']
+    # # seeds = [17]
+    # # model_cmt = '6groups_models'
+    # # base_cmt = 'px23whr3'
+    # # comments = ['xview_syn_xview_bkg_px23whr3_6groups2_models_color', 'xview_syn_xview_bkg_px23whr3_6groups2_models_mixed']
+    # # seeds = [17]
+    # # model_cmt = '6groups2_models'
+    # # base_cmt = 'px23whr3'
+    # comments = ['xview_syn_xview_bkg_px23whr3_small_models_color', 'xview_syn_xview_bkg_px23whr3_small_models_mixed']
+    # seeds = [17]
+    # model_cmt = 'small_models'
+    # base_cmt = 'px23whr3'
     # syn_args = get_syn_args(model_cmt)
-    # comments = ['xview_syn_xview_bkg_px23whr4_scale_models_texture', 'xview_syn_xview_bkg_px23whr4_scale_models_color', 'xview_syn_xview_bkg_px23whr4_scale_models_mixed']
-    # base_cmt = 'px23whr4'
-    # seeds = [17, 5, 9]
     # syn_ratios = [1]
     # for cmt in comments:
     #     for sd in seeds:
     #         for r in syn_ratios:
     #             create_syn_data_by_ratio(r, cmt, sd, base_cmt)
+
+    # # model_cmt = 'scale_models'
+    # # syn_args = get_syn_args(model_cmt)
+    # # comments = ['xview_syn_xview_bkg_px23whr4_scale_models_texture', 'xview_syn_xview_bkg_px23whr4_scale_models_color', 'xview_syn_xview_bkg_px23whr4_scale_models_mixed']
+    # # base_cmt = 'px23whr4'
+    # # seeds = [17, 5, 9]
+    # # comments = ['xview_syn_xview_bkg_px23whr4_small_models_color', 'xview_syn_xview_bkg_px23whr4_small_models_mixed']
+    # # seeds = [17]
+    # # model_cmt = 'small_models'
+    # # base_cmt = 'px23whr4'
+    # # comments = ['xview_syn_xview_bkg_px23whr4_small_fw_models_color', 'xview_syn_xview_bkg_px23whr4_small_fw_models_mixed']
+    # # seeds = [17]
+    # # model_cmt = 'small_fw_models'
+    # # base_cmt = 'px23whr4'
+    # # comments = ['xview_syn_xview_bkg_px23whr3_6groups_models_color', 'xview_syn_xview_bkg_px23whr3_6groups_models_mixed']
+    # # seeds = [17]
+    # # model_cmt = '6groups_models'
+    # # base_cmt = 'px23whr3'
+    # # comments = ['xview_syn_xview_bkg_px23whr3_6groups2_models_color', 'xview_syn_xview_bkg_px23whr3_6groups2_models_mixed']
+    # # seeds = [17]
+    # # model_cmt = '6groups2_models'
+    # # base_cmt = 'px23whr3'
+    # comments = ['xview_syn_xview_bkg_px23whr3_small_models_color', 'xview_syn_xview_bkg_px23whr3_small_models_mixed']
+    # seeds = [17]
+    # model_cmt = 'small_models'
+    # base_cmt = 'px23whr3'
+    # syn_args = get_syn_args(model_cmt)
+    # syn_ratios = [1]
+    # for cmt in comments:
+    #     for sd in seeds:
+    #         for r in syn_ratios:
+    #             create_syn_data_by_ratio_with_model(r, cmt, sd, base_cmt)
+

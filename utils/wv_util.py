@@ -66,6 +66,8 @@ def get_labels(fname, catNum=60):
     feature_ids = []
     if catNum == 60:
         cat_index_id_file = '../../data_xview/{}_cls/categories_id_color_diverse_{}.txt'.format(catNum, catNum)
+    elif catNum == 4:
+        cat_index_id_file = '../../data_xview/{}_cls/categories_id_label_children_color_{}_classes.txt'.format(catNum, catNum)
     else:
         cat_index_id_file = '../../data_xview/{}_cls/categories_id_color_{}_new_group.txt'.format(catNum, catNum)
 
@@ -126,7 +128,8 @@ def get_all_categories(catNum=60):
     categories = []
 
     # df_category_id = pd.read_csv('categories_id_color_diverse_60.txt', sep="\t")
-    df_category_id = pd.read_csv('../../data_xview/{}_cls/categories_id_color_diverse_{}.txt'.format(catNum, catNum), sep="\t")
+    # df_category_id = pd.read_csv('../../data_xview/{}_cls/categories_id_color_diverse_{}.txt'.format(catNum, catNum), sep="\t")
+    df_category_id = pd.read_csv('../../data_xview/{}_cls/categories_id_label_children_color_{}_classes.txt'.format(catNum, catNum), sep="\t")
 
     for i in range(df_category_id.shape[0]):
         # category_id = df_category_id['category_id'].iloc[i]
@@ -208,7 +211,7 @@ def chip_image(img, ci_coords, ci_classes, feature_ids, shape=(300, 300), name="
     height, width, _ = img.shape
     wn, hn = shape
 
-    w_num, h_num = (int(width / wn), int(height / hn))
+    w_num, h_num = (round(width / wn), round(height / hn))
     # images = np.zeros((w_num * h_num + (w_num-1) * (h_num-1), hn, wn, 3))
     images = {}
     image_names = {}
@@ -359,7 +362,7 @@ if __name__ == '__main__':
     '''
     import json
     # js = json.load(open('/media/lab/Yang/data/xView/xView_train.geojson'))
-    coords, chips, classes, features_ids = get_labels('/media/lab/Yang/data/xView/xView_train.geojson', 60) # 62
+    # coords, chips, classes, features_ids = get_labels('/media/lab/Yang/data/xView/xView_train.geojson', 60) # 62
     '''
     find the images not in the train folder but in the geojson
     '''

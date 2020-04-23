@@ -352,7 +352,7 @@ def get_part_syn_args(dt, sr):
     parser.add_argument("-ft2", "--font2", type=str, help="legend font",
                         default="{'family': 'serif', 'weight': 'normal', 'size': 13}")
 
-    parser.add_argument("--class_num", type=int, default=1, help="Number of Total Categories")  # 60  6
+    parser.add_argument("--class_num", type=int, default=1, help="Number of Total Categories")  # 60  6 1
     parser.add_argument("--seed", type=int, default=17, help="random seed") #fixme -- 1024 17
     parser.add_argument("--tile_size", type=int, default=608, help="image size")  # 300 416
 
@@ -430,6 +430,22 @@ if __name__ == "__main__":
     # px_thres = 23  # 4
     # pwv.clean_backup_xview_plane_with_constraints(px_thres, whr_thres)
 
+    # cat_ids = [1, 2, 3, 4]
+    # whr_thres = 3 # 3.5
+    # px_thres= 23
+    # iou_thres = 0.5
+    # # pwv.clean_backup_xview_plane_with_constraints(px_thres, whr_thres)
+    # pwv.cnt_ground_truth_overlap_from_pathces(cat_ids, iou_thres, px_thres, whr_thres)
+
+    ''' 
+    remove duplicate bbox of xview aireplanes
+    '''
+    # cat_id = 4
+    # px_thres = 23
+    # whr_thres = 3
+    # args = pwv.get_args(px_thres, whr_thres)
+    # pwv.remove_duplicate_gt_bbx(cat_id, px_thres, whr_thres)
+
     ''' if necessary
     check xview aireplane dropped images
     '''
@@ -470,9 +486,12 @@ if __name__ == "__main__":
     # comments = '_px20whr4_seed{}'
     # seeds = [17, 5, 9]
     # comments = '_px23whr4_seed{}'
+    # seeds = [17]
+    # comments = '_px23whr3_seed{}'
     # data_name = 'xview'
     # for sd in seeds:
     #     pwv.split_trn_val_with_chips(data_name, comments, sd)
+
 
     '''
     xview
@@ -483,6 +502,8 @@ if __name__ == "__main__":
     # comments = '_px20whr4_seed{}'
     # seeds = [17, 5, 9]
     # comments = '_px23whr4_seed{}'
+    # seeds = [17]
+    # comments = '_px23whr3_seed{}'
     # for sd in seeds:
     #     create_xview_syn_data(comments=comments, seed=sd)
 

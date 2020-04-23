@@ -375,7 +375,9 @@ def train(opt):
                 torch.save(chkpt, best)
 
             # Save backup every 10 epochs (optional)
-            if epoch > 0 and epoch % 20 == 0:
+            #fixme
+            # if (epoch > 0 and epoch % 10 == 0):
+            if (epoch > 0 and epoch % 20 == 0) or (epoch > epochs*0.8 and epoch%10==0) or epoch==epochs-2:
                 torch.save(chkpt, opt.weights_dir + 'backup%g.pt' % epoch)
 
             # Delete checkpoint
@@ -430,7 +432,7 @@ def get_opt(seed=1024, cmt='', Train=True, sr=None):
     parser.add_argument('--arc', type=str, default='default', help='yolo architecture')  # defaultpw, uCE, uBCE
     parser.add_argument('--prebias', action='store_true', help='pretrain model biases')
     parser.add_argument('--name', default='', help='renames results.txt to results_name.txt if supplied')
-    parser.add_argument('--device', default='0, 1', help='device id (i.e. 0 or 0,1 or cpu)')
+    parser.add_argument('--device', default='0', help='device id (i.e. 0 or 0,1 or cpu)')
     parser.add_argument('--adam', action='store_true', help='use adam optimizer')
     parser.add_argument('--var', type=float, help='debug variable')
     opt = parser.parse_args()
@@ -482,6 +484,8 @@ if __name__ == '__main__':
     # syn_ratios = [1, 2]
     # comments = ['px6whr4_ng0']
     # syn_ratios = [0]
+    # comments = ['px23whr4']
+    # syn_ratios = [0]
     # comments = ['syn_xview_bkg_certain_models_texture', 'syn_xview_bkg_certain_models_color', 'syn_xview_bkg_certain_models_mixed']
     # syn_ratios = [None]
     # comments = ['xview_syn_xview_bkg_certain_models_texture', 'xview_syn_xview_bkg_certain_models_color', 'xview_syn_xview_bkg_certain_models_mixed']
@@ -490,11 +494,27 @@ if __name__ == '__main__':
     # syn_ratios = [None]
     # comments = ['xview_syn_xview_bkg_px20whr4_certain_models_texture', 'xview_syn_xview_bkg_px20whr4_certain_models_color', 'xview_syn_xview_bkg_px20whr4_certain_models_mixed']
     # syn_ratios = [1]
-    comments = ['syn_xview_bkg_px23whr4_scale_models_texture', 'syn_xview_bkg_px23whr4_scale_models_color', 'syn_xview_bkg_px23whr4_scale_models_mixed']
-    syn_ratios = [None]
-    seeds = [17]
+    # comments = ['syn_xview_bkg_px23whr4_scale_models_texture', 'syn_xview_bkg_px23whr4_scale_models_color', 'syn_xview_bkg_px23whr4_scale_models_mixed']
+    # syn_ratios = [None]
+    # comments = ['xview_syn_xview_bkg_px23whr4_scale_models_texture', 'xview_syn_xview_bkg_px23whr4_scale_models_color', 'xview_syn_xview_bkg_px23whr4_scale_models_mixed']
+    # syn_ratios = [1]
+    # comments = ['xview_syn_xview_bkg_px23whr4_small_models_color', 'xview_syn_xview_bkg_px23whr4_small_models_mixed']
+    # syn_ratios = [1]
+    # comments = ['syn_xview_bkg_px23whr4_small_models_color', 'syn_xview_bkg_px23whr4_small_models_mixed']
+    # syn_ratios = [None]
+    # comments = ['syn_xview_bkg_px23whr4_small_fw_models_color', 'syn_xview_bkg_px23whr4_small_fw_models_mixed']
+    # syn_ratios = [None]
+    # comments = ['px23whr3']
+    # syn_ratios = [0]
+    # comments = ['xview_syn_xview_bkg_px23whr3_6groups_models_color', 'xview_syn_xview_bkg_px23whr3_6groups_models_mixed']
+    # syn_ratios = [1]
+    # comments = ['xview_syn_xview_bkg_px23whr3_6groups2_models_color', 'xview_syn_xview_bkg_px23whr3_6groups2_models_mixed']
+    # syn_ratios = [1]
+    comments = ['xview_syn_xview_bkg_px23whr3_small_models_color', 'xview_syn_xview_bkg_px23whr3_small_models_mixed']
+    syn_ratios = [1]
+    seeds = [17] # 5,
     for sd in seeds:
-        for cmt in comments[2:]:
+        for cmt in comments:
             for sr in syn_ratios:
                 # try:
                     # if (sd == 3 and cmt == 'syn_xview_background_texture'):
@@ -508,6 +528,7 @@ if __name__ == '__main__':
                     results_file = os.path.join(opt.result_dir, 'results_seed{}_{}xSyn.txt'.format(opt.seed, opt.syn_ratio))
                     last = os.path.join(opt.weights_dir, 'last_seed{}_{}xSyn.pt'.format(opt.seed, opt.syn_ratio))
                     best = os.path.join(opt.weights_dir, 'best_seed{}_{}xSyn.pt'.format(opt.seed, opt.syn_ratio))
+                opt.weights = last if opt.resume else opt.weights
                 print(opt)
                 # scale hyp['obj'] by img_size (evolved at 320)
                 # hyp['obj'] *= opt.img_size / 320.
