@@ -15,6 +15,7 @@ from torch.utils.data import Dataset
 from tqdm import tqdm
 
 from utils.utils import xyxy2xywh, xywh2xyxy
+import pandas as pd
 
 help_url = 'https://github.com/ultralytics/yolov3/wiki/Train-Custom-Data'
 img_formats = ['.bmp', '.jpg', '.jpeg', '.png', '.tif', '.dng']
@@ -256,7 +257,7 @@ class LoadStreams:  # multiple IP or RTSP cameras
 
 
 class LoadImagesAndLabels(Dataset):  # for training/testing
-    def __init__(self, path, img_size=416, batch_size=16, augment=False, hyp=None, rect=False, image_weights=False,
+    def __init__(self, path, label_path, img_size=416, batch_size=16, augment=False, hyp=None, rect=False, image_weights=False,
                  cache_labels=True, cache_images=False, single_cls=False):
         path = str(Path(path))  # os-agnostic
         assert os.path.isfile(path), 'File not found %s. See %s' % (path, help_url)
@@ -276,11 +277,17 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
         self.hyp = hyp
         self.image_weights = image_weights
         self.rect = False if image_weights else rect
-        self.mosaic = self.augment and not self.rect  # load 4 images at a time into a mosaic (only during training)
+        #fixme ---yang.xu
+        # self.mosaic = self.augment and not self.rect  # load 4 images at a time into a mosaic (only during training)
+        self.mosaic = False
 
         # Define labels
-        self.label_files = [x.replace('images', 'labels').replace(os.path.splitext(x)[-1], '.txt')
-                            for x in self.img_files]
+        #fixme---yang.xu
+        # self.label_files = [x.replace('images', 'labels').replace(os.path.splitext(x)[-1], '.txt')
+        #                     for x in self.img_files]
+        with open(label_path, 'r') as f:
+            self.label_files = [x.replace('/', os.sep) for x in f.read().splitlines()  # os-agnostic
+                              if os.path.splitext(x)[-1].lower()=='.txt']
 
         # Rectangular Training  https://github.com/ultralytics/yolov3/issues/232
         if self.rect:
@@ -327,7 +334,12 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
             for i, file in enumerate(pbar):
                 try:
                     with open(file, 'r') as f:
-                        l = np.array([x.split() for x in f.read().splitlines()], dtype=np.float32)
+                        # l = np.array([x.split() for x in f.read().splitlines()], dtype=np.float32)
+                        #fixme--yang.xu
+                        # if empty label file, will report an exception
+                        df_txt = pd.read_csv(file, header=None, delimiter=' ')
+                        l = df_txt.to_numpy()
+                        l = l[:, :5]
                 except:
                     nm += 1  # print('missing labels for image %s' % self.img_files[i])  # file missing
                     continue
@@ -348,6 +360,7 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
                         if ns == 0:
                             create_folder(path='./datasubset')
                             os.makedirs('./datasubset/images')
+                        #fixme--yang.xu
                         exclude_classes = 43
                         if exclude_classes not in l[:, 0]:
                             ns += 1
@@ -377,7 +390,9 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
                     ne += 1  # print('empty labels for image %s' % self.img_files[i])  # file empty
                     # os.system("rm '%s' '%s'" % (self.img_files[i], self.label_files[i]))  # remove
 
-                pbar.desc = 'Caching labels (%g found, %g missing, %g empty, %g duplicate, for %g images)' % (
+                # pbar.desc = 'Caching labels (%g found, %g missing, %g empty, %g duplicate, for %g images)' % (
+                #     nf, nm, ne, nd, n)
+                pbar.desc = 'Caching labels ({} found, {} missing, {} empty, {} duplicate, for {} images)'.format(
                     nf, nm, ne, nd, n)
             assert nf > 0, 'No labels found in %s. See %s' % (os.path.dirname(file) + os.sep, help_url)
 

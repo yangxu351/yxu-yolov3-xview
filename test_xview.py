@@ -37,12 +37,16 @@ class MyEncoder(json.JSONEncoder):
 
 
 def get_val_imgid_by_name(path, name):
-    # print(path)
-    val_files = pd.read_csv(path, header=None).to_numpy()
-    # print('val_files 0', val_files[0])
-    val_names = [os.path.basename(vf[0]) for vf in val_files]
-    img_id = val_names.index(name)
-    return img_id
+    json_img_id_file = glob.glob(os.path.join(path, 'xview_val*_img_id_map.json'))[0]
+    img_id_map = json.load(open(json_img_id_file))
+    imgIds = [id for id in img_id_map.values()]
+    return img_id_map[name]
+    # # print(path)
+    # val_files = pd.read_csv(path, header=None).to_numpy()
+    # # print('val_files 0', val_files[0])
+    # val_names = [os.path.basename(vf[0]) for vf in val_files]
+    # img_id = val_names.index(name)
+    # return img_id
 
 
 def test(cfg,
@@ -93,19 +97,6 @@ def test(cfg,
     iouv = torch.linspace(0.5, 0.95, 10).to(device)  # iou vector for mAP@0.5:0.95
     iouv = iouv[0].view(1)  # for mAP@0.5
     niou = iouv.numel()
-
-    # fixme
-    # if opt.syn_ratio is None and not opt.syn_display_type:
-    #     result_json_file = 'results_{}.json'.format(opt.name)
-    # elif opt.syn_ratio is None and opt.syn_display_type:
-    #     result_json_file = 'results_{}{}.json'.format(opt.syn_display_type, opt.name)
-    # else:
-    #     result_json_file = 'results_{}_{}.json'.format(opt.syn_display_type, opt.syn_ratio)
-    result_json_file = 'results_{}.json'.format(opt.name)
-    gt_json_file = 'xViewval_{}_{}cls_{}_{}_xtlytlwh.json'.format(img_size, opt.class_num, opt.syn_display_type, opt.syn_ratio)
-
-    # result_json_file = 'results_rare.json'
-    # gt_json_file = 'xViewval_rare_{}_{}cls_xtlytlwh.json'.format(img_size, opt.class_num)
 
     # Dataloader
     if dataloader is None:
@@ -171,8 +162,7 @@ def test(cfg,
             #    [file.write('%11.5g' * 7 % tuple(x) + '\n') for x in pred]
 
             # Clip boxes to image bounds
-            # fixme
-            # clip_coords(pred, (height, width))
+            clip_coords(pred, (height, width))
 
             # Append to pycocotools JSON dictionary
             if save_json:
@@ -182,7 +172,7 @@ def test(cfg,
                 # image_id = int(Path(paths[si]).stem.split('_')[-1])
 
                 image_name = paths[si].split('/')[-1]
-                image_id = get_val_imgid_by_name(path, image_name)
+                # image_id = get_val_imgid_by_name(opt.base_dir, image_name)
 
                 box = pred[:, :4].clone()  # xyxy
                 scale_coords(imgs[si].shape[1:], box, shapes[si][0], shapes[si][1])  # to original shape
@@ -228,14 +218,18 @@ def test(cfg,
                                     break
 
             # Append statistics (correct, conf, pcls, tcls)
+            # pred (x1, y1, x2, y2, object_conf, conf, class)
             stats.append((correct, pred[:, 4].cpu(), pred[:, 5].cpu(), tcls))
 
     # Compute statistics
     stats = [np.concatenate(x, 0) for x in list(zip(*stats))]  # to numpy
     if len(stats):
-        p, r, ap, f1, ap_class = ap_per_class(*stats)
+        p, r, ap, f1, ap_class = ap_per_class(*stats, pr_path=opt.result_dir, pr_name=opt.name)
         # if niou > 1:
         #       p, r, ap, f1 = p[:, 0], r[:, 0], ap[:, 0], ap.mean(1)  # average across ious
+        #fixme --yang.xu
+        if niou > 1:
+            p, r, ap, f1 = p[:, 0], r[:, 0], ap.mean(1), ap[:, 0]  # [P, R, AP@0.5:0.95, AP@0.5]
         mp, mr, map, mf1 = p.mean(), r.mean(), ap.mean(), f1.mean()
         nt = np.bincount(stats[3].astype(np.int64), minlength=nc)  # number of targets per class
     else:
@@ -253,7 +247,7 @@ def test(cfg,
     # Save JSON
     if save_json and map and len(jdict):
         # fixme
-        img_names = [os.path.basename(x) for x in dataloader.dataset.img_files]
+        # img_names = [os.path.basename(x) for x in dataloader.dataset.img_files]
         #fixme
         # img_id_maps = json.load(
         #     open(os.path.join(opt.label_dir, 'all_image_ids_names_dict_{}cls.json'.format(opt.class_num))))
@@ -264,43 +258,49 @@ def test(cfg,
         # sids = set(imgIds)
         # print('imgIds', len(imgIds), 'sids', len(sids))
 
+        # json_img_id_file = glob.glob(os.path.join(opt.base_dir, 'xview_val*_img_id_map.json'))[0]
+        # img_id_map = json.load(open(json_img_id_file))
+        # imgIds = [id for id in img_id_map.values()]
+
         # imgIds = [get_val_imgid_by_name(na) for na in img_names]
         # sids = set(imgIds)
         # print('imgIds', len(imgIds), 'sids', len(sids))
-        imgIds = np.arange(len(output))
+        # imgIds = np.arange(len(output))
 
+        result_json_file = 'results_{}.json'.format(opt.name)
         with open(os.path.join(opt.result_dir, result_json_file), 'w') as file:
             # json.dump(jdict, file)
             json.dump(jdict, file, ensure_ascii=False, indent=2, cls=MyEncoder)
 
-        try:
-            from pycocotools.coco import COCO
-            from pycocotools.cocoeval import COCOeval
-        except:
-            print('WARNING: missing pycocotools package, can not compute official COCO mAP. See requirements.txt.')
-
-            # https://github.com/cocodataset/cocoapi/blob/master/PythonAPI/pycocoEvalDemo.ipynb
-            # fixme
-            # cocoGt = COCO(glob.glob('../coco/annotations/instances_val*.json')[0])  # initialize COCO ground truth api
-            cocoGt = COCO(os.path.join(opt.label_dir, gt_json_file))
-            cocoDt = cocoGt.loadRes(os.path.join(opt.result_dir, result_json_file))  # initialize COCO pred api
-
-            cocoEval = COCOeval(cocoGt, cocoDt, 'bbox')
-            cocoEval.params.imgIds = imgIds  # [:32]  # only evaluate these images
-            cocoEval.evaluate()
-            cocoEval.accumulate()
-            cocoEval.summarize()
-            mf1, map = cocoEval.stats[:2]  # update to pycocotools results (mAP@0.5:0.95, mAP@0.5)
+        # try:
+        #     from pycocotools.coco import COCO
+        #     from pycocotools.cocoeval import COCOeval
+        # except:
+        #     print('WARNING: missing pycocotools package, can not compute official COCO mAP. See requirements.txt.')
+        #
+        #     # https://github.com/cocodataset/cocoapi/blob/master/PythonAPI/pycocoEvalDemo.ipynb
+        #     # fixme
+        #     # cocoGt = COCO(glob.glob('../coco/annotations/instances_val*.json')[0])  # initialize COCO ground truth api
+        #     cocoGt = COCO(glob.glob(os.path.join(opt.base_dir, '*_xtlytlwh.json'))[0])
+        #     cocoDt = cocoGt.loadRes(os.path.join(opt.result_dir, result_json_file))  # initialize COCO pred api
+        #
+        #     cocoEval = COCOeval(cocoGt, cocoDt, 'bbox')
+        #     cocoEval.params.imgIds = imgIds  # [:32]  # only evaluate these images
+        #     cocoEval.evaluate()
+        #     cocoEval.accumulate()
+        #     cocoEval.summarize()
+        #     mf1, map = cocoEval.stats[:2]  # update to pycocotools results (mAP@0.5:0.95, mAP@0.5)
 
     # Return results
     maps = np.zeros(nc) + map
     for i, c in enumerate(ap_class):
         maps[c] = ap[i]
-    return (mp, mr, map, mf1, *(loss / len(dataloader)).tolist()), maps
+    return (mp, mr, map, mf1, *(loss.cpu() / len(dataloader)).tolist()), maps
+    # return (mp, mr, map, mf1, *(loss / len(dataloader)).tolist()), maps
     # return (mp, mr, map, mf1, *(loss / len(dataloader)).tolist())
 
 
-def get_opt(dt, sr, comments=''):
+def get_opt(dt=None, sr=None, comments=''):
     parser = argparse.ArgumentParser(prog='test.py')
 
     parser.add_argument('--cfg', type=str, default='cfg/yolov3-spp-{}cls_syn.cfg', help='*.cfg path')
@@ -312,22 +312,21 @@ def get_opt(dt, sr, comments=''):
 
     parser.add_argument('--class_num', type=int, default=1, help='class number')  # 60 6
     parser.add_argument('--label_dir', type=str, default='/media/lab/Yang/data/xView_YOLO/labels/', help='*.json path')
-    parser.add_argument('--weights_dir', type=str, default='weights/{}_cls/{}_{}/', help='to save weights path')
-    parser.add_argument('--result_dir', type=str, default='result_output/{}_cls/{}_{}/', help='to save result files path')
-    parser.add_argument('--writer_dir', type=str, default='writer_output/{}_cls/{}_{}/', help='*events* path')
+    parser.add_argument('--weights_dir', type=str, default='weights/{}_cls/{}_seed{}/', help='to save weights path')
+    parser.add_argument('--result_dir', type=str, default='result_output/{}_cls/{}_seed{}/{}/', help='to save result files path')
     parser.add_argument("--syn_ratio", type=float, default=sr, help="ratio of synthetic data: 0 0.25, 0.5, 0.75")
     parser.add_argument('--syn_display_type', type=str, default=dt, help='syn_texture0, syn_color0, syn_texture, syn_color, syn_mixed, syn')
+    parser.add_argument('--base_dir', type=str, default='data_xview/{}_cls/{}/', help='without syn data path')
 
-    parser.add_argument('--conf-thres', type=float, default=0.001, help='object confidence threshold')
-    parser.add_argument('--iou-thres', type=float, default=0.5, help='IOU threshold for NMS')
-    parser.add_argument('--save_json', action='store_true', help='save a cocoapi-compatible JSON results file')
+    parser.add_argument('--conf-thres', type=float, default=0.1, help='0.1 0.001 object confidence threshold')
+    parser.add_argument('--iou-thres', type=float, default=0.5, help='0.5 IOU threshold for NMS')
+    parser.add_argument('--save_json', action='store_true', default=True, help='save a cocoapi-compatible JSON results file')
     parser.add_argument('--task', default='test', help="'test', 'study', 'benchmark'")
     parser.add_argument('--device', default='', help='device id (i.e. 0 or 0,1) or cpu')
     parser.add_argument('--name', default='', help='name')
 
     opt = parser.parse_args()
     # opt.save_json = opt.save_json or any([x in opt.data for x in ['xview.data']])
-    opt.save_json = True
     opt.cfg = opt.cfg.format(opt.class_num)
 
     return opt
@@ -420,7 +419,7 @@ if __name__ == '__main__':
     # #5  all        94       219    0.0699     0.466     0.175     0.122
     # for sd in seeds[:1]:
     #     for cmt in comments[:2]:
-    #         opt = tsl.get_opt(sd, cmt, False)
+    #         opt = tsl.get_opt(sd, cmt, Train=False)
     #         opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd , '{}_hgiou1_seed{}'.format('test_on_original', sd))
     #         if not os.path.exists(opt.result_dir):
     #             os.mkdir(opt.result_dir)
@@ -454,7 +453,7 @@ if __name__ == '__main__':
     # #5  all        94       219    0.0699     0.466     0.175     0.122
     # for sd in seeds[:1]:
     #     for cmt in comments[:1]:
-    #         opt = tsl.get_opt(sd, cmt, False)
+    #         opt = tsl.get_opt(sd, cmt, Train=False)
     #         opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd , '{}_hgiou1_seed{}'.format('test_on_original', sd))
     #         if not os.path.exists(opt.result_dir):
     #             os.mkdir(opt.result_dir)
@@ -480,105 +479,104 @@ if __name__ == '__main__':
     '''
     test for syn_xveiw_background_*_with_model
     '''
-    # import train_syn_xview_background_seeds_loop_1cls as tsl
     # # comments = ['syn_xview_background_texture', 'syn_xview_background_color', 'syn_xview_background_mixed']
     # # comments = ['syn_xview_bkg_certain_models_texture', 'syn_xview_bkg_certain_models_color', 'syn_xview_bkg_certain_models_mixed']
     # # comments = ['syn_xview_bkg_px20whr4_certain_models_texture', 'syn_xview_bkg_px20whr4_certain_models_color', 'syn_xview_bkg_px20whr4_certain_models_mixed']
     # comments = ['syn_xview_bkg_px23whr4_scale_models_texture', 'syn_xview_bkg_px23whr4_scale_models_color', 'syn_xview_bkg_px23whr4_scale_models_mixed']
-    # # comments = ['syn_xview_bkg_px23whr4_small_models_color']
-    # # comments = ['syn_xview_bkg_px23whr4_small_fw_models_color']
-    # px_thres = 23
-    # whr_thres = 4
-    # seeds = [17]
-    # for sd in seeds:
-    #     for cmt in comments:
-    #         opt = tsl.get_opt(sd, cmt, False)
-    #         opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd , '{}_hgiou1_seed{}_with_model'.format('test_on_original', sd))
-    #         if not os.path.exists(opt.result_dir):
-    #             os.makedirs(opt.result_dir)
-    #
-    #         opt.weights = glob.glob(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd, '*_hgiou1_seed{}'.format(sd)), 'best_{}_seed{}.pt'.format(cmt, sd)))[-1]
-    #         # opt.data = 'data_xview/{}_cls/{}/{}_seed{}_with_model.data'.format(opt.class_num, 'px6whr4_ng0_seed{}'.format(sd), 'xview_px6whr4_ng0', sd)
-    #         opt.data = 'data_xview/{}_cls/{}/{}_seed{}_with_model.data'.format(opt.class_num, 'px{}whr{}_seed{}'.format(px_thres, whr_thres, sd), 'xview_px{}whr{}'.format(px_thres, whr_thres), sd)
-    #         print(opt.data)
-    #         opt.name = 'seed{}_on_original_model'.format(opt.seed)
-    #         opt.task = 'test'
-    #         opt.save_json = True
-    #         test(opt.cfg,
-    #              opt.data,
-    #              opt.weights,
-    #              opt.batch_size,
-    #              opt.img_size,
-    #              opt.conf_thres,
-    #              opt.iou_thres,
-    #              opt.save_json, opt=opt)
+    # comments = ['syn_xview_bkg_px23whr4_small_models_color']
+    # comments = ['syn_xview_bkg_px23whr4_small_fw_models_color']
+    comments = ['syn_xview_bkg_px23whr3_6groups_models_color', 'syn_xview_bkg_px23whr3_6groups_models_mixed']
+    px_thres = 23
+    whr_thres = 3 # 4
+    hyp_cmt = 'hgiou1_fitness'
+    seeds = [17]
+    for sd in seeds:
+        for cmt in comments:
+            opt = get_opt(comments=cmt)
+            opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd , '{}_{}_seed{}_with_model'.format('test_on_original', hyp_cmt, sd))
+            if not os.path.exists(opt.result_dir):
+                os.makedirs(opt.result_dir)
+
+            opt.weights = glob.glob(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd), '*_{}_seed{}'.format(hyp_cmt, sd), 'best_{}_seed{}.pt'.format(cmt, sd)))[-1]
+            print(opt.weights)
+            # opt.data = 'data_xview/{}_cls/{}/{}_seed{}_with_model.data'.format(opt.class_num, 'px6whr4_ng0_seed{}'.format(sd), 'xview_px6whr4_ng0', sd)
+            opt.data = 'data_xview/{}_cls/{}/{}_seed{}_with_model.data'.format(opt.class_num, 'px{}whr{}_seed{}'.format(px_thres, whr_thres, sd), 'xview_px{}whr{}'.format(px_thres, whr_thres), sd)
+            print(opt.data)
+            opt.name = '{}_seed{}_on_xview_with_model'.format(cmt, sd)
+            test(opt.cfg,
+                 opt.data,
+                 opt.weights,
+                 opt.batch_size,
+                 opt.img_size,
+                 opt.conf_thres,
+                 opt.iou_thres,
+                 opt.save_json, opt=opt)
 
     '''
     test for xview_syn_xview_bkg_* with model
     '''
-    import train_syn_xview_background_seeds_loop_1cls as tsl
-    # # # comments = ['xview_syn_xview_bkg_texture', 'xview_syn_xview_bkg_color', 'xview_syn_xview_bkg_mixed']
-    # # # comments = ['xview_syn_xview_bkg_certain_models_texture', 'xview_syn_xview_bkg_certain_models_color', 'xview_syn_xview_bkg_certain_models_mixed']
-    # # # comments = ['xview_syn_xview_bkg_px20whr4_certain_models_texture', 'xview_syn_xview_bkg_px20whr4_certain_models_color', 'xview_syn_xview_bkg_px20whr4_certain_models_mixed']
+    # # # # comments = ['xview_syn_xview_bkg_texture', 'xview_syn_xview_bkg_color', 'xview_syn_xview_bkg_mixed']
+    # # # # comments = ['xview_syn_xview_bkg_certain_models_texture', 'xview_syn_xview_bkg_certain_models_color', 'xview_syn_xview_bkg_certain_models_mixed']
+    # # # # comments = ['xview_syn_xview_bkg_px20whr4_certain_models_texture', 'xview_syn_xview_bkg_px20whr4_certain_models_color', 'xview_syn_xview_bkg_px20whr4_certain_models_mixed']
     # comments = ['xview_syn_xview_bkg_px23whr4_scale_models_texture', 'xview_syn_xview_bkg_px23whr4_scale_models_color', 'xview_syn_xview_bkg_px23whr4_scale_models_mixed']
-    # comments = [ 'xview_syn_xview_bkg_px23whr4_small_models_color', 'xview_syn_xview_bkg_px23whr4_small_models_mixed']
-    comments = [ 'xview_syn_xview_bkg_px23whr3_small_models_color', 'xview_syn_xview_bkg_px23whr3_small_models_mixed']
-    # comments = [ 'xview_syn_xview_bkg_px23whr3_6groups_models_color', 'xview_syn_xview_bkg_px23whr3_6groups_models_mixed']
-    # comments = [ 'xview_syn_xview_bkg_px23whr3_6groups2_models_color']
-    sd=17
-    #5  all   94       219    0.0699     0.466     0.175     0.122
-    for cmt in comments:
-        opt = tsl.get_opt(sd, cmt, False)
-        # opt.result_dir = opt.result_dir.format(opt.class_num, opt.cmt, opt.seed, 'test_on_original_model_hgiou1_seed{}'.format(opt.seed))
-        opt.result_dir = opt.result_dir.format(opt.class_num, opt.cmt, opt.seed, 'test_on_original_model_hgiou1_seed{}_1xSyn'.format(opt.seed))
-        # opt.result_dir = opt.result_dir.format(opt.class_num, opt.cmt, opt.seed, 'test_on_original_model_hgiou1_seed{}_2xSyn'.format(opt.seed))
-        if not os.path.exists(opt.result_dir):
-            os.makedirs(opt.result_dir)
-        # print(opt.weights_dir.format(opt.class_num, cmt, sd,  '*_hgiou1_seed{}_2xSyn'.format(sd)))
-        # opt.weights = glob.glob(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd,  '*_hgiou1_seed{}_2xSyn'.format(sd)), 'best_seed{}_2xSyn.pt'.format(sd)))[-1]
-        # opt.data = 'data_xview/{}_cls/{}_seed{}/{}_seed{}_2xSyn_with_model.data'.format(opt.class_num, cmt, sd, cmt, sd)
-        print(opt.weights_dir.format(opt.class_num, cmt, sd,  '*_hgiou1_seed{}_1xSyn'.format(sd)))
-        # opt.weights = glob.glob(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd,  '*_hgiou1_seed{}_1xSyn'.format(sd)), 'best_seed{}_1xSyn.pt'.format(sd)))[-1]
-        opt.weights = glob.glob(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd,  '*_hgiou1_seed{}_1xSyn'.format(sd)), 'backup120.pt'.format(sd)))[-1]
-        opt.data = 'data_xview/{}_cls/{}_seed{}/{}_seed{}_1xSyn_with_model.data'.format(opt.class_num, cmt, sd, cmt, sd)
-        # opt.data = 'data_xview/{}_cls/{}_seed{}/{}_seed{}_with_model.data'.format(opt.class_num, cmt, sd, cmt, sd)
-        print(opt.data)
-        opt.name = 'seed{}_on_original_model'.format(opt.seed)
-        opt.task = 'test'
-        opt.save_json = True
-        test(opt.cfg,
-             opt.data,
-             opt.weights,
-             opt.batch_size,
-             opt.img_size,
-             opt.conf_thres,
-             opt.iou_thres,
-             opt.save_json, opt=opt)
+    # # comments = [ 'xview_syn_xview_bkg_px23whr4_small_models_color', 'xview_syn_xview_bkg_px23whr4_small_models_mixed']
+    # base_cmt = 'px23whr4_seed{}'
+    # # comments = [ 'xview_syn_xview_bkg_px23whr3_small_models_color', 'xview_syn_xview_bkg_px23whr3_small_models_mixed']
+    # # comments = ['xview_syn_xview_bkg_px23whr3_6groups_models_color', 'xview_syn_xview_bkg_px23whr3_6groups_models_mixed']
+    # # base_cmt = 'px23whr3_seed{}'
+    # # hyp_cmt = 'hgiou1_fitness'
+    # hyp_cmt = 'hgiou1'
+    # sd=17
+    # #5  all   94       219    0.0699     0.466     0.175     0.122
+    # for cmt in comments:
+    #     opt = get_opt(comments=cmt)
+    #     opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_with_model_{}_seed{}_1xSyn'.format(hyp_cmt, sd))
+    #     if not os.path.exists(opt.result_dir):
+    #         os.makedirs(opt.result_dir)
+    #     opt.weights = glob.glob(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd),  '*_{}_seed{}_1xSyn'.format(hyp_cmt, sd), 'best_seed{}_1xSyn.pt'.format(sd)))[-1]
+    #     # opt.weights = glob.glob(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd),  '*_{}_seed{}_1xSyn'.format(hyp_cmt, sd), 'backup200.pt'.format(sd)))[-1]
+    #     print(opt.weights)
+    #     opt.data = 'data_xview/{}_cls/{}_seed{}/{}_seed{}_1xSyn_with_model.data'.format(opt.class_num, cmt, sd, cmt, sd)
+    #     # opt.data = 'data_xview/{}_cls/{}_seed{}/{}_seed{}_with_model.data'.format(opt.class_num, cmt, sd, cmt, sd)
+    #     print(opt.data)
+    #     opt.name = 'seed{}_on_xview_with_model'.format(sd)
+    #     opt.base_dir = opt.base_dir.format(opt.class_num, base_cmt.format(sd))
+    #     print(opt.base_dir)
+    #     test(opt.cfg,
+    #          opt.data,
+    #          opt.weights,
+    #          opt.batch_size,
+    #          opt.img_size,
+    #          opt.conf_thres,
+    #          opt.iou_thres,
+    #          opt.save_json, opt=opt)
 
     '''
     test for xview_px6whr4_ng0_* with model
     '''
-    # import train_syn_xview_background_seeds_loop_1cls as tsl
-    # # comments = ['px6whr4_ng0']
-    # # comments = ['px20whr4']
-    # comments = ['px23whr4']
-    # # comments = ['px23whr3']
+    # # # comments = ['px6whr4_ng0']
+    # # # comments = ['px20whr4']
+    # # comments = ['px23whr4']
+    # # base_cmt = 'px23whr4_seed{}'
+    # comments = ['px23whr3']
+    # base_cmt = 'px23whr3_seed{}'
+    # hyp_cmt = 'hgiou1_fitness'
+    # # hyp_cmt = 'hgiou1'
     # sd=17
     # #5  all   94       219    0.0699     0.466     0.175     0.122
     # for cmt in comments:
-    #     opt = tsl.get_opt(sd, cmt, False)
-    #     opt.result_dir = opt.result_dir.format(opt.class_num, opt.cmt, opt.seed, 'test_on_original_model_hgiou1_seed{}'.format(sd))
+    #     opt = get_opt(comments=cmt)
+    #     opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_with_model_{}_seed{}'.format(hyp_cmt, sd))
     #     if not os.path.exists(opt.result_dir):
     #         os.mkdir(opt.result_dir)
-    #     print(opt.weights_dir.format(opt.class_num, cmt, sd,  '*_hgiou1_seed{}'.format(sd)))
-    #     opt.weights = glob.glob(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd,  '*_hgiou1_seed{}'.format(sd)), 'best_{}_seed{}.pt'.format(cmt, sd)))[-1]
-    #     # opt.weights = glob.glob(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd,  '*_hgiou1_seed{}'.format(sd)), 'backup200.pt'.format(cmt, sd)))[-1]
-    #     # opt.data = 'data_xview/{}_cls/{}_seed{}/xview_{}_seed{}.data'.format(opt.class_num, cmt, sd, cmt, sd)
+    #     print(opt.weights_dir.format(opt.class_num, cmt, sd,  '*_{}_seed{}'.format(hyp_cmt, sd)))
+    #     opt.weights = glob.glob(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd),  '*_{}_seed{}'.format(hyp_cmt, sd), 'best_{}_seed{}.pt'.format(cmt, sd)))[-1]
+    #     print(opt.weights)
+    #
     #     opt.data = 'data_xview/{}_cls/{}_seed{}/xview_{}_seed{}_with_model.data'.format(opt.class_num, cmt, sd, cmt, sd)
     #     print(opt.data)
-    #     opt.name = 'seed{}_on_original_model'.format(opt.seed)
-    #     opt.task = 'test'
-    #     opt.save_json = True
+    #     opt.name = 'seed{}_on_xview_with_model'.format(sd)
+    #     opt.base_dir = opt.base_dir.format(opt.class_num, base_cmt.format(sd))
     #     test(opt.cfg,
     #          opt.data,
     #          opt.weights,

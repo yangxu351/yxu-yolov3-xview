@@ -191,10 +191,9 @@ if __name__ == '__main__':
     # seedians = [0, 1, 2, 3, 4, 5, 6, 7]
     # cmt = 'small_models'
     # # # cmt = 'small_fw_models'
-    # # cmt = '6groups_models'
-    # # display_types = ['color', 'mixed']
-    # # seedians = [0, 1, 2, 3, 4]
-    # # cmt = '6groups2_models'
+    # cmt = '6groups_models'
+    # display_types = ['color', 'mixed']
+    # seedians = [0, 1, 2, 3, 4]
     # syn_args = get_args(cmt)
     # for dt in display_types:
     #     merge_clean_origin_syn_image_files(seedians, dt)
@@ -217,8 +216,7 @@ if __name__ == '__main__':
     # # cmt = 'small_fw_models'
     # px_thres=23 #20 #30
     # whr_thres=3
-    # # # cmt = '6groups_models'
-    # # cmt = '6groups2_models'
+    # cmt = '6groups_models'
     # display_types = ['color', 'mixed']
     # syn_args = get_args(cmt)
     # for dt in display_types:
@@ -236,16 +234,15 @@ if __name__ == '__main__':
     # # display_types = ['texture', 'color', 'mixed']
     # # cmt = 'certain_models'
     # # cmt = 'scale_models'
-    cmt = 'small_models'
-    # cmt = 'small_fw_models'
-    px_thres=23 #20 #30
-    whr_thres=3
-    # # cmt = '6groups_models'
-    # cmt = '6groups2_models'
-    display_types = ['color', 'mixed']
-    syn_args = get_args(cmt)
-    for dt in display_types:
-        draw_bbx_on_rgb_images(dt, px_thres, whr_thres)
+    # cmt = 'small_models'
+    # # cmt = 'small_fw_models'
+    # px_thres=23 #20 #30
+    # whr_thres=3
+    # cmt = '6groups_models'
+    # display_types = ['color', 'mixed']
+    # syn_args = get_args(cmt)
+    # for dt in display_types:
+    #     draw_bbx_on_rgb_images(dt, px_thres, whr_thres)
 
 # 0 100
 # 1 42

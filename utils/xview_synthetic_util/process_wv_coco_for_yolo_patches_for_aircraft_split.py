@@ -277,7 +277,7 @@ def create_mismatch_syn_labels(mis_ratio, ratio=0.25, trial=3):
 
 def create_xview_syn_data(dt=None, sr=None, comments='',seed=1024):
     syn_args = get_part_syn_args(dt, sr)
-    comments = comments.format(seed)
+
     if sr:
         data_txt = open(os.path.join(syn_args.data_xview_dir, 'xview_{}_{}'.format(dt, sr), 'xview_{}_{}{}.data'.format(dt, sr, comments)), 'w')
         data_txt.write('train=./data_xview/{}_cls/xview_{}_{}/xview_{}_{}_train_img{}.txt\n'.format(syn_args.class_num, dt, sr, dt, sr, comments))
@@ -298,7 +298,7 @@ def create_xview_syn_data(dt=None, sr=None, comments='',seed=1024):
         data_txt.write('valid_label=./data_xview/{}_cls/xviewval_lbl{}.txt\n'.format(syn_args.class_num, comments))
 
     df = pd.read_csv(os.path.join(syn_args.data_xview_dir, comments[1:], 'xviewtrain_img{}.txt'.format(comments)), header=None)
-    data_txt.write('syn_0_xview_number=%s\n' % str(df.shape[0]))
+    data_txt.write('syn_0_xview_number={}\n'.format(df.shape[0]))
     data_txt.write('classes=%s\n' % str(syn_args.class_num))
     data_txt.write('names=./data_xview/{}_cls/xview.names\n'.format(syn_args.class_num))
     data_txt.write('backup=backup/\n')
@@ -486,11 +486,14 @@ if __name__ == "__main__":
     # comments = '_px20whr4_seed{}'
     # seeds = [17, 5, 9]
     # comments = '_px23whr4_seed{}'
+
     # seeds = [17]
-    # comments = '_px23whr3_seed{}'
     # data_name = 'xview'
+    # px_thres= 23
+    # whr_thres = 3
     # for sd in seeds:
-    #     pwv.split_trn_val_with_chips(data_name, comments, sd)
+    #     comments = '_px{}whr{}_seed{}'.format(px_thres, whr_thres, sd)
+    #     pwv.split_trn_val_with_chips(data_name=data_name, comments=comments, seed=sd, px_thres=px_thres, whr_thres=whr_thres)
 
 
     '''
@@ -503,9 +506,22 @@ if __name__ == "__main__":
     # seeds = [17, 5, 9]
     # comments = '_px23whr4_seed{}'
     # seeds = [17]
-    # comments = '_px23whr3_seed{}'
     # for sd in seeds:
+    #     comments = '_px23whr3_seed{}'.format(sd)
     #     create_xview_syn_data(comments=comments, seed=sd)
+
+    '''
+    xview
+    create xview_* .data
+    default split 
+    '''
+    # typestr='val'
+    # px_thres = 23
+    # whr_thres = 3
+    # seed=17
+    # comments = '_px{}whr{}_seed{}'.format(px_thres, whr_thres, seed)
+    # data_name = 'xview'
+    # pwv.create_json_for_train_or_val_according_to_all_json(data_name, comments, seed, px_thres, whr_thres, typestr)
 
     '''
     collect all syn images and txt into one file

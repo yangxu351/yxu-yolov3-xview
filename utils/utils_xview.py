@@ -272,7 +272,7 @@ def clip_coords(boxes, img_shape):
     boxes[:, [1, 3]] = boxes[:, [1, 3]].clamp(min=0, max=img_shape[0])  # clip y
 
 
-def ap_per_class(tp, conf, pred_cls, target_cls):
+def ap_per_class(tp, conf, pred_cls, target_cls, pr_path='', pr_name=''):
     """ Compute the average precision, given the recall and precision curves.
     Source: https://github.com/rafaelpadilla/Object-Detection-Metrics.
     # Arguments
@@ -319,12 +319,18 @@ def ap_per_class(tp, conf, pred_cls, target_cls):
                 ap[ci, j] = compute_ap(recall[:, j], precision[:, j])
 
             # Plot
-            # fig, ax = plt.subplots(1, 1, figsize=(4, 4))
-            # ax.plot(np.concatenate(([0.], recall)), np.concatenate(([0.], precision)))
-            # ax.set_title('YOLOv3-SPP'); ax.set_xlabel('Recall'); ax.set_ylabel('Precision')
-            # ax.set_xlim(0, 1)
-            # fig.tight_layout()
-            # fig.savefig('PR_curve.png', dpi=300)
+            if pr_path:
+                fig, ax = plt.subplots(1, 1, figsize=(10, 8))
+                # print('r', recall.shape) #  , np.concatenate(([0.], recall).shape)
+                # print('p', precision.shape) # , np.concatenate(([0.], precision).shape)
+                # ax.plot(np.concatenate(([0.], recall)), np.concatenate(([0.], precision)))
+                ax.plot([0.]+ recall, [0.] + precision, label=pr_name)
+                ax.legend()
+                ax.set_title('YOLOv3-SPP'); ax.set_xlabel('Recall'); ax.set_ylabel('Precision')
+                ax.set_xlim(0, 1)
+                ax.grid()
+                # fig.tight_layout()
+                fig.savefig(os.path.join(pr_path, pr_name + '_PR_curve.png'), dpi=300)
 
     # Compute F1 score (harmonic mean of precision and recall)
     f1 = 2 * p * r / (p + r + 1e-16)
@@ -999,11 +1005,15 @@ def apply_classifier(x, model, img, im0):
 
     return x
 
+#fixme --yang.xu
+# def fitness(x):
+#     # Returns fitness (for use with results.txt or evolve.txt)
+#     return x[:, 2] * 0.3 + x[:, 3] * 0.7  # weighted combination of x=[p, r, mAP@0.5, F1 or mAP@0.5:0.95]
 
 def fitness(x):
     # Returns fitness (for use with results.txt or evolve.txt)
-    return x[:, 2] * 0.3 + x[:, 3] * 0.7  # weighted combination of x=[p, r, mAP@0.5, F1 or mAP@0.5:0.95]
-
+    w = [0.0, 0.01, 0.99, 0.00]  # weights for [P, R, mAP, F1]@0.5 or [P, R, mAP@0.5, mAP@0.5:0.95]
+    return (x[:, :4] * w).sum(1)
 
 # Plotting functions ---------------------------------------------------------------------------------------------------
 def plot_one_box(x, img, color=None, label=None, line_thickness=None):
@@ -1149,9 +1159,10 @@ def plot_results_overlay(start=0, stop=0):  # from utils.utils import *; plot_re
         fig.savefig(f.replace('.txt', '.png'), dpi=200)
 
 
-def plot_results(start=0, stop=0, bucket='', id=(), class_num=1, result_dir=None, png_name='result.png'):  # from utils.utils import *; plot_results()
+def plot_results(start=0, stop=0, bucket='', id=(), class_num=1, result_dir=None, png_name='result.png', title=''):
+    # from utils.utils import *; plot_results()
     # Plot training results files 'results*.txt'
-    fig, ax = plt.subplots(2, 5, figsize=(14, 7))
+    fig, ax = plt.subplots(2, 5, figsize=(14, 7), constrained_layout=True)
     ax = ax.ravel()
     s = ['GIoU', 'Objectness', 'Classification', 'Precision', 'Recall',
          'val GIoU', 'val Objectness', 'val Classification', 'mAP@0.5', 'F1']
@@ -1176,8 +1187,7 @@ def plot_results(start=0, stop=0, bucket='', id=(), class_num=1, result_dir=None
             if i in [5, 6, 7]:  # share train and val loss y axes
                 ax[i].get_shared_y_axes().join(ax[i], ax[i - 5])
 
-    fig.tight_layout()
-    # ax[1].legend()
+    fig.suptitle(title)
     fig.savefig(result_dir + png_name, dpi=200)
 
 

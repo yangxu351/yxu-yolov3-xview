@@ -153,8 +153,8 @@ def train(opt):
     cutoff = -1  # backbone reaches to cutoff layer
     start_epoch = 0
     #fixme
-    best_fitness = float('inf')
-    # best_fitness = 0.0
+    # best_fitness = float('inf')
+    best_fitness = 0.0
     # attempt_download(weights)
     if weights.endswith('.pt'):  # pytorch format
         # possible weights are '*.pt', 'yolov3-spp.pt', 'yolov3-tiny.pt' etc.
@@ -399,9 +399,12 @@ def train(opt):
             for x, tag in zip(list(mloss[:-1]) + list(results), tags):
                 tb_writer.add_scalar(tag, x, epoch)
         # Update best mAP
-        #fixme--yang.xu # chang initialization of fi
-        fi = sum(results[4:])  # total loss
-        if fi < best_fitness:
+        #fixme--yang.xu
+        # fi = sum(results[4:])  # total loss
+        # if fi < best_fitness:
+        #     best_fitness = fi
+        fi = fitness(np.array(results).reshape(1, -1))  # fitness_i = weighted combination of [P, R, mAP, F1]
+        if fi > best_fitness:
             best_fitness = fi
 
         # Save training results
@@ -496,7 +499,8 @@ def get_opt(seed=1024, cmt='', hyp_cmt = 'hgiou1', Train=True, sr=None):
         # opt.weights_dir = opt.weights_dir.format(opt.class_num, opt.cmt, '{}_hgiou1_seed{}_'.format(time_marker, opt.seed))
         # opt.writer_dir = opt.writer_dir.format(opt.class_num, opt.cmt, '{}_hgiou1_seed{}'.format(time_marker, opt.seed))
         if sr is None:
-            opt.data = 'data_xview/{}_{}_cls/{}_seed{}/{}_seed{}.data'.format(cmt, opt.class_num, cmt, seed, cmt, seed)
+            # opt.data = 'data_xview/{}_{}_cls/{}_seed{}/{}_seed{}.data'.format(cmt, opt.class_num, cmt, seed, cmt, seed)
+            opt.data = 'data_xview/{}_{}_cls/{}_seed{}/{}_seed{}_xview_val.data'.format(cmt, opt.class_num, cmt, seed, cmt, seed)
             opt.weights_dir = opt.weights_dir.format(opt.class_num, cmt, seed, '{}_{}_seed{}'.format(time_marker, hyp_cmt, seed))
             opt.writer_dir = opt.writer_dir.format(opt.class_num, cmt, seed, '{}_{}_seed{}'.format(time_marker, hyp_cmt, seed))
             opt.result_dir = opt.result_dir.format(opt.class_num, cmt, seed, '{}_{}_seed{}'.format(time_marker, hyp_cmt, seed))
@@ -534,7 +538,7 @@ def get_opt(seed=1024, cmt='', hyp_cmt = 'hgiou1', Train=True, sr=None):
 if __name__ == '__main__':
     # main()
     # seeds = [17]#, 5, 9, 1024, 3] #   5, 9, 1024,
-    # comments = ['syn_xview_background_texture', 'syn_xview_background_color', 'syn_xview_background_mixed']
+    # comments = ['syn_xview_background_color', 'syn_xview_background_mixed']
     # comments = ['xview_syn_xview_bkg_texture', 'xview_syn_xview_bkg_color', 'xview_syn_xview_bkg_mixed']
     # syn_ratios = [1, 2]
     # comments = ['px6whr4_ng0']
@@ -561,19 +565,22 @@ if __name__ == '__main__':
     # syn_ratios = [None]
     # comments = ['px23whr3']
     # syn_ratios = [0]
-    # comments = ['xview_syn_xview_bkg_px23whr3_6groups_models_color', 'xview_syn_xview_bkg_px23whr3_6groups_models_mixed', 'px23whr3']
-    # syn_ratios = [1,1, 0]
+    # comments = ['px23whr3']
+    # syn_ratios = [0]
+    # comments = ['syn_xview_bkg_px23whr3_small_models_color', 'syn_xview_bkg_px23whr3_small_models_mixed']
+    # syn_ratios = [None]
     # comments = ['xview_syn_xview_bkg_px23whr3_small_models_color', 'xview_syn_xview_bkg_px23whr3_small_models_mixed']
     # syn_ratios = [1]
+    comments = ['syn_xview_bkg_px23whr3_6groups_models_color', 'syn_xview_bkg_px23whr3_6groups_models_mixed'] #
+    syn_ratios = [None, None]
     # comments = ['xview_syn_xview_bkg_px23whr3_small_models_color', 'xview_syn_xview_bkg_px23whr3_small_models_mixed', 'px23whr3']
+    # comments = ['xview_syn_xview_bkg_px23whr3_6groups_models_color','xview_syn_xview_bkg_px23whr3_6groups_models_mixed',  1,]
     # syn_ratios = [ 1, 1, 0]
-    comments = ['px23whr3']
-    sr = 0
+    # comments = ['px23whr3']
+    # sr = 0
     pxwhrsd = 'px23whr3_seed{}'
-    hyp_cmt = 'hgiou1_fitness'
-    # comments = ['px23whr4']
-    # syn_ratios = [0]
     # pxwhrsd = 'px23whr4_seed{}'
+    hyp_cmt = 'hgiou1_fitness'
     # hyp_cmt = 'hgiou1'
     seeds = [17] # 5,
     for sd in seeds:

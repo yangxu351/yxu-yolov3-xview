@@ -15,61 +15,60 @@ import warnings
 
 warnings.filterwarnings("ignore")
 
-#fixme --yang.xu Apr 23 2020
 # Hyperparameters https://github.com/ultralytics/yolov3/issues/310
-# hyp = {'giou': 1.0,  # giou loss gain  3.54
-#        'cls': 37.4,  # cls loss gain
-#        'cls_pw': 1.0,  # cls BCELoss positive_weight
-#        'obj': 64.3,  # obj loss gain (*=img_size/320 if img_size != 320)
-#        'obj_pw': 1.0,  # obj BCELoss positive_weight
-#        'iou_t': 0.20,  # iou training threshold
-#        'lr0': 0.01,  # initial learning rate (SGD=5E-3, Adam=5E-4)
-#        'lrf': 0.0005,  # final learning rate (with cos scheduler)
-#        'momentum': 0.937,  # SGD momentum
-#        'weight_decay': 0.000484,  # optimizer weight decay
-#        'fl_gamma': 0.0,  # focal loss gamma (efficientDet default is gamma=1.5)
-#        'hsv_h': 0.0138,  # image HSV-Hue augmentation (fraction)
-#        'hsv_s': 0.678,  # image HSV-Saturation augmentation (fraction)
-#        'hsv_v': 0.36,  # image HSV-Value augmentation (fraction)
-#        'degrees': 1.98 * 0,  # image rotation (+/- deg)
-#        'translate': 0.05 * 0,  # image translation (+/- fraction)
-#        'scale': 0.05 * 0,  # image scale (+/- gain)
-#        'shear': 0.641 * 0}  # image shear (+/- deg)
+hyp = {'giou': 1.0,  # giou loss gain  3.54
+       'cls': 37.4,  # cls loss gain
+       'cls_pw': 1.0,  # cls BCELoss positive_weight
+       'obj': 64.3,  # obj loss gain (*=img_size/320 if img_size != 320)
+       'obj_pw': 1.0,  # obj BCELoss positive_weight
+       'iou_t': 0.20,  # iou training threshold
+       'lr0': 0.01,  # initial learning rate (SGD=5E-3, Adam=5E-4)
+       'lrf': 0.0005,  # final learning rate (with cos scheduler)
+       'momentum': 0.937,  # SGD momentum
+       'weight_decay': 0.000484,  # optimizer weight decay
+       'fl_gamma': 0.0,  # focal loss gamma (efficientDet default is gamma=1.5)
+       'hsv_h': 0.0138,  # image HSV-Hue augmentation (fraction)
+       'hsv_s': 0.678,  # image HSV-Saturation augmentation (fraction)
+       'hsv_v': 0.36,  # image HSV-Value augmentation (fraction)
+       'degrees': 1.98 * 0,  # image rotation (+/- deg)
+       'translate': 0.05 * 0,  # image translation (+/- fraction)
+       'scale': 0.05 * 0,  # image scale (+/- gain)
+       'shear': 0.641 * 0}  # image shear (+/- deg)
 
 # Overwrite hyp with hyp*.txt (optional)
-# f = glob.glob('hyp*.txt')
-# if f:
-#     print('Using %s' % f[0])
-#     for k, v in zip(hyp.keys(), np.loadtxt(f[0])):
-#         hyp[k] = v
-#
-# # Print focal loss if gamma > 0
-# if hyp['fl_gamma']:
-#     print('Using FocalLoss(gamma=%g)' % hyp['fl_gamma'])
+f = glob.glob('hyp*.txt')
+if f:
+    print('Using %s' % f[0])
+    for k, v in zip(hyp.keys(), np.loadtxt(f[0])):
+        hyp[k] = v
+
+# Print focal loss if gamma > 0
+if hyp['fl_gamma']:
+    print('Using FocalLoss(gamma=%g)' % hyp['fl_gamma'])
 
 # GPU="0, 1"
 # os.environ["CUDA_VISIBLE_DEVICES"] = GPU
 # Hyperparameters (results68: 59.2 mAP@0.5 yolov3-spp-416) https://github.com/ultralytics/yolov3/issues/310
 
 #fixme before git pull at April 23
-hyp = {'giou': 1.0,  # giou loss gain
-       'cls': 37.4,  # cls loss gain
-       'cls_pw': 1.0,  # cls BCELoss positive_weight
-       'obj': 49.5,  # obj loss gain (*=img_size/320 if img_size != 320)
-       'obj_pw': 1.0,  # obj BCELoss positive_weight
-       'iou_t': 0.225,  # iou training threshold
-       'lr0': 0.00579,  # initial learning rate (SGD=1E-3, Adam=9E-5)
-       'lrf': -4.,  # final LambdaLR learning rate = lr0 * (10 ** lrf)
-       'momentum': 0.937,  # SGD momentum
-       'weight_decay': 0.000484,  # optimizer weight decay
-       'fl_gamma': 0.5,  # focal loss gamma
-       'hsv_h': 0.0138,  # image HSV-Hue augmentation (fraction)
-       'hsv_s': 0.678,  # image HSV-Saturation augmentation (fraction)
-       'hsv_v': 0.36,  # image HSV-Value augmentation (fraction)
-       'degrees': 1.98,  # image rotation (+/- deg)
-       'translate': 0.05,  # image translation (+/- fraction)
-       'scale': 0.05,  # image scale (+/- gain)
-       'shear': 0.641}  # image shear (+/- deg)
+# hyp = {'giou': 1.0,  # giou loss gain
+#        'cls': 37.4,  # cls loss gain
+#        'cls_pw': 1.0,  # cls BCELoss positive_weight
+#        'obj': 49.5,  # obj loss gain (*=img_size/320 if img_size != 320)
+#        'obj_pw': 1.0,  # obj BCELoss positive_weight
+#        'iou_t': 0.225,  # iou training threshold
+#        'lr0': 0.00579,  # initial learning rate (SGD=1E-3, Adam=9E-5)
+#        'lrf': -4.,  # final LambdaLR learning rate = lr0 * (10 ** lrf)
+#        'momentum': 0.937,  # SGD momentum
+#        'weight_decay': 0.000484,  # optimizer weight decay
+#        'fl_gamma': 0.5,  # focal loss gamma
+#        'hsv_h': 0.0138,  # image HSV-Hue augmentation (fraction)
+#        'hsv_s': 0.678,  # image HSV-Saturation augmentation (fraction)
+#        'hsv_v': 0.36,  # image HSV-Value augmentation (fraction)
+#        'degrees': 1.98,  # image rotation (+/- deg)
+#        'translate': 0.05,  # image translation (+/- fraction)
+#        'scale': 0.05,  # image scale (+/- gain)
+#        'shear': 0.641}  # image shear (+/- deg)
 
 def infi_loop(dl):
     while True:
@@ -84,7 +83,6 @@ def train(opt):
     epochs = 1 if opt.prebias else opt.epochs  # 500200 batches at bs 64, 117263 images = 273 epochs
     batch_size = opt.batch_size
     accumulate = opt.accumulate  # effective bs = batch_size * accumulate = 16 * 4 = 64
-    # accumulate = max(round(64 / batch_size), 1)
     weights = opt.weights  # initial training weights
 
     mixed_precision = True
@@ -108,7 +106,7 @@ def train(opt):
     # Initialize
     #fixme
     # init_seeds(opt.seed)
-    init_seeds()
+    init_seeds(0)
     if opt.multi_scale:
         img_sz_min = round(img_size / 32 / 1.5)
         img_sz_max = round(img_size / 32 * 1.5)
@@ -152,9 +150,7 @@ def train(opt):
 
     cutoff = -1  # backbone reaches to cutoff layer
     start_epoch = 0
-    #fixme
     best_fitness = float('inf')
-    # best_fitness = 0.0
     # attempt_download(weights)
     if weights.endswith('.pt'):  # pytorch format
         # possible weights are '*.pt', 'yolov3-spp.pt', 'yolov3-tiny.pt' etc.
@@ -256,20 +252,10 @@ def train(opt):
     model.hyp = hyp  # attach hyperparameters to model
     model.class_weights = labels_to_class_weights(dataset.labels, nc).to(device)  # attach class weights
     maps = np.zeros(nc)  # mAP per class
-
-    #fixme --yang.xu
-    model.gr = 1.0  # giou loss ratio (obj_loss = 1.0 or giou)
-    #fixme --yang.xu
-    # Model EMA
-    # ema = torch_utils.ModelEMA(model)
-
     # torch.autograd.set_detect_anomaly(True)
     results = (0, 0, 0, 0, 0, 0, 0)  # 'P', 'R', 'mAP', 'F1', 'val GIoU', 'val Objectness', 'val Classification'
     t0 = time.time()
-    #fixme --yang.xu
-    # torch_utils.model_info(model, report='summary')  # 'full' or 'summary'
-    torch_utils.model_info(model)
-
+    torch_utils.model_info(model, report='summary')  # 'full' or 'summary'
     print('Using %g dataloader workers' % nw)
     print('Starting %s for %g epochs...' % ('prebias' if opt.prebias else 'training', epochs))
     for epoch in range(start_epoch, epochs):  # epoch ------------------------------------------------------------------
@@ -333,8 +319,6 @@ def train(opt):
             if ni % accumulate == 0:
                 optimizer.step()
                 optimizer.zero_grad()
-                #fixme
-                # ema.update(model)
 
             # Print batch results
             mloss = (mloss * i + loss_items) / (i + 1)  # update mean losses
@@ -352,8 +336,7 @@ def train(opt):
         if tb_writer:
             tb_writer.add_scalar('lr', np.array(scheduler.get_lr())[0], epoch)
 
-        #fixme ---yang.xu
-        # ema.update_attr(model)
+
         # Process epoch results
         final_epoch = epoch + 1 == epochs
         if opt.prebias:
@@ -371,11 +354,10 @@ def train(opt):
                                       data,
                                       batch_size=batch_size * 2,
                                       img_size=opt.img_size,
-                                      conf_thres= 0.1, # 0.001 if final_epoch else 0.1,  # 0.1 for speed
-                                      iou_thres=0.5, # 0.6 if final_epoch and is_xview else 0.5,
+                                      conf_thres=0.001 if final_epoch else 0.1,  # 0.1 for speed
+                                      iou_thres=0.6 if final_epoch and is_xview else 0.5,
                                       save_json=True,  # final_epoch and is_xview, #fixme
-                                      model=model,#fixme
-                                      # model=ema.ema,
+                                      model=model,
                                       dataloader=testloader, opt=opt)
 
         # Write epoch results
@@ -385,24 +367,17 @@ def train(opt):
             os.system('gsutil cp results.txt gs://%s/results%s.txt' % (opt.bucket, opt.name))
 
         # Write Tensorboard results
-        #fixme --yang.xu
-        # if tb_writer:
-        #     x = list(mloss) + list(results)
-        #     titles = ['GIoU', 'Objectness', 'Classification', 'Train loss',
-        #               'Precision', 'Recall', 'mAP', 'F1', 'val GIoU', 'val Objectness', 'val Classification']
-        #     for xi, title in zip(x, titles):
-        #         tb_writer.add_scalar(title, xi, epoch)
         if tb_writer:
-            tags = ['train/giou_loss', 'train/obj_loss', 'train/cls_loss',
-                    'metrics/precision', 'metrics/recall', 'metrics/mAP_0.5', 'metrics/F1',
-                    'val/giou_loss', 'val/obj_loss', 'val/cls_loss']
-            for x, tag in zip(list(mloss[:-1]) + list(results), tags):
-                tb_writer.add_scalar(tag, x, epoch)
+            x = list(mloss) + list(results)
+            titles = ['GIoU', 'Objectness', 'Classification', 'Train loss',
+                      'Precision', 'Recall', 'mAP', 'F1', 'val GIoU', 'val Objectness', 'val Classification']
+            for xi, title in zip(x, titles):
+                tb_writer.add_scalar(title, xi, epoch)
+
         # Update best mAP
-        #fixme--yang.xu # chang initialization of fi
-        fi = sum(results[4:])  # total loss
-        if fi < best_fitness:
-            best_fitness = fi
+        fitness = sum(results[4:])  # total loss
+        if fitness < best_fitness:
+            best_fitness = fitness
 
         # Save training results
         save = (not opt.nosave) or (final_epoch and not opt.evolve) or opt.prebias
@@ -412,17 +387,15 @@ def train(opt):
                 chkpt = {'epoch': epoch,
                          'best_fitness': best_fitness,
                          'training_results': f.read(),
-                         #fixme --yang.xu
                          'model': model.module.state_dict() if type(
                              model) is nn.parallel.DistributedDataParallel else model.state_dict(),
-                         # 'model': ema.ema.module.state_dict() if hasattr(model, 'module') else ema.ema.state_dict(),
                          'optimizer': None if final_epoch else optimizer.state_dict()}
 
             # Save last checkpoint
             torch.save(chkpt, last)
 
             # Save best checkpoint
-            if best_fitness == fi and not final_epoch:
+            if best_fitness == fitness:
                 torch.save(chkpt, best)
 
             # Save backup every 10 epochs (optional)
@@ -438,7 +411,7 @@ def train(opt):
 
     # png_name = 'results_{}_{}.png'.format(opt.syn_display_type, opt.syn_ratio)
     png_name = 'results_{}.png'.format(opt.name)
-    plot_results(result_dir=opt.result_dir, png_name=png_name, class_num=opt.class_num, title=opt.name)  # save as results.png
+    plot_results(result_dir=opt.result_dir, png_name=png_name, class_num=opt.class_num)  # save as results.png
     print('%g epochs completed in %.3f hours.\n' % (epoch - start_epoch + 1, (time.time() - t0) / 3600))
     dist.destroy_process_group() if torch.cuda.device_count() > 1 else None
     torch.cuda.empty_cache()
@@ -446,7 +419,7 @@ def train(opt):
     return results
 
 
-def get_opt(seed=1024, cmt='', hyp_cmt = 'hgiou1', Train=True, sr=None):
+def get_opt(seed=1024, cmt='', Train=True, sr=None):
     parser = argparse.ArgumentParser()
     parser.add_argument('--seed', type=int, default=seed, help='seed')
     parser.add_argument('--cmt', type=str, default=cmt,
@@ -462,14 +435,12 @@ def get_opt(seed=1024, cmt='', hyp_cmt = 'hgiou1', Train=True, sr=None):
     parser.add_argument('--writer_dir', type=str, default='writer_output/{}_cls/{}_seed{}/{}/', help='*events* path')
     parser.add_argument('--weights_dir', type=str, default='weights/{}_cls/{}_seed{}/{}/', help='to save weights path')
     parser.add_argument('--result_dir', type=str, default='result_output/{}_cls/{}_seed{}/{}/', help='to save result files path')
-    parser.add_argument('--base_dir', type=str, default='data_xview/{}_cls/{}/', help='without syn data path')
 
     parser.add_argument('--multi_scale', action='store_true', help='adjust (67% - 150%) img_size every 10 batches')
     parser.add_argument('--img_size', type=int, default=608, help='inference size (pixels)')  # 416 608
     parser.add_argument('--class_num', type=int, default=1, help='class number')  # 60 6 1
-    parser.add_argument('--single-cls', action='store_true', default='True', help='train as single-class dataset')
 
-    parser.add_argument('--conf-thres', type=float, default=0.001, help='0.001 object confidence threshold')
+    parser.add_argument('--conf-thres', type=float, default=0.001, help='object confidence threshold')
     parser.add_argument('--iou-thres', type=float, default=0.5, help='IOU threshold for NMS')
     parser.add_argument('--save_json', action='store_true', help='save a cocoapi-compatible JSON results file')
     parser.add_argument('--task', default='', help="'test', 'study', 'benchmark'")
@@ -485,7 +456,7 @@ def get_opt(seed=1024, cmt='', hyp_cmt = 'hgiou1', Train=True, sr=None):
     parser.add_argument('--arc', type=str, default='default', help='yolo architecture')  # defaultpw, uCE, uBCE
     parser.add_argument('--prebias', action='store_true', help='pretrain model biases')
     parser.add_argument('--name', default='', help='renames results.txt to results_name.txt if supplied')
-    parser.add_argument('--device', default='0, 1', help='device id (i.e. 0 or 0,1 or cpu)')
+    parser.add_argument('--device', default='0', help='device id (i.e. 0 or 0,1 or cpu)')
     parser.add_argument('--adam', action='store_true', help='use adam optimizer')
     parser.add_argument('--var', type=float, help='debug variable')
     opt = parser.parse_args()
@@ -496,25 +467,23 @@ def get_opt(seed=1024, cmt='', hyp_cmt = 'hgiou1', Train=True, sr=None):
         # opt.weights_dir = opt.weights_dir.format(opt.class_num, opt.cmt, '{}_hgiou1_seed{}_'.format(time_marker, opt.seed))
         # opt.writer_dir = opt.writer_dir.format(opt.class_num, opt.cmt, '{}_hgiou1_seed{}'.format(time_marker, opt.seed))
         if sr is None:
-            opt.data = 'data_xview/{}_{}_cls/{}_seed{}/{}_seed{}.data'.format(cmt, opt.class_num, cmt, seed, cmt, seed)
-            opt.weights_dir = opt.weights_dir.format(opt.class_num, cmt, seed, '{}_{}_seed{}'.format(time_marker, hyp_cmt, seed))
-            opt.writer_dir = opt.writer_dir.format(opt.class_num, cmt, seed, '{}_{}_seed{}'.format(time_marker, hyp_cmt, seed))
-            opt.result_dir = opt.result_dir.format(opt.class_num, cmt, seed, '{}_{}_seed{}'.format(time_marker, hyp_cmt, seed))
-            opt.name = '{}_seed{}'.format(cmt, seed)
+            opt.data = 'data_xview/{}_{}_cls/{}_seed{}/{}_seed{}.data'.format(opt.cmt, opt.class_num, opt.cmt, opt.seed, opt.cmt, opt.seed)
+            opt.weights_dir = opt.weights_dir.format(opt.class_num, opt.cmt, opt.seed, '{}_hgiou1_seed{}'.format(time_marker, opt.seed))
+            opt.writer_dir = opt.writer_dir.format(opt.class_num, opt.cmt, opt.seed, '{}_hgiou1_seed{}'.format(time_marker, opt.seed))
+            opt.result_dir = opt.result_dir.format(opt.class_num, opt.cmt, opt.seed, '{}_hgiou1_seed{}'.format(time_marker, opt.seed))
+            opt.name = '{}_seed{}'.format(opt.cmt, opt.seed)
         elif sr == 0:
-            opt.data = 'data_xview/{}_cls/{}_seed{}/xview_{}_seed{}.data'.format(opt.class_num, cmt, seed, cmt, seed)
-            # time_marker = '2020-04-28_14.21'
-            opt.weights_dir = opt.weights_dir.format(opt.class_num, cmt, seed, '{}_{}_seed{}'.format(time_marker, hyp_cmt, seed))
-            opt.writer_dir = opt.writer_dir.format(opt.class_num, cmt, seed, '{}_{}_seed{}'.format(time_marker, hyp_cmt, seed))
-            opt.result_dir = opt.result_dir.format(opt.class_num, cmt, seed, '{}_{}_seed{}'.format(time_marker, hyp_cmt, seed))
-            opt.name = '{}_seed{}'.format(cmt, seed)
+            opt.data = 'data_xview/{}_cls/{}_seed{}/xview_{}_seed{}.data'.format(opt.class_num, opt.cmt, opt.seed, opt.cmt, opt.seed)
+            opt.weights_dir = opt.weights_dir.format(opt.class_num, opt.cmt, opt.seed, '{}_hgiou1_seed{}'.format(time_marker, opt.seed))
+            opt.writer_dir = opt.writer_dir.format(opt.class_num, opt.cmt, opt.seed, '{}_hgiou1_seed{}'.format(time_marker, opt.seed))
+            opt.result_dir = opt.result_dir.format(opt.class_num, opt.cmt, opt.seed, '{}_hgiou1_seed{}'.format(time_marker, opt.seed))
+            opt.name = '{}_seed{}'.format(opt.cmt, opt.seed)
         else:
-            opt.data = 'data_xview/{}_cls/{}_seed{}/{}_seed{}_{}xSyn.data'.format(opt.class_num, cmt, seed, cmt, seed, sr)
-            # time_marker = '2020-04-24_02.03'
-            opt.weights_dir = opt.weights_dir.format(opt.class_num, cmt, seed, '{}_{}_seed{}_{}xSyn'.format(time_marker, hyp_cmt, seed, sr))
-            opt.writer_dir = opt.writer_dir.format(opt.class_num, cmt, seed, '{}_{}_seed{}_{}xSyn'.format(time_marker, hyp_cmt, seed, sr))
-            opt.result_dir = opt.result_dir.format(opt.class_num, cmt, seed, '{}_{}_seed{}_{}xSyn'.format(time_marker, hyp_cmt, seed, sr))
-            opt.name = '{}_seed{}_{}xSyn'.format(cmt, seed, sr)
+            opt.data = 'data_xview/{}_cls/{}_seed{}/{}_seed{}_{}xSyn.data'.format(opt.class_num, opt.cmt, opt.seed, opt.cmt, opt.seed, opt.syn_ratio)
+            opt.weights_dir = opt.weights_dir.format(opt.class_num, opt.cmt, opt.seed, '{}_hgiou1_seed{}_{}xSyn'.format(time_marker, opt.seed, opt.syn_ratio))
+            opt.writer_dir = opt.writer_dir.format(opt.class_num, opt.cmt, opt.seed, '{}_hgiou1_seed{}_{}xSyn'.format(time_marker, opt.seed, opt.syn_ratio))
+            opt.result_dir = opt.result_dir.format(opt.class_num, opt.cmt, opt.seed, '{}_hgiou1_seed{}_{}xSyn'.format(time_marker, opt.seed, opt.syn_ratio))
+            opt.name = '{}_seed{}_{}xSyn'.format(opt.cmt, opt.seed, opt.syn_ratio)
 
         if not os.path.exists(opt.weights_dir):
             os.makedirs(opt.weights_dir)
@@ -561,89 +530,79 @@ if __name__ == '__main__':
     # syn_ratios = [None]
     # comments = ['px23whr3']
     # syn_ratios = [0]
-    # comments = ['xview_syn_xview_bkg_px23whr3_6groups_models_color', 'xview_syn_xview_bkg_px23whr3_6groups_models_mixed', 'px23whr3']
-    # syn_ratios = [1,1, 0]
-    # comments = ['xview_syn_xview_bkg_px23whr3_small_models_color', 'xview_syn_xview_bkg_px23whr3_small_models_mixed']
+    # comments = ['xview_syn_xview_bkg_px23whr3_6groups_models_color', 'xview_syn_xview_bkg_px23whr3_6groups_models_mixed']
     # syn_ratios = [1]
-    # comments = ['xview_syn_xview_bkg_px23whr3_small_models_color', 'xview_syn_xview_bkg_px23whr3_small_models_mixed', 'px23whr3']
-    # syn_ratios = [ 1, 1, 0]
-    comments = ['px23whr3']
-    sr = 0
-    pxwhrsd = 'px23whr3_seed{}'
-    hyp_cmt = 'hgiou1_fitness'
-    # comments = ['px23whr4']
-    # syn_ratios = [0]
-    # pxwhrsd = 'px23whr4_seed{}'
-    # hyp_cmt = 'hgiou1'
+    # comments = ['xview_syn_xview_bkg_px23whr3_6groups2_models_color', 'xview_syn_xview_bkg_px23whr3_6groups2_models_mixed']
+    # syn_ratios = [1]
+    comments = ['xview_syn_xview_bkg_px23whr3_small_models_color', 'xview_syn_xview_bkg_px23whr3_small_models_mixed']
+    syn_ratios = [1]
     seeds = [17] # 5,
     for sd in seeds:
-        for cx, cmt in enumerate(comments):
-            # for sr in syn_ratios:
-            sr = syn_ratios[cx]
-            # sr = 1
-            opt = get_opt(sd, cmt, hyp_cmt=hyp_cmt, sr=sr)
-            opt.base_dir = opt.base_dir.format(opt.class_num, pxwhrsd.format(sd))
-            # opt.resume = True
-            if sr == 0 or sr is None:
-                results_file = os.path.join(opt.result_dir, 'results_{}_seed{}.txt'.format(opt.cmt, opt.seed))
-                # last = os.path.join(opt.weights_dir, 'backup218.pt')
-                last = os.path.join(opt.weights_dir, 'last_{}_seed{}.pt'.format(opt.cmt, opt.seed))
-                best = os.path.join(opt.weights_dir, 'best_{}_seed{}.pt'.format(opt.cmt, opt.seed))
-            else:
-                results_file = os.path.join(opt.result_dir, 'results_seed{}_{}xSyn.txt'.format(opt.seed, opt.syn_ratio))
-                last = os.path.join(opt.weights_dir, 'last_seed{}_{}xSyn.pt'.format(opt.seed, opt.syn_ratio))
-                best = os.path.join(opt.weights_dir, 'best_seed{}_{}xSyn.pt'.format(opt.seed, opt.syn_ratio))
-            opt.weights = last if opt.resume else opt.weights
-            print(opt)
-            # scale hyp['obj'] by img_size (evolved at 320)
-            # hyp['obj'] *= opt.img_size / 320.
+        for cmt in comments:
+            for sr in syn_ratios:
+                # try:
+                    # if (sd == 3 and cmt == 'syn_xview_background_texture'):
+                    #     continue
+                opt = get_opt(sd, cmt, sr=sr)
+                if sr == 0 or sr is None:
+                    results_file = os.path.join(opt.result_dir, 'results_{}_seed{}.txt'.format(opt.cmt, opt.seed))
+                    last = os.path.join(opt.weights_dir, 'last_{}_seed{}.pt'.format(opt.cmt, opt.seed))
+                    best = os.path.join(opt.weights_dir, 'best_{}_seed{}.pt'.format(opt.cmt, opt.seed))
+                else:
+                    results_file = os.path.join(opt.result_dir, 'results_seed{}_{}xSyn.txt'.format(opt.seed, opt.syn_ratio))
+                    last = os.path.join(opt.weights_dir, 'last_seed{}_{}xSyn.pt'.format(opt.seed, opt.syn_ratio))
+                    best = os.path.join(opt.weights_dir, 'best_seed{}_{}xSyn.pt'.format(opt.seed, opt.syn_ratio))
+                opt.weights = last if opt.resume else opt.weights
+                print(opt)
+                # scale hyp['obj'] by img_size (evolved at 320)
+                # hyp['obj'] *= opt.img_size / 320.
 
-            if not opt.evolve:  # Train normally
-                # prebias()  # optional
-                train(opt)  # train normally
-                # exit(0)
-                # plot_results(result_dir=opt.result_dir, png_name='results_{}_{}.png'.format(opt.syn_display_type, opt.syn_ratio))
-            else:  # Evolve hyperparameters (optional)
-                opt.notest = True  # only test final epoch
-                opt.nosave = True  # only save final checkpoint
-                if opt.bucket:
-                    os.system('gsutil cp gs://%s/evolve.txt .' % opt.bucket)  # download evolve.txt if exists
+                if not opt.evolve:  # Train normally
+                    # prebias()  # optional
+                    train(opt)  # train normally
+                    # exit(0)
+                    # plot_results(result_dir=opt.result_dir, png_name='results_{}_{}.png'.format(opt.syn_display_type, opt.syn_ratio))
+                else:  # Evolve hyperparameters (optional)
+                    opt.notest = True  # only test final epoch
+                    opt.nosave = True  # only save final checkpoint
+                    if opt.bucket:
+                        os.system('gsutil cp gs://%s/evolve.txt .' % opt.bucket)  # download evolve.txt if exists
 
-                for _ in range(1):  # generations to evolve
-                    if os.path.exists('evolve.txt'):  # if evolve.txt exists: select best hyps and mutate
-                        # Select parent(s)
-                        x = np.loadtxt('evolve.txt', ndmin=2)
-                        parent = 'weighted'  # parent selection method: 'single' or 'weighted'
-                        if parent == 'single' or len(x) == 1:
-                            x = x[fitness(x).argmax()]
-                        elif parent == 'weighted':  # weighted combination
-                            n = min(10, x.shape[0])  # number to merge
-                            x = x[np.argsort(-fitness(x))][:n]  # top n mutations
-                            w = fitness(x) - fitness(x).min()  # weights
-                            x = (x[:n] * w.reshape(n, 1)).sum(0) / w.sum()  # new parent
-                        for i, k in enumerate(hyp.keys()):
-                            hyp[k] = x[i + 7]
+                    for _ in range(1):  # generations to evolve
+                        if os.path.exists('evolve.txt'):  # if evolve.txt exists: select best hyps and mutate
+                            # Select parent(s)
+                            x = np.loadtxt('evolve.txt', ndmin=2)
+                            parent = 'weighted'  # parent selection method: 'single' or 'weighted'
+                            if parent == 'single' or len(x) == 1:
+                                x = x[fitness(x).argmax()]
+                            elif parent == 'weighted':  # weighted combination
+                                n = min(10, x.shape[0])  # number to merge
+                                x = x[np.argsort(-fitness(x))][:n]  # top n mutations
+                                w = fitness(x) - fitness(x).min()  # weights
+                                x = (x[:n] * w.reshape(n, 1)).sum(0) / w.sum()  # new parent
+                            for i, k in enumerate(hyp.keys()):
+                                hyp[k] = x[i + 7]
 
-                        # Mutate
-                        np.random.seed(int(time.time()))
-                        s = np.random.random() * 0.15  # sigma
-                        g = [1, 1, 1, 1, 1, 1, 1, 0, .1, 1, 1, 1, 1, 1, 1, 1, 1, 1]  # gains
-                        for i, k in enumerate(hyp.keys()):
-                            x = (np.random.randn() * s * g[i] + 1) ** 2.0  # plt.hist(x.ravel(), 300)
-                            hyp[k] *= float(x)  # vary by sigmas
+                            # Mutate
+                            np.random.seed(int(time.time()))
+                            s = np.random.random() * 0.15  # sigma
+                            g = [1, 1, 1, 1, 1, 1, 1, 0, .1, 1, 1, 1, 1, 1, 1, 1, 1, 1]  # gains
+                            for i, k in enumerate(hyp.keys()):
+                                x = (np.random.randn() * s * g[i] + 1) ** 2.0  # plt.hist(x.ravel(), 300)
+                                hyp[k] *= float(x)  # vary by sigmas
 
-                    # Clip to limits
-                    keys = ['lr0', 'iou_t', 'momentum', 'weight_decay', 'hsv_s', 'hsv_v', 'translate', 'scale', 'fl_gamma']
-                    limits = [(1e-5, 1e-2), (0.00, 0.70), (0.60, 0.98), (0, 0.001), (0, .9), (0, .9), (0, .9), (0, .9), (0, 3)]
-                    for k, v in zip(keys, limits):
-                        hyp[k] = np.clip(hyp[k], v[0], v[1])
+                        # Clip to limits
+                        keys = ['lr0', 'iou_t', 'momentum', 'weight_decay', 'hsv_s', 'hsv_v', 'translate', 'scale', 'fl_gamma']
+                        limits = [(1e-5, 1e-2), (0.00, 0.70), (0.60, 0.98), (0, 0.001), (0, .9), (0, .9), (0, .9), (0, .9), (0, 3)]
+                        for k, v in zip(keys, limits):
+                            hyp[k] = np.clip(hyp[k], v[0], v[1])
 
-                    # Train mutation
-                    # prebias()
-                    results = train()
+                        # Train mutation
+                        # prebias()
+                        results = train()
 
-                    # Write mutation results
-                    print_mutation(hyp, results, opt.bucket)
+                        # Write mutation results
+                        print_mutation(hyp, results, opt.bucket)
 
                             # Plot results
                             # plot_evolution_results(hyp)

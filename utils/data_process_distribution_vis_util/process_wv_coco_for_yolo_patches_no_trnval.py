@@ -35,6 +35,7 @@ import cv2
 import seaborn as sn
 import json
 from utils.object_score_util import get_bbox_coords_from_annos_with_object_score as gbc
+import time
 
 """
   A script that processes xView imagery. 
@@ -178,6 +179,24 @@ def shuffle_images_and_boxes_classes(sh_ims, sh_img_names, sh_box, sh_classes_fi
     return out_m, out_n, out_b, out_c, out_i
 
 
+def get_raw_airplane_tifs():
+    tif_names = pd.read_csv('/media/lab/Yang/data/xView/airplane_tif_names.txt', header=None)
+    tif_path = '/media/lab/Yang/data/xView/airplane_tifs/'
+    if not os.path.exists(tif_path):
+        os.mkdir(tif_path)
+    src_path =  '/media/lab/Yang/data/xView/train_images/'
+    for name in tif_names.loc[:, 0].to_list():
+        shutil.copy(os.path.join(src_path, name), tif_path)
+
+
+def remove_bad_image(bad_img_path, src_dir):
+    bad_raw_tif_names = pd.read_csv(bad_img_path, header=None)
+    for name in bad_raw_tif_names.loc[:, 0].to_list():
+        bad_tif = os.path.join(src_dir, name)
+        if os.path.exists(bad_tif):
+            os.remove(bad_tif)
+
+
 def create_chips_and_txt_geojson_2_json(syn=False):
     if syn:
         args = pps.get_syn_args()
@@ -185,10 +204,13 @@ def create_chips_and_txt_geojson_2_json(syn=False):
         args = get_args()
     coords, chips, classes, features_ids = wv.get_labels(args.json_filepath, args.class_num)
     # gs = json.load(open('/media/lab/Yang/data/xView/xView_train.geojson'))
+    print('chips', chips.shape)
+
     res = (args.input_size, args.input_size)
 
-    file_names =glob.glob(args.image_folder + "*.tif")
+    file_names =glob.glob(os.path.join(args.image_folder, "*.tif"))
     file_names.sort()
+    print(len(file_names))
 
     # fixme
     df_img_num_names = pd.DataFrame(columns=['id', 'file_name'])
@@ -201,17 +223,21 @@ def create_chips_and_txt_geojson_2_json(syn=False):
     img_num_list = []
     image_info_list = []
     annotation_list = []
+    if os.path.exists(args.images_save_dir):
+            shutil.rmtree(args.images_save_dir)
+            os.mkdir(args.images_save_dir)
 
     for f_name in tqdm(file_names):
         # Needs to be "X.tif", ie ("5.tif")
         # Be careful!! Depending on OS you may need to change from '/' to '\\'.  Use '/' for UNIX and '\\' for windows
         arr = wv.get_image(f_name)
-        name = f_name.split("/")[-1]
+        name = os.path.basename(f_name)
         '''
-         # drop 1395.tif
+         # drop 1395.tif  airplane_bad_raw_tif_names.txt
         '''
         if name == '1395.tif' or  name == '2524.tif':
             continue
+
         ims, img_names, box, classes_final, box_ids = wv.chip_image(arr, coords[chips == name],
                                                                     classes[chips == name],
                                                                     features_ids[chips == name], res,
@@ -220,13 +246,13 @@ def create_chips_and_txt_geojson_2_json(syn=False):
             continue
 
         ks = [k for k in ims.keys()]
-
+        # print('ks ', len(ks))
         for k in ks:
             file_name = img_names[k]
             image_names_list.append(file_name)
             ana_txt_name = file_name.split(".")[0] + ".txt"
             f_txt = open(os.path.join(txt_norm_dir, ana_txt_name), 'w')
-            img = wv.get_image(args.images_save_dir + file_name)
+            img = wv.get_image(os.path.join(args.images_save_dir, file_name))
             image_info = {
                 "id": _img_num,
                 "file_name": file_name,
@@ -245,12 +271,12 @@ def create_chips_and_txt_geojson_2_json(syn=False):
                 annotation_info = {
                     "id": box_ids[k][d],
                     "image_id": _img_num,
-                    # "image_name": img_name, #fixme: there aren't 'image_name'
+                    # "image_name": img_name, #fixme: there isn't 'image_name'
                     "category_id": np.int(classes_final[k][d]),
                     "iscrowd": 0,
                     "area": (bbx[2] - bbx[0] + 1) * (bbx[3] - bbx[1] + 1),
                     "bbox": [bbx[0], bbx[1], bbx[2] - bbx[0], bbx[3] - bbx[1]],  # (w1, h1, w, h)
-                    "segmentation": [],
+                    # "segmentation": [],
                 }
                 annotation_list.append(annotation_info)
 
@@ -261,17 +287,124 @@ def create_chips_and_txt_geojson_2_json(syn=False):
             img_num_list.append(_img_num)
             _img_num += 1
             f_txt.close()
+    print('_img_num', _img_num)
     df_img_num_names['id'] = img_num_list
     df_img_num_names['file_name'] = image_names_list
     df_img_num_names.to_csv(
-        os.path.join(args.txt_save_dir, 'image_names_{}_{}cls.csv'.format(args.input_size, args.class_num)))
+        os.path.join(args.txt_save_dir, 'xview_all_image_names_ids_{}_{}cls.csv'.format(args.input_size, args.class_num)),
+        index=False)
 
-    trn_instance = {'info': 'xView aiplanes chips 608 yx185 created', 'license': ['license'], 'images': image_info_list,
+    trn_instance = {'info': 'xView aiplanes chips 608 yx185 created {}'.format(time.strftime('%Y-%m-%d_%H.%M', time.localtime())),
+                    'license': 'license', 'images': image_info_list,
                     'annotations': annotation_list, 'categories': wv.get_all_categories(args.class_num)}
     json_file = os.path.join(args.txt_save_dir,
-                             'xViewall_{}_{}cls_xtlytlwh.json'.format(args.input_size, args.class_num))  # topleft
+                             'xview_all_{}_{}cls_xtlytlwh.json'.format(args.input_size, args.class_num))  # topleft
     json.dump(trn_instance, open(json_file, 'w'), ensure_ascii=False, indent=2, cls=MyEncoder)
 
+
+def plot_image_with_bbox_by_image_name_from_patches(image_name):
+    df_cat_color = pd.read_csv(
+        args.data_save_dir + 'categories_id_color_diverse_{}.txt'.format(args.class_num, args.class_num),
+        delimiter='\t')
+    cat_ids = df_cat_color['category_id'].tolist()
+    cat_colors = df_cat_color['color'].tolist()
+    json_file = os.path.join(args.txt_save_dir,
+                             'xview_all_{}_{}cls_xtlytlwh.json'.format(args.input_size, args.class_num))
+
+    lbl_json = json.load(open(json_file))
+    image_list = lbl_json['images']
+    anns_list = lbl_json['annotations']
+    annos = []
+    for im in image_list:
+        if im['file_name'] == image_name:
+            im_id = im['id']
+            for an in anns_list:
+                if an['image_id'] == im_id:
+                    annos.append([an['category_id']] + an['bbox'])
+            break
+    img_bbx_fig_dir = args.cat_sample_dir + 'img_name_2_gt_bbx_figures/'
+    if not os.path.exists(img_bbx_fig_dir):
+        os.makedirs(img_bbx_fig_dir)
+    img_dir = args.images_save_dir
+    img = cv2.imread(os.path.join(img_dir, image_name))
+    for an in annos:
+        cat_id = an[0]
+        gt_bbx = an[1:]
+        color = literal_eval(cat_colors[cat_ids.index(cat_id)])
+        img = cv2.rectangle(img, (gt_bbx[0], gt_bbx[1]), (gt_bbx[0] + gt_bbx[2], gt_bbx[1] + gt_bbx[3]), color, 2)
+        cv2.putText(img, text=str(cat_id), org=(gt_bbx[0] + 10, gt_bbx[1] + 10),
+                    fontFace=cv2.FONT_HERSHEY_SIMPLEX,
+                    fontScale=0.5, thickness=1, lineType=cv2.LINE_AA, color=(0, 255, 255))
+    cv2.imwrite(os.path.join(img_bbx_fig_dir, image_name), img)
+
+
+def remove_txt_and_json_of_bad_image(bad_img_path, px_thres=None, whr_thres=None):
+    '''
+    remove bad *.txt of bad_images
+    remove bbox of bad_images in the *.json
+    :param bad_img_path:
+    :return:
+    '''
+    if px_thres:
+        args = get_args(px_thres, whr_thres)
+    else:
+        args = get_args()
+    ''' remove bad .jpg '''
+    bad_raw_img_names = pd.read_csv(bad_img_path, header=None).to_numpy()
+    for name in bad_raw_img_names[:, 0]:
+        lbl_name = name.replace('.jpg', '.txt')
+        bad_lbl = os.path.join(args.annos_save_dir, lbl_name)
+        # if lbl_name == '1164_0.txt':
+        #     print(os.path.exists(bad_lbl))
+        if os.path.exists(bad_lbl):
+            os.remove(bad_lbl)
+
+        ''' remove bad .jpg in image_names_ids_{}_{}cls.csv'''
+    img_id_file = os.path.join(args.txt_save_dir, 'xview_all_image_names_ids_{}_{}cls.csv'.format(args.input_size, args.class_num))
+    df_img_num_names = pd.read_csv(img_id_file)
+    for name in bad_raw_img_names[:, 0]:
+        bad_name = df_img_num_names[df_img_num_names['file_name'] == name]
+        for ix in bad_name.index:
+            df_img_num_names = df_img_num_names.drop(index=ix)
+    print('image_names_ids len ', df_img_num_names.shape[0])
+    reduced_img_id_map_file = os.path.join(args.txt_save_dir, 'xview_reduced_image_names_ids_{}_{}cls.csv'.format(args.input_size, args.class_num))
+    if os.path.exists(reduced_img_id_map_file):
+        os.remove(reduced_img_id_map_file)
+    df_img_num_names.to_csv(reduced_img_id_map_file, index=False)
+
+    ''' remove bbox of bad .jpg in xview_all_{}_{}cls_xtlytlwh.json '''
+    json_file = os.path.join(args.txt_save_dir,
+                             'xview_all_{}_{}cls_xtlytlwh.json'.format(args.input_size, args.class_num))  # topleft
+
+    exist_images = df_img_num_names['file_name'].tolist()
+    annos_json = json.load(open(json_file))
+    image_list = annos_json['images']
+    annotation_list = annos_json['annotations']
+    print('exist_images', len(exist_images))
+    print('image_list', len(image_list))
+    print('annotation_list', len(annotation_list))
+    bad_ids = []
+    for im in image_list:
+        if im['file_name']=='2399_5.jpg' or im['file_name']== '2531_4.jpg':# ???
+            print(im)
+        if im['file_name'] not in exist_images:
+            bad_ids.append(im['id'])
+            image_list.remove(im)
+    print('image_list', len(image_list))
+    for an in annotation_list:
+        if an['image_id'] in bad_ids:
+            annotation_list.remove(an)
+    print('after----------')
+    print('image_list', len(image_list))
+    print('annotation_list', len(annotation_list))
+    print([(a['id'], a['file_name']) for a in image_list if a['file_name']  not in exist_images])
+    trn_instance = {'info': 'xView aiplanes chips 608 yx185 created', 'license': 'license', 'images': image_list,
+                    'annotations': annotation_list, 'categories': wv.get_all_categories(args.class_num)}
+    json_file = os.path.join(args.txt_save_dir,
+                             'xview_reduced_{}_{}cls_xtlytlwh.json'.format(args.input_size, args.class_num))  # topleft
+    if os.path.exists(json_file):
+        os.remove(json_file)
+    json.dump(trn_instance, open(json_file, 'w'), ensure_ascii=False, indent=2, cls=MyEncoder)
 
 def clean_backup_xview_plane_with_constraints(px_thres=20, whr_thres=4):
     '''
@@ -347,6 +480,78 @@ def check_xview_plane_drops():
         gbc.plot_img_with_bbx(os.path.join(drop_rgb_dir, im), os.path.join(before_path, f), drop_rgb_bbx_dir)
 
 
+def adjust_empty_annos_json(px_thres=None, whr_thres=None):
+    args = get_args(px_thres, whr_thres)
+    json_file = os.path.join(args.txt_save_dir.split('_px')[0],
+                             'xview_reduced_{}_{}cls_xtlytlwh.json'.format(args.input_size, args.class_num))  # topleft
+    annos_json = json.load(open(json_file))
+    image_list = annos_json['images']
+    print('image_list', len(image_list))
+
+    img_id_file = os.path.join(args.txt_save_dir, 'xview_reduced_image_names_ids_{}_{}cls.csv'.format(args.input_size, args.class_num))
+    df_img_id = pd.read_csv(img_id_file)
+    lbl_files = np.sort(glob.glob(os.path.join(args.annos_save_dir, '*.txt')))
+    # print(lbl_files[0])
+    annotation_list = []
+    image_list = []
+    cnt = 0
+    for lbl in lbl_files:
+        img_name = os.path.basename(lbl).replace('.txt', '.jpg')
+        img_id = df_img_id[df_img_id['file_name']==img_name]['id'].to_numpy()
+        img = wv.get_image(args.images_save_dir + img_name)
+        image_info = {
+            "id": img_id,
+            "file_name": img_name,
+            "height": img.shape[0],
+            "width": img.shape[1],
+            "date_captured": datetime.datetime.utcnow().isoformat(' '),
+            "license": 1,
+            "coco_url": "",
+            "flickr_url": ""
+        }
+        image_list.append(image_info)
+
+        if pps.is_non_zero_file(lbl):
+            lbl_arr = pd.read_csv(lbl, header=None, sep=' ').to_numpy()
+            boxes = lbl_arr[:, 1:] * args.input_size
+            boxes[:, 0] = boxes[:, 0] - boxes[:, 2]/2
+            boxes[:, 1] = boxes[:, 1] - boxes[:, 3]/2
+            boxes = boxes.astype(np.int)
+            # create annotation_info
+            for i in range(boxes.shape[0]):
+                bbx = boxes[i]
+                annotation_info = {
+                    "id": cnt,
+                    "image_id": img_id,
+                    # "image_name": img_name, #fixme: there isn't 'image_name'
+                    "category_id": 0,
+                    "iscrowd": 0,
+                    "area": (bbx[2]) * (bbx[3]),
+                    "bbox": [bbx[0], bbx[1], bbx[2], bbx[3]],  # (w1, h1, w, h)
+                    # "segmentation": [],
+                    }
+                cnt += 1
+                annotation_list.append(annotation_info)
+        else:
+            annotation_info = {
+                "id": cnt,
+                "image_id": img_id,
+                # "image_name": img_name, #fixme: there isn't 'image_name'
+                "category_id": 0,
+                "iscrowd": 0,
+                "area": 0,
+                "bbox": [],  # (w1, h1, w, h)
+                # "segmentation": [],
+                }
+            cnt += 1
+            annotation_list.append(annotation_info)
+
+    trn_instance = {'info': 'xview aiplanes chips 608 yx185 created with empty label files', 'license': 'license', 'images': image_list,
+                    'annotations': annotation_list, 'categories': wv.get_all_categories(args.class_num)}
+    json_file = os.path.join(args.txt_save_dir,
+                             'xview_reduced_{}_{}cls_xtlytlwh_with_empty.json'.format(args.input_size, args.class_num))  # topleft
+    json.dump(trn_instance, open(json_file, 'w'), ensure_ascii=False, indent=2, cls=MyEncoder)
+
 def recover_xview_val_list():
     '''
     recover xview val list with constriants of px_theres=4, whr_thres=3
@@ -380,22 +585,21 @@ def create_xview_names(file_name='xview'):
     f_txt.close()
 
 
-def split_trn_val_with_chips(data_name='xview', comments='', seed=1024, px_thres=None, whr_thres=None):
+def split_trn_val_with_chips(data_name='xview', comments='', seed=17, px_thres=None, whr_thres=None):
     args = get_args(px_thres, whr_thres)
 
     data_save_dir = args.data_save_dir
     if comments:
-        comments = comments.format(seed)
         txt_save_dir = args.data_list_save_dir + comments[1:] + '/'
         if not os.path.exists(txt_save_dir):
             os.makedirs(txt_save_dir)
-        lbl_path = args.annos_save_dir[:-1] + comments.split('_seed')[0] + '/'
         data_save_dir = os.path.join(data_save_dir, comments[1:])
         if not os.path.exists(data_save_dir):
             os.makedirs(data_save_dir)
     else:
-        lbl_path = args.annos_save_dir
         txt_save_dir = args.data_list_save_dir
+        
+    lbl_path = args.annos_save_dir
     images_save_dir = args.images_save_dir
     all_files = np.sort(glob.glob(lbl_path + '*.txt'))
 
@@ -435,6 +639,53 @@ def split_trn_val_with_chips(data_name='xview', comments='', seed=1024, px_thres
                     os.path.join(data_save_dir, '{}val_img{}.txt'.format(data_name, comments)))
     shutil.copyfile(os.path.join(txt_save_dir, '{}val_lbl{}.txt'.format(data_name, comments)),
                     os.path.join(data_save_dir, '{}val_lbl{}.txt'.format(data_name, comments)))
+
+
+def create_json_for_train_or_val_according_to_all_json(data_name='xview', comments='', seed=1024, px_thres=None, whr_thres=None, typestr='val'):
+    args = get_args(px_thres, whr_thres)
+    if comments:
+        comments = comments.format(seed)
+        data_list_save_dir = args.data_list_save_dir + comments[1:] + '/'
+        if not os.path.exists(data_list_save_dir):
+            os.makedirs(data_list_save_dir)
+        data_save_dir = os.path.join(args.data_save_dir, comments[1:])
+        if not os.path.exists(data_save_dir):
+            os.makedirs(data_save_dir)
+    else:
+        data_list_save_dir = args.data_list_save_dir
+        data_save_dir = args.data_save_dir
+
+    val_img_txt = pd.read_csv(os.path.join(data_save_dir, '{}val_img{}.txt'.format(data_name, comments)), header=None)
+    val_img_names = [os.path.basename(f) for f in val_img_txt.loc[:, 0]]
+
+    plane_json = json.load(open(os.path.join(args.txt_save_dir,
+                             'xview_all_{}_{}cls_xtlytlwh.json'.format(args.input_size, args.class_num))))
+    all_image_list = plane_json['images']
+    all_annos_list = plane_json['annotations']
+
+    val_img_id_dict = {}
+    val_images = []
+    for vi in all_image_list:
+        vi_name = vi['file_name']
+        if vi_name in val_img_names:
+            val_img_id_dict[vi_name] = vi['id']
+            val_images.append(vi)
+    json_img_id_file = os.path.join(data_save_dir, 'xview_val{}_{}cls_img_id_map.json'.format(comments, args.class_num))
+    json.dump(val_img_id_dict, open(json_img_id_file, 'w'), ensure_ascii=False, indent=2, cls=MyEncoder)
+    shutil.copy(json_img_id_file, data_list_save_dir)
+
+    val_annotations = []
+    for va in all_annos_list:
+        va_img_id = va['image_id']
+        if va_img_id in val_img_id_dict.values():
+            val_annotations.append(va)
+
+    json_instance = {'info': 'xView {} aiplanes chips 608 yx185 created'.format(typestr), 'license': ['license'], 'images': val_images,
+                    'annotations': val_annotations, 'categories': wv.get_all_categories(args.class_num)}
+    json_file = os.path.join(data_save_dir,
+                             'xview_val{}_{}_{}cls_xtlytlwh.json'.format(comments, args.input_size, args.class_num))  # topleft
+    json.dump(json_instance, open(json_file, 'w'), ensure_ascii=False, indent=2, cls=MyEncoder)
+    shutil.copy(json_file, data_list_save_dir)
 
 
 def split_trn_val_with_tifs():
@@ -487,40 +738,6 @@ def split_trn_val_with_tifs():
                     os.path.join(args.data_save_dir, 'xviewval_lbl_tifsplit.txt'))
 
 
-def create_json_for_train_or_val_according_to_all_json(typestr='val'):
-    json_all_file = os.path.join(args.txt_save_dir,
-                                 'xViewall_{}_{}cls_xtlytlwh.json'.format(args.input_size, args.class_num))  # topleft
-    all_json = json.load(open(json_all_file))
-    all_imgs_info = all_json['images']
-    all_annos_info = all_json['annotations']
-    all_cats_info = all_json['categories']
-
-    all_img_id_maps = json.load(open(args.txt_save_dir + 'all_image_ids_names_dict_{}cls.json'.format(args.class_num)))
-    all_imgs = [i for i in all_img_id_maps.values()]
-    all_img_ids = [int(i) for i in all_img_id_maps.keys()]
-
-    val_img_files = pd.read_csv(os.path.join(args.data_save_dir, 'xview{}_img.txt'.format(typestr)), header=None)
-    val_img_names = [f.split('/')[-1] for f in val_img_files[0].tolist()]
-    val_img_ids = [all_img_ids[all_imgs.index(v)] for v in val_img_names]
-
-    image_info_list = []
-    anno_info_list = []
-
-    for ix in val_img_ids:
-        img_name = all_imgs[ix]
-        # for i in all_imgs_info:
-        #     if all_imgs_info[i]['id'] == ix:
-        # fixme: the index of all_imgs_info is the same as the image_info['id']
-        image_info_list.append(all_imgs_info[ix])
-        for ai in all_annos_info:
-            if ai['image_id'] == ix:
-                anno_info_list.append(ai)
-
-    trn_instance = {'info': 'xView val chips 600 yx185 created', 'license': ['license'], 'images': image_info_list,
-                    'annotations': anno_info_list, 'categories': all_cats_info}
-    json_file = os.path.join(args.txt_save_dir, 'xView{}_{}_{}cls_xtlytlwh.json'.format(typestr, args.input_size,
-                                                                                        args.class_num))  # topleft
-    json.dump(trn_instance, open(json_file, 'w'), ensure_ascii=False, indent=2, cls=MyEncoder)
 
 
 def get_train_or_val_imgs_by_cat_id(cat_ids, typestr='val'):
@@ -544,21 +761,6 @@ def get_train_or_val_imgs_by_cat_id(cat_ids, typestr='val'):
         cat_val_imgs[rc] = cat_img_names
     cat_val_imgs_files = os.path.join(args.txt_save_dir, 'cat_ids_2_{}_img_names.json'.format(typestr))
     json.dump(cat_val_imgs, open(cat_val_imgs_files, 'w'), ensure_ascii=False, indent=2, cls=MyEncoder)
-
-
-def create_xview_data():
-    data_txt = open(os.path.join(args.data_save_dir, 'xview.data'), 'w')
-    data_txt.write('classes=%s\n' % str(args.class_num))
-    data_txt.write('train=./data_xview/{}_cls/xviewtrain_img.txt\n'.format(args.class_num))
-    data_txt.write('train_label=./data_xview/{}_cls/xviewtrain_lbl.txt\n'.format(args.class_num))
-    data_txt.write('valid=./data_xview/{}_cls/xviewval_img.txt\n'.format(args.class_num))
-    data_txt.write('valid_label=./data_xview/{}_cls/xviewval_lbl.txt\n'.format(args.class_num))
-    data_txt.write('valid_rare=./data_xview/{}_cls/xviewval_rare_img.txt\n'.format(args.class_num))
-    data_txt.write('valid_rare_label=./data_xview/{}_cls/xviewval_rare_lbl.txt\n'.format(args.class_num))
-    data_txt.write('names=./data_xview/{}_cls/xview.names\n'.format(args.class_num))
-    data_txt.write('backup=backup/\n')
-    data_txt.write('eval=xview')
-    data_txt.close()
 
 
 def plot_val_image_with_gt_bbx_by_image_name_from_patches(image_name=None, typstr='val', comments=''):
@@ -642,102 +844,13 @@ def get_img_id_by_image_name(image_name):
     return img_ids[img_names.index(image_name)]
 
 
-# fixme
-# def plot_rare_results_by_rare_cat_ids(rare_cat_ids, score_thres=0.001):
-#     '''
-#     all: TP + FP + FN
-#     '''
-#     img_ids_names_file = '/media/lab/Yang/data/xView_YOLO/labels/{}/all_image_ids_names_dict_{}cls.json'.format(args.input_size, args.class_num)
-#     img_ids_names_map = json.load(open(img_ids_names_file))
-#     img_ids = [int(k) for k in img_ids_names_map.keys()] ## important
-#     img_names = [v for v in img_ids_names_map.values()]
-#
-#     df_rare_val_img = pd.read_csv('../data_xview/{}_cls/xviewval_rare_img.txt'.format(args.class_num), header=None)
-#     df_rare_val_gt = pd.read_csv('../data_xview/{}_cls/xviewval_rare_lbl.txt'.format(args.class_num), header=None)
-#     rare_val_img_list = df_rare_val_img[0].tolist()
-#     rare_val_id_list = df_rare_val_gt[0].tolist()
-#     rare_val_img_names = [f.split('/')[-1] for f in rare_val_img_list]
-#     rare_val_img_ids = [img_ids[img_names.index(x)] for x in rare_val_img_names]
-#
-#     rare_result_json_file = '../result_output/{}_cls/results_rare.json'.format(args.class_num)
-#     rare_result_allcat_list = json.load(open(rare_result_json_file))
-#     rare_result_list = []
-#     for ri in rare_result_allcat_list:
-#         if ri['category_id'] in rare_cat_ids and ri['score'] >= score_thres:
-#             rare_result_list.append(ri)
-#     del rare_result_allcat_list
-#
-#     prd_color = (255, 255, 0)
-#     gt_color = (0, 255, 255) # yellow
-#     save_dir = '../result_output/rare_result_figures/'
-#     if not os.path.exists(save_dir):
-#         os.mkdir(save_dir)
-#
-#     for ix in range(len(rare_val_img_list)):
-#         img = cv2.imread(rare_val_img_list[ix])
-#         img_size = img.shape[0]
-#         gt_rare_cat = pd.read_csv(rare_val_id_list[ix], delimiter=' ').to_numpy()
-#         gt_rare_list = []
-#         # for cat_id in rare_cat_ids:
-#         #     for gx in range(gt_rare_cat.shape[0]):
-#         #         if gt_rare_cat[gx, 0] == cat_id:
-#         #             gt_rare_cat[gx, 1:] = gt_rare_cat[gx, 1:] * img_size
-#         #             gt_rare_cat[gx, 1] = gt_rare_cat[gx, 1] - gt_rare_cat[gx, 3]/2
-#         #             gt_rare_cat[gx, 2] = gt_rare_cat[gx, 2] - gt_rare_cat[gx, 4]/2
-#         #             gt_bbx = gt_rare_cat[gx, 1:]
-#         #             gt_bbx = gt_bbx.astype(np.int64)
-#         #             img = cv2.rectangle(img, (gt_bbx[0], gt_bbx[1]), (gt_bbx[0] + gt_bbx[2], gt_bbx[1] + gt_bbx[3]), gt_color, 2)
-#         #             cv2.putText(img, text=str(cat_id), org=(gt_bbx[0] - 10, gt_bbx[1] - 10),
-#         #                         fontFace=cv2.FONT_HERSHEY_SIMPLEX,
-#         #                         fontScale=0.5, thickness=1, lineType=cv2.LINE_AA, color=gt_color)
-#         #             gt_rare_list.append(gx)
-#         #     img_prd_lbl_list = []
-#         #     for jx in rare_result_list:
-#         #         if jx['category_id'] == cat_id and jx['image_id'] == rare_val_img_ids[ix]:
-#         #             img_prd_lbl_list.append(jx) # rare_result_list.pop()
-#         #             bbx = jx['bbox'] # xtopleft, ytopleft, w, h
-#         #             bbx = [int(x) for x in bbx]
-#         #             img = cv2.rectangle(img, (bbx[0], bbx[1]), (bbx[0] + bbx[2], bbx[1] + bbx[3]), prd_color, 2)
-#         #             cv2.putText(img, text=str(jx['category_id']), org=(bbx[0] + 10, bbx[1] + 20),
-#         #                         fontFace=cv2.FONT_HERSHEY_SIMPLEX,
-#         #                         fontScale=0.5, thickness=1, lineType=cv2.LINE_AA, color=prd_color)
-#         #     if gt_rare_list or img_prd_lbl_list:
-#         #         cv2.imwrite(save_dir + 'cat{}_'.format(cat_id) + rare_val_img_names[ix], img)
-#         for gx in range(gt_rare_cat.shape[0]):
-#             cat_id = int(gt_rare_cat[gx, 0])
-#             if cat_id in rare_cat_ids:
-#                 gt_rare_cat[gx, 1:] = gt_rare_cat[gx, 1:] * img_size
-#                 gt_rare_cat[gx, 1] = gt_rare_cat[gx, 1] - gt_rare_cat[gx, 3]/2
-#                 gt_rare_cat[gx, 2] = gt_rare_cat[gx, 2] - gt_rare_cat[gx, 4]/2
-#                 gt_bbx = gt_rare_cat[gx, 1:]
-#                 gt_bbx = gt_bbx.astype(np.int64)
-#                 img = cv2.rectangle(img, (gt_bbx[0], gt_bbx[1]), (gt_bbx[0] + gt_bbx[2], gt_bbx[1] + gt_bbx[3]), gt_color, 2)
-#                 cv2.putText(img, text=str(cat_id), org=(gt_bbx[0] - 10, gt_bbx[1] - 10),
-#                             fontFace=cv2.FONT_HERSHEY_SIMPLEX,
-#                             fontScale=0.5, thickness=1, lineType=cv2.LINE_AA, color=gt_color)
-#                 gt_rare_list.append(gx)
-#         img_prd_lbl_list = []
-#         for jx in rare_result_list:
-#             jx_cat_id = jx['category_id']
-#             if jx['image_id'] == rare_val_img_ids[ix] and jx_cat_id in rare_cat_ids:
-#                 img_prd_lbl_list.append(jx) # rare_result_list.pop()
-#                 bbx = jx['bbox'] # xtopleft, ytopleft, w, h
-#                 bbx = [int(x) for x in bbx]
-#                 img = cv2.rectangle(img, (bbx[0], bbx[1]), (bbx[0] + bbx[2], bbx[1] + bbx[3]), prd_color, 2)
-#                 cv2.putText(img, text=str(jx_cat_id), org=(bbx[0] + 10, bbx[1] + 20),
-#                             fontFace=cv2.FONT_HERSHEY_SIMPLEX,
-#                             fontScale=0.5, thickness=1, lineType=cv2.LINE_AA, color=prd_color)
-#
-#         if gt_rare_list or img_prd_lbl_list:
-#             cv2.imwrite(save_dir + 'rare_cat_' + rare_val_img_names[ix], img)
-
 def cnt_ground_truth_overlap_from_pathces(cat_ids, iou_thres=0.5, px_thres=None, whr_thres=None, syn = False):
     if syn:
         args = pps.get_syn_args()
         json_name = '{}_gt_iou_overlap_cnt_each_cat.json'.format(args.syn_display_type)
     else:
         args = get_args(px_thres, whr_thres)
-        json_name = 'xView_gt_iou_overlap_cnt_each_cat.json'
+        json_name = 'xview_gt_iou_overlap_cnt_each_cat.json'
 
     pxwhr_dir = args.annos_save_dir
     lbl_files = np.sort(glob.glob(os.path.join(pxwhr_dir, '*.txt')))
@@ -755,7 +868,6 @@ def cnt_ground_truth_overlap_from_pathces(cat_ids, iou_thres=0.5, px_thres=None,
     if not os.path.exists(f_save_dir):
         os.mkdir(f_save_dir)
 
-
     cnt_cat_overlap = {}
     for c in cat_ids:
         cnt_cat_overlap[c] = 0
@@ -764,42 +876,6 @@ def cnt_ground_truth_overlap_from_pathces(cat_ids, iou_thres=0.5, px_thres=None,
         if not pps.is_non_zero_file(lbl_files[ix]):
             continue
         df_txt = pd.read_csv(lbl_files[ix], header=None, sep=' ')
-        # #fixme
-        # # df_lbl.iloc[:, 1:] = df_lbl.iloc[:, 1:] * args.input_size
-        # # w = df_lbl.iloc[:, 3]
-        # # df_lbl = df_lbl[w > px_thres]
-        # # h = df_lbl.iloc[:, 4]
-        # # df_lbl = df_lbl[h > px_thres]
-        # # whr = np.maximum(w / (h + 1e-16), h / (w + 1e-16))
-        # # df_lbl = df_lbl[whr <= whr_thres]
-        # # df_lbl.iloc[:, 1] = df_lbl.iloc[:, 1] - df_lbl.iloc[:, 3] / 2
-        # # df_lbl.iloc[:, 2] = df_lbl.iloc[:, 2] - df_lbl.iloc[:, 4] / 2
-        # # df_lbl.iloc[:, 3] = df_lbl.iloc[:, 1] + df_lbl.iloc[:, 3]
-        # # df_lbl.iloc[:, 4] = df_lbl.iloc[:, 2] + df_lbl.iloc[:, 4]
-        # # df_lbl_back = df_lbl.to_numpy().astype(np.int)
-        # for i in df_txt.index:
-        #     bbx = df_txt.loc[i, 1:] * args.input_size
-        #     if not bbx.loc[4] or not bbx.loc[3]:
-        #         print(bbx)
-        #         print(lbl_files[ix])
-        #     xl = round(bbx.loc[1] - bbx.loc[3]/2)
-        #     yl = round(bbx.loc[2] - bbx.loc[4]/2)
-        #     xr = round(bbx.loc[1] + bbx.loc[3]/2)
-        #     yr = round(bbx.loc[2] + bbx.loc[4]/2)
-        #     bbx_wh = max(bbx.loc[3]/bbx.loc[4], bbx.loc[4]/bbx.loc[3])
-        #     w = round(bbx.loc[3])
-        #     h = round(bbx.loc[4])
-        #     #fixme
-        #     # if bbx.loc[3] <= px_thres or bbx.loc[4] <= px_thres or bbx_wh > whr_thres:
-        #     #     df_txt = df_txt.drop(i)
-        #
-        #     if bbx_wh >= whr_thres:
-        #         df_txt = df_txt.drop(i)
-        #     elif (xl<=0 or xr>=args.input_size-1) and (w <= px_thres or h <= px_thres):
-        #         df_txt = df_txt.drop(i)
-        #     elif (yl<=0 or yr>=args.input_size-1) and (w <= px_thres or h <= px_thres):
-        #         df_txt = df_txt.drop(i)
-        # df_txt.to_csv(lbl_files[ix], header=False, index=False, sep=' ')
         df_lbl_back = df_txt.to_numpy()
         df_lbl_back[:, 1:] = df_lbl_back[:,1:]*args.input_size
         df_lbl_back[:, 3] = df_lbl_back[:,1] + df_lbl_back[:, 3]
@@ -818,8 +894,8 @@ def cnt_ground_truth_overlap_from_pathces(cat_ids, iou_thres=0.5, px_thres=None,
                 if ci != cj:
                     continue
                 iou = coord_iou(df_lbl_back[i, 1:], df_lbl_back[j, 1:])
-                if name == '2160_1.txt':
-                    print(i, j, iou)
+                # if name == '2160_1.txt':
+                #     print(i, j, iou)
                 if iou > iou_thres:
                     cnt_cat_overlap[ci] += 1
                     cat_bbox_overlap[ci].append([ci, i, j])
@@ -893,7 +969,7 @@ def check_duplicate_gt_bbx_for_60_classes(cat_id, iou_thres=0.5, whr_thres=3):
             cv2.imwrite(save_dir + b_str + img_name, img)
 
 
-def remove_duplicate_gt_bbx(cat_id, px_thres=6, whr_thres=4, syn = False):
+def remove_duplicate_gt_bbx(cat_id, syn = False):
     dup_dir = args.txt_save_dir + 'gt_iou_overlap/'
     duplicate_files = np.sort(glob.glob(dup_dir + '*.json'))
 
@@ -901,23 +977,13 @@ def remove_duplicate_gt_bbx(cat_id, px_thres=6, whr_thres=4, syn = False):
     if not os.path.exists(save_dir):
         os.mkdir(save_dir)
     lbl_path = args.annos_save_dir
-    duplicate_names = [os.path.basename(d) for d in duplicate_files if 'xView' not in os.path.basename(d)]
+    duplicate_names = [os.path.basename(d) for d in duplicate_files if 'xview' not in os.path.basename(d)]
     # b_str = 'cat_{}_'.format(cat_id)
     # duplicate_names = [x.split(b_str)[-1] for x in duplicate_names if x.startswith(b_str)]
     for dx, dn in enumerate(duplicate_names):
         img = cv2.imread(args.images_save_dir + dn.replace('.json', '.jpg'))
 
         df_lbl = pd.read_csv(lbl_path + dn.replace('.json', '.txt'), header=None, delimiter=' ')
-        # df_lbl.iloc[:, 1:] = df_lbl.iloc[:, 1:] * args.input_size
-        # w = df_lbl.iloc[:, 3]
-        # df_lbl = df_lbl[w > px_thres]
-        # h = df_lbl.iloc[:, 4]
-        # df_lbl = df_lbl[h > px_thres]
-        # whr = np.maximum(w / (h + 1e-16), h / (w + 1e-16))
-        # df_lbl = df_lbl[whr <= whr_thres]
-
-        # df_lbl_back = df_lbl.copy()
-        # df_lbl = df_lbl.to_numpy().astype(np.int)
         json_dup = json.load(open(dup_dir + dn))
         # dup_keys = [k for k in json_dup.keys() if json_dup.get(k)]
         for k in json_dup.keys():
@@ -963,6 +1029,45 @@ def remove_duplicate_gt_bbx(cat_id, px_thres=6, whr_thres=4, syn = False):
                     cv2.imwrite(save_dir + 'cat_{}_'.format(cat_id) + dn.replace('.json', '.jpg'), img)
 
 
+# def discard_bad_deviation_bbx_of_images():
+#     false_bx_files = pd.read_csv('/media/lab/Yang/data/xView/airplane_to_be_reomved_false_bbox.txt', header=None)
+#     deviation_files = pd.read_csv('/media/lab/Yang/data/xView/airplane_to_be_adjust_jpg_bbox.txt', header=None)
+#     missed_files = pd.read_csv('/media/lab/Yang/data/xView/airplane_to_add_missed_bbox.txt', header=None)
+#     src_img_bbx_path = args.cat_sample_dir + 'image_with_bbox/'
+#     des_img_bbx_path = args.cat_sample_dir + 'image_with_bbox/discarded/'
+#     if not os.path.exists(des_img_bbx_path):
+#         os.mkdir(des_img_bbx_path)
+#
+#     des_dir = args.images_save_dir[:-1] + '_discarded/'
+#     if not os.path.exists(des_dir):
+#         os.mkdir(des_dir)
+#     images_reduced_save_dir = args.images_save_dir[:-1] + '_reduced/'
+#     if not os.path.join(images_reduced_save_dir):
+#         os.mkdir(images_reduced_save_dir)
+#     shutil.copy(args.images_save_dir, images_reduced_save_dir)
+#
+#     for f in false_bx_files.loc[:, 0]:
+#         img_file = os.path.join(images_reduced_save_dir, f)
+#         if os.path.exists(img_file):
+#             shutil.move(img_file, os.path.join(des_dir, f))
+#         img_bbx_file = os.path.join(src_img_bbx_path, f)
+#         if os.path.exists(img_bbx_file):
+#             shutil.move(img_bbx_file, os.path.join(des_img_bbx_path, f))
+#
+#     for f in deviation_files.loc[:, 0]:
+#         img_file = os.path.join(images_reduced_save_dir, f)
+#         if os.path.exists(img_file):
+#             shutil.move(img_file, os.path.join(des_dir, f))
+#         img_bbx_file = os.path.join(src_img_bbx_path, f)
+#         if os.path.exists(img_bbx_file):
+#             shutil.move(img_bbx_file, os.path.join(des_img_bbx_path, f))
+#
+#     for f in missed_files.loc[:, 0]:
+#         # only move the missed_bbox_image to the discard folder
+#         img_bbx_file = os.path.join(src_img_bbx_path, f)
+#         if os.path.exists(img_bbx_file):
+#             shutil.move(img_bbx_file, os.path.join(des_img_bbx_path, f))
+
 def cats_split_crop_bbx_from_patches(typestr='val', whr_thres=3, N=200):
     img_files = pd.read_csv(os.path.join(args.data_save_dir, 'xview{}_img.txt'.format(typestr)), header=None)
     lbl_files = pd.read_csv(os.path.join(args.data_save_dir, 'xview{}_lbl.txt'.format(typestr)), header=None)
@@ -1006,7 +1111,7 @@ def cats_split_crop_bbx_from_patches(typestr='val', whr_thres=3, N=200):
                 cv2.imwrite(cat_dir + name.split('.')[0] + '_cat{}_{}.jpg'.format(cx, bx), bbx_img)
 
 
-def cats_split_crop_bbx_from_origins(whr_thres=3, imgN=200, N=10):
+def cats_split_crop_bbx_from_origins(px_thres=23, whr_thres=3, imgN=200, N=10):
     if args.rare:
         df_category_id = pd.read_csv(args.data_save_dir + 'categories_id_color_diverse_{}.txt'.format(args.class_num),
                                      sep="\t")
@@ -1030,8 +1135,8 @@ def cats_split_crop_bbx_from_origins(whr_thres=3, imgN=200, N=10):
     # for cx in range(len(cat_names[:1])):
         cat_imgs_dict[cx] = []
         cat_wh_dict[cx] = []
-        if not os.path.exists(args.cat_bbx_origins_dir + 'cat_{}_{}_bbxes/'.format(cx, cat_names[cx])):
-            os.mkdir(args.cat_bbx_origins_dir + 'cat_{}_{}_bbxes/'.format(cx, cat_names[cx]))
+        # if not os.path.exists(args.cat_bbx_origins_dir + 'cat_{}_{}_bbxes/'.format(cx, cat_names[cx])):
+        #     os.mkdir(args.cat_bbx_origins_dir + 'cat_{}_{}_bbxes/'.format(cx, cat_names[cx]))
 
     for i in range(len(feas)):
         clbl = feas[i]['properties']['type_id']
@@ -1045,8 +1150,8 @@ def cats_split_crop_bbx_from_origins(whr_thres=3, imgN=200, N=10):
             img_names.append(img_name)
             fea_indices.append(i)
     #fixme
-    json_file = os.path.join(args.cat_sample_dir, 'xView_cid_2_imgs_maps.json')  # topleft
-    # json_file = os.path.join(args.cat_sample_dir, 'xView_cid_2_imgs_maps_cat0.json')  # topleft
+    # json_file = os.path.join(args.cat_sample_dir, 'xView_cid_2_imgs_maps.json')  # topleft
+    json_file = os.path.join(args.cat_sample_dir, 'xView_cid_2_imgs_maps_cat0.json')  # topleft
     json.dump(cat_imgs_dict, open(json_file, 'w'), ensure_ascii=False, indent=2, cls=MyEncoder)
 
     img_names = np.unique(img_names).tolist()
@@ -1060,8 +1165,8 @@ def cats_split_crop_bbx_from_origins(whr_thres=3, imgN=200, N=10):
         bbx = list(literal_eval(feas[fx]['properties']['bounds_imcoords']))  # (w1, h1, w2, h2)
         img_cid_bbxs_dict[feas[fx]['properties']['image_id']].append([cid] + bbx)  # [cid, w1,h1, w2, h2]
     #fixme
-    json_file = os.path.join(args.cat_sample_dir, 'xView_img_2_cid_bbx_maps.json')  # topleft
-    # json_file = os.path.join(args.cat_sample_dir, 'xView_img_2_cid_bbx_maps_cat0.json')  # topleft
+    # json_file = os.path.join(args.cat_sample_dir, 'xView_img_2_cid_bbx_maps.json')  # topleft
+    json_file = os.path.join(args.cat_sample_dir, 'xView_img_2_cid_bbx_maps_cat0.json')  # topleft
     json.dump(img_cid_bbxs_dict, open(json_file, 'w'), ensure_ascii=False, indent=2, cls=MyEncoder)
 
     del data, feas
@@ -1074,7 +1179,7 @@ def cats_split_crop_bbx_from_origins(whr_thres=3, imgN=200, N=10):
         # fixme show imgN images
         for ix, name in enumerate(img_list):
             cntN = 0
-            img = cv2.imread(args.image_folder + name)  # 2355.tif
+            # img = cv2.imread(args.image_folder + name)  # 2355.tif
             cbbx_list = img_cid_bbxs_dict[name]  # [[18, 2726, 2512, 2740, 2518], [18, 2729, 2494, 2737, 2504]]
             # print(name, cbbx_list)
             for i in range(len(cbbx_list)):
@@ -1082,18 +1187,18 @@ def cats_split_crop_bbx_from_origins(whr_thres=3, imgN=200, N=10):
                 w = bbx[2] - bbx[0]
                 h = bbx[3] - bbx[1]
                 whr = np.maximum(w / (h + 1e-16), h / (w + 1e-16))
-                if cbbx_list[i][0] == cx and whr <= whr_thres and w >= 4 and h >= 4:
+                if cbbx_list[i][0] == cx and whr <= whr_thres and w >= px_thres and h >= px_thres:
                     cat_wh_dict[cx].append([w, h])
                     # fixme
                     # each image select N samples
-                    if ix < imgN and cntN < N:
-                        cat_dir = args.cat_bbx_origins_dir + 'cat_{}_{}_bbxes/'.format(cx, cat_names[cx])
-                        bbx_img = img[bbx[1]:bbx[3], bbx[0]:bbx[2], :]  # h w c
-                        cv2.imwrite(cat_dir + name.split('.')[0] + '_cat{}_{}.jpg'.format(cx, i), bbx_img)
+                    # if ix < imgN and cntN < N:
+                    #     cat_dir = args.cat_sample_dir + 'cat_{}_{}_bbxes/'.format(cx, cat_names[cx])
+                    #     bbx_img = img[bbx[1]:bbx[3], bbx[0]:bbx[2], :]  # h w c
+                    #     cv2.imwrite(cat_dir + name.split('.')[0] + '_cat{}_{}.jpg'.format(cx, i), bbx_img)
                     cntN += 1
     #fixme
-    json_file = os.path.join(args.cat_sample_dir, 'xView_cid_2_wh_maps.json')  #
-    # json_file = os.path.join(args.cat_sample_dir, 'xView_cid_2_wh_maps_cat0.json')
+    # json_file = os.path.join(args.cat_sample_dir, 'xView_cid_2_wh_maps.json')  #
+    json_file = os.path.join(args.cat_sample_dir, 'xView_cid_2_wh_maps_cat0.json')
     json.dump(cat_wh_dict, open(json_file, 'w'), ensure_ascii=False, indent=2, cls=MyEncoder)
 
 
@@ -1103,7 +1208,8 @@ def plot_image_with_gt_bbx_by_image_name_from_origin(img_name):
     cat_ids = df_cat_color['category_id'].tolist()
     cat_colors = df_cat_color['color'].tolist()
 
-    img_name_cid_maps = json.load(open(args.cat_bbx_origins_dir + 'xView_img_2_cid_bbx_maps.json'))
+    img_name_cid_maps = json.load(open(args.cat_sample_dir + 'xView_img_2_cid_bbx_maps_cat0.json'))
+    # img_name_cid_maps = json.load(open(args.cat_sample_dir + 'xView_img_2_cid_bbx_maps.json'))
     img_bbx_list = img_name_cid_maps[img_name]
 
     img_bbx_fig_dir = args.cat_sample_dir + 'img_name_2_gt_bbx_figures/'
@@ -1810,29 +1916,6 @@ def plot_bar_of_each_cat_cnt_with_txt():
     # draw_bar_for_each_cat_cnt(x, y, label, title, args.fig_save_dir, png_name, rotation=0)
 
 
-def draw_rare_cat(N):
-    title = 'Categories Count Least Rare {}'.format(N)
-    save_dir = args.fig_save_dir + '{}_{}_cls_xcycwh/'.format(args.input_size, args.class_num)
-    png_name = 'all_{}_cat_cnt_with_top{}_least_rare.png'.format(args.input_size, N)
-    df_cat = pd.read_csv(
-        os.path.join(args.txt_save_dir, 'all_{}_cat_cnt_{}cls.csv'.format(args.input_size, args.class_num)))
-    x_ids = df_cat['category_id']
-    x_cats = df_cat['category']
-    y = df_cat['category_count']
-
-    y_sort_inx = np.argsort(y)[:N]
-    labels = x_cats[y_sort_inx].to_list()
-    print(y_sort_inx)
-    # x = [x_ids[i] for i in y_sort_inx]
-    x = x_ids[y_sort_inx].to_list()
-    y = y[y_sort_inx].to_list()
-    print('category ids', x)
-    print('category', labels)
-    print('num', y)
-
-    draw_bar_for_each_cat_cnt_with_txt_rotation(x, y, labels, title, save_dir, png_name, rotation=80, sort=True)
-
-
 def get_cat_names_by_cat_ids(cat_ids):
 
     img_ids_names_file = args.data_save_dir + 'categories_id_color_diverse_{}.txt'.format(args.class_num,
@@ -1855,7 +1938,7 @@ def copy_lbl_to_lbl_model(typstr='val'):
         df_val_gt = pd.read_csv(args.data_save_dir + 'xview{}_lbl{}.txt'.format(typstr, comments), header=None)
     val_lbl_list = df_val_gt[0].tolist()
 
-    save_lbl_dir = os.path.join(args.txt_save_dir, 'lbl_with_modelid', typstr)
+    save_lbl_dir = os.path.join(args.txt_save_dir, 'lbl_with_model_id', typstr)
     if not os.path.exists(save_lbl_dir):
         os.makedirs(save_lbl_dir)
         for i in range(len(val_lbl_list)):
@@ -1864,9 +1947,12 @@ def copy_lbl_to_lbl_model(typstr='val'):
 
 def get_args(px_thres=None, whr_thres=None):
     parser = argparse.ArgumentParser()
+    # parser.add_argument("--image_folder", type=str,
+    #                     help="Path to folder containing image chips (ie 'Image_Chips/') ",
+    #                     default='/media/lab/Yang/data/xView/train_images/')
     parser.add_argument("--image_folder", type=str,
                         help="Path to folder containing image chips (ie 'Image_Chips/') ",
-                        default='/media/lab/Yang/data/xView/train_images/')
+                        default='/media/lab/Yang/data/xView/airplane_tifs/')
 
     parser.add_argument("--json_filepath", type=str, help="Filepath to GEOJSON coordinate file",
                         default='/media/lab/Yang/data/xView/xView_train.geojson')
@@ -1915,17 +2001,17 @@ def get_args(px_thres=None, whr_thres=None):
     parser.add_argument("-ft2", "--font2", type=str, help="legend font",
                         default="{'family': 'serif', 'weight': 'normal', 'size': 13}")
     parser.add_argument("--class_num", type=int, default=1, help="Number of Total Categories")  # 60  6 1
-    parser.add_argument("--seed", type=int, default=1024, help="random seed") #fixme ---- 1024 17
+    parser.add_argument("--seed", type=int, default=17, help="random seed") #fixme ---- 1024 17
     parser.add_argument("--input_size", type=int, default=608, help="Number of Total Categories")  # 300 416
 
-    parser.add_argument("--rare", type=bool, default=False,
-                        help="Number of Total Categories")  # -----------==--------change
-
     args = parser.parse_args()
-    if args.class_num == 1:
-        args.images_save_dir = args.images_save_dir + '{}/'.format(args.input_size, args.class_num)
-    else:
-        args.images_save_dir = args.images_save_dir + '{}_{}cls/'.format(args.input_size, args.class_num)
+    # if args.class_num == 1:
+    #     args.images_save_dir = args.images_save_dir + '{}/'.format(args.input_size, args.class_num)
+    # else:
+    #     args.images_save_dir = args.images_save_dir + '{}_{}cls/'.format(args.input_size, args.class_num)
+    #fixme ----------==--------change
+    args.images_save_dir = args.images_save_dir + '{}_{}cls/'.format(args.input_size, args.class_num)
+    # args.images_save_dir = args.images_save_dir + '{}_{}cls_reduced/'.format(args.input_size, args.class_num)
     args.annos_new_dir = args.annos_save_dir + '{}/{}_cls_xcycwh_part_new/'.format(args.input_size, args.class_num)
     if px_thres:
         args.annos_save_dir = args.annos_save_dir + '{}/{}_cls_xcycwh_px{}whr{}/'.format(args.input_size, args.class_num, px_thres, whr_thres)
@@ -1977,15 +2063,77 @@ _aug: Augmented dataset
 if __name__ == "__main__":
 
     '''
+    cats_split_crop_bbx_from_origins for val images
+    '''
+    # args = get_args(px_thres=None, whr_thres=None)
+    # whr_thres = 3
+    # px_thres = 23
+    # # imgN = 1000 # show imgN images 50
+    # # N = 1000 # each image select N samples 20
+    # imgN = 50
+    # N = 20
+    # cats_split_crop_bbx_from_origins(px_thres, whr_thres, imgN, N)
+
+    # cat_ids = np.arange(0, 6).tolist()
+    # cid_wh_maps = json.load(open(os.path.join(args.ori_lbl_dir, 'xView_cid_2_wh_maps.json')))
+    # draw_wh_scatter_for_cats(cid_wh_maps, cat_ids)
+
+    '''
+    plot origin tif with bbox
+    '''
+    # args = get_args(px_thres=None, whr_thres=None)
+    # # img_name = '525.tif'
+    # # img_name = '1127.tif'
+    # img_name = '1164.tif'
+    # plot_image_with_gt_bbx_by_image_name_from_origin(img_name)
+
+    '''
+    airplane raw images
+    # bad images 807.tif  983.tif 996.tif 2503.tif 2514.tif 2524.tif 2523.tif
+    # part cloud 1164.tif 2215.tif 2230.tif 2239.tif  2531.tif 345.tif  847.tif  2110.tif 2399.tif 
+    half black  1154.tif  2309.tif 2513.tif  2532.tif
+    '''
+    # get_raw_airplane_tifs()
+
+    '''
+     remove bad tifs ***** /media/lab/Yang/data/xView/airplane_bad_raw_tif_names.txt
+     '''
+    # args = get_args()
+    # bad_img_path = '/media/lab/Yang/data/xView/airplane_bad_raw_tif_names.txt'
+    # src_dir = args.image_folder
+    # remove_bad_image(bad_img_path, src_dir)
+
+    '''
     create chips and label txt and get all images json, convert from *.geojson to *.json
-    
-    get all images json, convert from *.geojson to *.json
-    # convert_geojson_to_json()
-    create label txt files
-    # create_label_txt()
-    
+    then manually *****  remove bad images according to  /media/lab/Yang/data/xView/airplane_part_occlusion_raw_tif_names.txt
     '''
     # create_chips_and_txt_geojson_2_json()
+
+    '''
+    plot images with bbox from patches 
+    '''
+    # args = get_args(px_thres=None, whr_thres=None)
+    # img_name = ['1164_1.jpg', '1164_2.jpg', '1164_3.jpg','1127_2.jpg', '1127_3.jpg'] #
+    # for name in img_name:
+    #     plot_image_with_bbox_by_image_name_from_patches(name)
+
+    '''
+     remove bad cropped .jpg 
+     manually get ***** /media/lab/Yang/data/xView/airplane_removed_cropped_jpg_names.txt
+     '''
+    # args = get_args()
+    # bad_img_path = '/media/lab/Yang/data/xView/airplane_removed_cropped_jpg_names.txt'
+    # src_dir = args.images_save_dir
+    # remove_bad_image(bad_img_path, src_dir)
+
+    '''
+     remove bbox and annotations of bad cropped .jpg 
+     manually get ***** /media/lab/Yang/data/xView/airplane_removed_cropped_jpg_names.txt
+     '''
+    # px_thres = 23
+    # whr_thres = 3
+    # bad_img_path = '/media/lab/Yang/data/xView/airplane_removed_cropped_jpg_names.txt'
+    # remove_txt_and_json_of_bad_image(bad_img_path, px_thres, whr_thres)
 
     '''
     backup ground truth *.txt 
@@ -1993,9 +2141,9 @@ if __name__ == "__main__":
     count ground truth self overlap from patches for each cat 
     '''
     # cat_ids = [0]
-    # # # whr_thres = 4
-    # # # px_thres=6
-    # # cat_ids = [0, 1, 2, 3]
+    # # # # whr_thres = 4
+    # # # # px_thres=6
+    # # # cat_ids = [0, 1, 2, 3]
     # whr_thres = 3 # 3.5
     # px_thres= 23
     # iou_thres = 0.5
@@ -2006,8 +2154,9 @@ if __name__ == "__main__":
     check duplicate bbox of images
     '''
     # image_name = '2160_1.jpg'
-    # # image_name = '525_1.jpg'
+    # image_name = '525_1.jpg'
     # # image_name = '525_3.jpg'
+    # # image_name = '2399_7.jpg'
     # whr_thres = 3 # 3.5
     # px_thres= 23
     # args = get_args(px_thres, whr_thres)
@@ -2019,26 +2168,73 @@ if __name__ == "__main__":
     #     os.mkdir(save_path)
     # gbc.plot_img_with_bbx(image_file, lbl_file, save_path)
 
-    '''
-    check the the origin 60 classes: see if one object is assigned to  two different classes
-    '''
-    # iou_thres = 0.5
-    # whr_thres = 3
-    # px_thres = 4
-    # cat_ids = np.arange(0, 6).tolist()
-    # for cat_id in cat_ids:
-    #     check_duplicate_gt_bbx_for_60_classes(cat_id, iou_thres, px_thres, whr_thres)
 
     '''
     remove duplicate ground truth bbox by cat_id
+    ** manually replace old overlap bbox with new lbl**** 
+    /media/lab/Yang/data/xView_YOLO/labels/608/1_cls_xcycwh_part_new
     '''
-    # # #fixme Not Done
+    # #fixme Not Done
     # cat_id = 0
-    # # cat_id = 2
     # px_thres = 23
     # whr_thres = 3
     # args = get_args(px_thres, whr_thres)
-    # remove_duplicate_gt_bbx(cat_id, px_thres, whr_thres)
+    # remove_duplicate_gt_bbx(cat_id)
+
+    '''
+    plot bbox on images
+    deviation
+    1127_2.jpg 1127_3.jpg 1154_0.jpg  1164_1.jpg 1164_2.jpg 1164_3.jpg  1568_5.jpg 1568_6.jpg 2399_2.jpg 2399_6.jpg 2399_7.jpg 2513_1.jpg 
+    2530_2.jpg 2530_3.jpg 2530_4.jpg 2531_10.jpg 79_3.jpg 80_5.jpg 294_2.jpg 302_1.jpg 310_2.jpg 
+    1585_7.jpg 1587_3.jpg 1593_9.jpg 1593_10.jpg 1883_4.jpg 1183_5.jpg 2250_2.jpg  2309_2.jpg 2315_6.jpg  2341_5.jpg 2341_6.jpg 
+    2370_1.jpg 2391_4.jpg
+   
+    342_0.jpg 1076_1.jpg 
+    
+    discard 1590_5.jpg 1606_2.jpg 1610_1.jpg 1692_3.jpg 1899_1.jpg 1899_2.jpg 2064_6.jpg 88_1.jpg  1076_5.jpg
+    2239.tif
+    '''
+    # whr_thres = 3 # 3.5
+    # px_thres= 23
+    # args = get_args(px_thres, whr_thres)
+    # save_path = args.cat_sample_dir + 'image_with_bbox/'
+    # if not os.path.exists(save_path):
+    #     os.mkdir(save_path)
+    # img_list = np.sort(glob.glob(os.path.join(args.images_save_dir, '*.jpg')))
+    # for img in img_list:
+    #     lbl_name = os.path.basename(img).replace('.jpg', '.txt')
+    #     lbl_file = os.path.join(args.annos_save_dir, lbl_name)
+    #     gbc.plot_img_with_bbx(img, lbl_file, save_path, label_index=False)
+
+    '''
+    drop deviation images
+    /media/lab/Yang/data/xView/airplane_to_be_adjust_jpg_bbox.txt
+    /media/lab/Yang/data/xView/airplane_to_be_reomved_false_bbox.txt
+    /media/lab/Yang/data/xView/airplane_to_add_missed_bbox.txt
+    '''
+    # whr_thres = 3 # 3.5
+    # px_thres= 23
+    # args = get_args(px_thres, whr_thres)
+    # discard_bad_deviation_bbx_of_images()
+
+    '''
+     remove bbox and annotations of bad cropped .jpg 
+     manually get ***** 
+     /media/lab/Yang/data/xView/airplane_to_be_adjust_jpg_bbox.txt
+     /media/lab/Yang/data/xView/airplane_to_be_reomved_false_bbox.txt
+     '''
+    # whr_thres = 3 # 3.5
+    # px_thres= 23
+    # # bad_img_path = '/media/lab/Yang/data/xView/airplane_to_be_adjust_jpg_bbox.txt'
+    # bad_img_path = '/media/lab/Yang/data/xView/airplane_to_be_reomved_false_bbox.txt'
+    # remove_txt_and_json_of_bad_image(bad_img_path, px_thres, whr_thres)
+
+    '''
+    re-generate *xtlytlwh.json with empty label files 
+    '''
+    # px_thres = 23
+    # whr_thres = 3
+    # adjust_empty_annos_json(px_thres, whr_thres)
 
     '''
     create xview.names 
@@ -2055,10 +2251,22 @@ if __name__ == "__main__":
     # comments = '_px6whr4_giou0'
     # px_thres = 23
     # whr_thres = 3
-    # comments = '_px23whr3'
+    # comments = '_px23whr3_seed17'
     # data_name = 'xview'
-    # split_trn_val_with_chips(data_name, comments, px_thres=px_thres, whr_thres=whr_thres)
+    # seed=17
+    # split_trn_val_with_chips(data_name, comments, seed = 17, px_thres=px_thres, whr_thres=whr_thres)
 
+    '''
+    create json for val according to all jsons 
+    '''
+    # # create_json_for_val_according_to_all_json()
+    # typestr='val'
+    # px_thres = 23
+    # whr_thres = 3
+    # seed=17
+    # comments = '_px{}whr{}_seed{}'.format(px_thres, whr_thres, seed)
+    # data_name = 'xview'
+    # create_json_for_train_or_val_according_to_all_json(data_name, comments, seed, px_thres, whr_thres, typestr)
 
     '''
     split train:val  randomly split tifs
@@ -2066,21 +2274,9 @@ if __name__ == "__main__":
     # split_trn_val_with_tifs()
 
     '''
-    create json for val according to all jsons 
-    '''
-    # create_json_for_val_according_to_all_json()
-
-    '''
     create xview.data includes cls_num, trn, val, ...
     '''
     # create_xview_data()
-
-    '''
-    create json for train or val according to all jsons 
-    '''
-    # typestr = 'train'
-    # typestr = 'val'
-    # create_json_for_train_or_val_according_to_all_json(typestr)
 
     '''
     categories count for all label files
@@ -2100,22 +2296,6 @@ if __name__ == "__main__":
     # N = 200 # each category select N samples
     # cats_split_crop_bbx_from_patches(typestr, whr_thres, N)
 
-    '''
-    cats_split_crop_bbx_from_origins for val images
-    '''
-    # whr_thres = 3
-    # # imgN = 1000 # show imgN images 50
-    # # N = 1000 # each image select N samples 20
-    # imgN = 50
-    # N = 20
-    # cats_split_crop_bbx_from_origins(whr_thres, imgN, N)
-    #
-    # cat_ids = np.arange(0, 6).tolist()
-    # cid_wh_maps = json.load(open(os.path.join(args.ori_lbl_dir, 'xView_cid_2_wh_maps.json')))
-    # draw_wh_scatter_for_cats(cid_wh_maps, cat_ids)
-
-    # img_name = '525.tif'
-    # plot_image_with_gt_bbx_by_image_name_from_origin(img_name)
 
     '''
     IoU check by image name
@@ -2248,6 +2428,17 @@ if __name__ == "__main__":
     # image_name = '310_12.jpg'
     # args.rare = False
     # check_prd_gt_iou(image_name, score_thres, iou_thres, args.rare)
+
+    '''
+    check the the origin 60 classes: see if one object is assigned to  two different classes
+    '''
+    # iou_thres = 0.5
+    # whr_thres = 3
+    # px_thres = 4
+    # cat_ids = np.arange(0, 6).tolist()
+    # for cat_id in cat_ids:
+    #     check_duplicate_gt_bbx_for_60_classes(cat_id, iou_thres, px_thres, whr_thres)
+
 
     '''
     get class names by cat_id

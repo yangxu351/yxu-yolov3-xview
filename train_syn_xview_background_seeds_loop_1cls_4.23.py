@@ -84,7 +84,6 @@ def train(opt):
     epochs = 1 if opt.prebias else opt.epochs  # 500200 batches at bs 64, 117263 images = 273 epochs
     batch_size = opt.batch_size
     accumulate = opt.accumulate  # effective bs = batch_size * accumulate = 16 * 4 = 64
-    # accumulate = max(round(64 / batch_size), 1)
     weights = opt.weights  # initial training weights
 
     mixed_precision = True
@@ -152,9 +151,7 @@ def train(opt):
 
     cutoff = -1  # backbone reaches to cutoff layer
     start_epoch = 0
-    #fixme
     best_fitness = float('inf')
-    # best_fitness = 0.0
     # attempt_download(weights)
     if weights.endswith('.pt'):  # pytorch format
         # possible weights are '*.pt', 'yolov3-spp.pt', 'yolov3-tiny.pt' etc.
@@ -256,20 +253,10 @@ def train(opt):
     model.hyp = hyp  # attach hyperparameters to model
     model.class_weights = labels_to_class_weights(dataset.labels, nc).to(device)  # attach class weights
     maps = np.zeros(nc)  # mAP per class
-
-    #fixme --yang.xu
-    model.gr = 1.0  # giou loss ratio (obj_loss = 1.0 or giou)
-    #fixme --yang.xu
-    # Model EMA
-    # ema = torch_utils.ModelEMA(model)
-
     # torch.autograd.set_detect_anomaly(True)
     results = (0, 0, 0, 0, 0, 0, 0)  # 'P', 'R', 'mAP', 'F1', 'val GIoU', 'val Objectness', 'val Classification'
     t0 = time.time()
-    #fixme --yang.xu
-    # torch_utils.model_info(model, report='summary')  # 'full' or 'summary'
-    torch_utils.model_info(model)
-
+    torch_utils.model_info(model, report='summary')  # 'full' or 'summary'
     print('Using %g dataloader workers' % nw)
     print('Starting %s for %g epochs...' % ('prebias' if opt.prebias else 'training', epochs))
     for epoch in range(start_epoch, epochs):  # epoch ------------------------------------------------------------------
@@ -333,8 +320,6 @@ def train(opt):
             if ni % accumulate == 0:
                 optimizer.step()
                 optimizer.zero_grad()
-                #fixme
-                # ema.update(model)
 
             # Print batch results
             mloss = (mloss * i + loss_items) / (i + 1)  # update mean losses
@@ -352,8 +337,7 @@ def train(opt):
         if tb_writer:
             tb_writer.add_scalar('lr', np.array(scheduler.get_lr())[0], epoch)
 
-        #fixme ---yang.xu
-        # ema.update_attr(model)
+
         # Process epoch results
         final_epoch = epoch + 1 == epochs
         if opt.prebias:
@@ -371,11 +355,10 @@ def train(opt):
                                       data,
                                       batch_size=batch_size * 2,
                                       img_size=opt.img_size,
-                                      conf_thres= 0.1, # 0.001 if final_epoch else 0.1,  # 0.1 for speed
-                                      iou_thres=0.5, # 0.6 if final_epoch and is_xview else 0.5,
+                                      conf_thres=0.001 if final_epoch else 0.1,  # 0.1 for speed
+                                      iou_thres=0.6 if final_epoch and is_xview else 0.5,
                                       save_json=True,  # final_epoch and is_xview, #fixme
-                                      model=model,#fixme
-                                      # model=ema.ema,
+                                      model=model,
                                       dataloader=testloader, opt=opt)
 
         # Write epoch results
@@ -385,24 +368,19 @@ def train(opt):
             os.system('gsutil cp results.txt gs://%s/results%s.txt' % (opt.bucket, opt.name))
 
         # Write Tensorboard results
-        #fixme --yang.xu
-        # if tb_writer:
-        #     x = list(mloss) + list(results)
-        #     titles = ['GIoU', 'Objectness', 'Classification', 'Train loss',
-        #               'Precision', 'Recall', 'mAP', 'F1', 'val GIoU', 'val Objectness', 'val Classification']
-        #     for xi, title in zip(x, titles):
-        #         tb_writer.add_scalar(title, xi, epoch)
         if tb_writer:
-            tags = ['train/giou_loss', 'train/obj_loss', 'train/cls_loss',
-                    'metrics/precision', 'metrics/recall', 'metrics/mAP_0.5', 'metrics/F1',
-                    'val/giou_loss', 'val/obj_loss', 'val/cls_loss']
-            for x, tag in zip(list(mloss[:-1]) + list(results), tags):
-                tb_writer.add_scalar(tag, x, epoch)
+            x = list(mloss) + list(results)
+            titles = ['GIoU', 'Objectness', 'Classification', 'Train loss',
+                      'Precision', 'Recall', 'mAP', 'F1', 'val GIoU', 'val Objectness', 'val Classification']
+            for xi, title in zip(x, titles):
+                tb_writer.add_scalar(title, xi, epoch)
+
         # Update best mAP
-        #fixme--yang.xu # chang initialization of fi
-        fi = sum(results[4:])  # total loss
-        if fi < best_fitness:
-            best_fitness = fi
+        #fixme--yang.xu
+        # fitness = sum(results[4:])  # total loss
+        fi = fitness(np.array(results).reshape(1, -1))  # fitness_i = weighted combination of [P, R, mAP, F1]
+        if fitness < best_fitness:
+            best_fitness = fitness
 
         # Save training results
         save = (not opt.nosave) or (final_epoch and not opt.evolve) or opt.prebias
@@ -412,17 +390,15 @@ def train(opt):
                 chkpt = {'epoch': epoch,
                          'best_fitness': best_fitness,
                          'training_results': f.read(),
-                         #fixme --yang.xu
                          'model': model.module.state_dict() if type(
                              model) is nn.parallel.DistributedDataParallel else model.state_dict(),
-                         # 'model': ema.ema.module.state_dict() if hasattr(model, 'module') else ema.ema.state_dict(),
                          'optimizer': None if final_epoch else optimizer.state_dict()}
 
             # Save last checkpoint
             torch.save(chkpt, last)
 
             # Save best checkpoint
-            if best_fitness == fi and not final_epoch:
+            if best_fitness == fitness:
                 torch.save(chkpt, best)
 
             # Save backup every 10 epochs (optional)
@@ -467,9 +443,8 @@ def get_opt(seed=1024, cmt='', hyp_cmt = 'hgiou1', Train=True, sr=None):
     parser.add_argument('--multi_scale', action='store_true', help='adjust (67% - 150%) img_size every 10 batches')
     parser.add_argument('--img_size', type=int, default=608, help='inference size (pixels)')  # 416 608
     parser.add_argument('--class_num', type=int, default=1, help='class number')  # 60 6 1
-    parser.add_argument('--single-cls', action='store_true', default='True', help='train as single-class dataset')
 
-    parser.add_argument('--conf-thres', type=float, default=0.001, help='0.001 object confidence threshold')
+    parser.add_argument('--conf-thres', type=float, default=0.001, help='object confidence threshold')
     parser.add_argument('--iou-thres', type=float, default=0.5, help='IOU threshold for NMS')
     parser.add_argument('--save_json', action='store_true', help='save a cocoapi-compatible JSON results file')
     parser.add_argument('--task', default='', help="'test', 'study', 'benchmark'")
@@ -485,7 +460,7 @@ def get_opt(seed=1024, cmt='', hyp_cmt = 'hgiou1', Train=True, sr=None):
     parser.add_argument('--arc', type=str, default='default', help='yolo architecture')  # defaultpw, uCE, uBCE
     parser.add_argument('--prebias', action='store_true', help='pretrain model biases')
     parser.add_argument('--name', default='', help='renames results.txt to results_name.txt if supplied')
-    parser.add_argument('--device', default='0, 1', help='device id (i.e. 0 or 0,1 or cpu)')
+    parser.add_argument('--device', default='0', help='device id (i.e. 0 or 0,1 or cpu)')
     parser.add_argument('--adam', action='store_true', help='use adam optimizer')
     parser.add_argument('--var', type=float, help='debug variable')
     opt = parser.parse_args()
@@ -503,7 +478,7 @@ def get_opt(seed=1024, cmt='', hyp_cmt = 'hgiou1', Train=True, sr=None):
             opt.name = '{}_seed{}'.format(cmt, seed)
         elif sr == 0:
             opt.data = 'data_xview/{}_cls/{}_seed{}/xview_{}_seed{}.data'.format(opt.class_num, cmt, seed, cmt, seed)
-            # time_marker = '2020-04-28_14.21'
+            # time_marker = '2020-04-26_18.16'
             opt.weights_dir = opt.weights_dir.format(opt.class_num, cmt, seed, '{}_{}_seed{}'.format(time_marker, hyp_cmt, seed))
             opt.writer_dir = opt.writer_dir.format(opt.class_num, cmt, seed, '{}_{}_seed{}'.format(time_marker, hyp_cmt, seed))
             opt.result_dir = opt.result_dir.format(opt.class_num, cmt, seed, '{}_{}_seed{}'.format(time_marker, hyp_cmt, seed))
@@ -561,32 +536,26 @@ if __name__ == '__main__':
     # syn_ratios = [None]
     # comments = ['px23whr3']
     # syn_ratios = [0]
-    # comments = ['xview_syn_xview_bkg_px23whr3_6groups_models_color', 'xview_syn_xview_bkg_px23whr3_6groups_models_mixed', 'px23whr3']
-    # syn_ratios = [1,1, 0]
+    # comments = ['xview_syn_xview_bkg_px23whr3_6groups_models_color', 'xview_syn_xview_bkg_px23whr3_6groups_models_mixed']
+    # syn_ratios = [1]
+    # comments = ['xview_syn_xview_bkg_px23whr3_6groups2_models_color', 'xview_syn_xview_bkg_px23whr3_6groups2_models_mixed']
+    # syn_ratios = [1]
     # comments = ['xview_syn_xview_bkg_px23whr3_small_models_color', 'xview_syn_xview_bkg_px23whr3_small_models_mixed']
     # syn_ratios = [1]
-    # comments = ['xview_syn_xview_bkg_px23whr3_small_models_color', 'xview_syn_xview_bkg_px23whr3_small_models_mixed', 'px23whr3']
-    # syn_ratios = [ 1, 1, 0]
-    comments = ['px23whr3']
-    sr = 0
-    pxwhrsd = 'px23whr3_seed{}'
-    hyp_cmt = 'hgiou1_fitness'
-    # comments = ['px23whr4']
-    # syn_ratios = [0]
-    # pxwhrsd = 'px23whr4_seed{}'
-    # hyp_cmt = 'hgiou1'
+    comments = ['px23whr3', 'xview_syn_xview_bkg_px23whr3_small_models_color', 'xview_syn_xview_bkg_px23whr3_small_models_mixed']
+    syn_ratios = [0, 1, 1]
     seeds = [17] # 5,
+    pxwhrsd = 'px23whr3_seed{}'
+    hyp_cmt = 'hgiou1'
     for sd in seeds:
         for cx, cmt in enumerate(comments):
             # for sr in syn_ratios:
             sr = syn_ratios[cx]
-            # sr = 1
             opt = get_opt(sd, cmt, hyp_cmt=hyp_cmt, sr=sr)
             opt.base_dir = opt.base_dir.format(opt.class_num, pxwhrsd.format(sd))
-            # opt.resume = True
+
             if sr == 0 or sr is None:
                 results_file = os.path.join(opt.result_dir, 'results_{}_seed{}.txt'.format(opt.cmt, opt.seed))
-                # last = os.path.join(opt.weights_dir, 'backup218.pt')
                 last = os.path.join(opt.weights_dir, 'last_{}_seed{}.pt'.format(opt.cmt, opt.seed))
                 best = os.path.join(opt.weights_dir, 'best_{}_seed{}.pt'.format(opt.cmt, opt.seed))
             else:

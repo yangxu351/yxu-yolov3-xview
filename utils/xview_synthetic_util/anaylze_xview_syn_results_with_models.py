@@ -109,10 +109,10 @@ def plot_val_results_iou_comp_with_model_id(mid, comments=''):
 
 
 def get_tp_fn_list_airplane_with_model(dt, sr, comments=[], mid=0, catid=0, iou_thres=0.5, score_thres=0.3,
-                                       px_thres=6, whr_thres=4, syn_cmt=''):
+                                       px_thres=6, whr_thres=4, syn_cmt='', hyp_cmt=''):
     ''' get TP FN of different 3d-models '''
-    # print(os.path.join(syn_args.results_dir.format(syn_args.class_num, dt, sr), 'test_on*{}'.format(syn_cmt)))
-    results_dir = glob.glob(os.path.join(syn_args.results_dir.format(syn_args.class_num, dt, sr), 'test_on*{}'.format(syn_cmt)))[0]
+    # print(os.path.join(syn_args.results_dir.format(syn_args.class_num, dt, sr), 'test_on*{}*'.format(hyp_cmt)))
+    results_dir = glob.glob(os.path.join(syn_args.results_dir.format(syn_args.class_num, dt, sr), 'test_on*{}*'.format(hyp_cmt)))[-1]
     result_json_file = os.path.join(results_dir, 'results_{}_{}.json'.format(sr, 'on_original_model'))
     result_allcat_list = json.load(open(result_json_file))
     result_list = []
@@ -459,7 +459,8 @@ def draw_bar_compare_tp_number_of_different_models(comments=[], mids=[], xview_c
 
     # xlabels = ['Model0', 'Model1', 'Model2', 'Unlabeled']
     # x = np.array([1, 3, 5, 7])
-    xlabels = ['Model0', 'Model1', 'Model2', 'Model3', 'Model4', 'Model5']
+    # xlabels = ['Model0', 'Model1', 'Model2', 'Model3', 'Model4', 'Model5']
+    xlabels = ['Model0', 'Model1', 'Model2', 'Model3', 'Model4', 'Model5', 'Unlabeled']
     x = np.arange(1, 1+len(mids)*2, 2)
 
     plt.rcParams['figure.figsize'] = (10.0, 8.0)
@@ -484,8 +485,8 @@ def draw_bar_compare_tp_number_of_different_models(comments=[], mids=[], xview_c
         rects_syn_fn = axs2.bar(x + cix*width, fn_num_arr, width, label=cmt + xview_cmt[cix])  # , label=labels
         autolabel(axs2, rects_syn_fn, x + cix*width, xlabels, fn_num_arr, rotation=0)
 
-    axs1.legend()
-    axs2.legend()
+    axs1.legend(loc='upper left')
+    axs2.legend(loc='upper left')
     axs1.grid(True)
     axs2.grid(True)
     axs1.set_xlabel('TP', literal_eval(syn_args.font2))
@@ -518,10 +519,13 @@ def statistic_model_number(type='validation', comments='px6whr4_ng0_seed17'):
     for f in df_val.loc[:, 0]:
         if not is_non_zero_file(f):
             continue
+        # print(f)
         df_lbl = pd.read_csv(f, header=None, sep=' ')
         for m in df_lbl.loc[:, 5]:
             if m not in Num.keys():
                 Num[m] = 1
+                print(m)
+                print(f)
             else:
                 Num[m] += 1
     json_dir = os.path.join(args.txt_save_dir, 'val_result_iou_map', comments)
@@ -669,10 +673,10 @@ if __name__ == "__main__":
     statistic model Number 
     '''
     # type = 'training'
-    # type = 'validation'
-    # # comments='px6whr4_ng0_seed17'
-    # # comments='px20whr4_seed17'
-    # # comments='px23whr4_seed17'
+    # # type = 'validation'
+    # # # comments='px6whr4_ng0_seed17'
+    # # # comments='px20whr4_seed17'
+    # # # comments='px23whr4_seed17'
     # comments='px23whr3_seed17'
     # statistic_model_number(type, comments)
 
@@ -689,21 +693,23 @@ if __name__ == "__main__":
     # whr_thres = 4
     # comments = ['px23whr4_seed17', '_with_model']
     # display_type = ['px23whr4']
+
     # px_thres = 23
     # whr_thres = 3
     # comments = ['px23whr3_seed17', '_with_model']
     # display_type = ['px23whr3']
-    #
+    # hyp_cmt = 'hgiou1_fitness'
+    # # hyp_cmt = 'hgiou1'
     # syn_ratio = ['seed17']
     # score_thres = 0.3
     # iou_thres = 0.5
     # catid = 0
     # # model_ids = [0, 1, 2, 3]
-    # model_ids = [0, 1, 2, 3, 4, 5]
+    # model_ids = [0, 1, 2, 3, 4, 5, 6]
     # for mid in model_ids:
     #     for dt in display_type:
     #         for sr in syn_ratio:
-    #             get_tp_fn_list_airplane_with_model(dt, sr, comments, mid, catid, iou_thres, score_thres, px_thres, whr_thres)
+    #             get_tp_fn_list_airplane_with_model(dt, sr, comments, mid, catid, iou_thres, score_thres, px_thres, whr_thres, hyp_cmt=hyp_cmt)
     #             plot_val_img_with_tp_fn_bbox_with_model(dt, sr, comments[0] + comments[1], mid)
 
 
@@ -722,7 +728,6 @@ if __name__ == "__main__":
     # display_types = ['syn_xview_bkg_px23whr4_scale_models_texture',
     #                 'syn_xview_bkg_px23whr4_scale_models_color',
     #                 'syn_xview_bkg_px23whr4_scale_models_mixed']
-    #
     # sr = 'seed17'
     # score_thres = 0.3
     # whr_thres = 4
@@ -776,21 +781,25 @@ if __name__ == "__main__":
     # # display_types = ['xview_syn_xview_bkg_px23whr4_small_models_color',
     # #                  'xview_syn_xview_bkg_px23whr4_small_models_mixed']
     # syn_cmt = '_1xSyn'
+
     # px_thres = 23 ##*******
     # whr_thres = 3
     # comments = ['px23whr3_seed17', '_with_model']
     # display_types = ['xview_syn_xview_bkg_px23whr3_6groups_models_color',
     #                  'xview_syn_xview_bkg_px23whr3_6groups_models_mixed']
     # syn_cmt = '_1xSyn'
+    # hyp_cmt = 'hgiou1_fitness'
+    # # # hyp_cmt = 'hgiou1'
     # score_thres = 0.3
     # iou_thres = 0.5
     # catid = 0
     # # model_ids = [0, 1, 2, 3]
-    # model_ids = [0, 1, 2, 3, 4, 5]
+    # # model_ids = [0, 1, 2, 3, 4, 5]
+    # model_ids = [0, 1, 2, 3, 4, 5, 6]
     # sr = 'seed17'
     # for mid in model_ids:
     #     for dt in display_types:
-    #         get_tp_fn_list_airplane_with_model(dt, sr, comments, mid, catid, iou_thres, score_thres, px_thres, whr_thres, syn_cmt)
+    #         get_tp_fn_list_airplane_with_model(dt, sr, comments, mid, catid, iou_thres, score_thres, px_thres, whr_thres, syn_cmt, hyp_cmt=hyp_cmt)
     #         plot_val_img_with_tp_fn_bbox_with_model(dt, sr, comments[0] + comments[1], mid, syn_cmt)
 
 
@@ -884,7 +893,8 @@ if __name__ == "__main__":
     #             'xview_syn_xview_bkg_px23whr3_6groups_models_color_seed17',
     #             'xview_syn_xview_bkg_px23whr3_6groups_models_mixed_seed17']
     # xview_cmt = ['', '_1xSyn', '_1xSyn']
-    # model_ids = [0, 1, 2, 3, 4, 5]
+    # model_ids = [0, 1, 2, 3, 4, 5, 6]
+    # # model_ids = [0, 1, 2, 3, 4, 5]
     # # model_ids = [0, 1, 2, 3]
     # draw_bar_compare_tp_number_of_different_models(comments, model_ids, xview_cmt)
 

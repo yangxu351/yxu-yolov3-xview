@@ -427,7 +427,14 @@ def compute_loss(p, targets, model):  # predictions, targets, model
     lcls *= h['cls']
     if red == 'sum':
         bs = tobj.shape[0]  # batch size
-        lobj *= 3 / (6300 * bs) * 2  # 3 / np * 2
+        #fixme--yang.xu
+        # https://github.com/ultralytics/yolov3/issues/804
+        # 608/32x608/32=19x19 grid by 3 anchors for the first layer,
+        # 38x38 grid with 3 anchors for second,
+        # 76x76 grid with 3 anchors for third
+        # 6300 ????  7581*3=22743
+        # lobj *= 3 / (6300 * bs) * 2  # 3 / np * 2
+        lobj *= 3 / (6300 * bs) * 2
         if ng:
             lcls *= 3 / ng / model.nc
             lbox *= 3 / ng
@@ -965,34 +972,35 @@ def plot_results_overlay(start=0, stop=0):  # from utils.utils import *; plot_re
         fig.savefig(f.replace('.txt', '.png'), dpi=200)
 
 
-def plot_results(start=0, stop=0, bucket='', id=()):  # from utils.utils import *; plot_results()
+def plot_results(start=0, stop=0, bucket='', id=(), class_num=1, result_dir=None, png_name='result.png', title=''):
+    #fixme
+    # from utils.utils import *; plot_results()
     # Plot training 'results*.txt' as seen in https://github.com/ultralytics/yolov3#training
-    fig, ax = plt.subplots(2, 5, figsize=(12, 6))
+    #fixme --yang.xu
+    fig, ax = plt.subplots(2, 5, figsize=(14, 7), constrained_layout=True)
     ax = ax.ravel()
     s = ['GIoU', 'Objectness', 'Classification', 'Precision', 'Recall',
          'val GIoU', 'val Objectness', 'val Classification', 'mAP@0.5', 'F1']
+    if not result_dir:
+        result_dir = '../result_output/{}_cls/'.format(class_num)
     if bucket:
-        os.system('rm -rf storage.googleapis.com')
         files = ['https://storage.googleapis.com/%s/results%g.txt' % (bucket, x) for x in id]
     else:
-        files = glob.glob('results*.txt') + glob.glob('../../Downloads/results*.txt')
+        # files = glob.glob('results*.txt') + glob.glob('../../Downloads/results*.txt')
+        files = glob.glob(result_dir + 'results*.txt')
     for f in sorted(files):
-        try:
-            results = np.loadtxt(f, usecols=[2, 3, 4, 8, 9, 12, 13, 14, 10, 11], ndmin=2).T
-            n = results.shape[1]  # number of rows
-            x = range(start, min(stop, n) if stop else n)
-            for i in range(10):
-                y = results[i, x]
-                if i in [0, 1, 2, 5, 6, 7]:
-                    y[y == 0] = np.nan  # dont show zero loss values
-                    # y /= y[0]  # normalize
-                ax[i].plot(x, y, marker='.', label=Path(f).stem, linewidth=2, markersize=8)
-                ax[i].set_title(s[i])
-                if i in [5, 6, 7]:  # share train and val loss y axes
-                    ax[i].get_shared_y_axes().join(ax[i], ax[i - 5])
-        except:
-            print('Warning: Plotting error for %s, skipping file' % f)
+        results = np.loadtxt(f, usecols=[2, 3, 4, 8, 9, 12, 13, 14, 10, 11], ndmin=2).T
+        n = results.shape[1]  # number of rows
+        x = range(start, min(stop, n) if stop else n)
+        for i in range(10):
+            y = results[i, x]
+            if i in [0, 1, 2, 5, 6, 7]:
+                y[y == 0] = np.nan  # dont show zero loss values
+            ax[i].plot(x, y, marker='.', label=Path(f).stem)
+            ax[i].set_title(s[i])
+            ax[i].grid(True)
+            if i in [5, 6, 7]:  # share train and val loss y axes
+                ax[i].get_shared_y_axes().join(ax[i], ax[i - 5])
 
-    fig.tight_layout()
-    ax[1].legend()
-    fig.savefig('results.png', dpi=200)
+    fig.suptitle(title)
+    fig.savefig(result_dir + png_name, dpi=200)

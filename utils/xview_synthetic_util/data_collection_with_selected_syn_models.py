@@ -231,7 +231,80 @@ def change_labels_from_px6whr4_to_px23whr4():
     print(bx)
 
 
+def backup_val_rgb_bbx_indices_lbl(cmt='', typestr='', px_thres=None, whr_thres=None):
+    bbox_folder_name = '{}_images_with_bbox_with_indices'.format(cmt)
+    src_bbx_path = os.path.join(args.cat_sample_dir,'image_with_bbox_indices', bbox_folder_name)
+
+    val_bbox_folder_name = '{}_{}_images_with_bbox_with_indices'.format(cmt, typestr)
+    dst_bbx_path = os.path.join(args.cat_sample_dir,'image_with_bbox_indices', val_bbox_folder_name)
+
+    if not os.path.exists(dst_bbx_path):
+        os.makedirs(dst_bbx_path)
+
+    val_lbl_file = os.path.join(args.data_save_dir, cmt, 'xview{}_lbl_{}.txt'.format(typestr, cmt))
+    save_lbl_path = os.path.join(args.txt_save_dir, 'lbl_with_model_id', '{}_{}_model'.format(cmt, typestr))
+    print(os.path.exists(save_lbl_path), save_lbl_path)
+    if not os.path.exists(save_lbl_path):
+        os.makedirs(save_lbl_path)
+
+    val_lbl = pd.read_csv(val_lbl_file, header=None)
+    for vl in val_lbl.loc[:, 0]:
+        shutil.copyfile(vl, os.path.join(save_lbl_path, os.path.basename(vl)))
+        if pps.is_non_zero_file(vl):
+            img_name = os.path.basename(vl).replace('.txt', '.jpg')
+            shutil.copyfile(os.path.join(src_bbx_path, img_name),
+                            os.path.join(dst_bbx_path, img_name))
+
+
+def bakcup_all_bbox_with_model_id(cmt='', typestr='', px_thres=None, whr_thres=None):
+    src_lbl_path = os.path.join(args.txt_save_dir, 'lbl_with_model_id', '{}_{}_model'.format(cmt, typestr))
+    lbl_with_mid_files = np.sort(glob.glob(os.path.join(src_lbl_path, '*.txt')))
+
+    des_lbl_path = args.annos_save_dir[:-1] + '_all_model/'
+    if not os.path.exists(des_lbl_path):
+        os.mkdir(des_lbl_path)
+
+    for f in lbl_with_mid_files:
+        shutil.copy(f, des_lbl_path)
+
+
 if __name__ == '__main__':
+    '''
+    draw bbox on rgb images with label indices
+    '''
+    # syn = False
+    # px_thres = 23
+    # whr_thres = 3
+    # pxwhr = 'px{}whr{}_seed17'.format(px_thres, whr_thres)
+    # pps.draw_bbx_on_rgb_images_with_indices(syn, pxwhr=pxwhr, px_thres=px_thres, whr_thres=whr_thres)
+
+    '''
+    get val rgb images with bbox indices 
+    get val lbl for label modelid
+    '''
+    # px_thres = 23
+    # whr_thres = 3
+    # seed = 17
+    # args = pwv.get_args(px_thres, whr_thres)
+    # cmt = 'px{}whr{}_seed{}'.format(px_thres, whr_thres, seed)
+    # # typestr = 'val'
+    # typestr = 'train'
+    # backup_val_rgb_bbx_indices_lbl(cmt, typestr, px_thres, whr_thres)
+
+    '''
+    after label bbox with model id
+    backup all label_with_model_id 
+    '''
+    # px_thres = 23
+    # whr_thres = 3
+    # seed = 17
+    # args = pwv.get_args(px_thres, whr_thres)
+    # cmt = 'px{}whr{}_seed{}'.format(px_thres, whr_thres, seed)
+    # # typestr = 'val'
+    # typestr = 'train'
+    # bakcup_all_bbox_with_model_id(cmt, typestr, px_thres, whr_thres)
+
+
     '''
     generate new xviewval_lbl_with_model.txt
     '''

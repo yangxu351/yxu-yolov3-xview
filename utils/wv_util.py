@@ -211,8 +211,8 @@ def chip_image(img, ci_coords, ci_classes, feature_ids, shape=(300, 300), name="
     height, width, _ = img.shape
     wn, hn = shape
 
+    # w_num, h_num = (int(width / wn), int(height / hn))
     w_num, h_num = (round(width / wn), round(height / hn))
-    # images = np.zeros((w_num * h_num + (w_num-1) * (h_num-1), hn, wn, 3))
     images = {}
     image_names = {}
     total_boxes = {}
@@ -228,7 +228,70 @@ def chip_image(img, ci_coords, ci_classes, feature_ids, shape=(300, 300), name="
     k = 0
     for i in range(w_num):
         for j in range(h_num):
-            chip = img[hn * j:hn * (j + 1), wn * i:wn * (i + 1), :3]
+            hmin = hn * j
+            hmax = hn * (j + 1)
+            wmin = wn * i
+            wmax = wn * (i + 1)
+
+            x = np.logical_or(np.logical_and((ci_coords[:, 0] < ((i + 1) * wn)), (ci_coords[:, 0] >= (i * wn))),
+                              np.logical_and((ci_coords[:, 2] < ((i + 1) * wn)), (ci_coords[:, 2] >= (i * wn))))
+            out = ci_coords[x]
+            y = np.logical_or(np.logical_and((out[:, 1] < ((j + 1) * hn)), (out[:, 1] >= (j * hn))),
+                              np.logical_and((out[:, 3] < ((j + 1) * hn)), (out[:, 3] >= (j * hn))))
+            out_drop = out[y]
+            if out_drop.shape[0] == 0:
+                continue
+
+            s_height = None
+            s_width = None
+            if hmax >= height and wmax >= width:
+                chip = img[height-hn : height, width-wn : width, :3]
+                s_height = (height-hn)
+                s_width = (width-wn)
+            elif hmax >= height and wmax < width:
+                chip = img[height-hn : height, wmin : wmax, :3]
+                s_height = (height-hn)
+            elif hmax < height and wmax >= width:
+                chip = img[hmin : hmax, width-wn : width, :3]
+                s_width = (width-wn)
+            else:
+                chip = img[hmin : hmax, wmin : wmax, :3]
+
+            if not s_height and not s_width:
+                out = np.transpose(np.vstack((np.clip(out_drop[:, 0] - wmin, 0, wn),
+                                              np.clip(out_drop[:, 1] - hmin, 0, hn),
+                                              np.clip(out_drop[:, 2] - wmin, 0, wn),
+                                              np.clip(out_drop[:, 3] - hmin, 0, hn))))
+            elif s_height and s_width:
+                    out = np.transpose(np.vstack((np.clip(out_drop[:, 0] - s_width, 0, wn),
+                                                  np.clip(out_drop[:, 1] - s_height, 0, hn),
+                                                  np.clip(out_drop[:, 2] - s_width, 0, wn),
+                                                  np.clip(out_drop[:, 3] - s_height, 0, hn))))
+            elif s_height and not s_width:
+                out = np.transpose(np.vstack((np.clip(out_drop[:, 0] - wmin, 0, wn),
+                                              np.clip(out_drop[:, 1] - s_height, 0, hn),
+                                              np.clip(out_drop[:, 2] - wmin, 0, wn),
+                                              np.clip(out_drop[:, 3] - s_height, 0, hn))))
+            elif not s_height and s_width: # s_width
+                out = np.transpose(np.vstack((np.clip(out_drop[:, 0] - s_width, 0, wn),
+                                              np.clip(out_drop[:, 1] - hmin, 0, hn),
+                                              np.clip(out_drop[:, 2] - s_width, 0, wn),
+                                              np.clip(out_drop[:, 3] - hmin, 0, hn))))
+            print(out.shape)
+
+            # bounding boxes partially overlapped with a chip
+            # were cropped at the chip edge
+            # out = np.transpose(np.vstack((np.clip(out_drop[:, 0] - (wn * i), 0, wn),
+            #                               np.clip(out_drop[:, 1] - (hn * j), 0, hn),
+            #                               np.clip(out_drop[:, 2] - (wn * i), 0, wn),
+            #                               np.clip(out_drop[:, 3] - (hn * j), 0, hn))))
+
+            if out.shape[0] == 0:
+                continue
+            total_boxes[k] = out
+            total_classes[k] = ci_classes[x][y]
+            total_box_ids[k] = feature_ids[x][y]
+
             # remove figures with more than 10% black pixels
             im = Image.fromarray(chip)
             im_gray = np.array(im.convert('L'))
@@ -237,26 +300,6 @@ def chip_image(img, ci_coords, ci_classes, feature_ids, shape=(300, 300), name="
             # NOTE: when the image is full of black pixel  or larger than (1-thr) covered with black pixel
             if non_black_percent < thr:
                 continue
-
-            x = np.logical_or(np.logical_and((ci_coords[:, 0] < ((i + 1) * wn)), (ci_coords[:, 0] >= (i * wn))),
-                              np.logical_and((ci_coords[:, 2] < ((i + 1) * wn)), (ci_coords[:, 2] >= (i * wn))))
-            out = ci_coords[x]
-            y = np.logical_or(np.logical_and((out[:, 1] < ((j + 1) * hn)), (out[:, 1] >= (j * hn))),
-                              np.logical_and((out[:, 3] < ((j + 1) * hn)), (out[:, 3] >= (j * hn))))
-            out_drop = out[y]
-            # bounding boxes partially overlapped with a chip
-            # were cropped at the chip edge
-            out = np.transpose(np.vstack((np.clip(out_drop[:, 0] - (wn * i), 0, wn),
-                                          np.clip(out_drop[:, 1] - (hn * j), 0, hn),
-                                          np.clip(out_drop[:, 2] - (wn * i), 0, wn),
-                                          np.clip(out_drop[:, 3] - (hn * j), 0, hn))))
-
-            if out.shape[0] == 0:
-                continue
-            total_boxes[k] = out
-            total_classes[k] = ci_classes[x][y]
-            total_box_ids[k] = feature_ids[x][y]
-
             image_name = name + '_' + str(k) + '.jpg'
             im.save(os.path.join(dir, image_name))
             image_names[k] = image_name

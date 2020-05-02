@@ -368,7 +368,7 @@ def draw_bbx_on_rgb_images(pxwhr='px6whr4_ng0'):
         gbc.plot_img_with_bbx(f, txt_file, save_bbx_path, label_index=False)
 
 
-def draw_bbx_on_rgb_images_with_indices(syn=True, dt='syn_texture', pxwhr='px6whr4_ng0'):
+def draw_bbx_on_rgb_images_with_indices(syn=True, dt='syn_texture', pxwhr='px6whr4_ng0', px_thres=None, whr_thres=None):
     if syn:
         step = syn_args.tile_size * syn_args.resolution
         img_folder_name = '{}_all_images_step{}'.format(dt, step)
@@ -393,12 +393,12 @@ def draw_bbx_on_rgb_images_with_indices(syn=True, dt='syn_texture', pxwhr='px6wh
             txt_file = os.path.join(txt_path, file_names[ix].replace(IMG_FORMAT, TXT_FORMAT))
             gbc.plot_img_with_bbx(f, txt_file, save_bbx_path, label_index=True)
     else:
-        args = pwv.get_args()
+        args = pwv.get_args(px_thres, whr_thres)
         files = np.sort(glob.glob(os.path.join(args.annos_save_dir, '*{}'.format(TXT_FORMAT))))
         file_names = [os.path.basename(f).replace(TXT_FORMAT, IMG_FORMAT0) for f in files]
 
-        bbox_folder_name = 'xview_all_images_with_bbox_with_indices'
-        save_bbx_path = os.path.join(args.txt_save_dir, bbox_folder_name)
+        bbox_folder_name = '{}_images_with_bbox_with_indices'.format(pxwhr)
+        save_bbx_path = os.path.join(args.cat_sample_dir, 'image_with_bbox_indices', bbox_folder_name)
 
         if not os.path.exists(save_bbx_path):
             os.makedirs(save_bbx_path)
