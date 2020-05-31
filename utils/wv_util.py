@@ -233,59 +233,67 @@ def chip_image(img, ci_coords, ci_classes, feature_ids, shape=(300, 300), name="
             wmin = wn * i
             wmax = wn * (i + 1)
 
-            x = np.logical_or(np.logical_and((ci_coords[:, 0] < ((i + 1) * wn)), (ci_coords[:, 0] >= (i * wn))),
-                              np.logical_and((ci_coords[:, 2] < ((i + 1) * wn)), (ci_coords[:, 2] >= (i * wn))))
+            x = np.logical_or(np.logical_and((ci_coords[:, 0] < wmax), (ci_coords[:, 0] >= wmin)),
+                              np.logical_and((ci_coords[:, 2] < wmax), (ci_coords[:, 2] >= wmin)))
             out = ci_coords[x]
-            y = np.logical_or(np.logical_and((out[:, 1] < ((j + 1) * hn)), (out[:, 1] >= (j * hn))),
-                              np.logical_and((out[:, 3] < ((j + 1) * hn)), (out[:, 3] >= (j * hn))))
+            y = np.logical_or(np.logical_and((out[:, 1] < hmax), (out[:, 1] >= hmin)),
+                              np.logical_and((out[:, 3] < hmax), (out[:, 3] >= hmin)))
             out_drop = out[y]
             if out_drop.shape[0] == 0:
                 continue
 
-            s_height = None
-            s_width = None
+            chip = np.zeros_like(img)
             if hmax >= height and wmax >= width:
-                chip = img[height-hn : height, width-wn : width, :3]
-                s_height = (height-hn)
-                s_width = (width-wn)
+                chip[:height-hmin, :width-wmin, :3] = img[hmin : height, wmin : width, :3]
             elif hmax >= height and wmax < width:
-                chip = img[height-hn : height, wmin : wmax, :3]
-                s_height = (height-hn)
+                chip[:height-hmin, :wmax-wmin, :3] = img[hmin : height, wmin : wmax, :3]
             elif hmax < height and wmax >= width:
-                chip = img[hmin : hmax, width-wn : width, :3]
-                s_width = (width-wn)
+                chip[:hmax-hmin, :width-wmin, :3] = img[hmin : hmax, wmin : width, :3]
             else:
                 chip = img[hmin : hmax, wmin : wmax, :3]
-
-            if not s_height and not s_width:
-                out = np.transpose(np.vstack((np.clip(out_drop[:, 0] - wmin, 0, wn),
-                                              np.clip(out_drop[:, 1] - hmin, 0, hn),
-                                              np.clip(out_drop[:, 2] - wmin, 0, wn),
-                                              np.clip(out_drop[:, 3] - hmin, 0, hn))))
-            elif s_height and s_width:
-                    out = np.transpose(np.vstack((np.clip(out_drop[:, 0] - s_width, 0, wn),
-                                                  np.clip(out_drop[:, 1] - s_height, 0, hn),
-                                                  np.clip(out_drop[:, 2] - s_width, 0, wn),
-                                                  np.clip(out_drop[:, 3] - s_height, 0, hn))))
-            elif s_height and not s_width:
-                out = np.transpose(np.vstack((np.clip(out_drop[:, 0] - wmin, 0, wn),
-                                              np.clip(out_drop[:, 1] - s_height, 0, hn),
-                                              np.clip(out_drop[:, 2] - wmin, 0, wn),
-                                              np.clip(out_drop[:, 3] - s_height, 0, hn))))
-            elif not s_height and s_width: # s_width
-                out = np.transpose(np.vstack((np.clip(out_drop[:, 0] - s_width, 0, wn),
-                                              np.clip(out_drop[:, 1] - hmin, 0, hn),
-                                              np.clip(out_drop[:, 2] - s_width, 0, wn),
-                                              np.clip(out_drop[:, 3] - hmin, 0, hn))))
-            print(out.shape)
-
             # bounding boxes partially overlapped with a chip
             # were cropped at the chip edge
-            # out = np.transpose(np.vstack((np.clip(out_drop[:, 0] - (wn * i), 0, wn),
-            #                               np.clip(out_drop[:, 1] - (hn * j), 0, hn),
-            #                               np.clip(out_drop[:, 2] - (wn * i), 0, wn),
-            #                               np.clip(out_drop[:, 3] - (hn * j), 0, hn))))
+            out = np.transpose(np.vstack((np.clip(out_drop[:, 0] - (wn * i), 0, wn),
+                                          np.clip(out_drop[:, 1] - (hn * j), 0, hn),
+                                          np.clip(out_drop[:, 2] - (wn * i), 0, wn),
+                                          np.clip(out_drop[:, 3] - (hn * j), 0, hn))))
+            # s_height = None
+            # s_width = None
+            # if hmax >= height and wmax >= width:
+            #     chip = img[height-hn : height, width-wn : width, :3]
+            #     s_height = (height-hn)
+            #     s_width = (width-wn)
+            # elif hmax >= height and wmax < width:
+            #     chip = img[height-hn : height, wmin : wmax, :3]
+            #     s_height = (height-hn)
+            # elif hmax < height and wmax >= width:
+            #     chip = img[hmin : hmax, width-wn : width, :3]
+            #     s_width = (width-wn)
+            # else:
+            #     chip = img[hmin : hmax, wmin : wmax, :3]
+            #
+            # if not s_height and not s_width:
+            #     out = np.transpose(np.vstack((np.clip(out_drop[:, 0] - wmin, 0, wn),
+            #                                   np.clip(out_drop[:, 1] - hmin, 0, hn),
+            #                                   np.clip(out_drop[:, 2] - wmin, 0, wn),
+            #                                   np.clip(out_drop[:, 3] - hmin, 0, hn))))
+            # elif s_height and s_width:
+            #         out = np.transpose(np.vstack((np.clip(out_drop[:, 0] - s_width, 0, wn),
+            #                                       np.clip(out_drop[:, 1] - s_height, 0, hn),
+            #                                       np.clip(out_drop[:, 2] - s_width, 0, wn),
+            #                                       np.clip(out_drop[:, 3] - s_height, 0, hn))))
+            # elif s_height and not s_width:
+            #     out = np.transpose(np.vstack((np.clip(out_drop[:, 0] - wmin, 0, wn),
+            #                                   np.clip(out_drop[:, 1] - s_height, 0, hn),
+            #                                   np.clip(out_drop[:, 2] - wmin, 0, wn),
+            #                                   np.clip(out_drop[:, 3] - s_height, 0, hn))))
+            # elif not s_height and s_width: # s_width
+            #     out = np.transpose(np.vstack((np.clip(out_drop[:, 0] - s_width, 0, wn),
+            #                                   np.clip(out_drop[:, 1] - hmin, 0, hn),
+            #                                   np.clip(out_drop[:, 2] - s_width, 0, wn),
+            #                                   np.clip(out_drop[:, 3] - hmin, 0, hn))))
 
+            print(out.shape)
             if out.shape[0] == 0:
                 continue
             total_boxes[k] = out

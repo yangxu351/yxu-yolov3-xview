@@ -26,6 +26,7 @@ def get_object_bbox_after_group(label_path, save_path, class_label=0, min_region
     :return: (catid, xcenter, ycenter, w, h) the bbox is propotional to the image size
     '''
     lbl_files = np.sort(glob.glob(os.path.join(label_path, '*.{}'.format(IMG_FORMAT))))
+
     lbl_files = [os.path.join(label_path, f) for f in lbl_files if os.path.isfile(os.path.join(label_path, f))]
     lbl_names = [os.path.basename(f) for f in lbl_files]
 
@@ -67,7 +68,7 @@ def get_object_bbox_after_group(label_path, save_path, class_label=0, min_region
         f_txt.close()
 
 
-def plot_img_with_bbx(img_file, lbl_file, save_path, label_index=False):
+def plot_img_with_bbx(img_file, lbl_file, save_path, label_index=False, Model_id=False):
     if not is_non_zero_file(lbl_file):
         # print(is_non_zero_file(lbl_file))
         return
@@ -97,6 +98,9 @@ def plot_img_with_bbx(img_file, lbl_file, save_path, label_index=False):
         pl = ''
         if label_index:
             pl = '{}'.format(ix)
+        elif Model_id:
+            mid = int(df_lbl[ix, 5])
+            pl = '{}'.format(mid)
         else:
              pl = '{}'.format(cat_id)
         cv2.putText(img, text=pl, org=(gt_bbx[0] + 10, gt_bbx[1] + 10),

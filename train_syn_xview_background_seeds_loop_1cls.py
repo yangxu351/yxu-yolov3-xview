@@ -374,7 +374,7 @@ def train(opt):
                                       conf_thres= 0.1, # 0.001 if final_epoch else 0.1,  # 0.1 for speed
                                       iou_thres=0.5, # 0.6 if final_epoch and is_xview else 0.5,
                                       save_json=True,  # final_epoch and is_xview, #fixme
-                                      model=model,#fixme
+                                      model=model, # fixme
                                       # model=ema.ema,
                                       dataloader=testloader, opt=opt)
 
@@ -559,6 +559,8 @@ if __name__ == '__main__':
     # syn_ratios = [None]
     # comments = ['syn_xview_bkg_px23whr4_small_fw_models_color', 'syn_xview_bkg_px23whr4_small_fw_models_mixed']
     # syn_ratios = [None]
+    comments = ['syn_xview_bkg_px23whr4_rnd_bwratio_models_color', 'syn_xview_bkg_px23whr4_rnd_bwratio_models_mixed']
+    syn_ratios = [None]
     # comments = ['px23whr3']
     # syn_ratios = [0]
     # comments = ['xview_syn_xview_bkg_px23whr3_6groups_models_color', 'xview_syn_xview_bkg_px23whr3_6groups_models_mixed', 'px23whr3']
@@ -567,8 +569,8 @@ if __name__ == '__main__':
     # syn_ratios = [1]
     # comments = ['xview_syn_xview_bkg_px23whr3_small_models_color', 'xview_syn_xview_bkg_px23whr3_small_models_mixed', 'px23whr3']
     # syn_ratios = [ 1, 1, 0]
-    comments = ['px23whr3']
-    sr = 0
+    # comments = ['px23whr3']
+    # syn_ratios = [0]
     pxwhrsd = 'px23whr3_seed{}'
     hyp_cmt = 'hgiou1_fitness'
     # comments = ['px23whr4']

@@ -1,6 +1,6 @@
 import numpy as np
 from matplotlib import pyplot as plt
-from utils.xview_synthetic_util import preprocess_synthetic_data_distribution as pps
+from utils.xview_synthetic_util import preprocess_xview_syn_data_distribution as pps
 import os
 from glob import glob
 from skimage.color import rgb2gray

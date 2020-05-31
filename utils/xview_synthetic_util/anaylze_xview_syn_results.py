@@ -13,7 +13,7 @@ import seaborn as sn
 
 from utils.data_process_distribution_vis_util import process_wv_coco_for_yolo_patches_no_trnval as pwv
 from utils.utils_xview import coord_iou
-from utils.xview_synthetic_util import preprocess_synthetic_data_distribution as pps
+from utils.xview_synthetic_util import preprocess_xview_syn_data_distribution as pps
 
 IMG_SUFFIX0 = '.jpg'
 IMG_SUFFIX = '.png'
@@ -954,9 +954,9 @@ if __name__ == "__main__":
     # # comments = '38bbox_giou0_with_model'
     # comments = 'px6whr4_ng0'
     #
-    # for dt in display_type:
-    #     for sr in syn_ratio:
-    #         get_fp_fn_list_airplane(dt, sr, comments, catid, iou_thres, score_thres, px_thres, whr_thres)
+    for dt in display_type:
+        for sr in syn_ratio:
+            get_fp_fn_list_airplane(dt, sr, comments, catid, iou_thres, score_thres, px_thres, whr_thres)
 
     '''
     plot val images with fp fn bbox

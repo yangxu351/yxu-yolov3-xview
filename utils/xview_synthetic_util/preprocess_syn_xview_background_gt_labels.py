@@ -10,6 +10,9 @@ from PIL import Image
 import pandas as pd
 import shutil
 from utils.object_score_util import get_bbox_coords_from_annos_with_object_score as gbc
+from skimage import io
+import matplotlib.pyplot as plt
+import cv2
 
 IMG_FORMAT = '.png'
 TXT_FORMAT = '.txt'
@@ -116,6 +119,42 @@ def draw_bbx_on_rgb_images(dt, px_thresh=20, whr_thres=4):
         gbc.plot_img_with_bbx(f, txt_file, save_bbx_path, label_index=False)
 
 
+def plot_rgb_histogram(img_path, syn=False):
+    save_dir = '/media/lab/Yang/data/xView_YOLO/cat_samples/608/1_cls/rgb_histogram/'
+    if not os.path.exists(save_dir):
+        os.mkdir(save_dir)
+
+    if syn:
+        x_files = glob.glob(os.path.join(img_path, '*.png'))
+        name = img_path.split('/')[-3] + '.png'
+        title = '{} RGB Histogram'.format(img_path.split('/')[-3])
+    else:
+        x_files = glob.glob(os.path.join(img_path, '*.jpg'))
+        name = 'xview_rgb_histogram.jpg'
+        title = 'Xview RGB Histogram'
+    arr_hist = np.zeros(shape=(3, 256, len(x_files)))
+    color = ('b','g','r')
+    for ix, f in enumerate(x_files):
+        img = cv2.imread(f)
+        for i,col in enumerate(color):
+            # (256, 1)
+            histr = cv2.calcHist([img],[i],None,[256],[0,256])
+            arr_hist[i, :, ix] = histr[:, 0]
+
+    hs = arr_hist.mean(axis=-1)
+    print(hs.shape)
+    for cx, c in enumerate(color):
+        plt.plot(hs[cx, :],color = c)
+
+    plt.xlim([0,256])
+    plt.xlabel('Intensity Value')
+    plt.ylabel('Count')
+    plt.legend(['Red_Channel', 'Green_Channel', 'Blue_Channel'])
+    plt.suptitle(title)
+    plt.savefig(os.path.join(save_dir, name))
+    plt.show()
+
+
 def get_args(cmt=''):
     parser = argparse.ArgumentParser()
     parser.add_argument("--image_folder", type=str,
@@ -151,12 +190,14 @@ def get_args(cmt=''):
                         help="the #pixels between two connected components to be grouped")
     parser.add_argument("--resolution", type=float, default=0.3, help="resolution of synthetic data")
     parser.add_argument("--tile_size", type=int, default=608, help="image size")
+    parser.add_argument("--class_num", type=int, default=1, help="class number")
 
     args = parser.parse_args()
     # if not os.path.exists(args.syn_annos_dir):
     #     os.makedirs(args.syn_annos_dir)
     # if not os.path.exists(args.syn_txt_dir):
     #     os.makedirs(args.syn_txt_dir)
+
     return args
 
 
@@ -192,11 +233,33 @@ if __name__ == '__main__':
     # cmt = 'small_models'
     # # # cmt = 'small_fw_models'
     # cmt = '6groups_models'
+    # cmt = 'rnd_bwratio_models'
+    # cmt = 'rnd_bwratio_flat0.8_models'
+    # cmt = 'rnd_bwratio_asx_models'
+    # cmt = 'xratio_xcolor_models'
+    # cmt = 'sbwratio_xratio_xcolor_models'
+    # cmt = 'sbwratio_xratio_xcolor_dark_models'
+    # cmt = 'sbwratio_new_xratio_xcolor_models'
     # display_types = ['color', 'mixed']
     # seedians = [0, 1, 2, 3, 4]
     # syn_args = get_args(cmt)
     # for dt in display_types:
     #     merge_clean_origin_syn_image_files(seedians, dt)
+
+    '''
+    draw RGB histogram 
+    '''
+    # xview_patch_dir = '/media/lab/Yang/data/xView_YOLO/images/608_1cls/'
+    # plot_rgb_histogram(xview_patch_dir, syn=False)
+
+    # syn_patch_dir = '/media/lab/Yang/data/synthetic_data/syn_xview_bkg_sbwratio_xratio_xcolor_models_color/color_all_images_step182.4/'
+    # syn_patch_dir = '/media/lab/Yang/data/synthetic_data/syn_xview_bkg_sbwratio_xratio_xcolor_models_mixed/mixed_all_images_step182.4/'
+    # syn_patch_dir = '/media/lab/Yang/data/synthetic_data/syn_xview_bkg_sbwratio_xratio_xcolor_dark_models_color/color_all_images_step182.4/'
+    # syn_patch_dir = '/media/lab/Yang/data/synthetic_data/syn_xview_bkg_sbwratio_xratio_xcolor_dark_models_mixed/mixed_all_images_step182.4/'
+    # syn_patch_dir = '/media/lab/Yang/data/synthetic_data/Airplanes/syn_color/syn_color_all_images_step182.4/'
+    # syn_patch_dir = '/media/lab/Yang/data/synthetic_data/syn_xview_bkg_sbwratio_new_xratio_xcolor_models_mixed/mixed_all_images_step182.4/'
+    # syn_patch_dir = '/media/lab/Yang/data/synthetic_data/syn_xview_bkg_sbwratio_new_xratio_xcolor_models_mixed/mixed_all_images_step182.4/'
+    # plot_rgb_histogram(syn_patch_dir, syn=True)
 
     '''
     generate txt and bbox for syn_xveiw_background data
@@ -214,13 +277,34 @@ if __name__ == '__main__':
     # # # cmt = 'scale_models'
     # cmt = 'small_models'
     # # cmt = 'small_fw_models'
-    # px_thres=23 #20 #30
-    # whr_thres=3
-    # cmt = '6groups_models'
-    # display_types = ['color', 'mixed']
-    # syn_args = get_args(cmt)
-    # for dt in display_types:
-    #     group_object_annotation_and_draw_bbox(dt, px_thres, whr_thres)
+    # # # cmt = '6groups_models'
+    # # cmt = 'rnd_bwratio_models'
+    # cmt = 'rnd_bwratio_flat0.8_models'
+    # cmt = 'rnd_bwratio_asx_models'
+    # cmt = 'xratio_xcolor_models'
+    # cmt = 'sbwratio_xratio_xcolor_models'
+    # cmt = 'sbwratio_new_xratio_xcolor_models'
+    # cmt = 'xbw_xrxc_spr_sml_models'
+    # cmt = 'sbw_xcolor_model4'
+    # cmt = 'sbw_xcolor_model4_v1'
+    # cmt = 'sbw_xcolor_model4_v2'
+    # cmt = 'xbw_xcolor_xbkg_gauss_model4_v3'
+    # px_thres=15 #20 #30
+    # cmt = 'sbw_xcolor_model0'
+    # cmt = 'xbw_xrxc_spr_sml_models_gauss'
+    # cmt = 'xbw_xrxc_spr_sml_models_gauss'
+    # cmt = 'sbw_xcolor_model1'
+    # cmt = 'xbw_xcolor_gauss_model1_v1'
+    # cmt = 'xbw_xcolor_xbkg_gauss_model1_v2'
+    # cmt = 'sbw_xcolor_xbkg_unif_model1_v3'
+    cmt = 'xbsw_xcolor_xbkg_gauss_model1_v4'
+    px_thres=23
+
+    whr_thres=3
+    display_types = ['color', 'mixed']
+    syn_args = get_args(cmt)
+    for dt in display_types:
+        group_object_annotation_and_draw_bbox(dt, px_thres, whr_thres)
 
     '''
     draw bbox on rgb images for syn_xveiw_background data
@@ -236,13 +320,41 @@ if __name__ == '__main__':
     # # cmt = 'scale_models'
     # cmt = 'small_models'
     # # cmt = 'small_fw_models'
-    # px_thres=23 #20 #30
-    # whr_thres=3
+
     # cmt = '6groups_models'
-    # display_types = ['color', 'mixed']
-    # syn_args = get_args(cmt)
-    # for dt in display_types:
-    #     draw_bbx_on_rgb_images(dt, px_thres, whr_thres)
+    # cmt = 'rnd_bwratio_models'
+    # cmt = 'rnd_bwratio_flat0.8_models'
+    # cmt = 'rnd_bwratio_asx_models'
+    # cmt = 'xratio_xcolor_models'
+    # cmt = 'sbwratio_xratio_xcolor_models'
+    # cmt = 'sbwratio_new_xratio_xcolor_models'
+    # cmt = 'xbw_xcolor_model0'
+    # # cmt = 'xbw_xrxc_spr_sml_models'
+
+    # cmt = 'sbw_xcolor_model4'
+    # cmt = 'sbw_xcolor_model4_v1'
+    # cmt = 'sbw_xcolor_model4_v2'
+    # cmt = 'xbw_xcolor_xbkg_gauss_model4_v3'
+    # px_thres=15
+    # cmt = 'sbw_xcolor_model0'
+    # cmt = 'sbw_xcolor_model1'
+    # cmt = 'xbw_xrxc_spr_sml_models_gauss'
+    # cmt = 'xbw_xrxc_gauss_model1_v1'
+    # cmt = 'xbw_xcolor_xbkg_gauss_model1_v2'
+    # cmt = 'sbw_xcolor_xbkg_unif_model1_v3'
+    cmt = 'xbsw_xcolor_xbkg_gauss_model1_v4'
+    px_thres=23 #20 #30
+
+    whr_thres=3
+    display_types = ['color', 'mixed']
+    syn_args = get_args(cmt)
+    for dt in display_types:
+        draw_bbx_on_rgb_images(dt, px_thres, whr_thres)
+
+
+
+
+
 
 # 0 100
 # 1 42

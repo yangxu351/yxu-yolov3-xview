@@ -378,7 +378,7 @@ def train(opt):
         # Update best mAP
         #fixme--yang.xu
         # fitness = sum(results[4:])  # total loss
-        fi = fitness(np.array(results).reshape(1, -1))  # fitness_i = weighted combination of [P, R, mAP, F1]
+        fitness = fitness(np.array(results).reshape(1, -1))  # fitness_i = weighted combination of [P, R, mAP, F1]
         if fitness < best_fitness:
             best_fitness = fitness
 

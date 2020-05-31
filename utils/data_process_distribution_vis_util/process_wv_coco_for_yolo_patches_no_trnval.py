@@ -23,7 +23,7 @@ import os
 
 import utils.wv_util as wv
 from utils.utils_xview import coord_iou, compute_iou
-from utils.xview_synthetic_util import preprocess_synthetic_data_distribution as pps
+from utils.xview_synthetic_util import preprocess_xview_syn_data_distribution as pps
 import pandas as pd
 from ast import literal_eval
 import json
@@ -340,6 +340,7 @@ def plot_image_with_bbox_by_image_name_from_patches(image_name):
 
 def remove_txt_and_json_of_bad_image(bad_img_path, px_thres=None, whr_thres=None):
     '''
+    backup *.txt
     remove bad *.txt of bad_images
     remove bbox of bad_images in the *.json
     :param bad_img_path:
@@ -349,6 +350,14 @@ def remove_txt_and_json_of_bad_image(bad_img_path, px_thres=None, whr_thres=None
         args = get_args(px_thres, whr_thres)
     else:
         args = get_args()
+    '''backup *.txt'''
+    src_files = glob.glob(os.path.join(args.annos_save_dir.split('_px')[0], '*.txt'))
+    if os.path.exists(args.annos_save_dir):
+        shutil.rmtree(args.annos_save_dir)
+        os.mkdir(args.annos_save_dir)
+    for sf in src_files:
+        shutil.copy(sf, args.annos_save_dir)
+
     ''' remove bad .jpg '''
     bad_raw_img_names = pd.read_csv(bad_img_path, header=None).to_numpy()
     for name in bad_raw_img_names[:, 0]:
@@ -378,26 +387,26 @@ def remove_txt_and_json_of_bad_image(bad_img_path, px_thres=None, whr_thres=None
 
     exist_images = df_img_num_names['file_name'].tolist()
     annos_json = json.load(open(json_file))
-    image_list = annos_json['images']
+    image_list = [a for a in annos_json['images']]
+    image_name_list = [a['file_name'] for a in annos_json['images']]
+    image_id_list = [a['id'] for a in annos_json['images']]
     annotation_list = annos_json['annotations']
     print('exist_images', len(exist_images))
     print('image_list', len(image_list))
     print('annotation_list', len(annotation_list))
     bad_ids = []
-    for im in image_list:
-        if im['file_name']=='2399_5.jpg' or im['file_name']== '2531_4.jpg':# ???
-            print(im)
-        if im['file_name'] not in exist_images:
-            bad_ids.append(im['id'])
-            image_list.remove(im)
-    print('image_list', len(image_list))
+    for ix, imn in enumerate(image_name_list):
+        if imn not in exist_images:
+            bad_ids.append(image_id_list[ix])
+            image_list.remove(image_list[ix])
     for an in annotation_list:
         if an['image_id'] in bad_ids:
             annotation_list.remove(an)
     print('after----------')
     print('image_list', len(image_list))
     print('annotation_list', len(annotation_list))
-    print([(a['id'], a['file_name']) for a in image_list if a['file_name']  not in exist_images])
+    # print([(a['id'], a['file_name']) for a in image_list if a['file_name'] not in exist_images])
+    # print([x for x in exist_images if x not in [a['file_name'] for a in annos_json['images']]])
     trn_instance = {'info': 'xView aiplanes chips 608 yx185 created', 'license': 'license', 'images': image_list,
                     'annotations': annotation_list, 'categories': wv.get_all_categories(args.class_num)}
     json_file = os.path.join(args.txt_save_dir,
@@ -415,12 +424,12 @@ def clean_backup_xview_plane_with_constraints(px_thres=20, whr_thres=4):
     :return:
     '''
     args = get_args(px_thres, whr_thres)
-    gt_files = np.sort(glob.glob(os.path.join(args.annos_save_dir.split('_px')[0], '*.txt')))
-    if os.path.exists(args.annos_save_dir):
-        shutil.rmtree(args.annos_save_dir)
-        os.mkdir(args.annos_save_dir)
-        for f in gt_files:
-            shutil.copy(f, args.annos_save_dir)
+    # gt_files = np.sort(glob.glob(os.path.join(args.annos_save_dir.split('_px')[0], '*.txt')))
+    # if os.path.exists(args.annos_save_dir):
+    #     shutil.rmtree(args.annos_save_dir)
+    #     os.mkdir(args.annos_save_dir)
+    #     for f in gt_files:
+    #         shutil.copy(f, args.annos_save_dir)
 
     txt_files = np.sort(glob.glob(os.path.join(args.annos_save_dir, '*.txt')))
     for f in txt_files:
@@ -497,7 +506,7 @@ def adjust_empty_annos_json(px_thres=None, whr_thres=None):
     cnt = 0
     for lbl in lbl_files:
         img_name = os.path.basename(lbl).replace('.txt', '.jpg')
-        img_id = df_img_id[df_img_id['file_name']==img_name]['id'].to_numpy()
+        img_id = df_img_id[df_img_id['file_name'] == img_name]['id'].to_numpy()
         img = wv.get_image(args.images_save_dir + img_name)
         image_info = {
             "id": img_id,
@@ -601,32 +610,56 @@ def split_trn_val_with_chips(data_name='xview', comments='', seed=17, px_thres=N
         
     lbl_path = args.annos_save_dir
     images_save_dir = args.images_save_dir
-    all_files = np.sort(glob.glob(lbl_path + '*.txt'))
+    all_files = glob.glob(os.path.join(lbl_path, '*.txt'))
+    all_files.sort()
+    all_file_names = [os.path.basename(s).split('_')[0] for s in all_files]
+    all_name_set = list(set(all_file_names))
 
-    num_files = len(all_files)
+    num_files = len(all_name_set)
     trn_num = int(num_files * (1 - args.val_percent))
     np.random.seed(seed)
-    perm_files = np.random.permutation(all_files)
+    perm_files = np.random.permutation(all_name_set)
+
+    # num_files = len(all_files)
+    # trn_num = int(num_files * (1 - args.val_percent))
+    # np.random.seed(seed)
+    # perm_files = np.random.permutation(all_files)
 
     trn_img_txt = open(os.path.join(txt_save_dir, '{}train_img{}.txt'.format(data_name, comments)), 'w')
     trn_lbl_txt = open(os.path.join(txt_save_dir, '{}train_lbl{}.txt'.format(data_name, comments)), 'w')
     val_img_txt = open(os.path.join(txt_save_dir, '{}val_img{}.txt'.format(data_name, comments)), 'w')
     val_lbl_txt = open(os.path.join(txt_save_dir, '{}val_lbl{}.txt'.format(data_name, comments)), 'w')
 
+    # for i in range(trn_num):
+    #     trn_lbl_txt.write("%s\n" % perm_files[i])
+    #     lbl_name = perm_files[i].split('/')[-1]
+    #     img_name = lbl_name.replace('.txt', '.jpg')
+    #     trn_img_txt.write("%s\n" % os.path.join(images_save_dir, img_name))
+
     for i in range(trn_num):
-        trn_lbl_txt.write("%s\n" % perm_files[i])
-        lbl_name = perm_files[i].split('/')[-1]
-        img_name = lbl_name.replace('.txt', '.jpg')
-        trn_img_txt.write("%s\n" % os.path.join(images_save_dir, img_name))
+        start_files = glob.glob(os.path.join(lbl_path, perm_files[i] + '*.txt'))
+        for f in start_files:
+            trn_lbl_txt.write("%s\n" % f)
+            lbl_name = os.path.basename(f)
+            img_name = lbl_name.replace('.txt', '.jpg')
+            trn_img_txt.write("%s\n" % os.path.join(images_save_dir, img_name))
 
     trn_img_txt.close()
     trn_lbl_txt.close()
 
+    # for i in range(trn_num, num_files):
+    #     val_lbl_txt.write("%s\n" % perm_files[i])
+    #     lbl_name = perm_files[i].split('/')[-1]
+    #     img_name = lbl_name.replace('.txt', '.jpg')
+    #     val_img_txt.write("%s\n" % os.path.join(images_save_dir, img_name))
+
     for i in range(trn_num, num_files):
-        val_lbl_txt.write("%s\n" % perm_files[i])
-        lbl_name = perm_files[i].split('/')[-1]
-        img_name = lbl_name.replace('.txt', '.jpg')
-        val_img_txt.write("%s\n" % os.path.join(images_save_dir, img_name))
+        start_files = glob.glob(os.path.join(lbl_path, perm_files[i] + '*.txt'))
+        for f in start_files:
+            val_lbl_txt.write("%s\n" % f)
+            lbl_name = os.path.basename(f)
+            img_name = lbl_name.replace('.txt', '.jpg')
+            val_img_txt.write("%s\n" % os.path.join(images_save_dir, img_name))
 
     val_img_txt.close()
     val_lbl_txt.close()
@@ -659,7 +692,7 @@ def create_json_for_train_or_val_according_to_all_json(data_name='xview', commen
     val_img_names = [os.path.basename(f) for f in val_img_txt.loc[:, 0]]
 
     plane_json = json.load(open(os.path.join(args.txt_save_dir,
-                             'xview_all_{}_{}cls_xtlytlwh.json'.format(args.input_size, args.class_num))))
+                             'xview_reduced_{}_{}cls_xtlytlwh.json'.format(args.input_size, args.class_num))))
     all_image_list = plane_json['images']
     all_annos_list = plane_json['annotations']
 
@@ -680,7 +713,7 @@ def create_json_for_train_or_val_according_to_all_json(data_name='xview', commen
         if va_img_id in val_img_id_dict.values():
             val_annotations.append(va)
 
-    json_instance = {'info': 'xView {} aiplanes chips 608 yx185 created'.format(typestr), 'license': ['license'], 'images': val_images,
+    json_instance = {'info': 'xView {} aiplanes chips 608 yx185 created'.format(typestr), 'license': 'license', 'images': val_images,
                     'annotations': val_annotations, 'categories': wv.get_all_categories(args.class_num)}
     json_file = os.path.join(data_save_dir,
                              'xview_val{}_{}_{}cls_xtlytlwh.json'.format(comments, args.input_size, args.class_num))  # topleft
@@ -736,8 +769,6 @@ def split_trn_val_with_tifs():
                     os.path.join(args.data_save_dir, 'xviewval_img_tifsplit.txt'))
     shutil.copyfile(os.path.join(args.txt_save_dir, 'xviewval_lbl_tifsplit.txt'),
                     os.path.join(args.data_save_dir, 'xviewval_lbl_tifsplit.txt'))
-
-
 
 
 def get_train_or_val_imgs_by_cat_id(cat_ids, typestr='val'):
@@ -1945,6 +1976,86 @@ def copy_lbl_to_lbl_model(typstr='val'):
             shutil.copy(val_lbl_list[i], os.path.join(save_lbl_dir, os.path.basename(val_lbl_list[i])))
 
 
+def get_raw_train_tifs(px_thres=23, whr_thres=3, seed=17):
+    tif_list = []
+    df_trn = pd.read_csv( os.path.join(args.data_save_dir,
+                                       'px{}whr{}_seed{}/xviewtrain_img_px{}whr{}_seed{}.txt'.format(px_thres, whr_thres, seed, px_thres, whr_thres, seed)), header=None)
+    for f in df_trn.loc[:, 0]:
+        name = os.path.basename(f)
+        name = name.split('_')[0] + '.tif'
+        tif_list.append(name)
+    tif_list = list(set(tif_list))
+
+    src_path = args.image_folder
+    dst_path = args.image_folder[:-1] + '_train/'
+    if not os.path.exists(dst_path):
+        os.mkdir(dst_path)
+    for t in tif_list:
+        shutil.copy(os.path.join(src_path, t), os.path.join(dst_path, t))
+
+
+def get_new_background_images_based_on_cropped_tiff():
+    src_path = args.image_folder[:-1] + '_modify/'
+    des_path = args.image_folder[:-1] + '_modify_patches/'
+    if not os.path.exists(des_path):
+        os.mkdir(des_path)
+    src_images = glob.glob(os.path.join(src_path, '*.tiff'))
+    src_images.sort()
+    ''' get the width list and height list'''
+    # w_list = []
+    # h_list = []
+    # for f in src_images:
+    #     # print(os.path.basename(f))
+    #     img = cv2.imread(f)
+    #     # print(img.shape) # height, width, chanel
+    #     h_list.append(img.shape[0])
+    #     w_list.append(img.shape[1])
+    # h_arr = np.array(h_list)
+    # w_arr = np.array(w_list)
+    # # thres = 2190 # h_cnt  39 w_cnt  48
+    # thres = 1824 # 608*0.3*3/0.3 # h_cnt  54 w_cnt  56
+    # h_cnt = np.sum(h_arr>=thres)
+    # w_cnt = np.sum(w_arr>=thres)
+    # print('h_cnt ', h_cnt, 'w_cnt ', w_cnt)
+
+    # num_bins = 30
+    # plt.hist(h_list, bins=num_bins, label='height', alpha=0.5)
+    # plt.hist(w_list, bins=num_bins, label='width', alpha=0.6)
+    # plt.legend()
+    # plt.show()
+    ''' given the threshold for image cropping '''
+    thres = 1824
+    for f in src_images:
+        name = os.path.basename(f)
+        img = cv2.imread(f)
+        h = img.shape[0]
+        w = img.shape[1]
+        w_num = round(w/thres)
+        h_num = round(h/thres)
+        if w_num==0 or h_num==0:
+            continue
+        for hix in range(h_num):
+            for wix in range(w_num):
+                hleft = hix*thres
+                hright = (hix+1)*thres
+                wleft = wix*thres
+                wright = (wix+1)*thres
+                if hright > h and wright > w:
+                    hright = h
+                    hleft = h-thres
+                    wright = w
+                    wleft = w-thres
+                elif wright > w:
+                    wright = w
+                    wleft = w-thres
+                elif hright > h:
+                    hright = h
+                    hleft = h-thres
+                crop_img = img[hleft: hright, wleft:wright, :]
+                crop_name = name.split('.tiff')[0] + '_{}_{}.png'.format(hix, wix)
+                cv2.imwrite(os.path.join(des_path, crop_name), crop_img)
+
+
 def get_args(px_thres=None, whr_thres=None):
     parser = argparse.ArgumentParser()
     # parser.add_argument("--image_folder", type=str,
@@ -2062,6 +2173,14 @@ _aug: Augmented dataset
 
 if __name__ == "__main__":
 
+    ''' get raw train tifs '''
+
+    # px_thres=23 #20 #30
+    # whr_thres=3
+    # seed=17
+    # args = get_args(px_thres, whr_thres)
+    # get_raw_train_tifs(px_thres, whr_thres, seed)
+
     '''
     cats_split_crop_bbx_from_origins for val images
     '''
@@ -2118,25 +2237,26 @@ if __name__ == "__main__":
     #     plot_image_with_bbox_by_image_name_from_patches(name)
 
     '''
-     remove bad cropped .jpg 
-     manually get ***** /media/lab/Yang/data/xView/airplane_removed_cropped_jpg_names.txt
-     '''
+    remove bad cropped .jpg 
+    manually get ***** /media/lab/Yang/data/xView/airplane_removed_cropped_jpg_names.txt
+    '''
     # args = get_args()
     # bad_img_path = '/media/lab/Yang/data/xView/airplane_removed_cropped_jpg_names.txt'
     # src_dir = args.images_save_dir
     # remove_bad_image(bad_img_path, src_dir)
 
     '''
-     remove bbox and annotations of bad cropped .jpg 
-     manually get ***** /media/lab/Yang/data/xView/airplane_removed_cropped_jpg_names.txt
-     '''
+    backup ground truth *.txt 
+    remove bbox and annotations of bad cropped .jpg 
+    manually get ***** /media/lab/Yang/data/xView/airplane_removed_cropped_jpg_names.txt
+    '''
     # px_thres = 23
     # whr_thres = 3
     # bad_img_path = '/media/lab/Yang/data/xView/airplane_removed_cropped_jpg_names.txt'
     # remove_txt_and_json_of_bad_image(bad_img_path, px_thres, whr_thres)
 
     '''
-    backup ground truth *.txt 
+    # backup ground truth *.txt 
     delete bbox that doesn't meet the condition (>px_thres, <whr_thres)
     count ground truth self overlap from patches for each cat 
     '''
@@ -2174,7 +2294,7 @@ if __name__ == "__main__":
     ** manually replace old overlap bbox with new lbl**** 
     /media/lab/Yang/data/xView_YOLO/labels/608/1_cls_xcycwh_part_new
     '''
-    # #fixme Not Done
+    #fixme Not Done
     # cat_id = 0
     # px_thres = 23
     # whr_thres = 3
@@ -2205,29 +2325,6 @@ if __name__ == "__main__":
     #     lbl_name = os.path.basename(img).replace('.jpg', '.txt')
     #     lbl_file = os.path.join(args.annos_save_dir, lbl_name)
     #     gbc.plot_img_with_bbx(img, lbl_file, save_path, label_index=False)
-
-    '''
-    drop deviation images
-    /media/lab/Yang/data/xView/airplane_to_be_adjust_jpg_bbox.txt
-    /media/lab/Yang/data/xView/airplane_to_be_reomved_false_bbox.txt
-    /media/lab/Yang/data/xView/airplane_to_add_missed_bbox.txt
-    '''
-    # whr_thres = 3 # 3.5
-    # px_thres= 23
-    # args = get_args(px_thres, whr_thres)
-    # discard_bad_deviation_bbx_of_images()
-
-    '''
-     remove bbox and annotations of bad cropped .jpg 
-     manually get ***** 
-     /media/lab/Yang/data/xView/airplane_to_be_adjust_jpg_bbox.txt
-     /media/lab/Yang/data/xView/airplane_to_be_reomved_false_bbox.txt
-     '''
-    # whr_thres = 3 # 3.5
-    # px_thres= 23
-    # # bad_img_path = '/media/lab/Yang/data/xView/airplane_to_be_adjust_jpg_bbox.txt'
-    # bad_img_path = '/media/lab/Yang/data/xView/airplane_to_be_reomved_false_bbox.txt'
-    # remove_txt_and_json_of_bad_image(bad_img_path, px_thres, whr_thres)
 
     '''
     re-generate *xtlytlwh.json with empty label files 
@@ -2466,6 +2563,14 @@ if __name__ == "__main__":
     # clabel_wh_maps = json.load(open(os.path.join(args.ori_lbl_dir, 'xView_rare_clabel_2_wh_maps.json')))
     # draw_wh_scatter_for_rare_cats(clabel_wh_maps, rare_cat_ids, rare_cat_names)
 
+    ''' 
+    crop tiff images that not contain aircrafts
+    get new background images
+    '''
+    px_thres = 23
+    whr_thres = 3
+    args = get_args(px_thres, whr_thres)
+    get_new_background_images_based_on_cropped_tiff()
 
 
 

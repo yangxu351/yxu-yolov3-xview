@@ -265,7 +265,7 @@ class LoadStreams:  # multiple IP or RTSP cameras
 
 class LoadImagesAndLabels(Dataset):  # for training/testing
     def __init__(self, path, label_path, img_size=608, batch_size=8, class_num=60, augment=False, hyp=None, rect=False, image_weights=False,
-                 cache_labels=False, cache_images=False):
+                 cache_labels=False, cache_images=False, with_modelid=False):
         #fixme
         path = str(Path(path))  # os-agnostic
         assert os.path.isfile(path), 'File not found %s. See %s' % (path, help_url)
@@ -277,11 +277,6 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
         with open(label_path, 'r') as f:
             self.lbl_files = [x.replace('/', os.sep) for x in f.read().splitlines()  # os-agnostic
                               if os.path.splitext(x)[-1].lower() in lbl_formats]
-        # self.lbl_files = []
-        # with open(label_path, 'r') as f:
-        #     lbl_path = os.path.dirname(f.readline())
-        # for im in img_names:
-        #     self.lbl_files.append(os.path.join(lbl_path, im))
 
         self.label_files = self.lbl_files
         n = len(self.img_files)
@@ -298,7 +293,8 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
         self.hyp = hyp
         self.image_weights = image_weights
         self.rect = False if image_weights else rect
-
+        #fixme --yang.xu
+        self.with_modelid = with_modelid
         # Define labels
         # self.label_files = [x.replace('images', 'labels').replace(os.path.splitext(x)[-1], '.txt')
         #                     for x in self.img_files]
@@ -341,7 +337,13 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
         self.imgs = [None] * n
         self.labels = [None] * n
         if cache_labels or image_weights:  # cache labels for faster training
-            self.labels = [np.zeros((0, 5))] * n
+            #fixme yang.xu
+            # self.labels = [np.zeros((0, 5))] * n
+            if self.with_modelid:
+                self.labels = [np.zeros((0, 6))] * n
+            else:
+                self.labels = [np.zeros((0, 5))] * n
+
             pbar = tqdm(self.label_files, desc='Caching labels')
 
             extract_bounding_boxes = False
@@ -358,7 +360,10 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
                     #fixme
                     l = df_txt.to_numpy()
                     # print(l.shape)
-                    l = l[:, :5]
+                    #fixme yang.xu
+                    # l = l[:, :5]
+                    if not with_modelid:
+                        l = l[:, :5]
 
                 except:
                     nm += 1
@@ -366,11 +371,11 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
                     continue
 
                 if l.shape[0]:
-
-                    assert l.shape[1] == 5, '> 5 label columns: %s' % file
+                    #fixme -- yang.xu
+                    assert l.shape[1] == 5 or l.shape[1] == 6, '> 5 label columns: %s' % file
                     assert (l >= 0).all(), 'negative labels: %s' % file
                     #fixme
-                    assert (l[:, 1:] <= 1).all(), 'non-normalized or out of bounds coordinate labels: %s' % file
+                    # assert (l[:, 1:] <= 1).all(), 'non-normalized or out of bounds coordinate labels: %s' % file
                     if np.unique(l, axis=0).shape[0] < l.shape[0]:  # duplicate rows
                         nd += 1  # print('WARNING: duplicate rows in %s' % self.label_files[i])  # duplicate rows
 
@@ -493,7 +498,7 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
                 # else:
                 #     #FIXME
                 #     labels = np.zeros((0, 5), dtype=np.float32) # ****** deal with empty label files
-        # print(len(labels[0]))
+        # print(labels[0])
         if self.augment:
             # Augment imagespace
             if not mosaic:
@@ -502,7 +507,6 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
                                             translate=hyp['translate'],
                                             scale=hyp['scale'],
                                             shear=hyp['shear'])
-
             # Augment colorspace
             augment_hsv(img, hgain=hyp['hsv_h'], sgain=hyp['hsv_s'], vgain=hyp['hsv_v'])
 
@@ -533,8 +537,14 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
                 img = np.flipud(img)
                 if nL:
                     labels[:, 2] = 1 - labels[:, 2]
+        #fixme --yang.xu
+        # labels_out = torch.zeros((nL, 6))
+        #fixme --yang.xu
+        if self.with_modelid:
+            labels_out = torch.zeros((nL, 7))
+        else:
+            labels_out = torch.zeros((nL, 6))
 
-        labels_out = torch.zeros((nL, 6))
         if nL:
             labels_out[:, 1:] = torch.from_numpy(labels)
 

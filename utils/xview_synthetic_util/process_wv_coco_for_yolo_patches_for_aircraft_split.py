@@ -9,7 +9,7 @@ import cv2
 import json
 import shutil
 from utils.data_process_distribution_vis_util import process_wv_coco_for_yolo_patches_no_trnval as pwv
-from utils.xview_synthetic_util import preprocess_synthetic_data_distribution as pps
+from utils.xview_synthetic_util import preprocess_xview_syn_data_distribution as pps
 from utils.object_score_util import get_bbox_coords_from_annos_with_object_score as gbc
 from utils.xview_synthetic_util import anaylze_xview_syn_results as axs
 

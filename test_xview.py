@@ -129,7 +129,7 @@ def test(cfg,
         _, _, height, width = imgs.shape  # batch size, channels, height, width
 
         # Plot images with bounding boxes
-        if batch_i == 0 and not os.path.exists('test_batch0.jpg'):
+        if batch_i == 0 and not os.path.exists('test_1gpu.jpg'):
             plot_images(imgs=imgs, targets=targets, paths=paths, fname='test_batch0.jpg')
 
         # Disable gradients
@@ -485,10 +485,12 @@ if __name__ == '__main__':
     # comments = ['syn_xview_bkg_px23whr4_scale_models_texture', 'syn_xview_bkg_px23whr4_scale_models_color', 'syn_xview_bkg_px23whr4_scale_models_mixed']
     # comments = ['syn_xview_bkg_px23whr4_small_models_color']
     # comments = ['syn_xview_bkg_px23whr4_small_fw_models_color']
-    comments = ['syn_xview_bkg_px23whr3_6groups_models_color', 'syn_xview_bkg_px23whr3_6groups_models_mixed']
+    # comments = ['syn_xview_bkg_px23whr3_6groups_models_color', 'syn_xview_bkg_px23whr3_6groups_models_mixed']
+    comments = ['syn_xview_bkg_px23whr3_rnd_bwratio_models_color', 'syn_xview_bkg_px23whr3_rnd_bwratio_models_mixed']
     px_thres = 23
     whr_thres = 3 # 4
-    hyp_cmt = 'hgiou1_fitness'
+    # hyp_cmt = 'hgiou1_fitness'
+    hyp_cmt = 'hgiou1_mean_best'
     seeds = [17]
     for sd in seeds:
         for cmt in comments:

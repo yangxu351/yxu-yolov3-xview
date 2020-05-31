@@ -4,7 +4,7 @@ import os
 import pandas as pd
 import shutil
 from utils.data_process_distribution_vis_util import process_wv_coco_for_yolo_patches_no_trnval as pwv
-from utils.xview_synthetic_util import preprocess_synthetic_data_distribution as pps
+from utils.xview_synthetic_util import preprocess_xview_syn_data_distribution as pps
 
 
 def generate_new_xview_lbl_with_model_id(type='val', nonmatch=3, comments='', px_thres=None, whr_thres=None):
@@ -230,6 +230,72 @@ def change_labels_from_px6whr4_to_px23whr4():
     print(ax)
     print(bx)
 
+def check_regenerate_labels_with_model_id_based_on_previous():
+    new_dir = '/media/lab/Yang/data/xView_YOLO/labels/608/1_cls_xcycwh_px23whr3_all_model/'
+    old_dir = '/media/lab/Yang/data/xView_YOLO/labels/608/1_cls_xcycwh_px23whr3_all_model_5.2/'
+    new_ll = glob.glob(os.path.join(new_dir, '*.txt'))
+    old_ll = glob.glob(os.path.join(old_dir, '*.txt'))
+    new_names = [os.path.basename(s) for s in new_ll]
+    old_names =  [os.path.basename(s) for s in old_ll]
+    same_names = [s for s in old_names if s in new_names]
+    for n in same_names:
+        if not pps.is_non_zero_file(os.path.join(old_dir, n)):
+            continue
+        df_old = pd.read_csv(os.path.join(old_dir, n), header=None, sep=' ')
+        df_new = pd.read_csv(os.path.join(new_dir, n), header=None, sep=' ')
+        if not df_old.loc[:, :4].equals(df_new):
+            print(n)
+        else:
+            shutil.copy(os.path.join(old_dir, n),
+                        os.path.join(new_dir, n))
+            # 2309_5.txt
+            # 2122_5.txt
+            # 2309_0.txt
+            # 1817_2.txt
+
+def change_labels_from_old_px23whr3(px_thres=23, whr_thres=3):
+    args = pwv.get_args(px_thres, whr_thres)
+    old_model_lbl_dir = '/media/lab/Yang/data/xView_YOLO/labels/608/1_cls_xcycwh_px23whr3_all_model_4.26/'
+    part_added_model_lbl_dir = '/media/lab/Yang/data/xView_YOLO/labels/608/1_cls_xcycwh_px23whr3_part_model_added/'
+    new_lbl = glob.glob(os.path.join(args.annos_save_dir, '*.txt'))
+    new_model_lbl_dir = args.annos_save_dir[:-1] + '_all_model/'
+    if not os.path.exists(new_model_lbl_dir):
+        os.mkdir(new_model_lbl_dir)
+    else:
+        shutil.rmtree(new_model_lbl_dir)
+        os.mkdir(new_model_lbl_dir)
+
+    for f in new_lbl:
+        name = os.path.basename(f)
+        omf = os.path.join(old_model_lbl_dir, name)
+        pamf = os.path.join(part_added_model_lbl_dir, name)
+        if os.path.exists(omf):
+            shutil.copy(omf, os.path.join(new_model_lbl_dir, name))
+        elif os.path.exists(pamf):
+            shutil.copy(pamf, os.path.join(new_model_lbl_dir, name))
+
+
+def change_end_model_id(px_thres=23, whr_thres=3, end_mid=6):
+    args = pwv.get_args(px_thres, whr_thres)
+    old_model_lbl_dir = '/media/lab/Yang/data/xView_YOLO/labels/608/1_cls_xcycwh_px23whr3_all_model/'
+    lbl_files = glob.glob(os.path.join(old_model_lbl_dir, '*.txt'))
+
+    backup_lbl_dir = '/media/lab/Yang/data/xView_YOLO/labels/608/1_cls_xcycwh_px23whr3_all_model_backup/'
+    if not os.path.exists(backup_lbl_dir):
+        os.mkdir(backup_lbl_dir)
+        for f in lbl_files:
+            name = os.path.basename(f)
+            shutil.copy(f, os.path.join(backup_lbl_dir, name))
+
+    for f in lbl_files:
+        if not pps.is_non_zero_file(f):
+            continue
+        df_txt = pd.read_csv(f, header=None, sep=' ')
+        df_txt.loc[df_txt.loc[:, 5]==end_mid, 5] = end_mid+1
+        if df_txt.empty:
+           continue
+        df_txt.to_csv(f, sep=' ', header=False, index=False)
+
 
 def backup_val_rgb_bbx_indices_lbl(cmt='', typestr='', px_thres=None, whr_thres=None):
     bbox_folder_name = '{}_images_with_bbox_with_indices'.format(cmt)
@@ -304,7 +370,6 @@ if __name__ == '__main__':
     # typestr = 'train'
     # bakcup_all_bbox_with_model_id(cmt, typestr, px_thres, whr_thres)
 
-
     '''
     generate new xviewval_lbl_with_model.txt
     '''
@@ -319,7 +384,6 @@ if __name__ == '__main__':
     # whr_thres = 3
     # comments = 'px{}whr{}_seed17'.format(px_thres, whr_thres)
     # generate_new_xview_lbl_with_model_id(type, nonmatch, comments, px_thres, whr_thres)
-
 
     '''
     generate new syn_*_lbl_with_model.txt
@@ -348,3 +412,32 @@ if __name__ == '__main__':
     change labels from px6whr4 to px23whr4
     '''
     # change_labels_from_px6whr4_to_px23whr4()
+    '''
+    check how many new labels are the same as previous
+    * manually change the different bbox**********
+    '''
+    # check_regenerate_labels_with_model_id_based_on_previous()
+
+    '''
+    change labels from px23whr3_4.26 to px23whr3
+    '''
+    # px_thres = 23
+    # whr_thres = 3
+    # change_labels_from_old_px23whr3(px_thres, whr_thres)
+
+    '''
+    change end model id 
+    '''
+    # px_thres = 23
+    # whr_thres = 3
+    # end_id = 6
+    # change_end_model_id(px_thres, whr_thres)
+
+    '''
+    draw bbox on rgb images with model_id
+    '''
+    # syn = False
+    # px_thres = 23
+    # whr_thres = 3
+    # pxwhr = 'px{}whr{}_seed17'.format(px_thres, whr_thres)
+    # pps.draw_bbx_on_rgb_images_with_model_id(syn, pxwhr=pxwhr, px_thres=px_thres, whr_thres=whr_thres)

@@ -112,8 +112,10 @@ def get_tp_fn_list_airplane_with_model(dt, sr, comments=[], mid=0, catid=0, iou_
                                        px_thres=6, whr_thres=4, syn_cmt='', hyp_cmt=''):
     ''' get TP FN of different 3d-models '''
     # print(os.path.join(syn_args.results_dir.format(syn_args.class_num, dt, sr), 'test_on*{}*'.format(hyp_cmt)))
-    results_dir = glob.glob(os.path.join(syn_args.results_dir.format(syn_args.class_num, dt, sr), 'test_on*{}*'.format(hyp_cmt)))[-1]
-    result_json_file = os.path.join(results_dir, 'results_{}_{}.json'.format(sr, 'on_original_model'))
+    rs_files = glob.glob(os.path.join(syn_args.results_dir.format(syn_args.class_num, dt, sr), 'test_on*{}*'.format(hyp_cmt)))
+    rs_files.sort()
+    results_dir = rs_files[-1]
+    result_json_file = os.path.join(results_dir, 'results_{}_{}_219.json'.format(sr, 'on_xview_with_model'))
     result_allcat_list = json.load(open(result_json_file))
     result_list = []
     # #fixme filter, and rare_result_allcat_list contains rare_cat_ids, rare_img_id_list and object score larger than score_thres
@@ -237,7 +239,7 @@ def get_tp_fn_list_airplane_with_model(dt, sr, comments=[], mid=0, catid=0, iou_
     print('tv ', len(tv), 'fv ', len(fv))
 
     save_dir = os.path.join(args.txt_save_dir,
-                            'val_img_2_tp_fn_list', comments[0] + comments[1], '{}_{}{}/'.format(dt, sr, syn_cmt))
+                            'val_img_2_tp_fn_list', comments[0] + comments[1], '{}_{}{}_{}/'.format(dt, sr, syn_cmt, hyp_cmt))
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
     tp_json_file = os.path.join(save_dir,
@@ -249,11 +251,11 @@ def get_tp_fn_list_airplane_with_model(dt, sr, comments=[], mid=0, catid=0, iou_
     json.dump(img_name_2_fn_list_maps, open(fn_json_file, 'w'), ensure_ascii=False, indent=2, cls=MyEncoder)
 
 
-def plot_val_img_with_tp_fn_bbox_with_model(dt, sr, comments='', mid=0, syn_cmt=''):
+def plot_val_img_with_tp_fn_bbox_with_model(dt, sr, comments='', mid=0, syn_cmt='', hyp_cmt=''):
     tp_fn_list_dir = os.path.join(args.txt_save_dir,
-                                  'val_img_2_tp_fn_list', comments, '{}_{}{}/'.format(dt, sr, syn_cmt))
+                                  'val_img_2_tp_fn_list', comments, '{}_{}{}_{}/'.format(dt, sr, syn_cmt, hyp_cmt))
     img_tp_fn_bbox_path = os.path.join(args.cat_sample_dir,
-                                       'val_img_with_tp_fn_bbox', comments, '{}_{}{}/'.format(dt, sr, syn_cmt), 'model_{}'.format(mid))
+                                       'val_img_with_tp_fn_bbox', comments, '{}_{}{}_{}/'.format(dt, sr, syn_cmt, hyp_cmt), 'model_{}'.format(mid))
     if not os.path.exists(img_tp_fn_bbox_path):
         os.makedirs(img_tp_fn_bbox_path)
 
@@ -485,8 +487,8 @@ def draw_bar_compare_tp_number_of_different_models(comments=[], mids=[], xview_c
         rects_syn_fn = axs2.bar(x + cix*width, fn_num_arr, width, label=cmt + xview_cmt[cix])  # , label=labels
         autolabel(axs2, rects_syn_fn, x + cix*width, xlabels, fn_num_arr, rotation=0)
 
-    axs1.legend(loc='upper left')
-    axs2.legend(loc='upper left')
+    axs1.legend(loc='center') # upper left
+    axs2.legend(loc='center') # loc='upper left'
     axs1.grid(True)
     axs2.grid(True)
     axs1.set_xlabel('TP', literal_eval(syn_args.font2))
@@ -505,18 +507,20 @@ def draw_bar_compare_tp_number_of_different_models(comments=[], mids=[], xview_c
 def statistic_model_number(type='validation', comments='px6whr4_ng0_seed17'):
 
     # comments = '38bbox_giou0_with_model'
-    if type == 'validation':
-        val_lbl_file = '/media/lab/Yang/code/yolov3/data_xview/1_cls/{}/xviewval_lbl_{}_with_model.txt'.format(comments, comments)
-        json_name = 'val_model_num_maps.json'
-        png_name = 'val_number_3d-model.jpg'
-    else:
-        val_lbl_file = '/media/lab/Yang/code/yolov3/data_xview/1_cls/{}/xviewtrain_lbl_{}_with_model.txt'.format(comments, comments)
-        json_name = 'trn_model_num_maps.json'
-        png_name = 'trn_number_3d-model.jpg'
-    df_val = pd.read_csv(val_lbl_file, header=None)
+    # if type == 'validation':
+    #     val_lbl_file = '/media/lab/Yang/code/yolov3/data_xview/1_cls/{}/xviewval_lbl_{}_with_model.txt'.format(comments, comments)
+    #     json_name = 'val_model_num_maps.json'
+    #     png_name = 'val_number_3d-model.jpg'
+    # else:
+    #     val_lbl_file = '/media/lab/Yang/code/yolov3/data_xview/1_cls/{}/xviewtrain_lbl_{}_with_model.txt'.format(comments, comments)
+    #     json_name = 'trn_model_num_maps.json'
+    #     png_name = 'trn_number_3d-model.jpg'
+    lbl_files = glob.glob(os.path.join(args.annos_save_dir[:-1] + '_all_model', '*.txt'))
+    json_name = 'all_model_num_maps.json'
+    png_name = 'all_number_3d-model.jpg'
     Num = {}
 
-    for f in df_val.loc[:, 0]:
+    for f in lbl_files:
         if not is_non_zero_file(f):
             continue
         # print(f)
@@ -524,17 +528,23 @@ def statistic_model_number(type='validation', comments='px6whr4_ng0_seed17'):
         for m in df_lbl.loc[:, 5]:
             if m not in Num.keys():
                 Num[m] = 1
-                print(m)
-                print(f)
+                # print(m)
+                # print(f)
             else:
                 Num[m] += 1
-    json_dir = os.path.join(args.txt_save_dir, 'val_result_iou_map', comments)
+    json_dir = os.path.join(args.txt_save_dir, 'model_number', comments)
     if not os.path.exists(json_dir):
         os.makedirs(json_dir)
     json.dump(Num, open(os.path.join(json_dir, json_name),
                         'w'), ensure_ascii=False, indent=2, cls=MyEncoder)
-
-    save_dir = os.path.join(args.txt_save_dir, 'val_result_iou_map', 'figures', comments)
+    cnt_models = [s for s in Num.values()]
+    sum_models = sum(cnt_models)
+    ratios = np.array([c/sum_models for c in cnt_models])
+    keys = np.array([s for s in Num.keys()])
+    kids = np.argsort(keys)
+    print('keys: ', keys[kids])
+    print('values: ', ratios[kids])
+    save_dir = os.path.join(args.txt_save_dir, 'model_number', comments)
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
 
@@ -547,13 +557,202 @@ def statistic_model_number(type='validation', comments='px6whr4_ng0_seed17'):
     autolabel(ax, rects, x, x, ylist, rotation=0)
     ylabel = 'Number of Bbox'
     xlabel = "Model ID"
-    plt.title('Model Numbers in {} Dataset'.format(type), literal_eval(syn_args.font2))
+    # plt.title('Model Numbers in {} Dataset'.format(type), literal_eval(syn_args.font2))
+    plt.title('Model Numbers in xview', literal_eval(syn_args.font2))
     plt.ylabel(ylabel, literal_eval(syn_args.font2))
     plt.xlabel(xlabel, literal_eval(syn_args.font2))
     plt.tight_layout(pad=0.4, w_pad=3.0, h_pad=3.0)
     plt.grid()
     plt.savefig(os.path.join(save_dir, png_name))
     plt.show()
+
+
+def plot_roc_curve(comments, syn=False, all=False):
+    base_cmt = 'px23whr3'
+    hyp_cmt = 'hgiou1_mean_best'
+    sd=17
+    result_dir = '../../result_output/1_cls/{}_seed{}/{}/'
+    pr_save_path = '/media/lab/Yang/data/xView_YOLO/cat_samples/608/1_cls/PR_ROC_figures/'
+    if not os.path.exists(pr_save_path):
+        os.mkdir(pr_save_path)
+    fig, ax = plt.subplots(1, 1, figsize=(10, 8))
+    base_dir = result_dir.format(base_cmt, sd, 'test_on_xview_with_model_{}_seed{}'.format(hyp_cmt, sd))
+    df_base_rec = pd.read_csv(os.path.join(base_dir, 'recall.txt'), header=None)
+    base_rec = [0.]+ df_base_rec.loc[:, 0].tolist()
+    df_base_fp = pd.read_csv(os.path.join(base_dir, 'fp.txt'), header=None)
+    base_fp = [0.]+ df_base_fp.loc[:, 0].tolist()
+    ax.plot(base_fp, base_rec, label='xview of ' + base_cmt+'_seed{}'.format(sd))
+    if syn:
+        for cmt in comments:
+            rs_dir  = result_dir.format(cmt, sd, 'test_on_xview_with_model_{}_seed{}'.format(hyp_cmt, sd))
+            df_rec = pd.read_csv(os.path.join(rs_dir, 'recall.txt'), header=None)
+            rec = [0.] + df_rec.loc[:, 0].tolist()
+            df_fp = pd.read_csv(os.path.join(rs_dir, 'fp.txt'), header=None)
+            fp = [0.] + df_fp.loc[:, 0].tolist()
+            ax.plot(fp, rec, label='only syn' + cmt.split(base_cmt)[-1] + '_seed{}'.format(sd))
+            ax.legend()
+            ax.set_title('ROC Comparison'); ax.set_xlabel('FP'); ax.set_ylabel('Recall')
+            if all:
+                pr_name = 'xview_vs._only_syn_other{}_seed{}'.format(len(comments), sd)
+            else:
+                pr_name = 'xview_vs._only syn' + cmt.split(base_cmt)[-1].split('_models')[0] + '_seed{}'.format(sd)
+    else:
+        for cmt in comments:
+            rs_dir  = result_dir.format(cmt, sd, 'test_on_xview_with_model_{}_seed{}_1xSyn'.format(hyp_cmt, sd))
+            df_rec = pd.read_csv(os.path.join(rs_dir, 'recall.txt'), header=None)
+            rec = [0.] + df_rec.loc[:, 0].tolist()
+            df_fp = pd.read_csv(os.path.join(rs_dir, 'fp.txt'), header=None)
+            fp = [0.] + df_fp.loc[:, 0].tolist()
+            ax.plot(fp, rec, label='xview + syn' + cmt.split(base_cmt)[-1] + '_seed{}'.format(sd))
+            ax.legend()
+            ax.set_title('ROC Comparison'); ax.set_xlabel('FP'); ax.set_ylabel('Recall')
+            if all:
+                pr_name = 'xview_vs. xview+syn_other{}_seed{}'.format(len(comments), sd)
+            else:
+                pr_name = 'xview_vs._xview + syn' + cmt.split(base_cmt)[-1].split('_models')[0] + '_seed{}'.format(sd)
+    ax.grid()
+    fig.savefig(os.path.join(pr_save_path, pr_name + '_ROC_curve.png'), dpi=300)
+
+
+def plot_pr_curve(comments, syn=False, all=False):
+    base_cmt = 'px23whr3'
+    hyp_cmt = 'hgiou1_mean_best'
+    sd=17
+    result_dir = '../../result_output/1_cls/{}_seed{}/{}/'
+    pr_save_path = '/media/lab/Yang/data/xView_YOLO/cat_samples/608/1_cls/PR_ROC_figures/'
+    if not os.path.exists(pr_save_path):
+        os.mkdir(pr_save_path)
+    fig, ax = plt.subplots(1, 1, figsize=(10, 8))
+    base_dir = result_dir.format(base_cmt, sd, 'test_on_xview_with_model_{}_seed{}'.format(hyp_cmt, sd))
+    df_base_rec = pd.read_csv(os.path.join(base_dir, 'recall.txt'), header=None)
+    base_rec = [0.]+ df_base_rec.loc[:, 0].tolist()
+    df_base_prec = pd.read_csv(os.path.join(base_dir, 'precision.txt'), header=None)
+    base_prec = [0.]+ df_base_prec.loc[:, 0].tolist()
+    ax.plot(base_rec, base_prec, label='xview of ' + base_cmt+'_seed{}'.format(sd))
+    if syn:
+        for cmt in comments:
+            rs_dir  = result_dir.format(cmt, sd, 'test_on_xview_with_model_{}_seed{}'.format(hyp_cmt, sd))
+            df_rec = pd.read_csv(os.path.join(rs_dir, 'recall.txt'), header=None)
+            rec = [0.] + df_rec.loc[:, 0].tolist()
+            df_prec = pd.read_csv(os.path.join(rs_dir, 'precision.txt'), header=None)
+            prec = [0.] + df_prec.loc[:, 0].tolist()
+            ax.plot(rec, prec, label='only syn' + cmt.split(base_cmt)[-1] + '_seed{}'.format(sd))
+            ax.legend()
+            ax.set_title('PR-Curve Comparison'); ax.set_xlabel('Recall'); ax.set_ylabel('Precision')
+            ax.set_xlim(0, 1)
+            if all:
+                pr_name = 'xview_vs._only_syn_other{}_seed{}'.format(len(comments), sd)
+            else:
+                pr_name = 'xview_vs._only syn' + cmt.split(base_cmt)[-1].split('_models')[0] + '_seed{}'.format(sd)
+    else:
+        for cmt in comments:
+            rs_dir  = result_dir.format(cmt, sd, 'test_on_xview_with_model_{}_seed{}_1xSyn'.format(hyp_cmt, sd))
+            df_rec = pd.read_csv(os.path.join(rs_dir, 'recall.txt'), header=None)
+            rec = [0.] + df_rec.loc[:, 0].tolist()
+            df_prec = pd.read_csv(os.path.join(rs_dir, 'precision.txt'), header=None)
+            prec = [0.] + df_prec.loc[:, 0].tolist()
+            ax.plot(rec, prec, label='xview + syn' + cmt.split(base_cmt)[-1] + '_seed{}'.format(sd))
+            ax.legend()
+            ax.set_title('PR-Curve Comparison'); ax.set_xlabel('Recall'); ax.set_ylabel('Precision')
+            ax.set_xlim(0, 1)
+            if all:
+                pr_name = 'xview_vs. xview+syn_other{}_seed{}'.format(len(comments), sd)
+            else:
+                pr_name = 'xview_vs._xview + syn' + cmt.split(base_cmt)[-1].split('_models')[0] + '_seed{}'.format(sd)
+    ax.grid()
+    fig.savefig(os.path.join(pr_save_path, pr_name + '_PR_curve.png'), dpi=300)
+
+
+def plot_far_roc_curve(comments, syn=False, include_base=True, miss=False, hyp_cmt='hgiou1_mean_best', x1s1=False, base_hyp_cmt='hgiou1_1gpu'):
+    base_cmt = 'px23whr3'
+    sd=17
+    result_dir = '/media/lab/Yang/code/yolov3/result_output/1_cls/{}_seed{}/{}/'
+    pr_save_path = '/media/lab/Yang/data/xView_YOLO/cat_samples/608/1_cls/PR_ROC_figures/'
+    if not os.path.exists(pr_save_path):
+        os.mkdir(pr_save_path)
+    fig, ax = plt.subplots(1, 1, figsize=(10, 8))
+    font_title = {'family': 'serif', 'weight': 'normal', 'size': 15}
+    font_label = {'family': 'serif', 'weight': 'normal', 'size': 12}
+    if include_base:
+        base_dir = result_dir.format(base_cmt, sd, 'test_on_xview_with_model_{}_seed{}'.format(base_hyp_cmt, sd))
+        df_base_rec = pd.read_csv(os.path.join(base_dir, 'rec_list.txt'), header=None)
+        df_base_far = pd.read_csv(os.path.join(base_dir, 'far_list.txt'), header=None)
+        base_far_arr = df_base_far.to_numpy()
+        base_rec_arr = df_base_rec.to_numpy()
+        fx = np.where(base_far_arr[1:] != base_far_arr[:-1])[0]
+        base_auc = np.sum((base_far_arr[fx + 1] - base_far_arr[fx]) * base_rec_arr[fx + 1])
+        ax.plot(base_far_arr, base_rec_arr, label='xview' + '  @IoU:0.5 conf_thres:0.1 AUC: {:.3f}'.format(base_auc) )
+
+    if syn:
+        for cmt in comments:
+            if miss:
+                rs_dir  = result_dir.format(cmt, sd, 'test_on_xview_with_model_{}_seed{}_miss'.format(hyp_cmt, sd))
+                title = '$T_{xview\_m%s}$ ROC Comparison' % cmt.split('model')[-1][0]
+                con_thres = 0.01
+            else:
+                rs_dir  = result_dir.format(cmt, sd, 'test_on_xview_with_model_{}_seed{}'.format(hyp_cmt, sd))
+                title = '$T_{xview}$ ROC Comparison'
+                con_thres = 0.1
+            df_rec = pd.read_csv(os.path.join(rs_dir, 'rec_list.txt'), header=None)
+            rec = df_rec.loc[:, 0].tolist()
+            df_far = pd.read_csv(os.path.join(rs_dir, 'far_list.txt'), header=None)
+            far = df_far.loc[:, 0].tolist()
+
+            far_arr = df_far.to_numpy()
+            rec_arr = df_rec.to_numpy()
+            fx = np.where(far_arr[1:] != far_arr[:-1])[0]
+            auc = np.sum((far_arr[fx + 1] - far_arr[fx]) * rec_arr[fx + 1])
+
+            cinx = cmt.find('model') # first letter index
+            endstr = cmt[cinx:] # models1_gauss_color
+            rcinx = endstr.rfind('_')
+            fstr = endstr[rcinx:] # '_' is included
+            sstr = endstr[:rcinx]
+            suffix = fstr + '_' + sstr
+
+            ax.plot(far, rec, label='syn' + suffix + ' @IoU:0.5 conf_thres:{} AUC: {:.3f}'.format(con_thres, auc))
+            ax.legend()
+            ax.set_title(title , font_title)
+            ax.set_xlabel('FAR', font_label); ax.set_ylabel('Recall', font_label)
+            if include_base:
+                pr_name = 'xview_vs._only_syn_{}_{}_seed{}'.format(sstr, len(comments), sd)
+            else:
+                pr_name = 'syn_{}_{}'.format(sstr, len(comments))
+    else:
+        for cmt in comments:
+            if x1s1:
+                rs_dir = result_dir.format(cmt, sd, 'test_on_xview_with_model_{}_seed{}_1xSyn'.format(hyp_cmt, sd))
+            else:
+                rs_dir = result_dir.format(cmt, sd, 'test_on_xview_with_model_{}_seed{}'.format(hyp_cmt, sd))
+
+            df_rec = pd.read_csv(os.path.join(rs_dir, 'rec_list.txt'), header=None)
+            rec = df_rec.loc[:, 0].tolist()
+            df_far = pd.read_csv(os.path.join(rs_dir, 'far_list.txt'), header=None)
+            far = df_far.loc[:, 0].tolist()
+
+            far_arr = df_far.to_numpy()
+            rec_arr = df_rec.to_numpy()
+            fx = np.where(far_arr[1:] != far_arr[:-1])[0]
+            auc = np.sum((far_arr[fx + 1] - far_arr[fx]) * rec_arr[fx + 1])
+
+            cinx = cmt.find('model') # first letter index
+            endstr = cmt[cinx:] # models_gauss_color
+            rcinx = endstr.rfind('_')
+            fstr = endstr[rcinx:] # '_' is included
+            sstr = endstr[:rcinx]
+            suffix = fstr + '_' + sstr
+            title = '$T_{xview}$ ROC Comparison'
+
+            ax.plot(far, rec, label='xview + syn' + suffix + '  @IoU:0.5 conf_thres:0.1 AUC: {:.3f}'.format(auc))
+            ax.legend()
+            ax.set_title(title, font_title); ax.set_xlabel('FAR', font_label); ax.set_ylabel('Recall', font_label)
+            if include_base:
+                pr_name = 'xview_vs. xview+syn_{}_{}'.format(sstr, len(comments))
+            else:
+                pr_name = 'xview + syn_{}_{}'.format(sstr, len(comments))
+    ax.grid()
+    fig.savefig(os.path.join(pr_save_path, pr_name + '_ROC.png'), dpi=300)
+
 
 
 def get_part_syn_args():
@@ -621,8 +820,9 @@ def get_part_syn_args():
     return syn_args
 
 
+
 if __name__ == "__main__":
-    args = pwv.get_args()
+
     syn_args = get_part_syn_args()
 
     '''
@@ -673,11 +873,12 @@ if __name__ == "__main__":
     statistic model Number 
     '''
     # type = 'training'
-    # # type = 'validation'
-    # # # comments='px6whr4_ng0_seed17'
+    # type = 'validation'
+    # # comments='px6whr4_ng0_seed17'
     # # # comments='px20whr4_seed17'
     # # # comments='px23whr4_seed17'
     # comments='px23whr3_seed17'
+    # args = pwv.get_args(px_thres=23, whr_thres=3)
     # statistic_model_number(type, comments)
 
     '''
@@ -696,21 +897,25 @@ if __name__ == "__main__":
 
     # px_thres = 23
     # whr_thres = 3
+    # args = pwv.get_args(px_thres=23, whr_thres=3)
     # comments = ['px23whr3_seed17', '_with_model']
     # display_type = ['px23whr3']
-    # hyp_cmt = 'hgiou1_fitness'
+    # # hyp_cmt = 'hgiou1_fitness'
     # # hyp_cmt = 'hgiou1'
+    # # hyp_cmt = 'hgiou1_mean_best'
+    # hyp_cmt = 'hgiou1_1gpu'
+    # # hyp_cmt = 'hgiou1_2gpus'
     # syn_ratio = ['seed17']
     # score_thres = 0.3
     # iou_thres = 0.5
     # catid = 0
-    # # model_ids = [0, 1, 2, 3]
+    # # model_ids = [0, 1, 2, 3, 4]
     # model_ids = [0, 1, 2, 3, 4, 5, 6]
     # for mid in model_ids:
     #     for dt in display_type:
     #         for sr in syn_ratio:
     #             get_tp_fn_list_airplane_with_model(dt, sr, comments, mid, catid, iou_thres, score_thres, px_thres, whr_thres, hyp_cmt=hyp_cmt)
-    #             plot_val_img_with_tp_fn_bbox_with_model(dt, sr, comments[0] + comments[1], mid)
+    #             plot_val_img_with_tp_fn_bbox_with_model(dt, sr, comments[0] + comments[1], mid, hyp_cmt=hyp_cmt )
 
 
     # comments = ['px6whr4_ng0_seed17', '_with_model']
@@ -782,21 +987,46 @@ if __name__ == "__main__":
     # #                  'xview_syn_xview_bkg_px23whr4_small_models_mixed']
     # syn_cmt = '_1xSyn'
 
-    # px_thres = 23 ##*******
-    # whr_thres = 3
-    # comments = ['px23whr3_seed17', '_with_model']
+
     # display_types = ['xview_syn_xview_bkg_px23whr3_6groups_models_color',
     #                  'xview_syn_xview_bkg_px23whr3_6groups_models_mixed']
     # syn_cmt = '_1xSyn'
     # hyp_cmt = 'hgiou1_fitness'
-    # # # hyp_cmt = 'hgiou1'
+    # # hyp_cmt = 'hgiou1'
+    # display_types = ['xview_syn_xview_bkg_px23whr3_6groups_models_color',
+    #                  'xview_syn_xview_bkg_px23whr3_6groups_models_mixed']
+    # display_types = ['xview_syn_xview_bkg_px23whr3_rnd_bwratio_models_color',
+    #                  'xview_syn_xview_bkg_px23whr3_rnd_bwratio_models_mixed']
+    # display_types = ['xview_syn_xview_bkg_px23whr3_rnd_bwratio_flat0.8_models_color',
+    #              'xview_syn_xview_bkg_px23whr3_rnd_bwratio_flat0.8_models_mixed']
+    # display_types = ['xview_syn_xview_bkg_px23whr3_rnd_bwratio_asx_models_color',
+    #              'xview_syn_xview_bkg_px23whr3_rnd_bwratio_asx_models_mixed']
+    # display_types = ['xview_syn_xview_bkg_px23whr3_xratio_xcolor_models_color',
+    #              'xview_syn_xview_bkg_px23whr3_xratio_xcolor_models_mixed']
+    # display_types = ['xview_syn_xview_bkg_px23whr3_sbwratio_xratio_xcolor_models_color',
+    #              'xview_syn_xview_bkg_px23whr3_sbwratio_xratio_xcolor_models_mixed']
+    # syn_cmt = '_1xSyn'
+    # display_types = ['xview_syn_xview_bkg_px23whr3_sbwratio_new_xratio_xcolor_models_color']#,
+    #              # 'xview_syn_xview_bkg_px23whr3_sbwratio_new_xratio_xcolor_models_mixed']
+    # syn_cmt = ''
+    # display_types = ['xview_syn_xview_bkg_px23whr3_xbw_xcolor_model0_color',
+    #              'xview_syn_xview_bkg_px23whr3_xbw_xcolor_model0_mixed']
+    # syn_cmt = '_1xSyn'
+    # display_types = ['xview_syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_models_color',
+    #                 'xview_syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_models_mixed']
+    # syn_cmt = '_1xSyn'
+    # hyp_cmt = 'hgiou1_mean_best'
     # score_thres = 0.3
     # iou_thres = 0.5
     # catid = 0
+    # px_thres = 23 ##*******
+    # whr_thres = 3
+    # comments = ['px23whr3_seed17', '_with_model']
     # # model_ids = [0, 1, 2, 3]
     # # model_ids = [0, 1, 2, 3, 4, 5]
     # model_ids = [0, 1, 2, 3, 4, 5, 6]
     # sr = 'seed17'
+    # args = pwv.get_args(px_thres, whr_thres)
     # for mid in model_ids:
     #     for dt in display_types:
     #         get_tp_fn_list_airplane_with_model(dt, sr, comments, mid, catid, iou_thres, score_thres, px_thres, whr_thres, syn_cmt, hyp_cmt=hyp_cmt)
@@ -892,10 +1122,37 @@ if __name__ == "__main__":
     # comments = ['px23whr3_seed17',
     #             'xview_syn_xview_bkg_px23whr3_6groups_models_color_seed17',
     #             'xview_syn_xview_bkg_px23whr3_6groups_models_mixed_seed17']
+    # # comments = ['px23whr3_seed17',
+    # #             'xview_syn_xview_bkg_px23whr3_rnd_bwratio_models_color_seed17',
+    # #             'xview_syn_xview_bkg_px23whr3_rnd_bwratio_models_mixed_seed17']
+    # # comments = ['px23whr3_seed17',
+    # #             'xview_syn_xview_bkg_px23whr3_rnd_bwratio_flat0.8_models_color_seed17',
+    # #             'xview_syn_xview_bkg_px23whr3_rnd_bwratio_flat0.8_models_mixed_seed17']
+    # comments = ['px23whr3_seed17',
+    #              'xview_syn_xview_bkg_px23whr3_rnd_bwratio_asx_models_color_seed17',
+    #              'xview_syn_xview_bkg_px23whr3_rnd_bwratio_asx_models_mixed_seed17']
+    # comments = ['px23whr3_seed17',
+    #              'xview_syn_xview_bkg_px23whr3_xratio_xcolor_models_color_seed17',
+    #              'xview_syn_xview_bkg_px23whr3_xratio_xcolor_models_mixed_seed17']
+    # comments = ['px23whr3_seed17',
+    #              'xview_syn_xview_bkg_px23whr3_sbwratio_xratio_xcolor_models_color_seed17',
+    #             'xview_syn_xview_bkg_px23whr3_sbwratio_xratio_xcolor_models_mixed_seed17']
     # xview_cmt = ['', '_1xSyn', '_1xSyn']
+    # comments = ['px23whr3_seed17',
+    #              'xview_syn_xview_bkg_px23whr3_sbwratio_new_xratio_xcolor_models_color_seed17']
+    # xview_cmt = ['', '']
+    # comments = ['px23whr3_seed17',
+    #             'xview_syn_xview_bkg_px23whr3_xbw_xcolor_model0_color_seed17',
+    #             'xview_syn_xview_bkg_px23whr3_xbw_xcolor_model0_mixed_seed17']
+    # xview_cmt =  ['', '_1xSyn', '_1xSyn']
+    # comments = ['px23whr3_seed17',
+    #             'xview_syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_models_color_seed17',
+    #             'xview_syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_models_mixed_seed17']
+    # xview_cmt =  ['', '_1xSyn', '_1xSyn']
     # model_ids = [0, 1, 2, 3, 4, 5, 6]
     # # model_ids = [0, 1, 2, 3, 4, 5]
     # # model_ids = [0, 1, 2, 3]
+    # args = pwv.get_args(px_thres=23, whr_thres=3)
     # draw_bar_compare_tp_number_of_different_models(comments, model_ids, xview_cmt)
 
 
@@ -930,4 +1187,67 @@ if __name__ == "__main__":
     # print(a==b)
 
 
+    '''
+    PR-Curve
+    xview_syn_bkg_*
+    '''
+    # comments = ['xview_syn_xview_bkg_px23whr3_sbwratio_xratio_xcolor_models_color', 'xview_syn_xview_bkg_px23whr3_sbwratio_xratio_xcolor_models_mixed']
+    # # comments = ['xview_syn_xview_bkg_px23whr3_xratio_xcolor_models_color', 'xview_syn_xview_bkg_px23whr3_xratio_xcolor_models_mixed']
+    # # comments = ['xview_syn_xview_bkg_px23whr3_rnd_bwratio_asx_models_color', 'xview_syn_xview_bkg_px23whr3_rnd_bwratio_asx_models_mixed']
+    # # comments = ['xview_syn_xview_bkg_px23whr3_6groups_models_color', 'xview_syn_xview_bkg_px23whr3_6groups_models_mixed']
+    # comments = ['xview_syn_xview_bkg_px23whr3_sbwratio_xratio_xcolor_models_color', 'xview_syn_xview_bkg_px23whr3_sbwratio_xratio_xcolor_models_mixed']
+    # plot_pr_curve(comments, syn=False)
 
+    # comments = ['xview_syn_xview_bkg_px23whr3_sbwratio_xratio_xcolor_models_color',
+    #             'xview_syn_xview_bkg_px23whr3_sbwratio_xratio_xcolor_models_mixed',
+    #             'xview_syn_xview_bkg_px23whr3_xratio_xcolor_models_color',
+    #             'xview_syn_xview_bkg_px23whr3_xratio_xcolor_models_mixed',
+    #             'xview_syn_xview_bkg_px23whr3_rnd_bwratio_asx_models_color',
+    #             'xview_syn_xview_bkg_px23whr3_rnd_bwratio_asx_models_mixed']
+    # plot_pr_curve(comments, syn=False, all=True)
+
+    '''
+    PR-Curve
+    only syn_bkg_*
+    '''
+    # comments = ['syn_xview_bkg_px23whr3_sbwratio_xratio_xcolor_models_color', 'syn_xview_bkg_px23whr3_sbwratio_xratio_xcolor_models_mixed']
+    # comments = ['syn_xview_bkg_px23whr3_rnd_bwratio_asx_models_color', 'syn_xview_bkg_px23whr3_rnd_bwratio_asx_models_mixed']
+    # # comments = ['syn_xview_bkg_px23whr3_xratio_xcolor_models_color', 'syn_xview_bkg_px23whr3_xratio_xcolor_models_mixed']
+    # # plot_pr_curve(comments, syn=True)
+    # plot_roc_curve(comments, syn=True)
+
+    # comments = ['syn_xview_bkg_px23whr3_sbwratio_xratio_xcolor_models_color',
+    #             'syn_xview_bkg_px23whr3_sbwratio_xratio_xcolor_models_mixed',
+    #             'syn_xview_bkg_px23whr3_xratio_xcolor_models_color',
+    #             'syn_xview_bkg_px23whr3_xratio_xcolor_models_mixed',
+    #             'syn_xview_bkg_px23whr3_rnd_bwratio_asx_models_color',
+    #             'syn_xview_bkg_px23whr3_rnd_bwratio_asx_models_mixed']
+    # # plot_pr_curve(comments, syn=True, all=True)
+    # plot_roc_curve(comments, syn=True, all=True)
+
+
+    '''
+    ROC comparision
+    '''
+    # comments = ['xview_syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_models_gauss_color', 'xview_syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_models_gauss_mixed']
+    # miss = False
+    # syn = False
+    # include_base = True
+    # hyp_cmt = 'hgiou1_x5s3'
+
+    # comments = ['syn_xview_bkg_px15whr3_sbw_xcolor_model4_color', 'syn_xview_bkg_px15whr3_sbw_xcolor_model4_mixed',
+    #             'syn_xview_bkg_px15whr3_sbw_xcolor_model4_v1_color', 'syn_xview_bkg_px15whr3_sbw_xcolor_model4_v1_mixed',
+    #             'syn_xview_bkg_px15whr3_sbw_xcolor_model4_v2_color', 'syn_xview_bkg_px15whr3_sbw_xcolor_model4_v2_mixed',
+    #             'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v3_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v3_mixed']
+    # miss = True
+
+    comments = ['syn_xview_bkg_px23whr3_sbw_xcolor_model1_color', 'syn_xview_bkg_px23whr3_sbw_xcolor_model1_mixed',
+                'syn_xview_bkg_px23whr3_xbw_xcolor_gauss_model1_v1_color', 'syn_xview_bkg_px23whr3_xbw_xcolor_gauss_model1_v1_mixed',
+                'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_gauss_model1_v2_color', 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_gauss_model1_v2_mixed']
+    miss = True
+
+    include_base = False
+    syn = True
+    hyp_cmt = 'hgiou1_1gpu'
+
+    plot_far_roc_curve(comments, syn, include_base, miss, hyp_cmt, x1s1=False)

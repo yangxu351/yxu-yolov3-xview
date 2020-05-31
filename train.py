@@ -24,7 +24,7 @@ except:
 
 # Hyperparameters https://github.com/ultralytics/yolov3/issues/310
 #fixme 'giou': 3.54
-hyp = {'giou': 0.8,  # giou loss gain 1.0  1.0
+hyp = {'giou': 3.54,  # giou loss gain 1.0  1.0
        'cls': 37.4,  # cls loss gain
        'cls_pw': 1.0,  # cls BCELoss positive_weight
        'obj': 64.3,  # 64.3  obj loss gain (*=img_size/320 if img_size != 320)

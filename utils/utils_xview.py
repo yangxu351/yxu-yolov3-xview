@@ -14,6 +14,8 @@ import torch.nn as nn
 import torchvision
 from tqdm import tqdm
 import pandas as pd
+
+import models_xview
 from utils import torch_utils # , google_utils
 import json
 
@@ -35,6 +37,25 @@ def init_seeds(seed=0):
     random.seed(seed)
     np.random.seed(seed)
     torch_utils.init_seeds(seed=seed)
+
+
+# Built-in
+import os
+import time
+import json
+import pickle
+import collections.abc
+# from glob import glob
+from functools import wraps
+
+# Libs
+import torch
+import scipy.signal
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from PIL import Image
+from skimage import io
 
 
 def load_classes(path):
@@ -272,7 +293,7 @@ def clip_coords(boxes, img_shape):
     boxes[:, [1, 3]] = boxes[:, [1, 3]].clamp(min=0, max=img_shape[0])  # clip y
 
 
-def ap_per_class(tp, conf, pred_cls, target_cls, pr_path='', pr_name=''):
+def ap_per_class(tp, conf, pred_cls, target_cls, pr_path='', pr_name='', model_id=None):
     """ Compute the average precision, given the recall and precision curves.
     Source: https://github.com/rafaelpadilla/Object-Detection-Metrics.
     # Arguments
@@ -295,16 +316,24 @@ def ap_per_class(tp, conf, pred_cls, target_cls, pr_path='', pr_name=''):
     s = [len(unique_classes), tp.shape[1]]  # number class, number iou thresholds (i.e. 10 for mAP0.5...0.95)
     ap, p, r = np.zeros(s), np.zeros(s), np.zeros(s)
     for ci, c in enumerate(unique_classes):
-        i = pred_cls == c
-        n_gt = (target_cls == c).sum()  # Number of ground truth objects
-        n_p = i.sum()  # Number of predicted objects
+        if model_id is not None:
+            i = pred_cls ==0
+            n_gt = (target_cls == model_id).sum()
+            n_p = i.sum()
+        else:
+            i = pred_cls == c
+            n_gt = (target_cls == c).sum()  # Number of ground truth objects
+            n_p = i.sum()  # Number of predicted objects
 
         if n_p == 0 or n_gt == 0:
             continue
         else:
+
             # Accumulate FPs and TPs
             fpc = (1 - tp[i]).cumsum(0)
             tpc = tp[i].cumsum(0)
+            # print('fpc', fpc.shape) # (178, 1)  , np.concatenate(([0.], recall).shape)
+            # print('tp', tp.shape) #  , np.concatenate(([0.], recall).shape)
 
             # Recall
             recall = tpc / (n_gt + 1e-16)  # recall curve
@@ -320,22 +349,179 @@ def ap_per_class(tp, conf, pred_cls, target_cls, pr_path='', pr_name=''):
 
             # Plot
             if pr_path:
-                fig, ax = plt.subplots(1, 1, figsize=(10, 8))
+                fig1, ax1= plt.subplots(1, figsize=(10, 8))
                 # print('r', recall.shape) #  , np.concatenate(([0.], recall).shape)
                 # print('p', precision.shape) # , np.concatenate(([0.], precision).shape)
                 # ax.plot(np.concatenate(([0.], recall)), np.concatenate(([0.], precision)))
-                ax.plot([0.]+ recall, [0.] + precision, label=pr_name)
-                ax.legend()
-                ax.set_title('YOLOv3-SPP'); ax.set_xlabel('Recall'); ax.set_ylabel('Precision')
-                ax.set_xlim(0, 1)
-                ax.grid()
-                # fig.tight_layout()
-                fig.savefig(os.path.join(pr_path, pr_name + '_PR_curve.png'), dpi=300)
+                np.savetxt(os.path.join(pr_path, 'recall.txt'), recall)
+                np.savetxt(os.path.join(pr_path, 'precision.txt'), precision)
+                ax1.plot(recall, precision, label=pr_name + '  mAP: %.3f' % ap[ci])
+                ax1.legend()
+                ax1.set_title('YOLOv3-SPP PR-Curve')
+                ax1.set_xlabel('Recall')
+                ax1.set_ylabel('Precision')
+                ax1.set_xlim(0, 1)
+                ax1.grid()
+                fig1.savefig(os.path.join(pr_path, pr_name + '_PR_curve.png'), dpi=300)
+
 
     # Compute F1 score (harmonic mean of precision and recall)
     f1 = 2 * p * r / (p + r + 1e-16)
-
+    # print('r', r.shape) #  (1,1)
     return p, r, ap, f1, unique_classes.astype('int32')
+
+def plot_roc(tp, conf, pred_cls, target_cls, pr_path='', pr_name='', model_id=None, area=0):
+    """ Compute the average precision, given the recall and precision curves.
+    Source: https://github.com/rafaelpadilla/Object-Detection-Metrics.
+    # Arguments
+        tp:    True positives (nparray, nx1 or nx10).
+        conf:  Objectness value from 0-1 (nparray).
+        pred_cls: Predicted object classes (nparray).
+        target_cls: True object classes (nparray).
+        model_id: the specified id
+        area: all image covered area (square kilometers)
+    # Returns
+        The average precision as computed in py-faster-rcnn.
+    """
+    # Sort by objectness
+    i = np.argsort(-conf) # 175
+    tp, conf, pred_cls = tp[i], conf[i], pred_cls[i]
+
+    n_gt = len(target_cls==model_id)
+    far_list = [0]
+    rec_list = [0]
+    n_t = 0
+    n_f = 0
+    for ix, t in enumerate(conf):
+        if tp[ix]: # and conf[ix] >= t:
+            n_t += 1
+        elif tp[ix]==0: # and conf[ix]>=t:
+            n_f += 1
+        far = n_f/area
+        rec = n_t/n_gt
+        far_list.append(far)
+        rec_list.append(rec)
+    np.savetxt(os.path.join(pr_path, 'far_list.txt'), far_list)
+    np.savetxt(os.path.join(pr_path, 'rec_list.txt'), rec_list)
+    rec_arr = np.array(rec_list)
+    far_arr = np.array(far_list)
+    fx = np.where(far_arr[1:] != far_arr[:-1])[0]
+    auc = np.sum((far_arr[fx + 1] - far_arr[fx]) * rec_arr[fx + 1])
+    if model_id is not None:
+        title = 'YOLOv3-SPP ROC of $T_{%s}$' % 'xview\_model{}'.format(model_id)
+    else:
+        title = 'YOLOv3-SPP ROC of $T_{xview}$ '
+    if pr_path:
+        font_title = {'family': 'serif', 'weight': 'normal', 'size': 15}
+        font_label = {'family': 'serif', 'weight': 'normal', 'size': 12}
+
+        fig2, ax2= plt.subplots(1, figsize=(10, 8))
+        ax2.plot(far_list, rec_list, label=pr_name + '  AUC: %.3f'%(auc))
+        ax2.legend()
+        ax2.set_title(title, font_title)
+        ax2.set_xlabel('FAR', font_label)
+        ax2.set_ylabel('Recall', font_label)
+        ax2.grid()
+        fig2.savefig(os.path.join(pr_path, pr_name + '_ROC_curve.png'), dpi=300)
+        plt.close(fig2)
+
+
+    # Find unique classes
+    # unique_classes = np.unique(target_cls)
+    # # for c in unique_classes:
+    # #     gt_p = (target_cls == c).sum()
+    # #     gt_n = len(target_cls) - gt_p
+    # #     for ic in range(len(conf)):
+    # #         temp_tp = tp[:ic+1]
+    # #         tpc = np.sum(temp_tp)
+    # #         fpc = np.sum(temp_tp == 0)
+    # #         recall = tpc / gt_p
+    # #         precision = tpc / (tpc + fpc)
+    #         # fpr = fpc / gt_n
+    #
+    # # Create Precision-Recall curve and compute AP for each class
+    # s = [1, tp.shape[1]]  # number class, number iou thresholds (i.e. 10 for mAP0.5...0.95)
+    # ap, p, r, auc = np.zeros(s), np.zeros(s), np.zeros(s), np.zeros(s)
+    # # if syn_trn:
+    # #     gt_p = (target_cls == model_id).sum()
+    # #     prd_p = len(pred_cls)  # Number of predicted objects
+    # # else:
+    # gt_p = (target_cls == unique_classes[0]).sum()
+    # prd_p = len(pred_cls)  # Number of predicted objects
+    #
+    # # print('gt_p', gt_p) # 19
+    # # print('prd_p', prd_p) # 184
+    # # exit(0)
+    # rec_list = []
+    # prec_list = []
+    # far_list = []
+    # fpc_list = []
+    # ci = 0
+    # for ix in range(len(conf)):
+    #     # Accumulate FPs and TPs
+    #     tix = tp[:ix+1, 0]
+    #     tpc = np.sum(tix==1)
+    #     fpc = np.sum(tix==0)
+    #
+    #     # print('fpc', fpc.shape) # (184, 1) (178, 1)  , np.concatenate(([0.], recall).shape)
+    #     # print('tp', tp.shape) #  (184, 1), np.concatenate(([0.], recall).shape)
+    #
+    #     # Recall
+    #     recall = tpc / gt_p  # recall curve
+    #     rec_list.append(recall)
+    #
+    #     # Precision
+    #     precision = tpc / (tpc + fpc) # (tpc + fpc)  # precision curve
+    #     prec_list.append(precision)
+    #
+    #     fpc_list.append(fpc)
+    #
+    #     fpa = fpc / area  # roc curve fpr = fpc/(fpc + tnc)
+    #     far_list.append(fpa)
+    #
+    # r = recall
+    # p = precision
+    # fx = np.where(far_list[1:] != far_list[:-1])[0]
+    # far_arr = np.array(far_list)
+    # rec_arr = np.array(rec_list)
+    # np.savetxt(os.path.join(pr_path, 'fpc.txt'), fpc_list)
+    # auc[ci] = np.sum((far_arr[fx + 1] - far_arr[fx]) * rec_arr[fx + 1])
+    # # AP from recall-precision curve
+    # ap[ci, 0] = compute_ap(rec_list, prec_list)
+    #
+    # if pr_path:
+    #     fig1, ax1= plt.subplots(1, figsize=(10, 8))
+    #     font_title = {'family': 'serif', 'weight': 'normal', 'size': 15}
+    #     font_label = {'family': 'serif', 'weight': 'normal', 'size': 12}
+    #     # print('r', recall.shape) #  , np.concatenate(([0.], recall).shape)
+    #     # print('p', precision.shape) # , np.concatenate(([0.], precision).shape)
+    #     # ax.plot(np.concatenate(([0.], recall)), np.concatenate(([0.], precision)))
+    #     np.savetxt(os.path.join(pr_path, 'recall.txt'), rec_list)
+    #     np.savetxt(os.path.join(pr_path, 'precision.txt'), prec_list)
+    #     ax1.plot(rec_list, prec_list, label=pr_name + '  mAP: %.3f'%(ap[ci]))
+    #     ax1.legend()
+    #     ax1.set_title('YOLOv3-SPP PR-Curve', font_title)
+    #     ax1.set_xlabel('Recall', font_label)
+    #     ax1.set_ylabel('Precision', font_label)
+    #     ax1.set_xlim(0, 1)
+    #     ax1.grid()
+    #     fig1.savefig(os.path.join(pr_path, pr_name + '_PR_curve.png'), dpi=300)
+    #     plt.close(fig1)
+    #
+    #     fig2, ax2= plt.subplots(1, figsize=(10, 8))
+    #     np.savetxt(os.path.join(pr_path, 'far.txt'), far_list)
+    #     ax2.plot(far_list, rec_list, label=pr_name + '  AUC: %.3f'%(auc[ci]))
+    #     ax2.legend()
+    #     ax2.set_title('YOLOv3-SPP ROC', font_title)
+    #     ax2.set_xlabel('FP', font_label)
+    #     ax2.set_ylabel('Recall', font_label)
+    #     ax2.grid()
+    #     fig2.savefig(os.path.join(pr_path, pr_name + '_ROC_curve.png'), dpi=300)
+    #     plt.close(fig2)
+    # Compute F1 score (harmonic mean of precision and recall)
+    # f1 = 2 * p * r / (p + r + 1e-16)
+    # # print('r', r.shape) #  (1,1)
+    # return p, r, ap, f1, unique_classes.astype('int32')
 
 
 def compute_ap(recall, precision):
@@ -594,10 +780,13 @@ def build_targets(model, targets):
     nt = len(targets)
     tcls, tbox, indices, av = [], [], [], []
     multi_gpu = type(model) in (nn.parallel.DataParallel, nn.parallel.DistributedDataParallel)
+    # print('multi gpu ', multi_gpu)
     reject, use_all_anchors = True, True
     for i in model.yolo_layers:
         # get number of grid points and anchor vec for this yolo layer
+        # print(type(model)) # <class 'models_xview.DataParallelPassThrough'>
         if multi_gpu:
+            # print(type(model.module.module_list[i])) # <class 'models_xview.YOLOLayer'>
             ng, anchor_vec = model.module.module_list[i].ng, model.module.module_list[i].anchor_vec
         else:
             ng, anchor_vec = model.module_list[i].ng, model.module_list[i].anchor_vec
@@ -1062,7 +1251,6 @@ def plot_images(imgs, targets, paths=None, fname='images.jpg'):
     bs, _, h, w = imgs.shape  # batch size, _, height, width
     bs = min(bs, 16)  # limit plot to 16 images
     ns = np.ceil(bs ** 0.5)  # number of subplots
-
     for i in range(bs):
         #fixme skip target is null
         if i >= targets.shape[0] or not targets[i].shape[0]:
