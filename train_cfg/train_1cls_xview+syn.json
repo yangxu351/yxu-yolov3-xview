@@ -1,0 +1,19 @@
+{
+  "device": 1,
+  "seed": 17,
+  "epochs": 220,
+  "batch_size": 8,
+  "syn_batch_size": 3,
+  "image_size": 608,
+  "class_num": 1,
+
+  "pxwhrsd": "px23whr3_seed{}",
+  "hyp_cmt": "hgiou1_x{}s{}",
+
+  "prefix":"xview + syn",
+  "comments": ["xview_syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_gauss_models_color", "xview_syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_gauss_models_mixed"],
+  "val_syn": false,
+  "xbkgonly": true,
+  "model_id": 1
+
+}
