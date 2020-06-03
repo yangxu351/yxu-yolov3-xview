@@ -7,13 +7,9 @@ import glob
 import numpy as np
 import argparse
 import os
-from PIL import Image
 import pandas as pd
 import shutil
 from utils.object_score_util import get_bbox_coords_from_annos_with_object_score as gbc
-from skimage import io
-import matplotlib.pyplot as plt
-import cv2
 
 IMG_FORMAT = '.png'
 TXT_FORMAT = '.txt'
@@ -210,9 +206,9 @@ if __name__ == '__main__':
     merge all syn_xveiw_background data
     *****---change syn_data_dir first----******
     '''
-    cities = ['spiral', 'berlin', 'siena']
-    streets = [500, 500, 500]
-    display_types = ['color', 'mixed']
+    cities = ['siena']
+    streets = [500]
+    display_types = ['mixed']
     syn_args = get_args()
     for dt in display_types:
         for cx, ct in enumerate(cities):
@@ -227,7 +223,7 @@ if __name__ == '__main__':
 
     px_thres=23
     whr_thres=3
-    display_types = ['color', 'mixed']
+    display_types = [ 'mixed']
     syn_args = get_args()
     for dt in display_types:
         group_object_annotation_and_draw_bbox(dt, px_thres, whr_thres)
@@ -237,7 +233,7 @@ if __name__ == '__main__':
     '''
     px_thres=23 #20 #30
     whr_thres=3
-    display_types = ['color', 'mixed']
+    display_types = ['mixed']
     syn_args = get_args()
     for dt in display_types:
         draw_bbx_on_rgb_images(dt, px_thres, whr_thres)
@@ -245,7 +241,7 @@ if __name__ == '__main__':
     '''
     split train val
     '''
-    comments = ['syn_color', 'syn_mixed']
+    comments = ['syn_mixed']
     pxwhr = 'px23whr3'
 
     base_pxwhrs = 'px23whr3_seed{}'
@@ -258,7 +254,7 @@ if __name__ == '__main__':
     '''
     create *.data
     '''
-    comments = ['syn_color', 'syn_mixed']
+    comments = ['syn_mixed']
     for cmt in comments:
         create_syn_data(cmt, seed=17)
 
