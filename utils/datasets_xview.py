@@ -280,7 +280,7 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
 
         self.label_files = self.lbl_files
         n = len(self.img_files)
-        # print(self.img_files)
+        # print('self.img_files', self.img_files)
         assert n > 0, 'No images found in %s. See %s' % (path, help_url)
         bi = np.floor(np.arange(n) / batch_size).astype(np.int)  # batch index
         nb = bi[-1] + 1  # number of batches
@@ -355,6 +355,7 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
                     # with open(file, 'r') as f:
                     #     l = np.array([x.split() for x in f.read().splitlines()], dtype=np.float32)
                     # print(file)
+
                     #fixme if empty label file, will report an exception
                     df_txt = pd.read_csv(file, header=None, delimiter=' ')
                     #fixme
@@ -367,8 +368,11 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
 
                 except:
                     nm += 1
+                    #fixme --yang.xu to deal with empty labels
+                    # continue
+                    l = np.zeros((1, 5))
                     # print('missing labels for image %s' % self.img_files[i])  # file missing
-                    continue
+
 
                 if l.shape[0]:
                     #fixme -- yang.xu
@@ -440,6 +444,7 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
                     _ = io.imread(file)
                 except:
                     print('Corrupted image detected: %s' % file)
+        # print('self.lables[0]', self.labels[0])
 
     def __len__(self):
         return len(self.img_files)
@@ -495,9 +500,7 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
                     labels[:, 2] = ratio[1] * h * (x[:, 2] - x[:, 4] / 2) + pad[1]  # pad height
                     labels[:, 3] = ratio[0] * w * (x[:, 1] + x[:, 3] / 2) + pad[0]
                     labels[:, 4] = ratio[1] * h * (x[:, 2] + x[:, 4] / 2) + pad[1]
-                # else:
-                #     #FIXME
-                #     labels = np.zeros((0, 5), dtype=np.float32) # ****** deal with empty label files
+
         # print(labels[0])
         if self.augment:
             # Augment imagespace
@@ -507,6 +510,12 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
                                             translate=hyp['translate'],
                                             scale=hyp['scale'],
                                             shear=hyp['shear'])
+                #fixme--yang.xu to deal with the empty labels
+                # print('img', len(img))
+                # print('labels', labels)
+                # if len(img) and not len(labels):
+                #     labels = np.zeros((1, 5))
+
             # Augment colorspace
             augment_hsv(img, hgain=hyp['hsv_h'], sgain=hyp['hsv_s'], vgain=hyp['hsv_v'])
 

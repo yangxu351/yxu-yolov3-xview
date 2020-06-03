@@ -78,7 +78,7 @@ def infi_loop(dl):
 
 
 def train(opt):
-    cfg_model = opt.cfg_model
+    cfg = opt.cfg_model
     data = opt.data
     img_size = opt.img_size
     epochs = 1 if opt.prebias else opt.epochs  # 500200 batches at bs 64, 117263 images = 273 epochs
@@ -135,7 +135,7 @@ def train(opt):
         os.remove(f)
 
     # Initialize model
-    model = Darknet(cfg_model, arc=opt.arc).to(device)
+    model = Darknet(cfg, arc=opt.arc).to(device)
 
     # Optimizer
     pg0, pg1 = [], []  # optimizer parameter groups
@@ -353,28 +353,32 @@ def train(opt):
                 imgs_xview, targets_xview, paths_xview = next(gen_xview_data) 
                 imgs_syn, targets_syn, paths_syn = next(gen_syn_data)
                 #fixme -- yang.xu --************* important!!!!
-                xview_batch_size  = batch_size - syn_batch_size
+                # targets_syn[:, 0] = batch_size - syn_batch_size
+                xview_batch_size = batch_size - syn_batch_size
                 # print('xview_batch_size', xview_batch_size)
-                print('targets_syn[:,0]', targets_syn[:,0])
+                # print('targets_syn_size', targets_syn.shape)
+                # print('targets_syn[:,0]', targets_syn[:,0])
+                #fixme -- yang.xu
+                # --************* important!!!! reverse order
                 for si in reversed(range(syn_batch_size)):
                     targets_syn[targets_syn[:, 0] == si, 0] = xview_batch_size + si
                 # print('targets_syn[:,0]----after----', targets_syn[:,0])
-                # # print(imgs_xview.shape, targets_xview[:,0], len(paths_xview))
-                # # print(imgs_syn.shape, targets_syn[:, 0], len(paths_syn))
+                # print(imgs_xview.shape, targets_xview[:,0], len(paths_xview))
+                # print(imgs_syn.shape, targets_syn[:, 0], len(paths_syn))
                 # print('imgs_xview.shape ', imgs_xview.shape)
+                # print('targets_xview.shape ', targets_xview.shape)
                 # print('imgs_syn.shape ', imgs_syn.shape)
                 # print('targets_syn.shape ', targets_syn.shape)
-                # print('targets_xview.shape ', targets_xview.shape)
+                # exit(0)
 
-                imgs = torch.cat((imgs_xview, imgs_syn), dim=0)
-                targets = torch.cat((targets_xview, targets_syn), dim=0)
+                imgs = torch.cat([imgs_xview, imgs_syn], dim=0)
+                targets = torch.cat([targets_xview, targets_syn], dim=0)
                 paths =  paths_xview + paths_syn
                 # print('imgs.shape ', imgs.shape)
                 # print('targets.shape ', targets.shape)
                 # print('len(paths) ', len(paths))
                 # print('targets ', targets)
                 # exit(0)
-
 
             elif syn_dataloader and not dataloader:
                 imgs, targets, paths = next(gen_syn_data)
@@ -460,10 +464,10 @@ def train(opt):
             #     is_xview = any([x in data for x in [
             #         '{}_seed{}.data'.format(opt.cmt, opt.seed)]]) and model.nc == opt.class_num
             # else:
-            # is_xview = any([x in data for x in [
-            #     '{}_seed{}.data'.format(opt.cmt, opt.seed)]]) and model.nc == opt.class_num
+            is_xview = any([x in data for x in [
+                '{}_seed{}.data'.format(opt.cmt, opt.seed)]]) and model.nc == opt.class_num
 
-            results, maps = test.test(cfg_model,
+            results, maps = test.test(cfg,
                                       data,
                                       batch_size=batch_size * 2,
                                       img_size=opt.img_size,
@@ -545,7 +549,6 @@ def train(opt):
 
     return results
 
-
 def get_opt():
     parser = argparse.ArgumentParser()
     parser.add_argument('--seed', type=int, default=17, help='seed')
@@ -560,7 +563,6 @@ def get_opt():
     parser.add_argument('--device', default='1', help='device id (i.e. 0 or 0,1 or cpu)')
 
     parser.add_argument('--data', type=str, default='', help='*.data path')
-    parser.add_argument('--accumulate', type=int, default=4, help='batches to accumulate before optimizing')
     parser.add_argument('--cfg_model', type=str, default='cfg/yolov3-spp-{}cls_syn.cfg', help='*.cfg path')
     parser.add_argument('--writer_dir', type=str, default='writer_output/{}_cls/{}_seed{}/{}/', help='*events* path')
     parser.add_argument('--weights_dir', type=str, default='weights/{}_cls/{}_seed{}/{}/', help='to save weights path')
@@ -573,6 +575,7 @@ def get_opt():
     parser.add_argument('--save_json', action='store_true', help='save a cocoapi-compatible JSON results file')
     parser.add_argument('--task', default='', help="'test', 'study', 'benchmark'")
     parser.add_argument('--multi_scale', action='store_true', help='adjust (67% - 150%) img_size every 10 batches')
+    parser.add_argument('--accumulate', type=int, default=4, help='batches to accumulate before optimizing')
     parser.add_argument('--rect', default=False, action='store_true', help='rectangular training')
     parser.add_argument('--resume', default=False, action='store_true', help='resume training from last.pt')
     parser.add_argument('--nosave', action='store_true', help='only save final checkpoint')
@@ -588,9 +591,6 @@ def get_opt():
     opt = parser.parse_args()
 
     opt.cfg_model = opt.cfg_model.format(opt.class_num)
-
-    # opt.weights_dir = opt.weights_dir.format(opt.class_num, opt.cmt, '{}_hgiou1_seed{}_'.format(time_marker, opt.seed))
-    # opt.writer_dir = opt.writer_dir.format(opt.class_num, opt.cmt, '{}_hgiou1_seed{}'.format(time_marker, opt.seed))
 
 
     if 'pw' not in opt.arc:  # remove BCELoss positive weights
@@ -683,11 +683,12 @@ if __name__ == '__main__':
     # comments = ['xview_syn_xview_bkg_px15whr3_xbw_xcolor_model4_v1_color', 'xview_syn_xview_bkg_px15whr3_xbw_xcolor_model4_v1_mixed']
     # comments = ['xview_syn_xview_bkg_px15whr3_xbw_xcolor_model4_v2_color', 'xview_syn_xview_bkg_px15whr3_xbw_xcolor_model4_v2_mixed']
     # comments = ['xview_syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_gauss_models_color', 'xview_syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_gauss_models_mixed']
+    # comments = ['xview_syn_xview_bkg_px23whr3_xbw_xrxc_gauss_model1_v1_color', 'xview_syn_xview_bkg_px23whr3_xbw_xrxc_gauss_model1_v1_mixed']
+    # comments = ['xview_syn_xview_bkg_px23whr3_xbw_xrxc_gauss_model1_v1_mixed']
     # comments = ['xview_syn_xview_bkg_px23whr3_xbw_xrxc_model1_gauss_color', 'xview_syn_xview_bkg_px23whr3_xbw_xrxc_model1_gauss_mixed']
     # comments = ['xview_syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_gauss_model1_v2_color', 'xview_syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_gauss_model1_v2_mixed']
     # comments = ['xview_syn_xview_bkg_px23whr3_xbsw_xcolor_xbkg_gauss_model1_v4_color', 'xview_syn_xview_bkg_px23whr3_xbsw_xcolor_xbkg_gauss_model1_v4_mixed']
-
-    # syn_batch_sizes = [3] # [3] # [1, 2, 3] # 1,
+    # syn_batch_sizes = [5] # [3] # [1, 2, 3] # 1,
     # pxwhrsd = 'px23whr3_seed{}'
     # prefix = 'xview + syn'
 
@@ -699,8 +700,10 @@ if __name__ == '__main__':
     # hyp_cmt = 'hgiou1_x5s3' # syn-batch-size
     # hyp_cmt = 'hgiou0.8_mean_best'
     # hyp_cmt = 'hgiou1'
+    # val_syn=False
+    # sd = 17 # 5,
+    # batch_size = 8
     opt = get_opt()
-
     Configure_file = opt.cfg_dict
     cfg_dict = json.load(open(Configure_file))
     comments = cfg_dict['comments']
@@ -730,6 +733,7 @@ if __name__ == '__main__':
         opt.name = prefix + suffix
 
         opt.base_dir = opt.base_dir.format(opt.class_num, pxwhrsd.format(opt.seed))
+
         if val_syn:
             # opt.data = 'data_xview/{}_{}_cls/{}_seed{}/{}_seed{}.data'.format(cmt, opt.class_num, cmt, seed, cmt, seed)
             opt.data = 'data_xview/{}_{}_cls/{}_seed{}/{}_seed{}_xview_val.data'.format(cmt, opt.class_num, cmt, opt.seed, cmt, opt.seed)
@@ -753,10 +757,15 @@ if __name__ == '__main__':
 
         if not os.path.exists(opt.result_dir):
             os.makedirs(opt.result_dir)
-        # opt.resume = True
-        results_file = os.path.join(opt.result_dir, 'results_seed{}.txt'.format(opt.seed))
-        last = os.path.join(opt.weights_dir, 'last_seed{}.pt'.format(opt.seed))
-        best = os.path.join(opt.weights_dir, 'best_seed{}.pt'.format(opt.seed))
+        if val_syn:
+            results_file = os.path.join(opt.result_dir, 'results_{}_seed{}.txt'.format(opt.cmt, opt.seed))
+            # last = os.path.join(opt.weights_dir, 'backup218.pt')
+            last = os.path.join(opt.weights_dir, 'last_{}_seed{}.pt'.format(opt.cmt, opt.seed))
+            best = os.path.join(opt.weights_dir, 'best_{}_seed{}.pt'.format(opt.cmt, opt.seed))
+        else:
+            results_file = os.path.join(opt.result_dir, 'results_seed{}.txt'.format(opt.seed))
+            last = os.path.join(opt.weights_dir, 'last_seed{}.pt'.format(opt.seed))
+            best = os.path.join(opt.weights_dir, 'best_seed{}.pt'.format(opt.seed))
         opt.weights = last if opt.resume else opt.weights
         print(opt)
 
@@ -813,10 +822,3 @@ if __name__ == '__main__':
             #     print('excetion')
             #     pass
 
-    # print(sys.argv)
-    # main(t=sys.argv[2], seed=sys.argv[4], dt=sys.argv[6], sr=sys.argv[8])
-#     trials = 3
-#     for t in range(trials):
-#         print(os.getcwd())
-#         os.system('python train_syn_background_seeds.py main %d' % t)
-#         print(sys.argv[0])

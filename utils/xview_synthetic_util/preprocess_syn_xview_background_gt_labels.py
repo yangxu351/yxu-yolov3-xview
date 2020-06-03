@@ -221,9 +221,9 @@ if __name__ == '__main__':
     merge all syn_xveiw_background data
     *****---change syn_data_dir first----******
     '''
-    # # cmt = ''
-    # # seedians = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
-    # display_types = ['texture', 'color', 'mixed']
+    cmt = ''
+    seedians = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+    display_types = ['texture', 'color', 'mixed']
     # cmt = 'certain_models'
     # display_types = ['texture', 'color', 'mixed']
     # seedians = [0, 1, 2, 3, 4, 5, 6, 7]
@@ -242,9 +242,9 @@ if __name__ == '__main__':
     # cmt = 'sbwratio_new_xratio_xcolor_models'
     # display_types = ['color', 'mixed']
     # seedians = [0, 1, 2, 3, 4]
-    # syn_args = get_args(cmt)
-    # for dt in display_types:
-    #     merge_clean_origin_syn_image_files(seedians, dt)
+    syn_args = get_args(cmt)
+    for dt in display_types:
+        merge_clean_origin_syn_image_files(seedians, dt)
 
     '''
     draw RGB histogram 

@@ -269,6 +269,8 @@ def test(cfg,
             pr_name= opt.name + '  @IoU: {:.2f} '.format(iouv[0]) + '  conf_thres: {} '.format(conf_thres)
             p, r, ap, f1, ap_class = ap_per_class(*stats, pr_path=opt.result_dir, pr_name= pr_name, model_id=opt.model_id)
 
+            # print('dataset.batch ', dataset.batch.shape)
+            # exit(0)
             area = (img_size*opt.res)*(img_size*opt.res)*dataset.batch.shape[0]*1e-6
             plot_roc(*stats, pr_path=opt.result_dir, pr_name= pr_name, model_id=opt.model_id, area=area)
             # if niou > 1:
@@ -486,64 +488,68 @@ if __name__ == '__main__':
     # comments = ['syn_xview_bkg_px15whr3_sbw_xcolor_model4_color', 'syn_xview_bkg_px15whr3_sbw_xcolor_model4_mixed']
     # comments = ['syn_xview_bkg_px15whr3_sbw_xcolor_model4_v1_color', 'syn_xview_bkg_px15whr3_sbw_xcolor_model4_v1_mixed']
     # comments = ['syn_xview_bkg_px15whr3_sbw_xcolor_model4_v2_color', 'syn_xview_bkg_px15whr3_sbw_xcolor_model4_v2_mixed']
-    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v3_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v3_mixed']
+    # comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v3_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v3_mixed']
     # comments = ['syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_gauss_models_color', 'syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_gauss_models_mixed']
     # comments = ['syn_xview_bkg_px23whr3_sbw_xcolor_model1_color', 'syn_xview_bkg_px23whr3_sbw_xcolor_model1_mixed']
-    # comments = ['syn_xview_bkg_px23whr3_xbw_xcolor_gauss_model1_v1_color', 'syn_xview_bkg_px23whr3_xbw_xcolor_gauss_model1_v1_mixed']
-    # comments = ['syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_gauss_model1_v2_color', 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_gauss_model1_v2_mixed']
-    # comments = ['syn_xview_bkg_px23whr3_sbw_xcolor_xbkg_unif_model1_v3_color', 'syn_xview_bkg_px23whr3_sbw_xcolor_xbkg_unif_model1_v3_mixed']
-    # comments = ['syn_xview_bkg_px23whr3_xbsw_xcolor_xbkg_gauss_model1_v4_color', 'syn_xview_bkg_px23whr3_xbsw_xcolor_xbkg_gauss_model1_v4_mixed']
-    base_cmt = 'px23whr3_seed{}'
-    hyp_cmt = 'hgiou1_1gpu'
-    # hyp_cmt = 'hgiou1_1gpu_xval'
-    # hyp_cmt = 'hgiou1_mean_best'
-    prefix = 'syn'
-    px_thres = 23
-    whr_thres = 3 # 4
-    seeds = [17]
-    for sd in seeds:
-        for cmt in comments:
-            base_cmt = base_cmt.format(sd)
-            opt = get_opt(comments=cmt)
-
-            cinx = cmt.find('model') # first letter index
-            endstr = cmt[cinx:]
-            rcinx = endstr.rfind('_')
-            fstr = endstr[rcinx:] # '_' is included
-            sstr = endstr[:rcinx]
-            suffix = fstr + '_' + sstr
-            opt.name = prefix + suffix
-
-            ''' for specified model id '''
-            opt.batch_size = 2
-            sidx = cmt.split('model')[-1][0]
-            opt.model_id = int(sidx)
-            opt.conf_thres = 0.01
-            opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_with_model_{}_seed{}_miss'.format(hyp_cmt, sd))
-            opt.data = 'data_xview/{}_cls/{}/xviewtest_{}_with_model_m{}_miss.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id)
-
-            ''' for whole validation dataset '''
-            # opt.conf_thres = 0.1
-            # opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd , '{}_{}_seed{}'.format('test_on_xview_with_model', hyp_cmt, sd))
-            # opt.data = 'data_xview/{}_cls/{}/{}_seed{}_with_model.data'.format(opt.class_num, 'px{}whr{}_seed{}'.format(px_thres, whr_thres, sd), 'xview_px{}whr{}'.format(px_thres, whr_thres), sd)
-
-            if not os.path.exists(opt.result_dir):
-                os.makedirs(opt.result_dir)
-            print(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd), '*_{}_seed{}'.format(hyp_cmt, sd), 'best_{}_seed{}.pt'.format(cmt, sd)))
-            all_weights = glob.glob(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd), '*_{}_seed{}'.format(hyp_cmt, sd), 'best_{}_seed{}.pt'.format(cmt, sd)))
-            all_weights.sort()
-            opt.weights = all_weights[-1]
-
-            print(opt.weights)
-            print(opt.data)
-            test(opt.cfg,
-                 opt.data,
-                 opt.weights,
-                 opt.batch_size,
-                 opt.img_size,
-                 opt.conf_thres,
-                 opt.iou_thres,
-                 opt.save_json, opt=opt)
+    # # comments = ['syn_xview_bkg_px23whr3_xbw_xcolor_gauss_model1_v1_color', 'syn_xview_bkg_px23whr3_xbw_xcolor_gauss_model1_v1_mixed']
+    # # comments = ['syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_gauss_model1_v2_color', 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_gauss_model1_v2_mixed']
+    # # comments = ['syn_xview_bkg_px23whr3_sbw_xcolor_xbkg_unif_model1_v3_color', 'syn_xview_bkg_px23whr3_sbw_xcolor_xbkg_unif_model1_v3_mixed']
+    # # comments = ['syn_xview_bkg_px23whr3_xbsw_xcolor_xbkg_gauss_model1_v4_color', 'syn_xview_bkg_px23whr3_xbsw_xcolor_xbkg_gauss_model1_v4_mixed']
+    # base_cmt = 'px23whr3_seed{}'
+    # hyp_cmt = 'hgiou1_1gpu'
+    # # hyp_cmt = 'hgiou1_1gpu_xval'
+    # # hyp_cmt = 'hgiou1_mean_best'
+    # prefix = 'syn'
+    # px_thres = 23
+    # whr_thres = 3 # 4
+    # seeds = [17]
+    # for sd in seeds:
+    #     for cmt in comments:
+    #         base_cmt = base_cmt.format(sd)
+    #         opt = get_opt(comments=cmt)
+    #
+    #         cinx = cmt.find('model') # first letter index
+    #         endstr = cmt[cinx:]
+    #         rcinx = endstr.rfind('_')
+    #         fstr = endstr[rcinx:] # '_' is included
+    #         sstr = endstr[:rcinx]
+    #         suffix = fstr + '_' + sstr
+    #         opt.name = prefix + suffix
+    #
+    #         ''' for specified model id '''
+    #         # opt.batch_size = 2
+    #         # sidx = cmt.split('model')[-1][0]
+    #         # opt.model_id = int(sidx)
+    #         # opt.conf_thres = 0.01
+    #         # ############# 2 images test set
+    #         # # opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_with_model_{}_seed{}_miss'.format(hyp_cmt, sd))
+    #         # # opt.data = 'data_xview/{}_cls/{}/xviewtest_{}_with_model_m{}_miss.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id)
+    #         # ############# all m* labeled validation images make up the test set
+    #         # opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_with_model_{}_only'.format(hyp_cmt))
+    #         # opt.data = 'data_xview/{}_cls/{}/xviewtest_{}_with_model_m{}_only.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id)
+    #
+    #         ''' for whole validation dataset '''
+    #         opt.conf_thres = 0.1
+    #         opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd , '{}_{}_seed{}'.format('test_on_xview_with_model', hyp_cmt, sd))
+    #         opt.data = 'data_xview/{}_cls/{}/{}_seed{}_with_model.data'.format(opt.class_num, 'px{}whr{}_seed{}'.format(px_thres, whr_thres, sd), 'xview_px{}whr{}'.format(px_thres, whr_thres), sd)
+    #
+    #         if not os.path.exists(opt.result_dir):
+    #             os.makedirs(opt.result_dir)
+    #         print(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd), '*_{}_seed{}'.format(hyp_cmt, sd), 'best_{}_seed{}.pt'.format(cmt, sd)))
+    #         all_weights = glob.glob(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd), '*_{}_seed{}'.format(hyp_cmt, sd), 'best_{}_seed{}.pt'.format(cmt, sd)))
+    #         all_weights.sort()
+    #         opt.weights = all_weights[-1]
+    #
+    #         print(opt.weights)
+    #         print(opt.data)
+    #         test(opt.cfg,
+    #              opt.data,
+    #              opt.weights,
+    #              opt.batch_size,
+    #              opt.img_size,
+    #              opt.conf_thres,
+    #              opt.iou_thres,
+    #              opt.save_json, opt=opt)
 
     '''
     test for xview_syn_xview_bkg_* with model
@@ -577,102 +583,105 @@ if __name__ == '__main__':
     # comments = ['xview_syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_models_color']#, 'xview_syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_models_mixed']
     # comments = ['xview_syn_xview_bkg_px23whr3_xbw_xcolor_model0_color', 'xview_syn_xview_bkg_px23whr3_xbw_xcolor_model0_mixed']
     # comments = ['xview_syn_xview_bkg_px15whr3_xbw_xcolor_model4_color', 'xview_syn_xview_bkg_px15whr3_xbw_xcolor_model4_mixed']
-    # comments = ['xview_syn_xview_bkg_px23whr3_xbw_xcolor_model1_color', 'xview_syn_xview_bkg_px23whr3_xbw_xcolor_model1_mixed']
+    comments = ['xview_syn_xview_bkg_px23whr3_xbw_xrxc_gauss_model1_v1_color', 'xview_syn_xview_bkg_px23whr3_xbw_xrxc_gauss_model1_v1_mixed']
     # comments = ['xview_syn_xview_bkg_px23whr3_xbw_xcolor_model1_color', 'xview_syn_xview_bkg_px23whr3_xbw_xcolor_model1_mixed']
     # comments = ['xview_syn_xview_bkg_px15whr3_xbw_xcolor_model4_color', 'xview_syn_xview_bkg_px15whr3_xbw_xcolor_model4_mixed']
     # comments = ['xview_syn_xview_bkg_px15whr3_xbw_xcolor_model4_v1_color', 'xview_syn_xview_bkg_px15whr3_xbw_xcolor_model4_v1_mixed']
     # comments = ['xview_syn_xview_bkg_px15whr3_xbw_xcolor_model4_v2_color', 'xview_syn_xview_bkg_px15whr3_xbw_xcolor_model4_v1_mixed']
     # comments = ['xview_syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_gauss_models_color', 'xview_syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_gauss_models_mixed']
-    # prefix = 'xview + syn'
-    # base_cmt = 'px23whr3_seed{}'
-    # # hyp_cmt = 'hgiou1_mean_best'
-    # sd=17
-    # for cmt in comments:
-    #     base_cmt = base_cmt.format(sd)
-    #     opt = get_opt(comments=cmt)
-    #
-    #     cinx = cmt.find('model') # first letter index
-    #     endstr = cmt[cinx:]
-    #     rcinx = endstr.rfind('_')
-    #     fstr = endstr[rcinx:] # '_' is included
-    #     sstr = endstr[:rcinx]
-    #     suffix = fstr + '_' + sstr
-    #     opt.name = prefix + suffix
-    #
-    #     # prefix = 'xview + syn_'
-    #     # lcmt = cmt.split('_')[-2:]
-    #     # suffix = lcmt[1] + '_' + lcmt[0]
-    #     # opt.name = prefix + suffix
-    #     '''
-    #     for a specified model id
-    #     ********* manually change the IoU_threshold, iouv,0.5
-    #     '''
-    #     # hyp_cmt = 'hgiou1_1gpu'
-    #     # opt.batch_size = 2
-    #     # opt.model_id = int(lcmt[0][-1])
-    #     # opt.conf_thres = 0.01
-    #     # # opt.conf_thres = 0.1
-    #     # # # opt.conf_thres = 0.001
-    #     #
-    #     # opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_with_model_{}_seed{}_1xSyn_miss'.format(hyp_cmt, sd))
-    #     # all_weights = glob.glob(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd),  '*_{}_seed{}_1xSyn'.format(hyp_cmt, sd), 'best_seed{}_1xSyn.pt'.format(sd)))
-    #     # opt.data = 'data_xview/{}_cls/{}/xviewtest_{}_with_model_m{}_miss.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id)
-    #
-    #     '''
-    #     for whole validation dataset T_xview
-    #     ** important : area is all images area
-    #     ****** keep IoU_threshold,iouv, as 0.5
-    #     '''
-    #     # hyp_cmt = 'hgiou1_1gpu'
-    #     # opt.conf_thres = 0.1
-    #     # opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_with_model_{}_seed{}_1xSyn'.format(hyp_cmt, sd))
-    #     # all_weights = glob.glob(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd),  '*_{}_seed{}_1xSyn'.format(hyp_cmt, sd), 'best_seed{}_1xSyn.pt'.format(sd)))
-    #     # opt.data = 'data_xview/{}_cls/{}_seed{}/{}_seed{}_1xSyn_with_model.data'.format(opt.class_num, cmt, sd, cmt, sd)
-    #
-    #     '''
-    #     for whole validation dataset T_xview
-    #     'hgiou1_x{}s{}'.format(batch_size-syn_batch_size, syn_batch_size)
-    #     '''
-    #     hyp_cmt = 'hgiou1_x5s3'
-    #     # hyp_cmt = 'hgiou1_x7s1'
-    #     # hyp_cmt = 'hgiou1_x6s2'
-    #     # hyp_cmt = 'hgiou1_x4s4'
-    #     opt.conf_thres = 0.1
-    #     opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_with_model_{}_seed{}'.format(hyp_cmt, sd))
-    #     all_weights = glob.glob(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd),  '*_{}_seed{}'.format(hyp_cmt, sd), 'best_seed{}.pt'.format(sd)))
-    #     opt.data = 'data_xview/{}_cls/{}_seed{}/{}_seed{}_with_model.data'.format(opt.class_num, cmt, sd, cmt, sd)
-    #
-    #     '''
-    #     for  specified model id T_xview_m*
-    #     'hgiou1_x{}s{}'.format(batch_size-syn_batch_size, syn_batch_size)
-    #     '''
-    #     # hyp_cmt = 'hgiou1_x5s3'
-    #     # opt.batch_size = 2
-    #     # sidx = cmt.split('model')[-1][0]
-    #     # opt.model_id = int(sidx)
-    #     # opt.conf_thres = 0.1
-    #     # opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_with_model_{}_seed{}'.format(hyp_cmt, sd))
-    #     # all_weights = glob.glob(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd),  '*_{}_seed{}'.format(hyp_cmt, sd), 'best_seed{}.pt'.format(sd)))
-    #     # opt.data = 'data_xview/{}_cls/{}/xviewtest_{}_with_model_m{}_miss.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id)
-    #
-    #     print(opt.data)
-    #     all_weights.sort()
-    #     opt.weights = all_weights[-1]
-    #     print(opt.weights)
-    #
-    #     if not os.path.exists(opt.result_dir):
-    #         os.makedirs(opt.result_dir)
-    #
-    #     opt.base_dir = opt.base_dir.format(opt.class_num, base_cmt.format(sd))
-    #     print(opt.base_dir)
-    #     test(opt.cfg,
-    #          opt.data,
-    #          opt.weights,
-    #          opt.batch_size,
-    #          opt.img_size,
-    #          opt.conf_thres,
-    #          opt.iou_thres,
-    #          opt.save_json, opt=opt)
+    prefix = 'xview + syn'
+    base_cmt = 'px23whr3_seed{}'
+    # hyp_cmt = 'hgiou1_mean_best'
+    sd=17
+    for cmt in comments:
+        base_cmt = base_cmt.format(sd)
+        opt = get_opt(comments=cmt)
+
+        cinx = cmt.find('model') # first letter index
+        endstr = cmt[cinx:]
+        rcinx = endstr.rfind('_')
+        fstr = endstr[rcinx:] # '_' is included
+        sstr = endstr[:rcinx]
+        suffix = fstr + '_' + sstr
+        opt.name = prefix + suffix
+
+        # prefix = 'xview + syn_'
+        # lcmt = cmt.split('_')[-2:]
+        # suffix = lcmt[1] + '_' + lcmt[0]
+        # opt.name = prefix + suffix
+        '''
+        for a specified model id
+        ********* manually change the IoU_threshold, iouv,0.5
+        '''
+        # hyp_cmt = 'hgiou1_1gpu'
+        # opt.batch_size = 2
+        # opt.model_id = int(lcmt[0][-1])
+        # opt.conf_thres = 0.01
+        # # opt.conf_thres = 0.1
+        # # # opt.conf_thres = 0.001
+        #
+        # opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_with_model_{}_seed{}_1xSyn_miss'.format(hyp_cmt, sd))
+        # all_weights = glob.glob(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd),  '*_{}_seed{}_1xSyn'.format(hyp_cmt, sd), 'best_seed{}_1xSyn.pt'.format(sd)))
+        # opt.data = 'data_xview/{}_cls/{}/xviewtest_{}_with_model_m{}_miss.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id)
+
+        '''
+        for whole validation dataset T_xview
+        ** important : area is all images area
+        ****** keep IoU_threshold,iouv, as 0.5
+        '''
+        # hyp_cmt = 'hgiou1_1gpu'
+        # opt.conf_thres = 0.1
+        # opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_with_model_{}_seed{}_1xSyn'.format(hyp_cmt, sd))
+        # all_weights = glob.glob(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd),  '*_{}_seed{}_1xSyn'.format(hyp_cmt, sd), 'best_seed{}_1xSyn.pt'.format(sd)))
+        # opt.data = 'data_xview/{}_cls/{}_seed{}/{}_seed{}_1xSyn_with_model.data'.format(opt.class_num, cmt, sd, cmt, sd)
+
+        '''
+        for whole validation dataset T_xview
+        'hgiou1_x{}s{}'.format(batch_size-syn_batch_size, syn_batch_size)
+        '''
+        # # hyp_cmt = 'hgiou1_x5s3'
+        # hyp_cmt = 'hgiou1_xbkgonly_x3s5'
+        # # hyp_cmt = 'hgiou1_x7s1'
+        # # hyp_cmt = 'hgiou1_x6s2'
+        # # hyp_cmt = 'hgiou1_x4s4'
+        # opt.conf_thres = 0.1
+        # opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_with_model_{}_seed{}'.format(hyp_cmt, sd))
+        # all_weights = glob.glob(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd),  '*_{}_seed{}'.format(hyp_cmt, sd), 'best_seed{}.pt'.format(sd)))
+        # opt.data = 'data_xview/{}_cls/{}_seed{}/{}_seed{}_with_model.data'.format(opt.class_num, cmt, sd, cmt, sd)
+
+        '''
+        for  specified model id T_xview_m*
+        'hgiou1_x{}s{}'.format(batch_size-syn_batch_size, syn_batch_size)
+        '''
+        # hyp_cmt = 'hgiou1_x5s3'
+        hyp_cmt = 'hgiou1_xbkgonly_x3s5'
+        opt.batch_size = 2
+        sidx = cmt.split('model')[-1][0]
+        opt.model_id = int(sidx)
+        opt.conf_thres = 0.1
+        opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_with_model_{}_seed{}'.format(hyp_cmt, sd))
+        all_weights = glob.glob(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd),  '*_{}_seed{}'.format(hyp_cmt, sd), 'best_seed{}.pt'.format(sd)))
+        # opt.data = 'data_xview/{}_cls/{}/xviewtest_{}_with_model_m{}_miss.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id)
+        opt.data = 'data_xview/{}_cls/{}/xviewtest_{}_with_model_m{}_only.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id)
+
+        print(opt.data)
+        all_weights.sort()
+        opt.weights = all_weights[-1]
+        print(opt.weights)
+
+        if not os.path.exists(opt.result_dir):
+            os.makedirs(opt.result_dir)
+
+        opt.base_dir = opt.base_dir.format(opt.class_num, base_cmt.format(sd))
+        print(opt.base_dir)
+        test(opt.cfg,
+             opt.data,
+             opt.weights,
+             opt.batch_size,
+             opt.img_size,
+             opt.conf_thres,
+             opt.iou_thres,
+             opt.save_json, opt=opt)
 
     '''
     test for xview_px6whr4_ng0_* with model

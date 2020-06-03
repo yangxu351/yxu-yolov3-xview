@@ -574,25 +574,44 @@ def check_img_with_bbox_with_indices_model_id():
         plot_img_with_bbx_model_id(os.path.join(mimg_path, mn), os.path.join(mixed_path, mn.replace(IMG_FORMAT, TXT_FORMAT)), save_m_path)
 
 
-def statistic_model_number(comments='px23whr3_seed17'):
-
-    lbl_files = glob.glob(os.path.join(args.annos_save_dir[:-1] + '_all_model', '*.txt'))
-    json_name = 'all_model_num_maps.json'
-    png_name = 'all_number_3d-model.jpg'
+def statistic_model_number(comments='px23whr3_seed17', type='all'):
+    json_name = '{}_model_num_maps.json'.format(type)
+    png_name = '{}_number_3d-model.jpg'.format(type)
     Num = {}
+
+    if type == 'train':
+        data_path = pd.read_csv(os.path.join(args.data_save_dir, comments, 'xview{}_lbl_{}_with_model.txt'.format(type, comments)), header=None)
+        lbl_files = [f for f in data_path.loc[:, 0]]
+        title = "Model Numbers of Training Dataset"
+    elif type == 'val':
+        data_path = pd.read_csv(os.path.join(args.data_save_dir, comments, 'xview{}_lbl_{}_with_model.txt'.format(type, comments)), header=None)
+        lbl_files = [f for f in data_path.loc[:, 0]]
+        title = "Model Numbers of Validation Dataset"
+    elif type == 'syn':
+        syn_file = '/media/lab/Yang/code/yolov3/data_xview/syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_gauss_models_color_1_cls/syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_gauss_models_color_seed17/syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_gauss_models_color_all_lbl_seed17.txt'
+        data_path = pd.read_csv(syn_file, header=None)
+        lbl_files = [f for f in data_path.loc[:, 0]]
+        Num['all'] = 0
+        title = "Model Numbers of Synthetic Dataset"
+    else:
+        lbl_files = glob.glob(os.path.join(args.annos_save_dir[:-1] + '_all_model', '*.txt'))
+        title = 'Model Numbers of xView '.format(type)
 
     for f in lbl_files:
         if not is_non_zero_file(f):
             continue
         # print(f)
         df_lbl = pd.read_csv(f, header=None, sep=' ')
-        for m in df_lbl.loc[:, 5]:
-            if m not in Num.keys():
-                Num[m] = 1
-                # print(m)
-                # print(f)
-            else:
-                Num[m] += 1
+        if type=='syn':
+            Num['all'] += df_lbl.shape[0]
+        else:
+            for m in df_lbl.loc[:, 5]:
+                if m not in Num.keys():
+                    Num[m] = 1
+                    # print(m)
+                    # print(f)
+                else:
+                    Num[m] += 1
     json_dir = os.path.join(args.txt_save_dir, 'model_number', comments)
     if not os.path.exists(json_dir):
         os.makedirs(json_dir)
@@ -600,6 +619,7 @@ def statistic_model_number(comments='px23whr3_seed17'):
                         'w'), ensure_ascii=False, indent=2, cls=MyEncoder)
     cnt_models = [s for s in Num.values()]
     sum_models = sum(cnt_models)
+    print('sum models :', sum_models)
     ratios = np.array([c/sum_models for c in cnt_models])
     keys = np.array([s for s in Num.keys()])
     kids = np.argsort(keys)
@@ -613,19 +633,22 @@ def statistic_model_number(comments='px23whr3_seed17'):
     fig, ax = plt.subplots(1, 1)
     width = 0.35
     x = [k for k in Num.keys()]
+    xticklabels = x.copy()
+    xticklabels[xticklabels.index(max(xticklabels))] = 'unlabeled'
     ylist = [v for v in Num.values()]
     rects = ax.bar(np.array(x), ylist, width)  # , label=labels
-    autolabel(ax, rects, x, x, ylist, rotation=0)
+    autolabel(ax, rects, x, xticklabels, ylist, rotation=0)
     ylabel = 'Number of Bbox'
     xlabel = "Model ID"
-    # plt.title('Model Numbers in {} Dataset'.format(type), literal_eval(syn_args.font2))
-    plt.title('Model Numbers in xview', literal_eval(syn_args.font2))
+    plt.title(title, literal_eval(syn_args.font2))
     plt.ylabel(ylabel, literal_eval(syn_args.font2))
     plt.xlabel(xlabel, literal_eval(syn_args.font2))
     plt.tight_layout(pad=0.4, w_pad=3.0, h_pad=3.0)
     plt.grid()
     plt.savefig(os.path.join(save_dir, png_name))
     plt.show()
+
+
 
 
 
@@ -713,20 +736,6 @@ def get_syn_args(cmt=''):
     parser = argparse.ArgumentParser()
     parser.add_argument("--json_filepath", type=str, help="Filepath to GEOJSON coordinate file",
                         default='/media/lab/Yang/data/xView/xView_train.geojson')
-
-    # parser.add_argument("--syn_plane_img_anno_dir", type=str, help="images and annotations of synthetic airplanes",
-    #                     default='/media/lab/Yang/data/synthetic_data/Airplanes/{}/')
-    # parser.add_argument("--syn_plane_txt_dir", type=str, help="txt labels of synthetic airplanes",
-    #                     default='/media/lab/Yang/data/synthetic_data/Airplanes_txt_xcycwh/{}/')
-    # parser.add_argument("--syn_plane_gt_bbox_dir", type=str, help="gt images with bbox of synthetic airplanes",
-    #                     default='/media/lab/Yang/data/synthetic_data/Airplanes_gt_bbox/{}/')
-
-    # parser.add_argument("--syn_plane_img_anno_dir", type=str, help="images and annotations of synthetic airplanes",
-    #                     default='/media/lab/Yang/data/synthetic_data/syn_xview_bkg_certain_models_texture/')
-    # parser.add_argument("--syn_plane_txt_dir", type=str, help="txt labels of synthetic airplanes",
-    #                     default='/media/lab/Yang/data/synthetic_data/syn_xview_bkg_certain_models_txt_xcycwh/')
-    # parser.add_argument("--syn_plane_gt_bbox_dir", type=str, help="gt images with bbox of synthetic airplanes",
-    #                     default='/media/lab/Yang/data/synthetic_data/syn_xview_bkg_certain_models_gt_bbox/')
     #fixme
     if cmt: # certain_models, scale_models
         parser.add_argument("--syn_plane_img_anno_dir", type=str,
@@ -776,10 +785,10 @@ def get_syn_args(cmt=''):
     parser.add_argument("--tile_size", type=int, default=608, help="image size")  # 300 416
 
     # #####*********************change
-    parser.add_argument("--syn_display_type", type=str, default='texture',
-                        help="syn_texture, syn_color, syn_mixed,  syn (match 0), syn_background")  # syn_color0, syn_texture0,
+    parser.add_argument("--syn_display_type", type=str, default='',
+                        help="syn_texture, syn_color, syn_mixed,  texture syn (match 0), syn_background")  # syn_color0, syn_texture0,
     # ######*********************change
-    parser.add_argument("--syn_ratio", type=float, default=0.25,
+    parser.add_argument("--syn_ratio", type=float, default=None,
                         help="ratio of synthetic data: 0.25, 0.5, 0.75, 1.0  0")  # ######*********************change
 
     parser.add_argument("--min_region", type=int, default=300, help="100 the smallest #pixels (area) to form an object")
@@ -806,18 +815,6 @@ def get_syn_args(cmt=''):
                                                                  syn_args.class_num)
     syn_args.results_dir = syn_args.results_dir.format(syn_args.class_num, syn_args.syn_display_type,
                                                        syn_args.syn_ratio)
-
-    # if not os.path.exists(syn_args.syn_images_save_dir):
-    #     os.makedirs(syn_args.syn_images_save_dir)
-    #
-    # if not os.path.exists(syn_args.syn_annos_save_dir):
-    #     os.makedirs(syn_args.syn_annos_save_dir)
-    #
-    # if not os.path.exists(syn_args.syn_txt_save_dir):
-    #     os.makedirs(syn_args.syn_txt_save_dir)
-    #
-    # if not os.path.exists(syn_args.results_dir):
-    #     os.makedirs(syn_args.results_dir)
 
     if syn_args.syn_ratio:
         syn_args.syn_data_list_dir = syn_args.syn_data_list_dir.format(syn_args.syn_display_type, syn_args.class_num)
@@ -1008,11 +1005,15 @@ if __name__ == "__main__":
     '''
     statistic aircraft number of each model 
     '''
-    whr_thres = 3 # 4  # 3
-    px_thresh = 23 # 6 # 4
-    seed = 17
-    args = pwv.get_args(px_thresh, whr_thres)
-    statistic_model_number(comments='px{}whr{}_seed{}'.format(px_thresh, whr_thres, seed))
+    # whr_thres = 3 # 4  # 3
+    # px_thresh = 23 # 6 # 4
+    # seed = 17
+    # args = pwv.get_args(px_thresh, whr_thres)
+    # # type = 'all'
+    # # type = 'train'
+    # # type = 'val'
+    # type = 'syn'
+    # statistic_model_number(comments='px{}whr{}_seed{}'.format(px_thresh, whr_thres, seed), type=type)
 
     '''
     plot body wing hist and probility distribution function

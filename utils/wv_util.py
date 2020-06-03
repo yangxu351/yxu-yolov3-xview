@@ -66,10 +66,11 @@ def get_labels(fname, catNum=60):
     feature_ids = []
     if catNum == 60:
         cat_index_id_file = '../../data_xview/{}_cls/categories_id_color_diverse_{}.txt'.format(catNum, catNum)
-    elif catNum == 4:
-        cat_index_id_file = '../../data_xview/{}_cls/categories_id_label_children_color_{}_classes.txt'.format(catNum, catNum)
-    else:
+    elif catNum == 6:
         cat_index_id_file = '../../data_xview/{}_cls/categories_id_color_{}_new_group.txt'.format(catNum, catNum)
+    else:
+        cat_index_id_file = '../../data_xview/{}_cls/categories_id_label_children_color_{}_classes.txt'.format(catNum, catNum)
+
 
     df_cat_idx_id = pd.read_csv(cat_index_id_file, delimiter='\t')
     feas = data['features']
@@ -293,7 +294,7 @@ def chip_image(img, ci_coords, ci_classes, feature_ids, shape=(300, 300), name="
             #                                   np.clip(out_drop[:, 2] - s_width, 0, wn),
             #                                   np.clip(out_drop[:, 3] - hmin, 0, hn))))
 
-            print(out.shape)
+            print('out shape', out.shape)
             if out.shape[0] == 0:
                 continue
             total_boxes[k] = out

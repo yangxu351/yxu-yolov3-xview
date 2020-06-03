@@ -197,20 +197,17 @@ def remove_bad_image(bad_img_path, src_dir):
             os.remove(bad_tif)
 
 
-def create_chips_and_txt_geojson_2_json(syn=False):
-    if syn:
-        args = pps.get_syn_args()
-    else:
-        args = get_args()
+def create_chips_and_txt_geojson_2_json(args):
+
     coords, chips, classes, features_ids = wv.get_labels(args.json_filepath, args.class_num)
     # gs = json.load(open('/media/lab/Yang/data/xView/xView_train.geojson'))
-    print('chips', chips.shape)
+    # print('chips', chips.shape)
 
     res = (args.input_size, args.input_size)
 
     file_names =glob.glob(os.path.join(args.image_folder, "*.tif"))
     file_names.sort()
-    print(len(file_names))
+    # print('file_names ', len(file_names))
 
     # fixme
     df_img_num_names = pd.DataFrame(columns=['id', 'file_name'])
@@ -294,7 +291,7 @@ def create_chips_and_txt_geojson_2_json(syn=False):
         os.path.join(args.txt_save_dir, 'xview_all_image_names_ids_{}_{}cls.csv'.format(args.input_size, args.class_num)),
         index=False)
 
-    trn_instance = {'info': 'xView aiplanes chips 608 yx185 created {}'.format(time.strftime('%Y-%m-%d_%H.%M', time.localtime())),
+    trn_instance = {'info': 'xView {} cls chips 608 yx185 created {}'.format(args.class_num, time.strftime('%Y-%m-%d_%H.%M', time.localtime())),
                     'license': 'license', 'images': image_info_list,
                     'annotations': annotation_list, 'categories': wv.get_all_categories(args.class_num)}
     json_file = os.path.join(args.txt_save_dir,
@@ -338,7 +335,7 @@ def plot_image_with_bbox_by_image_name_from_patches(image_name):
     cv2.imwrite(os.path.join(img_bbx_fig_dir, image_name), img)
 
 
-def remove_txt_and_json_of_bad_image(bad_img_path, px_thres=None, whr_thres=None):
+def remove_txt_and_json_of_bad_image(bad_img_names, args):
     '''
     backup *.txt
     remove bad *.txt of bad_images
@@ -346,20 +343,22 @@ def remove_txt_and_json_of_bad_image(bad_img_path, px_thres=None, whr_thres=None
     :param bad_img_path:
     :return:
     '''
-    if px_thres:
-        args = get_args(px_thres, whr_thres)
-    else:
-        args = get_args()
     '''backup *.txt'''
     src_files = glob.glob(os.path.join(args.annos_save_dir.split('_px')[0], '*.txt'))
-    if os.path.exists(args.annos_save_dir):
-        shutil.rmtree(args.annos_save_dir)
-        os.mkdir(args.annos_save_dir)
+    if '_px' in args.annos_save_dir:
+        if os.path.exists(args.annos_save_dir):
+            shutil.rmtree(args.annos_save_dir)
+            os.mkdir(args.annos_save_dir)
+        backup_dir = args.annos_save_dir
+    else:
+        backup_dir = args.annos_save_dir[:-1] + '_backup/'
+        if not os.path.exists(backup_dir):
+            os.mkdir(backup_dir)
     for sf in src_files:
-        shutil.copy(sf, args.annos_save_dir)
+        shutil.copy(sf, backup_dir)
 
     ''' remove bad .jpg '''
-    bad_raw_img_names = pd.read_csv(bad_img_path, header=None).to_numpy()
+    bad_raw_img_names = pd.read_csv(bad_img_names, header=None).to_numpy()
     for name in bad_raw_img_names[:, 0]:
         lbl_name = name.replace('.jpg', '.txt')
         bad_lbl = os.path.join(args.annos_save_dir, lbl_name)
@@ -2226,7 +2225,12 @@ if __name__ == "__main__":
     create chips and label txt and get all images json, convert from *.geojson to *.json
     then manually *****  remove bad images according to  /media/lab/Yang/data/xView/airplane_part_occlusion_raw_tif_names.txt
     '''
-    # create_chips_and_txt_geojson_2_json()
+    # syn=False
+    # if syn:
+    #     args = pps.get_syn_args()
+    # else:
+    #     args = get_args()
+    # create_chips_and_txt_geojson_2_json(args)
 
     '''
     plot images with bbox from patches 
@@ -2252,8 +2256,12 @@ if __name__ == "__main__":
     '''
     # px_thres = 23
     # whr_thres = 3
-    # bad_img_path = '/media/lab/Yang/data/xView/airplane_removed_cropped_jpg_names.txt'
-    # remove_txt_and_json_of_bad_image(bad_img_path, px_thres, whr_thres)
+    # if px_thres:
+    #     args = get_args(px_thres, whr_thres)
+    # else:
+    #     args = get_args()
+    # bad_img_names = '/media/lab/Yang/data/xView/airplane_removed_cropped_jpg_names.txt'
+    # remove_txt_and_json_of_bad_image(bad_img_names, args,px_thres, whr_thres)
 
     '''
     # backup ground truth *.txt 
