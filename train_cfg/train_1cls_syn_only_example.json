@@ -6,14 +6,12 @@
   "image_size": 608,
   "class_num": 1,
 
-  "pxwhrsd": "px23whr3_seed{}",
   "hyp_cmt": "hgiou1_1gpu",
 
-  "prefix":"syn_only",
   "comments": ["syn_mixed"],
-  "val_syn": true,
   "data": "/home/jovyan/work/data/syn_background_gt_bbox/syn_mixed_seed17.data",
-  "weights_dir": "weights/1_cls/syn_mixed_seed17/hgiou1_1gpu_seed17/",
-  "writer_dir": "writer_output/1_cls/syn_mixed_seed17/hgiou1_1gpu_seed17/",
-  "result_dir": "result_output/1_cls/syn_mixed_seed17/hgiou1_1gpu_seed17/"
+  "weights_dir": "weights/1_cls/syn_mixed_seed17/hgiou1_1gpu_seed17",
+  "writer_dir": "writer_output/1_cls/syn_mixed_seed17/hgiou1_1gpu_seed17",
+  "result_dir": "result_output/1_cls/syn_mixed_seed17/hgiou1_1gpu_seed17",
+  "cfg_model": "cfg/yolov3-spp-{}cls_syn.cfg"
 }

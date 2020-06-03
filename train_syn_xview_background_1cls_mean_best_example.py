@@ -415,22 +415,21 @@ def train(opt):
 
 def get_opt():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--seed', type=int, default=17, help='seed')
     parser.add_argument('--cfg_dict', type=str, default='',
                         help='train_cfg/train_1cls_syn_only_example.json')
-    parser.add_argument('--data', type=str, default='', help='*.data path')
-    parser.add_argument('--epochs', type=int, default=220)  # 220 180 250  500200 batches at bs 16, 117263 images = 273 epochs
-    parser.add_argument('--batch-size', type=int, default=8)  # effective bs = batch_size * accumulate = 16 * 4 = 64
 
     parser.add_argument('--device', default='0', help='device id (i.e. 0 or 0,1 or cpu)')
+    parser.add_argument('--seed', type=int, default=17, help='seed')
+    parser.add_argument('--epochs', type=int, default=220)  # 220 180 250  500200 batches at bs 16, 117263 images = 273 epochs
+    parser.add_argument('--batch-size', type=int, default=8)  # effective bs = batch_size * accumulate = 16 * 4 = 64
     parser.add_argument('--img_size', type=int, default=608, help='inference size (pixels)')  # 416 608
     parser.add_argument('--class_num', type=int, default=1, help='class number')  # 60 6 1
 
+    parser.add_argument('--data', type=str, default='', help='*.data path')
     parser.add_argument('--cfg_model', type=str, default='cfg/yolov3-spp-{}cls_syn.cfg', help='*.cfg path')
     parser.add_argument('--writer_dir', type=str, default='writer_output/{}_cls/{}_seed{}/{}/', help='*events* path')
     parser.add_argument('--weights_dir', type=str, default='weights/{}_cls/{}_seed{}/{}/', help='to save weights path')
     parser.add_argument('--result_dir', type=str, default='result_output/{}_cls/{}_seed{}/{}/', help='to save result files path')
-    parser.add_argument('--base_dir', type=str, default='data_xview/{}_cls/{}/', help='without syn data path')
     parser.add_argument('--name', default='', help='renames results.txt to results_name.txt if supplied')
 
     parser.add_argument('--accumulate', type=int, default=4, help='batches to accumulate before optimizing')
@@ -466,25 +465,24 @@ if __name__ == '__main__':
     Configure_file = opt.cfg_dict
     cfg_dict = json.load(open(Configure_file))
     comments = cfg_dict['comments']
-    prefix = cfg_dict['prefix']
-
-    pxwhrsd = cfg_dict['pxwhrsd']
     hyp_cmt = cfg_dict['hyp_cmt']
-    val_syn= cfg_dict['val_syn']
 
+    opt.device = cfg_dict['device']
     opt.seed = cfg_dict['seed']
+    opt.epochs = cfg_dict['epochs']
     opt.batch_size = cfg_dict['batch_size']
+    opt.image_size = cfg_dict['image_size']
     opt.class_num = cfg_dict['class_num']
-    opt.cfg_model = opt.cfg_model.format(opt.class_num)
+    opt.data = cfg_dict['data']
+    opt.cfg_model = cfg_dict['cfg_model'].format(opt.class_num)
 
     for cx, cmt in enumerate(comments):
-        opt.data = cfg_dict['data']
-        opt.weights_dir = cfg_dict['weights_dir']
-        opt.writer_dir = cfg_dict['writer_dir']
-        opt.result_dir = cfg_dict['result_dir']
 
+        time_marker = time.strftime('%Y-%m-%d_%H.%M', time.localtime())
+        opt.weights_dir = cfg_dict['weights_dir'] + '_' + time_marker + '/'
+        opt.writer_dir = cfg_dict['writer_dir'] + '_' + time_marker + '/'
+        opt.result_dir = cfg_dict['result_dir'] + '_' + time_marker + '/'
 
-        opt.base_dir = opt.base_dir.format(opt.class_num, pxwhrsd.format(opt.seed))
         opt.name = '{}_seed{}'.format(cmt, opt.seed)
 
         if not os.path.exists(opt.weights_dir):
@@ -496,7 +494,7 @@ if __name__ == '__main__':
         if not os.path.exists(opt.result_dir):
             os.makedirs(opt.result_dir)
 
-        results_file = os.path.join(opt.result_dir, 'results_{}_seed{}.txt'.format(opt.cmt_model, opt.seed))
+        results_file = os.path.join(opt.result_dir, 'results_{}_seed{}.txt'.format(cmt, opt.seed))
         last = os.path.join(opt.weights_dir, 'last_seed{}.pt'.format(opt.seed))
         best = os.path.join(opt.weights_dir, 'best_seed{}.pt'.format(opt.seed))
         opt.weights = last if opt.resume else opt.weights
