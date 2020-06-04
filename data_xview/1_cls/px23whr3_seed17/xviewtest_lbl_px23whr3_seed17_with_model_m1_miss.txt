@@ -1,2 +1,2 @@
-/media/lab/Yang/data/xView_YOLO/labels/608/1_cls_xcycwh_px23whr3_all_model/2315_3.txt
-/media/lab/Yang/data/xView_YOLO/labels/608/1_cls_xcycwh_px23whr3_all_model/2315_4.txt
+/media/lab/Yang/data/xView_YOLO/labels/608/1_cls_xcycwh_px23whr3_all_model/203_5.txt
+/media/lab/Yang/data/xView_YOLO/labels/608/1_cls_xcycwh_px23whr3_all_model/1690_2.txt

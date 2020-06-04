@@ -383,8 +383,8 @@ if __name__ == '__main__':
     # model_cmt = 'xbw_xrxc_spr_sml_models'
     # comments = ['syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_gauss_models_color', 'syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_gauss_models_mixed']
     # model_cmt = 'xbw_xrxc_spr_sml_gauss_models'
-    comments = ['syn_xview_bkg_px23whr3_xbw_xrxc_gauss_model1_v1_color', 'syn_xview_bkg_px23whr3_xbw_xrxc_gauss_model1_v1_mixed']
-    model_cmt = 'xbw_xrxc_gauss_model1_v1' # v1
+    comments = ['syn_xview_bkg_px23whr3_xbw_xcolor_gauss_model1_v1_color', 'syn_xview_bkg_px23whr3_xbw_xcolor_gauss_model1_v1_mixed']
+    model_cmt = 'xbw_xcolor_gauss_model1_v1' # v1
     # comments = ['syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_gauss_model1_v2_color', 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_gauss_model1_v2_mixed']
     # model_cmt = 'xbw_xcolor_xbkg_gauss_model1_v2'
     pxwhr = 'px23whr3'
@@ -457,8 +457,8 @@ if __name__ == '__main__':
     # model_cmt = 'xbw_xrxc_spr_sml_gauss_models'
     # # # comments = ['syn_xview_bkg_px23whr3_xbw_xrxc_model1_gauss_color', 'syn_xview_bkg_px23whr3_xbw_xrxc_model1_gauss_mixed']
     # # # model_cmt = 'xbw_xrxc_model1_gauss'
-    comments = ['syn_xview_bkg_px23whr3_xbw_xrxc_gauss_model1_v1_color', 'syn_xview_bkg_px23whr3_xbw_xrxc_gauss_model1_v1_mixed']
-    model_cmt = 'xbw_xrxc_gauss_model1_v1' # v1
+    comments = ['syn_xview_bkg_px23whr3_xbw_xcolor_gauss_model1_v1_color', 'syn_xview_bkg_px23whr3_xbw_xcolor_gauss_model1_v1_mixed']
+    model_cmt = 'xbw_xcolor_gauss_model1_v1' # v1
     # comments = ['syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_gauss_model1_v2_color', 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_gauss_model1_v2_mixed']
     # model_cmt = 'xbw_xcolor_xbkg_gauss_model1_v2'
     pxwhr = 'px23whr3'
@@ -517,8 +517,8 @@ if __name__ == '__main__':
     # model_cmt = 'xbw_xrxc_spr_sml_models'
     # comments = ['syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_gauss_models_color', 'syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_gauss_models_mixed']
     # model_cmt = 'xbw_xrxc_spr_sml_gauss_models'
-    comments = ['syn_xview_bkg_px23whr3_xbw_xrxc_gauss_model1_v1_color', 'syn_xview_bkg_px23whr3_xbw_xrxc_gauss_model1_v1_mixed']
-    model_cmt = 'xbw_xrxc_gauss_model1_v1' # v1
+    comments = ['syn_xview_bkg_px23whr3_xbw_xcolor_gauss_model1_v1_color', 'syn_xview_bkg_px23whr3_xbw_xcolor_gauss_model1_v1_mixed']
+    model_cmt = 'xbw_xcolor_gauss_model1_v1' # v1
     # comments = ['syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_gauss_model1_v2_color', 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_gauss_model1_v2_mixed']
     # model_cmt = 'xbw_xcolor_xbkg_gauss_model1_v2'
     syn_args = get_syn_args(model_cmt)
@@ -596,8 +596,8 @@ if __name__ == '__main__':
     # model_cmt = 'xbw_xcolor_xbkg_gauss_model4_v3'
     # comments = ['xview_syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_gauss_models_color', 'xview_syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_gauss_models_mixed']
     # model_cmt = 'xbw_xrxc_spr_sml_gauss_models'
-    comments = ['xview_syn_xview_bkg_px23whr3_xbw_xrxc_gauss_model1_v1_color', 'xview_syn_xview_bkg_px23whr3_xbw_xrxc_gauss_model1_v1_mixed']
-    model_cmt = 'xbw_xrxc_gauss_model1_v1' # v1
+    comments = ['xview_syn_xview_bkg_px23whr3_xbw_xcolor_gauss_model1_v1_color', 'xview_syn_xview_bkg_px23whr3_xbw_xcolor_gauss_model1_v1_mixed']
+    model_cmt = 'xbw_xcolor_gauss_model1_v1' # v1
     # comments = ['xview_syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_gauss_model1_v2_color', 'xview_syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_gauss_model1_v2_mixed']
     # model_cmt = 'xbw_xcolor_xbkg_gauss_model1_v2'
     seeds = [17]
@@ -681,8 +681,8 @@ if __name__ == '__main__':
     # model_cmt = 'xbw_xrxc_spr_sml_models'
     # comments = ['xview_syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_gauss_models_color', 'xview_syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_gauss_models_mixed']
     # model_cmt = 'xbw_xrxc_spr_sml_gauss_models'
-    comments = ['xview_syn_xview_bkg_px23whr3_xbw_xrxc_gauss_model1_v1_color', 'xview_syn_xview_bkg_px23whr3_xbw_xrxc_gauss_model1_v1_mixed']
-    model_cmt = 'xbw_xrxc_gauss_model1_v1' # v1
+    comments = ['xview_syn_xview_bkg_px23whr3_xbw_xcolor_gauss_model1_v1_color', 'xview_syn_xview_bkg_px23whr3_xbw_xcolor_gauss_model1_v1_mixed']
+    model_cmt = 'xbw_xcolor_gauss_model1_v1' # v1
     # comments = ['xview_syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_gauss_model1_v2_color', 'xview_syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_gauss_model1_v2_mixed']
     # model_cmt = 'xbw_xcolor_xbkg_gauss_model1_v2'
 
@@ -760,8 +760,8 @@ if __name__ == '__main__':
     # model_cmt = 'xbw_xcolor_xbkg_gauss_model4_v3'
     # comments = ['xview_syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_gauss_models_color', 'xview_syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_gauss_models_mixed']
     # model_cmt = 'xbw_xrxc_spr_sml_gauss_models'
-    comments = ['xview_syn_xview_bkg_px23whr3_xbw_xrxc_gauss_model1_v1_color', 'xview_syn_xview_bkg_px23whr3_xbw_xrxc_gauss_model1_v1_mixed']
-    model_cmt = 'xbw_xrxc_gauss_model1_v1' # v1
+    comments = ['xview_syn_xview_bkg_px23whr3_xbw_xcolor_gauss_model1_v1_color', 'xview_syn_xview_bkg_px23whr3_xbw_xcolor_gauss_model1_v1_mixed']
+    model_cmt = 'xbw_xcolor_gauss_model1_v1' # v1
     # comments = ['xview_syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_gauss_model1_v2_color', 'xview_syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_gauss_model1_v2_mixed']
     # model_cmt = 'xbw_xcolor_xbkg_gauss_model1_v2'
     syn_args = get_syn_args(model_cmt)

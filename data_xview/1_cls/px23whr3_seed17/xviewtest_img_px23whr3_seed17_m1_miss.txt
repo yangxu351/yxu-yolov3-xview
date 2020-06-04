@@ -1,2 +1,2 @@
-/media/lab/Yang/data/xView_YOLO/images/608_1cls/546_6.jpg
-/media/lab/Yang/data/xView_YOLO/images/608_1cls/587_1.jpg
+/media/lab/Yang/data/xView_YOLO/images/608_1cls/203_5.jpg
+/media/lab/Yang/data/xView_YOLO/images/608_1cls/1690_2.jpg
