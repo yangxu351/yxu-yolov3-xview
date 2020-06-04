@@ -1,5 +1,5 @@
 {
-  "device": 1,
+  "device": "1",
   "seed": 17,
   "epochs": 220,
   "batch_size": 8,
