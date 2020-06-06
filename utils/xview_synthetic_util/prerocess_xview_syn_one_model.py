@@ -278,7 +278,7 @@ if __name__ == '__main__':
     '''
     # # model_id = 0
     # model_id = 4
-    # # model_id = 1
+    # model_id = 1
     # get_all_annos_only_model_id_labeled(model_id)
 
     '''
@@ -286,7 +286,7 @@ if __name__ == '__main__':
     others are empty
     '''
     # model_id = 1
-    # model_id = 4
+    # # model_id = 4
     # create_test_dataset_of_model_id_labeled(model_id)
 
 
