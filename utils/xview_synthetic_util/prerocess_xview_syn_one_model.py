@@ -76,13 +76,15 @@ def get_all_annos_only_model_id_labeled(model_id=0):
         os.mkdir(des_model_dir)
 
     lbl_model_txts = glob.glob(os.path.join(src_model_dir, '*.txt'))
+    total_targets = 0
     for lt in lbl_model_txts:
         name = os.path.basename(lt)
         if pps.is_non_zero_file(lt):
             df_txt = pd.read_csv(lt, header=None, sep=' ')
             df_txt = df_txt[df_txt.loc[:, 5] == model_id]
             if not df_txt.empty:
-                df_txt_no_model_id = df_txt.loc[:, :-1]
+                df_txt_no_model_id = df_txt.loc[:, :4] # col 4 included
+                total_targets += df_txt_no_model_id.shape[0]
             else:
                 df_txt_no_model_id = df_txt.copy()
             df_txt.to_csv(os.path.join(des_model_modelid_dir, name), header=False, index=False, sep=' ')
@@ -90,7 +92,7 @@ def get_all_annos_only_model_id_labeled(model_id=0):
         else:
             shutil.copy(lt, os.path.join(des_model_modelid_dir, name))
             shutil.copy(lt, os.path.join(des_model_dir, name))
-
+    print('total_targets ', total_targets)
 
 def create_test_dataset_of_model_id_labeled(model_id, base_pxwhrs='px23whr3_seed17'):
     base_dir = args.data_save_dir
@@ -277,16 +279,16 @@ if __name__ == '__main__':
     others are empty
     '''
     # # model_id = 0
-    # model_id = 4
+    model_id = 4
     # model_id = 1
-    # get_all_annos_only_model_id_labeled(model_id)
+    get_all_annos_only_model_id_labeled(model_id)
 
     '''
     create val dataset of all annos but only model_id labeled
     others are empty
     '''
     # model_id = 1
-    # # model_id = 4
+    # model_id = 4
     # create_test_dataset_of_model_id_labeled(model_id)
 
 

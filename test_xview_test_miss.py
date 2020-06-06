@@ -142,6 +142,7 @@ def test(cfg,
             targets = targets.to(device)
             # print('imgs--', imgs.shape)
             # print('targets--', targets.shape)
+            # print('targets ', targets)
             # print('paths--', len(paths))
             # print('shapes', len(shapes))
             # exit(0)
@@ -165,17 +166,21 @@ def test(cfg,
 
             # Statistics per image
             for si, pred in enumerate(output):
-                # print('si', si, targets[si])
+                # print('si ', si, targets[si])
                 # print('targets--', targets)
                 labels = targets[targets[:, 0] == si, 1:]
-                # print('labels--', labels.shape)
-                # print(labels)
-                # exit(0)
+                print('labels--', labels.shape)
+                print(labels)
+                exit(0)
                 nl = len(labels)
                 #fixme --yang.xu
                 # tcls = labels[:, 0].tolist() if nl else []  # target class
                 if opt.model_id is not None:
+                    # labels = labels[labels[:, -1] == opt.model_id]
+                    # tcls =labels[:, -1].tolist() if nl else []
+                    #fixme --yang.xu
                     tcls = labels[:, -1].tolist() if nl else []  # target class
+                    # print('tcls', tcls)
                 else:
                     tcls = labels[:, 0].tolist() if nl else []  # target class
                 seen += 1
@@ -488,9 +493,9 @@ if __name__ == '__main__':
     # comments = ['syn_xview_bkg_px15whr3_sbw_xcolor_model4_color', 'syn_xview_bkg_px15whr3_sbw_xcolor_model4_mixed']
     # comments = ['syn_xview_bkg_px15whr3_sbw_xcolor_model4_v1_color', 'syn_xview_bkg_px15whr3_sbw_xcolor_model4_v1_mixed']
     # comments = ['syn_xview_bkg_px15whr3_sbw_xcolor_model4_v2_color', 'syn_xview_bkg_px15whr3_sbw_xcolor_model4_v2_mixed']
-    # comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v3_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v3_mixed']
+    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v3_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v3_mixed']
     # comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v4_color']
-    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v4_mixed']
+    # comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v4_mixed']
     # comments = ['syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_gauss_models_color', 'syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_gauss_models_mixed']
     # comments = ['syn_xview_bkg_px23whr3_sbw_xcolor_model1_color', 'syn_xview_bkg_px23whr3_sbw_xcolor_model1_mixed']
     # comments = ['syn_xview_bkg_px23whr3_xbw_xcolor_gauss_model1_v1_color', 'syn_xview_bkg_px23whr3_xbw_xcolor_gauss_model1_v1_mixed']
@@ -498,11 +503,13 @@ if __name__ == '__main__':
     # comments = ['syn_xview_bkg_px23whr3_sbw_xcolor_xbkg_unif_model1_v3_color', 'syn_xview_bkg_px23whr3_sbw_xcolor_xbkg_unif_model1_v3_mixed']
     # comments = ['syn_xview_bkg_px23whr3_xbsw_xcolor_xbkg_gauss_model1_v4_color', 'syn_xview_bkg_px23whr3_xbsw_xcolor_xbkg_gauss_model1_v4_mixed']
     base_cmt = 'px23whr3_seed{}'
-    # hyp_cmt = 'hgiou1_1gpu'
-    hyp_cmt = 'hgiou1_1gpu_val_labeled'
+    hyp_cmt = 'hgiou1_1gpu'
+
     # hyp_cmt = 'hgiou1_1gpu_obj29.5'
     # hyp_cmt = 'hgiou1_1gpu_xval'
     # hyp_cmt = 'hgiou1_mean_best'
+    # hyp_cmt = 'hgiou1_obj3.5_val_labeled'
+    # hyp_cmt = 'hgiou1_1gpu_val_labeled'
     prefix = 'syn'
     px_thres = 23
     whr_thres = 3 # 4
@@ -529,11 +536,11 @@ if __name__ == '__main__':
             # opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_with_model_{}_seed{}_miss'.format(hyp_cmt, sd))
             # opt.data = 'data_xview/{}_cls/{}/xviewtest_{}_with_model_m{}_miss.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id)
             ############# all m* labeled validation images make up the test set
-            # opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_with_model_{}_only'.format(hyp_cmt))
+            # opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_with_model_{}_seed{}_only'.format(hyp_cmt, sd))
             # opt.data = 'data_xview/{}_cls/{}/xviewtest_{}_with_model_m{}_only.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id)
             ############# all m* labeled validation images make up the test set
             opt.batch_size = 8
-            opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_with_model_{}_labeled'.format(hyp_cmt))
+            opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_with_model_{}_labeled_seed{}'.format(hyp_cmt, sd))
             opt.data = 'data_xview/{}_cls/{}/xviewtest_{}_with_model_m{}_labeled.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id)
 
             ''' for whole validation dataset '''
@@ -543,7 +550,8 @@ if __name__ == '__main__':
 
             if not os.path.exists(opt.result_dir):
                 os.makedirs(opt.result_dir)
-            print(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd), '*_{}_seed{}'.format(hyp_cmt, sd), 'best_{}_seed{}.pt'.format(cmt, sd)))
+            print(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd), '*_{}_seed{}'.format(hyp_cmt, sd), 'best_seed{}.pt'.format(sd)))
+            print(glob.glob(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd), '*_{}_seed{}'.format(hyp_cmt, sd), 'best_seed{}.pt'.format(sd))))
             all_weights = glob.glob(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd), '*_{}_seed{}'.format(hyp_cmt, sd), 'best_*seed{}.pt'.format(sd)))
             all_weights.sort()
             opt.weights = all_weights[-1]

@@ -131,16 +131,26 @@ def check_prd_gt_iou_xview_syn(miss_model_id, cmt, prefix, res_folder, hyp_cmt =
 
     df_imgs = pd.read_csv(img_path, header=None)
     df_lbls = pd.read_csv(lbl_path, header=None)
-
-    lcmt = cmt.split('_')[-2:]
-    if len(lcmt) > 1:
-        suffix = lcmt[1] + '_' + lcmt[0]
+    cinx = cmt.find('model') # first letter index
+    endstr = cmt[cinx:]
+    rcinx = endstr.rfind('_')
+    fstr = endstr[rcinx:] # '_' is included
+    sstr = endstr[:rcinx]
+    suffix = fstr + '_' + sstr
+    print('suffix', suffix)
+    # print('res+_folder', res_folder)
+    # exit(0)
+    if miss_model_id:
         result_path = syn_args.results_dir.format(syn_args.class_num, cmt, seed, res_folder.format(hyp_cmt, seed))
-    else:
-        suffix = 'model{}'.format(miss_model_id)
-        result_path = syn_args.results_dir.format(syn_args.class_num, cmt, seed, res_folder.format(hyp_cmt, seed, miss_model_id))
+    # if len(lcmt) > 1:
+    #     suffix = lcmt[1] + '_' + lcmt[0]
+    #     result_path = syn_args.results_dir.format(syn_args.class_num, cmt, seed, res_folder.format(hyp_cmt, seed))
+    # else:
+    #     suffix = 'model{}'.format(miss_model_id)
+    #     result_path = syn_args.results_dir.format(syn_args.class_num, cmt, seed, res_folder.format(hyp_cmt, seed, miss_model_id))
     json_name = prefix + suffix + '*.json'
-
+    print('result_path ', result_path)
+    print('json_name', json_name)
     res_json_file = glob.glob(os.path.join(result_path, json_name))[-1]
     res_json = json.load(open(res_json_file))
 
@@ -228,14 +238,14 @@ if __name__ == "__main__":
     seed = 17
     score_thres=0.1
     iou_thres=0.5
-    hyp_cmt = 'hgiou1_1gpu'
+    # hyp_cmt = 'hgiou1_1gpu'
 
-    comments = ['px23whr3']
-    res_folder = 'test_on_xview_with_model_{}_seed{}_m{}_miss'
-    # json_name = 'xview' + '_model{}'.format(miss_model_id)
-    prefix = 'results_xview_'
-    # miss_model_id = 1
-    miss_model_id = 4
+    # comments = ['px23whr3']
+    # res_folder = 'test_on_xview_with_model_{}_seed{}_m{}_miss'
+    # # json_name = 'xview' + '_model{}'.format(miss_model_id)
+    # prefix = 'results_xview_'
+    # # miss_model_id = 1
+    # miss_model_id = 4
 
     # comments = ['xview_syn_xview_bkg_px23whr3_xbw_xcolor_model1_color', 'xview_syn_xview_bkg_px23whr3_xbw_xcolor_model1_mixed']
     # miss_model_id = 1
@@ -248,11 +258,14 @@ if __name__ == "__main__":
     # comments = ['syn_xview_bkg_px23whr3_xbw_xcolor_model1_color', 'syn_xview_bkg_px23whr3_xbw_xcolor_model1_mixed']
     # miss_model_id = 1
     # comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_model4_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_model4_mixed']
-    # miss_model_id = 4
-    # res_folder = 'test_on_xview_with_model_{}_seed{}_miss'
-    # prefix = 'results_syn_'
+    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v4_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v4_mixed']
+    miss_model_id = 4
+    res_folder = 'test_on_xview_with_model_{}_seed{}_miss'
+    # hyp_cmt = 'hgiou1_obj3.5_val_labeled'
+    hyp_cmt = 'hgiou1_1gpu_val_labeled'
+    prefix = 'results_syn'
 
-    for cmt in comments:
+    for cmt in comments[1:]:
         check_prd_gt_iou_xview_syn(miss_model_id, cmt, prefix, res_folder, hyp_cmt,
                                     seed=seed, px_thres=px_thres, whr_thres=whr_thres,
                                     score_thres=score_thres, iou_thres=iou_thres)

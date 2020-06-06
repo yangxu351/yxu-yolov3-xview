@@ -340,7 +340,8 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
             #fixme yang.xu
             # self.labels = [np.zeros((0, 5))] * n
             if self.with_modelid:
-                self.labels = [np.zeros((0, 6))] * n
+                # self.labels = [np.zeros((0, 6))] * n
+                self.labels = [np.zeros((0, 6))*(-1)] * n
             else:
                 self.labels = [np.zeros((0, 5))] * n
 
@@ -371,17 +372,19 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
                     #fixme --yang.xu to deal with empty labels
                     # continue
                     if self.with_modelid:
-                        l = np.zeros((1, 6))
+                        # l = np.zeros((1, 6))
+                        l = np.ones((1, 6))*(-1)
                     else:
-                        l = np.zeros((1, 5))
+                        # l = np.zeros((1, 5))
+                        l = np.ones((1, 5))*(-1)
                     # print('missing labels for image %s' % self.img_files[i])  # file missing
 
 
                 if l.shape[0]:
                     #fixme -- yang.xu
                     assert l.shape[1] == 5 or l.shape[1] == 6, '> 5 label columns: %s' % file
-                    assert (l >= 0).all(), 'negative labels: %s' % file
-                    #fixme
+                    # assert (l >= 0).all(), 'negative labels: %s' % file
+                    #fixme -- yang.xu
                     # assert (l[:, 1:] <= 1).all(), 'non-normalized or out of bounds coordinate labels: %s' % file
                     if np.unique(l, axis=0).shape[0] < l.shape[0]:  # duplicate rows
                         nd += 1  # print('WARNING: duplicate rows in %s' % self.label_files[i])  # duplicate rows
@@ -553,7 +556,10 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
         # labels_out = torch.zeros((nL, 6))
         #fixme --yang.xu
         if self.with_modelid:
-            labels_out = torch.zeros((nL, 7))
+            #fixme --yang.xu
+            # labels_out = torch.zeros((nL, 7))
+            labels_out = torch.ones((nL, 7))
+            labels_out = labels_out.mul(-1)
         else:
             labels_out = torch.zeros((nL, 6))
 

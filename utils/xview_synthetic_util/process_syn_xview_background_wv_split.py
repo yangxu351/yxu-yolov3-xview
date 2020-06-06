@@ -412,13 +412,13 @@ if __name__ == '__main__':
     model_cmt = 'xbw_xcolor_xbkg_gauss_model4_v4'
     pxwhr = 'px15whr3'
 
-    base_pxwhrs = 'px23whr3_seed{}'
-    syn_args = get_syn_args(model_cmt)
-    seeds = [17]
-    for cmt in comments:
-        for sd in seeds:
-            base_pxwhrs = base_pxwhrs.format(sd)
-            split_syn_xview_background_trn_val(sd, cmt, pxwhr, base_pxwhrs)
+    # base_pxwhrs = 'px23whr3_seed{}'
+    # syn_args = get_syn_args(model_cmt)
+    # seeds = [17]
+    # for cmt in comments:
+    #     for sd in seeds:
+    #         base_pxwhrs = base_pxwhrs.format(sd)
+    #         split_syn_xview_background_trn_val(sd, cmt, pxwhr, base_pxwhrs)
 
     # # # comments = ['syn_xview_background_texture', 'syn_xview_background_color', 'syn_xview_background_mixed']
     # # comments = ['syn_xview_bkg_certain_models_texture', 'syn_xview_bkg_certain_models_color', 'syn_xview_bkg_certain_models_mixed']
@@ -471,10 +471,10 @@ if __name__ == '__main__':
     # model_cmt = 'sbw_xcolor_model4_v2'
     # # comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v3_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v3_mixed']
     # # model_cmt = 'xbw_xcolor_xbkg_gauss_model4_v3'
-    # comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v4_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v4_mixed']
-    # model_cmt = 'xbw_xcolor_xbkg_gauss_model4_v4'
-    # label_id = 4
-    # pxwhr = 'px15whr3'
+    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v4_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v4_mixed']
+    model_cmt = 'xbw_xcolor_xbkg_gauss_model4_v4'
+    label_id = 4
+    pxwhr = 'px15whr3'
     # # comments = ['syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_models_color', 'syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_models_mixed']
     # # model_cmt = 'xbw_xrxc_spr_sml_models'
     # # pxwhr = 'px23whr3'
@@ -482,12 +482,12 @@ if __name__ == '__main__':
     # model_cmt = 'xbw_xrxc_spr_sml_gauss_models'
     # # # comments = ['syn_xview_bkg_px23whr3_xbw_xrxc_model1_gauss_color', 'syn_xview_bkg_px23whr3_xbw_xrxc_model1_gauss_mixed']
     # # # model_cmt = 'xbw_xrxc_model1_gauss'
-    comments = ['syn_xview_bkg_px23whr3_xbw_xcolor_gauss_model1_v1_color', 'syn_xview_bkg_px23whr3_xbw_xcolor_gauss_model1_v1_mixed']
-    model_cmt = 'xbw_xcolor_gauss_model1_v1' # v1
+    # comments = ['syn_xview_bkg_px23whr3_xbw_xcolor_gauss_model1_v1_color', 'syn_xview_bkg_px23whr3_xbw_xcolor_gauss_model1_v1_mixed']
+    # model_cmt = 'xbw_xcolor_gauss_model1_v1' # v1
     # comments = ['syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_gauss_model1_v2_color', 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_gauss_model1_v2_mixed']
     # model_cmt = 'xbw_xcolor_xbkg_gauss_model1_v2'
-    label_id = 1
-    pxwhr = 'px23whr3'
+    # label_id = 1
+    # pxwhr = 'px23whr3'
 
     base_pxwhrs = 'px23whr3_seed{}'
     syn_args = get_syn_args(model_cmt)

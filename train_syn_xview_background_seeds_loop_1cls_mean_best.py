@@ -401,7 +401,7 @@ def train(opt):
             # Save backup every 10 epochs (optional)
             #fixme
             # if (epoch > 0 and epoch % 10 == 0):
-            if (epoch > 0 and epoch % 50 == 0) or (epoch > epochs*0.8 and epoch%20==0):
+            if (epoch > 0 and epoch % 50 == 0) or (epoch > epochs*0.8 and epoch%40==0):
                 torch.save(chkpt, opt.weights_dir + 'backup%g.pt' % epoch)
 
             # Delete checkpoint
@@ -616,19 +616,19 @@ if __name__ == '__main__':
         opt.base_dir = opt.base_dir.format(opt.class_num, pxwhrsd.format(opt.seed))
         time_marker = time.strftime('%Y-%m-%d_%H.%M', time.localtime())
         if val_syn:
-            hyp_cmt = hyp_cmt + '_val_syn'
+            hyp_cmt_name = hyp_cmt + '_val_syn'
             opt.data = 'data_xview/{}_{}_cls/{}_seed{}/{}_seed{}.data'.format(cmt, opt.class_num, cmt, opt.seed, cmt, opt.seed)
         elif val_labeled:
-            hyp_cmt = hyp_cmt + '_val_labeled'
+            hyp_cmt_name = hyp_cmt + '_val_labeled'
             opt.data = 'data_xview/{}_{}_cls/{}_seed{}/{}_seed{}_xview_val_labeled.data'.format(cmt, opt.class_num, cmt, opt.seed, cmt, opt.seed)
         else:
-            hyp_cmt = hyp_cmt + '_val_xview'
+            hyp_cmt_name = hyp_cmt + '_val_xview'
             opt.data = 'data_xview/{}_{}_cls/{}_seed{}/{}_seed{}_xview_val.data'.format(cmt, opt.class_num, cmt, opt.seed, cmt, opt.seed)
 
         time_marker = time.strftime('%Y-%m-%d_%H.%M', time.localtime())
-        opt.weights_dir = 'weights/{}_cls/{}_seed{}/{}/'.format(opt.class_num, cmt, opt.seed, '{}_{}_seed{}'.format(time_marker, hyp_cmt, opt.seed))
-        opt.writer_dir = 'writer_output/{}_cls/{}_seed{}/{}/'.format(opt.class_num, cmt, opt.seed, '{}_{}_seed{}'.format(time_marker, hyp_cmt, opt.seed))
-        opt.result_dir = 'result_output/{}_cls/{}_seed{}/{}/'.format(opt.class_num, cmt, opt.seed, '{}_{}_seed{}'.format(time_marker, hyp_cmt, opt.seed))
+        opt.weights_dir = 'weights/{}_cls/{}_seed{}/{}/'.format(opt.class_num, cmt, opt.seed, '{}_{}_seed{}'.format(time_marker, hyp_cmt_name, opt.seed))
+        opt.writer_dir = 'writer_output/{}_cls/{}_seed{}/{}/'.format(opt.class_num, cmt, opt.seed, '{}_{}_seed{}'.format(time_marker, hyp_cmt_name, opt.seed))
+        opt.result_dir = 'result_output/{}_cls/{}_seed{}/{}/'.format(opt.class_num, cmt, opt.seed, '{}_{}_seed{}'.format(time_marker, hyp_cmt_name, opt.seed))
 
         if not os.path.exists(opt.weights_dir):
             os.makedirs(opt.weights_dir)
@@ -638,7 +638,7 @@ if __name__ == '__main__':
 
         if not os.path.exists(opt.result_dir):
             os.makedirs(opt.result_dir)
-        results_file = os.path.join(opt.result_dir, 'results_{}_seed{}.txt'.format(cmt, opt.seed))
+        results_file = os.path.join(opt.result_dir, 'results_{}_seed{}.txt'.format(opt.name, opt.seed))
         last = os.path.join(opt.weights_dir, 'last_seed{}.pt'.format(opt.seed))
         best = os.path.join(opt.weights_dir, 'best_seed{}.pt'.format(opt.seed))
         opt.weights = last if opt.resume else opt.weights
