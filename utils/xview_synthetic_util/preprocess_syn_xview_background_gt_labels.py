@@ -221,9 +221,9 @@ if __name__ == '__main__':
     merge all syn_xveiw_background data
     *****---change syn_data_dir first----******
     '''
-    cmt = ''
-    seedians = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
-    display_types = ['texture', 'color', 'mixed']
+    # cmt = ''
+    # seedians = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+    # display_types = ['texture', 'color', 'mixed']
     # cmt = 'certain_models'
     # display_types = ['texture', 'color', 'mixed']
     # seedians = [0, 1, 2, 3, 4, 5, 6, 7]
@@ -242,9 +242,9 @@ if __name__ == '__main__':
     # cmt = 'sbwratio_new_xratio_xcolor_models'
     # display_types = ['color', 'mixed']
     # seedians = [0, 1, 2, 3, 4]
-    syn_args = get_args(cmt)
-    for dt in display_types:
-        merge_clean_origin_syn_image_files(seedians, dt)
+    # syn_args = get_args(cmt)
+    # for dt in display_types:
+    #     merge_clean_origin_syn_image_files(seedians, dt)
 
     '''
     draw RGB histogram 
@@ -289,7 +289,8 @@ if __name__ == '__main__':
     # cmt = 'sbw_xcolor_model4_v1'
     # cmt = 'sbw_xcolor_model4_v2'
     # cmt = 'xbw_xcolor_xbkg_gauss_model4_v3'
-    # px_thres=15 #20 #30
+    cmt = 'xbw_xcolor_xbkg_gauss_model4_v4'
+    px_thres=15 #20 #30
     # cmt = 'sbw_xcolor_model0'
     # cmt = 'xbw_xrxc_spr_sml_models_gauss'
     # cmt = 'xbw_xrxc_spr_sml_models_gauss'
@@ -297,11 +298,11 @@ if __name__ == '__main__':
     # cmt = 'xbw_xcolor_gauss_model1_v1'
     # cmt = 'xbw_xcolor_xbkg_gauss_model1_v2'
     # cmt = 'sbw_xcolor_xbkg_unif_model1_v3'
-    cmt = 'xbsw_xcolor_xbkg_gauss_model1_v4'
-    px_thres=23
+    # cmt = 'xbsw_xcolor_xbkg_gauss_model1_v4'
+    # px_thres=23
 
     whr_thres=3
-    display_types = ['color', 'mixed']
+    display_types = ['mixed']# 'color',
     syn_args = get_args(cmt)
     for dt in display_types:
         group_object_annotation_and_draw_bbox(dt, px_thres, whr_thres)
@@ -335,18 +336,19 @@ if __name__ == '__main__':
     # cmt = 'sbw_xcolor_model4_v1'
     # cmt = 'sbw_xcolor_model4_v2'
     # cmt = 'xbw_xcolor_xbkg_gauss_model4_v3'
-    # px_thres=15
+    mt = 'xbw_xcolor_xbkg_gauss_model4_v4'
+    px_thres=15
     # cmt = 'sbw_xcolor_model0'
     # cmt = 'sbw_xcolor_model1'
     # cmt = 'xbw_xrxc_spr_sml_models_gauss'
     # cmt = 'xbw_xrxc_gauss_model1_v1'
     # cmt = 'xbw_xcolor_xbkg_gauss_model1_v2'
     # cmt = 'sbw_xcolor_xbkg_unif_model1_v3'
-    cmt = 'xbsw_xcolor_xbkg_gauss_model1_v4'
-    px_thres=23 #20 #30
+    # cmt = 'xbsw_xcolor_xbkg_gauss_model1_v4'
+    # px_thres=23 #20 #30
 
     whr_thres=3
-    display_types = ['color', 'mixed']
+    display_types = ['mixed']#'color', 'mixed']
     syn_args = get_args(cmt)
     for dt in display_types:
         draw_bbx_on_rgb_images(dt, px_thres, whr_thres)

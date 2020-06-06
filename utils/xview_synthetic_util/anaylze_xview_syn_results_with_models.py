@@ -774,7 +774,7 @@ def plot_pr_curve(comments, syn=False, all=False):
     fig.savefig(os.path.join(pr_save_path, pr_name + '_PR_curve.png'), dpi=300)
 
 
-def plot_far_roc_curve(comments, syn=False, include_base=True, miss_only='', hyp_cmt='hgiou1_mean_best', x1s1=False, base_hyp_cmt='hgiou1_1gpu'):
+def plot_far_roc_curve(comments, syn=False, include_base=True, miss_only='', hyp_cmt=None, x1s1=False, base_hyp_cmt='hgiou1_1gpu', labels=None):
     base_cmt = 'px23whr3'
     sd=17
     result_dir = '/media/lab/Yang/code/yolov3/result_output/1_cls/{}_seed{}/{}/'
@@ -794,7 +794,41 @@ def plot_far_roc_curve(comments, syn=False, include_base=True, miss_only='', hyp
         base_auc = np.sum((base_far_arr[fx + 1] - base_far_arr[fx]) * base_rec_arr[fx + 1])
         ax.plot(base_far_arr, base_rec_arr, label='xview' + '  @IoU:0.5 conf_thres:0.1 AUC: {:.3f}'.format(base_auc) )
 
-    if syn:
+    if syn ==None:
+        for cx, cmt in enumerate(comments):
+            hc = hyp_cmt[cx]
+            prefix = labels[cx]
+            rs_dir  = result_dir.format(cmt, sd, 'test_on_xview_with_model_{}_seed{}'.format(hc, sd))
+            title = '$T_{xview\_m%s\_all}$ ROC Comparison'% cmt.split('model')[-1][0]
+            con_thres = 0.1
+
+            df_rec = pd.read_csv(os.path.join(rs_dir, 'rec_list.txt'), header=None)
+            rec = df_rec.loc[:, 0].tolist()
+            df_far = pd.read_csv(os.path.join(rs_dir, 'far_list.txt'), header=None)
+            far = df_far.loc[:, 0].tolist()
+
+            far_arr = df_far.to_numpy()
+            rec_arr = df_rec.to_numpy()
+            fx = np.where(far_arr[1:] != far_arr[:-1])[0]
+            auc = np.sum((far_arr[fx + 1] - far_arr[fx]) * rec_arr[fx + 1])
+
+            cinx = cmt.find('model') # first letter index
+            endstr = cmt[cinx:] # models1_gauss_color
+            rcinx = endstr.rfind('_')
+            fstr = endstr[rcinx:] # '_' is included
+            sstr = endstr[:rcinx]
+            suffix = fstr + '_' + sstr
+
+            ax.plot(far, rec, label= prefix + suffix + ' @IoU:0.5 conf_thres:{} AUC: {:.3f}'.format(con_thres, auc))
+            ax.legend()
+            ax.set_title(title , font_title)
+            ax.set_xlabel('FAR', font_label); ax.set_ylabel('Recall', font_label)
+            ax.set_ylim(0, 1)
+        if include_base:
+            pr_name = 'xview_vs._only_syn_{}_{}_{}_seed{}'.format(sstr, miss_only, len(comments), sd)
+        else:
+            pr_name = 'xview_and_syn_{}_{}_{}'.format(sstr, miss_only, len(comments))
+    elif syn:
         for cmt in comments:
             if miss_only=='miss':
                 rs_dir  = result_dir.format(cmt, sd, 'test_on_xview_with_model_{}_seed{}_miss'.format(hyp_cmt, sd))
@@ -802,7 +836,7 @@ def plot_far_roc_curve(comments, syn=False, include_base=True, miss_only='', hyp
                 con_thres = 0.01
             elif miss_only=='only':
                 rs_dir  = result_dir.format(cmt, sd, 'test_on_xview_with_model_{}_only'.format(hyp_cmt))
-                title = '$T_{xview\_m%s}$ ROC Comparison' % cmt.split('model')[-1][0]
+                title = '$T_{xview\_m%s\_all}$ ROC Comparison' % cmt.split('model')[-1][0]
                 con_thres = 0.01
             else:
                 rs_dir  = result_dir.format(cmt, sd, 'test_on_xview_with_model_{}_seed{}'.format(hyp_cmt, sd))
@@ -831,9 +865,9 @@ def plot_far_roc_curve(comments, syn=False, include_base=True, miss_only='', hyp
             ax.set_xlabel('FAR', font_label); ax.set_ylabel('Recall', font_label)
             ax.set_ylim(0, 1)
             if include_base:
-                pr_name = 'xview_vs._only_syn_{}_{}_seed{}'.format(sstr, len(comments), sd)
+                pr_name = 'xview_vs._only_syn_{}_{}_{}_seed{}'.format(sstr, miss_only, len(comments), sd)
             else:
-                pr_name = 'syn_{}_{}'.format(sstr, len(comments))
+                pr_name = 'syn_{}_{}_{}'.format(sstr, miss_only, len(comments))
     else:
         for cmt in comments:
             if x1s1:
@@ -864,12 +898,11 @@ def plot_far_roc_curve(comments, syn=False, include_base=True, miss_only='', hyp
             ax.set_ylim(0, 1)
             ax.set_title(title, font_title); ax.set_xlabel('FAR', font_label); ax.set_ylabel('Recall', font_label)
             if include_base:
-                pr_name = 'xview_vs. xview+syn_{}_{}'.format(sstr, len(comments))
+                pr_name = 'xview_vs. xview+syn_{}_{}_{}'.format(sstr, miss_only, len(comments))
             else:
-                pr_name = 'xview + syn_{}_{}'.format(sstr, len(comments))
+                pr_name = 'xview + syn_{}_{}_{}'.format(sstr, miss_only, len(comments))
     ax.grid()
     fig.savefig(os.path.join(pr_save_path, pr_name + '_ROC.png'), dpi=300)
-
 
 
 def get_part_syn_args():
@@ -1359,6 +1392,28 @@ if __name__ == "__main__":
     # include_base = True
     # hyp_cmt = 'hgiou1_1gpu'
 
+    # comments = ['syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_gauss_models_color', 'syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_gauss_models_mixed',
+    #             'xview_syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_gauss_models_color', 'xview_syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_gauss_models_mixed',
+    #             'xview_syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_gauss_models_color', 'xview_syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_gauss_models_mixed']
+    # miss_only = ''
+    # syn = None
+    # include_base = False
+    # hyp_cmt = ['hgiou1_1gpu','hgiou1_1gpu', 'hgiou1_xbkgonly_x3s5','hgiou1_xbkgonly_x3s5', 'hgiou1_x5s3', 'hgiou1_x5s3']
+    # labels = ['syn','syn', 'xview_bkg + syn','xview_bkg + syn', 'xview + syn', 'xview + syn']
+
+    comments = ['syn_xview_bkg_px23whr3_xbw_xcolor_gauss_model1_v1_color', 'syn_xview_bkg_px23whr3_xbw_xcolor_gauss_model1_v1_mixed',
+                'xview_syn_xview_bkg_px23whr3_xbw_xcolor_gauss_model1_v1_color', 'xview_syn_xview_bkg_px23whr3_xbw_xcolor_gauss_model1_v1_mixed',
+                'xview_syn_xview_bkg_px23whr3_xbw_xcolor_gauss_model1_v1_color', 'xview_syn_xview_bkg_px23whr3_xbw_xcolor_gauss_model1_v1_mixed',
+                'xview_syn_xview_bkg_px23whr3_xbw_xcolor_gauss_model1_v1_color', 'xview_syn_xview_bkg_px23whr3_xbw_xcolor_gauss_model1_v1_mixed']
+    miss_only = ''
+    syn = None
+    include_base = False
+    hyp_cmt = ['hgiou1_1gpu','hgiou1_1gpu', 'hgiou1_x5s3','hgiou1_x5s3', 'hgiou1_xbkgonly_x3s5', 'hgiou1_xbkgonly_x3s5',
+               'hgiou1_xbkgonly_x2s6', 'hgiou1_xbkgonly_x2s6','hgiou1_xbkgonly_x1s7', 'hgiou1_xbkgonly_x1s7']
+    labels = ['syn','syn', 'xview_bkg + syn','xview_bkg + syn', 'xview + syn', 'xview + syn',
+              'xview_bkg + syn','xview_bkg + syn', 'xview + syn', 'xview + syn']
+    plot_far_roc_curve(comments, syn, include_base, miss_only, hyp_cmt=hyp_cmt, x1s1=False, labels=labels)
+
     # comments = ['syn_xview_bkg_px15whr3_sbw_xcolor_model4_color', 'syn_xview_bkg_px15whr3_sbw_xcolor_model4_mixed',
     #             'syn_xview_bkg_px15whr3_sbw_xcolor_model4_v1_color', 'syn_xview_bkg_px15whr3_sbw_xcolor_model4_v1_mixed',
     #             'syn_xview_bkg_px15whr3_sbw_xcolor_model4_v2_color', 'syn_xview_bkg_px15whr3_sbw_xcolor_model4_v2_mixed',
@@ -1371,32 +1426,35 @@ if __name__ == "__main__":
     #             'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_gauss_model1_v2_color', 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_gauss_model1_v2_mixed',
     #             'syn_xview_bkg_px23whr3_sbw_xcolor_xbkg_unif_model1_v3_color', 'syn_xview_bkg_px23whr3_sbw_xcolor_xbkg_unif_model1_v3_mixed',
     #             'syn_xview_bkg_px23whr3_xbsw_xcolor_xbkg_gauss_model1_v4_color', 'syn_xview_bkg_px23whr3_xbsw_xcolor_xbkg_gauss_model1_v4_mixed']
-    # # miss_only = 'miss'
+    # miss_only = 'miss'
     # miss_only = 'only'
 
     # include_base = False
     # syn = True
     # hyp_cmt = 'hgiou1_1gpu'
+    # hyp_cmt = 'hgiou1_xbkgonly'
 
     # plot_far_roc_curve(comments, syn, include_base, miss_only, hyp_cmt, x1s1=False)
 
+    '''
+    Prd GT iou check
+    '''
 
-
-    px_thres = 23
-    whr_thres = 3
-    seed = 17
-    score_thres=0.1
-    iou_thres=0.5
-
-    # hyp_cmt = 'hgiou1_1gpu'
-    # comments = ['px23whr3']
-    # comments = ['syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_gauss_models_color', 'syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_gauss_models_mixed']
-    # prefixs = ['results_syn_color_models', 'results_syn_mixed_models']
-    hyp_cmt = 'hgiou1_x5s3'
-    comments = ['xview_syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_gauss_models_color', 'xview_syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_gauss_models_mixed']
-    prefixs = ['results_xview + syn_color_models', 'results_xview + syn_mixed_models']
-    res_folder = 'test_on_xview_with_model_{}_seed{}'
-    # json_name = 'xview' + '_model{}'.format(miss_model_id)
-
-    for ix, cmt in enumerate(comments):
-        check_prd_gt_iou_xview_syn(cmt, prefixs[ix], res_folder.format(hyp_cmt, seed), hyp_cmt)
+    # px_thres = 23
+    # whr_thres = 3
+    # seed = 17
+    # score_thres=0.1
+    # iou_thres=0.5
+    #
+    # # hyp_cmt = 'hgiou1_1gpu'
+    # # comments = ['px23whr3']
+    # # comments = ['syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_gauss_models_color', 'syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_gauss_models_mixed']
+    # # prefixs = ['results_syn_color_models', 'results_syn_mixed_models']
+    # hyp_cmt = 'hgiou1_x5s3'
+    # comments = ['xview_syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_gauss_models_color', 'xview_syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_gauss_models_mixed']
+    # prefixs = ['results_xview + syn_color_models', 'results_xview + syn_mixed_models']
+    # res_folder = 'test_on_xview_with_model_{}_seed{}'
+    # # json_name = 'xview' + '_model{}'.format(miss_model_id)
+    #
+    # for ix, cmt in enumerate(comments):
+    #     check_prd_gt_iou_xview_syn(cmt, prefixs[ix], res_folder.format(hyp_cmt, seed), hyp_cmt)

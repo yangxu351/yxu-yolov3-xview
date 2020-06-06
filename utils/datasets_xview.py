@@ -370,7 +370,10 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
                     nm += 1
                     #fixme --yang.xu to deal with empty labels
                     # continue
-                    l = np.zeros((1, 5))
+                    if self.with_modelid:
+                        l = np.zeros((1, 6))
+                    else:
+                        l = np.zeros((1, 5))
                     # print('missing labels for image %s' % self.img_files[i])  # file missing
 
 

@@ -43,7 +43,7 @@ def get_annos_of_model_id(model_id=0):
         df_txt_no_model_id.to_csv(os.path.join(des_model_dir, name), header=False, index=False, sep=' ')
 
 
-def create_test_dataset_by_model_id(model_id):
+def create_test_dataset_by_only_model_id(model_id):
     base_dir = args.data_save_dir
     base_val_lbl_files = pd.read_csv(os.path.join(base_dir, 'xviewval_lbl_px23whr3_seed17.txt'), header=None)
     base_val_lbl_name = [os.path.basename(f) for f in base_val_lbl_files.loc[:, 0]]
@@ -66,6 +66,60 @@ def create_test_dataset_by_model_id(model_id):
     test_lbl_files.close()
 
 
+def get_all_annos_only_model_id_labeled(model_id=0):
+    src_model_dir = args.annos_save_dir[:-1] + '_all_model/'
+    des_model_modelid_dir = args.annos_save_dir[:-1] + '_m{}_labeled_with_modelid/'.format(model_id)
+    if not os.path.exists(des_model_modelid_dir):
+        os.mkdir(des_model_modelid_dir)
+    des_model_dir = args.annos_save_dir[:-1] + '_m{}_labeled/'.format(model_id)
+    if not os.path.exists(des_model_dir):
+        os.mkdir(des_model_dir)
+
+    lbl_model_txts = glob.glob(os.path.join(src_model_dir, '*.txt'))
+    for lt in lbl_model_txts:
+        name = os.path.basename(lt)
+        if pps.is_non_zero_file(lt):
+            df_txt = pd.read_csv(lt, header=None, sep=' ')
+            df_txt = df_txt[df_txt.loc[:, 5] == model_id]
+            if not df_txt.empty:
+                df_txt_no_model_id = df_txt.loc[:, :-1]
+            else:
+                df_txt_no_model_id = df_txt.copy()
+            df_txt.to_csv(os.path.join(des_model_modelid_dir, name), header=False, index=False, sep=' ')
+            df_txt_no_model_id.to_csv(os.path.join(des_model_dir, name), header=False, index=False, sep=' ')
+        else:
+            shutil.copy(lt, os.path.join(des_model_modelid_dir, name))
+            shutil.copy(lt, os.path.join(des_model_dir, name))
+
+
+def create_test_dataset_of_model_id_labeled(model_id, base_pxwhrs='px23whr3_seed17'):
+    base_dir = args.data_save_dir
+    base_val_lbl_files = pd.read_csv(os.path.join(base_dir, 'xviewval_lbl_px23whr3_seed17.txt'), header=None)
+    base_val_lbl_name = [os.path.basename(f) for f in base_val_lbl_files.loc[:, 0]]
+
+    test_lbl_files = open(os.path.join(base_dir, 'xviewtest_lbl_px23whr3_seed17_m{}_labeled.txt'.format(model_id)), 'w')
+    test_img_files = open(os.path.join(base_dir, 'xviewtest_img_px23whr3_seed17_m{}_labeled.txt'.format(model_id)), 'w')
+    test_lbl_with_modelid_files = open(os.path.join(base_dir, 'xviewtest_lbl_px23whr3_seed17_with_model_m{}_labeled.txt'.format(model_id)), 'w')
+
+    lbl_model_with_modelid_dir = args.annos_save_dir[:-1] + '_m{}_labeled_with_modelid/'.format(model_id)
+    lbl_model_dir = args.annos_save_dir[:-1] + '_m{}_labeled/'.format(model_id)
+    lbl_model_txts = glob.glob(os.path.join(lbl_model_dir, '*.txt'))
+    for lt in lbl_model_txts:
+        lbl_name = os.path.basename(lt)
+        img_name = lbl_name.replace('.txt', '.jpg')
+        if lbl_name in base_val_lbl_name:
+            test_lbl_files.write('%s\n' % lt)
+            test_lbl_with_modelid_files.write('%s\n' % os.path.join(lbl_model_with_modelid_dir, lbl_name))
+            test_img_files.write('%s\n' % os.path.join(args.images_save_dir, img_name))
+    test_img_files.close()
+    test_lbl_files.close()
+
+    data_txt = open(os.path.join(base_dir, 'xviewtest_{}_with_model_m{}_labeled.data'.format(base_pxwhrs, model_id)), 'w')
+    data_txt.write('classes=%s\n' % str(args.class_num))
+    data_txt.write('test=./data_xview/{}_cls/{}/xviewtest_img_{}_m{}_labeled.txt\n'.format(args.class_num, base_pxwhrs, base_pxwhrs, model_id))
+    data_txt.write('test_label=./data_xview/{}_cls/{}/xviewtest_lbl_{}_with_model_m{}_labeled.txt\n'.format(args.class_num, base_pxwhrs, base_pxwhrs, model_id))
+    data_txt.write('names=./data_xview/{}_cls/xview.names\n'.format(args.class_num))
+    data_txt.close()
 
 def get_txt_contain_model_id(model_id=5, copy_img=False):
     src_model_dir = args.annos_save_dir[:-1] + '_all_model/'
@@ -108,6 +162,7 @@ def get_image_list_contain_model_id(model_id):
         if contain_or_not.any():
             image_list.append(name.replace('.txt', '.jpg'))
     return image_list
+
 
 def get_args(px_thres=None, whr_thres=None, seed=17):
     parser = argparse.ArgumentParser()
@@ -191,8 +246,8 @@ if __name__ == '__main__':
     create test dataset contain only one model
     '''
     # model_id = 1
-    # model_id = 4
-    # create_test_dataset_by_model_id(model_id)
+    # # model_id = 4
+    # create_test_dataset_by_only_model_id(model_id)
 
     '''
     create *.data for only one model
@@ -217,6 +272,22 @@ if __name__ == '__main__':
     # image_list = get_image_list_contain_model_id(model_id)
     # print(image_list)
 
+    '''
+    get all validation txt but only model_id labeled
+    others are empty
+    '''
+    # # model_id = 0
+    # model_id = 4
+    # # model_id = 1
+    # get_all_annos_only_model_id_labeled(model_id)
+
+    '''
+    create val dataset of all annos but only model_id labeled
+    others are empty
+    '''
+    # model_id = 1
+    # model_id = 4
+    # create_test_dataset_of_model_id_labeled(model_id)
 
 
 

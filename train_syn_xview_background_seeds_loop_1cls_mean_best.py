@@ -19,24 +19,24 @@ warnings.filterwarnings("ignore")
 
 #fixme before git pull at April 23
 # Hyperparameters https://github.com/ultralytics/yolov3/issues/310
-hyp = {'giou': 1.0, #1.0,  1.5# giou loss gain 3.54
-       'cls': 37.4,  # cls loss gain
-       'cls_pw': 1.0,  # cls BCELoss positive_weight
-       'obj': 49.5,  # obj loss gain (*=img_size/320 if img_size != 320)
-       'obj_pw': 1.0,  # obj BCELoss positive_weight
-       'iou_t': 0.225,  # iou training threshold
-       'lr0': 0.00579,  # initial learning rate (SGD=1E-3, Adam=9E-5)
-       'lrf': -4.,  # final LambdaLR learning rate = lr0 * (10 ** lrf)
-       'momentum': 0.937,  # SGD momentum
-       'weight_decay': 0.000484,  # optimizer weight decay
-       'fl_gamma': 0.5,  # focal loss gamma
-       'hsv_h': 0.0138,  # image HSV-Hue augmentation (fraction)
-       'hsv_s': 0.678,  # image HSV-Saturation augmentation (fraction)
-       'hsv_v': 0.36,  # image HSV-Value augmentation (fraction)
-       'degrees': 1.98,  # image rotation (+/- deg)
-       'translate': 0.05,  # image translation (+/- fraction)
-       'scale': 0.05,  # image scale (+/- gain)
-       'shear': 0.641}  # image shear (+/- deg)
+# hyp = {'giou': 1.0, #1.0,  1.5# giou loss gain 3.54
+#        'cls': 37.4,  # cls loss gain
+#        'cls_pw': 1.0,  # cls BCELoss positive_weight
+#        'obj': 49.5, # 49.5,  # obj loss gain (*=img_size/320 if img_size != 320)
+#        'obj_pw': 1.0,  # obj BCELoss positive_weight
+#        'iou_t': 0.225,  # iou training threshold
+#        'lr0': 0.00579,  # initial learning rate (SGD=1E-3, Adam=9E-5)
+#        'lrf': -4.,  # final LambdaLR learning rate = lr0 * (10 ** lrf)
+#        'momentum': 0.937,  # SGD momentum
+#        'weight_decay': 0.000484,  # optimizer weight decay
+#        'fl_gamma': 0.5,  # focal loss gamma
+#        'hsv_h': 0.0138,  # image HSV-Hue augmentation (fraction)
+#        'hsv_s': 0.678,  # image HSV-Saturation augmentation (fraction)
+#        'hsv_v': 0.36,  # image HSV-Value augmentation (fraction)
+#        'degrees': 1.98,  # image rotation (+/- deg)
+#        'translate': 0.05,  # image translation (+/- fraction)
+#        'scale': 0.05,  # image scale (+/- gain)
+#        'shear': 0.641}  # image shear (+/- deg)
 
 
 def infi_loop(dl):
@@ -464,12 +464,6 @@ def get_opt():
     parser.add_argument('--var', type=float, help='debug variable')
     opt = parser.parse_args()
 
-    opt.cfg = opt.cfg.format(opt.class_num)
-
-
-    if 'pw' not in opt.arc:  # remove BCELoss positive weights
-        hyp['cls_pw'] = 1.
-        hyp['obj_pw'] = 1.
     return opt
 
 
@@ -585,48 +579,56 @@ if __name__ == '__main__':
     opt = get_opt()
     Configure_file = opt.cfg_dict
     cfg_dict = json.load(open(Configure_file))
+    opt.device = cfg_dict['device']
+    opt.seed = cfg_dict['seed']
+    opt.epochs = cfg_dict['epochs']
+    opt.batch_size = cfg_dict['batch_size']
+    opt.image_size = cfg_dict['image_size']
+    opt.class_num = cfg_dict['class_num']
+    opt.cfg = opt.cfg.format(opt.class_num)
+
     comments = cfg_dict['comments']
-    syn_ratios = cfg_dict['syn_ratios']
     prefix = cfg_dict['prefix']
 
     pxwhrsd = cfg_dict['pxwhrsd']
     hyp_cmt = cfg_dict['hyp_cmt']
-    val_syn= cfg_dict['val_syn']
+    val_syn = cfg_dict['val_syn']
+    val_labeled = cfg_dict['val_labeled']
     model_id = cfg_dict['model_id']
-
-    opt.seed = cfg_dict['seed']
-    opt.batch_size = cfg_dict['batch_size']
-    opt.class_num = cfg_dict['class_num']
-
+    syn_ratios = cfg_dict['syn_ratios']
+    hyp = cfg_dict['hyp']
+    if 'pw' not in opt.arc:  # remove BCELoss positive weights
+        hyp['cls_pw'] = 1.
+        hyp['obj_pw'] = 1.
     for cx, cmt in enumerate(comments):
-        hyp_cmt = hyp_cmt.format(opt.batch_size - opt.syn_batch_size, opt.syn_batch_size)
-
         sr = syn_ratios[cx]
+
+        cinx = cmt.find('model') # first letter index
+        endstr = cmt[cinx:]
+        rcinx = endstr.rfind('_')
+        fstr = endstr[rcinx:] # '_' is included
+        sstr = endstr[:rcinx]
+        suffix = fstr + '_' + sstr
+
+        opt.name = prefix + suffix
+
+
         opt.base_dir = opt.base_dir.format(opt.class_num, pxwhrsd.format(opt.seed))
         time_marker = time.strftime('%Y-%m-%d_%H.%M', time.localtime())
-        # opt.weights_dir = opt.weights_dir.format(opt.class_num, opt.cmt, '{}_hgiou1_seed{}_'.format(time_marker, opt.seed))
-        # opt.writer_dir = opt.writer_dir.format(opt.class_num, opt.cmt, '{}_hgiou1_seed{}'.format(time_marker, opt.seed))
-        if sr == -1: # syn only
-            # opt.data = 'data_xview/{}_{}_cls/{}_seed{}/{}_seed{}.data'.format(cmt, opt.class_num, cmt, opt.seed, cmt, opt.seed)
+        if val_syn:
+            hyp_cmt = hyp_cmt + '_val_syn'
+            opt.data = 'data_xview/{}_{}_cls/{}_seed{}/{}_seed{}.data'.format(cmt, opt.class_num, cmt, opt.seed, cmt, opt.seed)
+        elif val_labeled:
+            hyp_cmt = hyp_cmt + '_val_labeled'
+            opt.data = 'data_xview/{}_{}_cls/{}_seed{}/{}_seed{}_xview_val_labeled.data'.format(cmt, opt.class_num, cmt, opt.seed, cmt, opt.seed)
+        else:
+            hyp_cmt = hyp_cmt + '_val_xview'
             opt.data = 'data_xview/{}_{}_cls/{}_seed{}/{}_seed{}_xview_val.data'.format(cmt, opt.class_num, cmt, opt.seed, cmt, opt.seed)
-            opt.weights_dir = opt.weights_dir.format(opt.class_num, cmt,opt.seed, '{}_{}_seed{}'.format(time_marker, hyp_cmt, opt.seed))
-            opt.writer_dir = opt.writer_dir.format(opt.class_num, cmt,opt.seed, '{}_{}_seed{}'.format(time_marker, hyp_cmt, opt.seed))
-            opt.result_dir = opt.result_dir.format(opt.class_num, cmt,opt.seed, '{}_{}_seed{}'.format(time_marker, hyp_cmt, opt.seed))
-            opt.name = '{}_seed{}'.format(cmt, opt.seed)
-        elif sr == 0: # baseline
-            opt.data = 'data_xview/{}_cls/{}_seed{}/xview_{}_seed{}.data'.format(opt.class_num, cmt,opt.seed, cmt, opt.seed)
-            # time_marker = '2020-04-28_14.21'
-            opt.weights_dir = opt.weights_dir.format(opt.class_num, cmt,opt.seed, '{}_{}_seed{}'.format(time_marker, hyp_cmt, opt.seed))
-            opt.writer_dir = opt.writer_dir.format(opt.class_num, cmt,opt.seed, '{}_{}_seed{}'.format(time_marker, hyp_cmt, opt.seed))
-            opt.result_dir = opt.result_dir.format(opt.class_num, cmt,opt.seed, '{}_{}_seed{}'.format(time_marker, hyp_cmt, opt.seed))
-            opt.name = '{}_seed{}'.format(cmt, opt.seed)
-        else: # xview + syn
-            # opt.data = 'data_xview/{}_cls/{}_seed{}/{}_seed{}_{}xSyn_miss.data'.format(opt.class_num, cmt,opt.seed, cmt,opt.seed, sr)
-            opt.data = 'data_xview/{}_cls/{}_seed{}/{}_seed{}_{}xSyn.data'.format(opt.class_num, cmt,opt.seed, cmt,opt.seed, sr)
-            opt.weights_dir = opt.weights_dir.format(opt.class_num, cmt,opt.seed, '{}_{}_seed{}_{}xSyn'.format(time_marker, hyp_cmt,opt.seed, sr))
-            opt.writer_dir = opt.writer_dir.format(opt.class_num, cmt,opt.seed, '{}_{}_seed{}_{}xSyn'.format(time_marker, hyp_cmt,opt.seed, sr))
-            opt.result_dir = opt.result_dir.format(opt.class_num, cmt,opt.seed, '{}_{}_seed{}_{}xSyn'.format(time_marker, hyp_cmt,opt.seed, sr))
-            opt.name = '{}_seed{}_{}xSyn'.format(cmt,opt.seed, sr)
+
+        time_marker = time.strftime('%Y-%m-%d_%H.%M', time.localtime())
+        opt.weights_dir = 'weights/{}_cls/{}_seed{}/{}/'.format(opt.class_num, cmt, opt.seed, '{}_{}_seed{}'.format(time_marker, hyp_cmt, opt.seed))
+        opt.writer_dir = 'writer_output/{}_cls/{}_seed{}/{}/'.format(opt.class_num, cmt, opt.seed, '{}_{}_seed{}'.format(time_marker, hyp_cmt, opt.seed))
+        opt.result_dir = 'result_output/{}_cls/{}_seed{}/{}/'.format(opt.class_num, cmt, opt.seed, '{}_{}_seed{}'.format(time_marker, hyp_cmt, opt.seed))
 
         if not os.path.exists(opt.weights_dir):
             os.makedirs(opt.weights_dir)
@@ -636,14 +638,9 @@ if __name__ == '__main__':
 
         if not os.path.exists(opt.result_dir):
             os.makedirs(opt.result_dir)
-        if sr >= 1:
-            results_file = os.path.join(opt.result_dir, 'results_seed{}_{}xSyn.txt'.format(opt.seed, opt.syn_ratio))
-            last = os.path.join(opt.weights_dir, 'last_seed{}_{}xSyn.pt'.format(opt.seed, opt.syn_ratio))
-            best = os.path.join(opt.weights_dir, 'best_seed{}_{}xSyn.pt'.format(opt.seed, opt.syn_ratio))
-        else:
-            results_file = os.path.join(opt.result_dir, 'results_{}_seed{}.txt'.format(opt.cmt, opt.seed))
-            last = os.path.join(opt.weights_dir, 'last_seed{}.pt'.format(opt.seed))
-            best = os.path.join(opt.weights_dir, 'best_seed{}.pt'.format(opt.seed))
+        results_file = os.path.join(opt.result_dir, 'results_{}_seed{}.txt'.format(cmt, opt.seed))
+        last = os.path.join(opt.weights_dir, 'last_seed{}.pt'.format(opt.seed))
+        best = os.path.join(opt.weights_dir, 'best_seed{}.pt'.format(opt.seed))
         opt.weights = last if opt.resume else opt.weights
         print(opt)
         # scale hyp['obj'] by img_size (evolved at 320)

@@ -766,7 +766,7 @@ def compute_loss(p, targets, model):  # predictions, targets, model
             lbox *= 3 / ng
 
     loss = lbox + lobj + lcls
-    return loss, torch.cat((lbox, lobj, lcls, loss)).detach()
+    return loss, torch.cat((lbox, lobj, lcls, loss)).detach() # giou, obj
 
 
 def build_targets(model, targets):

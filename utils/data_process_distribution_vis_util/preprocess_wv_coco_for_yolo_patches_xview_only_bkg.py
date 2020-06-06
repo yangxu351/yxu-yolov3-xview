@@ -65,6 +65,50 @@ def get_xview_bkg_and_lbl_files_create_realated_list_files():
     xview_bkg_lbl_file.close()
 
 
+def get_test_xview_bkg_and_lbl_files():
+    args = get_args()
+    src_all_dir = args.images_save_dir.split('_{}cls'.format(args.class_num)) [0]
+    all_images = glob.glob(os.path.join(src_all_dir, '*.jpg'))
+    all_img_names = [os.path.basename(f) for f in all_images]
+
+    airc_dir = args.images_save_dir
+    airc_images = glob.glob(os.path.join(airc_dir, '*.jpg'))
+    airc_img_names = [os.path.basename(f) for f in airc_images]
+    airc_img_prefixes = [x.split('_')[0] for x in airc_img_names]
+    airc_img_prefixes = list(set(airc_img_prefixes))
+
+    bkg_img_names = [n for n in all_img_names if n.split('_')[0] not in airc_img_prefixes]
+
+    np.random.seed(args.seed)
+    bkg_indices = np.random.permutation(len(bkg_img_names))
+
+    save_bkg_img_dir = src_all_dir + '_xview_bkg/'
+    if not os.path.exists(save_bkg_img_dir):
+        os.mkdir(save_bkg_img_dir)
+
+    list_dir = os.path.join(args.data_save_dir, 'xview_bkg_only_seed{}/'.format(args.seed))
+    if not os.path.exists(list_dir):
+        os.mkdir(list_dir)
+    xview_bkg_img_file = open(os.path.join(list_dir, 'xview_bkg_img_seed{}.txt'.format(args.seed)), 'w')
+    xview_bkg_lbl_file = open(os.path.join(list_dir, 'xview_bkg_lbl_seed{}.txt'.format(args.seed)), 'w')
+
+    save_bkg_lbl_dir = args.annos_save_dir[:-1] + '_bkg/'
+    if not os.path.exists(save_bkg_lbl_dir):
+        os.mkdir(save_bkg_lbl_dir)
+
+    num_airc_imgs = len(airc_img_names)
+    for i in range(num_airc_imgs):
+        idx = bkg_indices[i]
+        shutil.copy(os.path.join(src_all_dir, bkg_img_names[idx]),
+                    os.path.join(save_bkg_img_dir, bkg_img_names[idx]))
+        lbl_file = open(os.path.join(save_bkg_lbl_dir, bkg_img_names[idx].replace('.jpg', '.txt')), 'w')
+        lbl_file.close()
+
+        xview_bkg_img_file.write('%s\n' % os.path.join(save_bkg_img_dir, bkg_img_names[idx]))
+        xview_bkg_lbl_file.write('%s\n' % os.path.join(save_bkg_lbl_dir, bkg_img_names[idx].replace('.jpg', '.txt')))
+    xview_bkg_img_file.close()
+    xview_bkg_lbl_file.close()
+
 def get_args(px_thres=None, whr=None): #
     parser = argparse.ArgumentParser()
     parser.add_argument("--image_folder", type=str,
@@ -145,6 +189,10 @@ if __name__ == '__main__':
     create xview bkg images and labels list files
     '''
     # get_xview_bkg_and_lbl_files_create_realated_list_files()
+
+    '''
+    create list of test xview background
+    '''
 
 
     '''
