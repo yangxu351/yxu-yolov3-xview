@@ -269,6 +269,7 @@ def train(opt):
             ni = i + nb * epoch  # number integrated batches (since train start)
             imgs = imgs.to(device).float() / 255.0  # uint8 to float32, 0 - 255 to 0.0 - 1.0
             targets = targets.to(device)
+            # print('targets ', targets.shape, targets)
 
             # Multi-Scale training
             if opt.multi_scale:
@@ -435,6 +436,7 @@ def get_opt():
     parser.add_argument('--device', default='0', help='device id (i.e. 0 or 0,1 or cpu)')
     parser.add_argument('--img_size', type=int, default=608, help='inference size (pixels)')  # 416 608
     parser.add_argument('--class_num', type=int, default=1, help='class number')  # 60 6 1
+    parser.add_argument('--model_id', type=int, default=None, help='model id')
 
     parser.add_argument('--cfg', type=str, default='cfg/yolov3-spp-{}cls_syn.cfg', help='*.cfg path')
     parser.add_argument('--writer_dir', type=str, default='writer_output/{}_cls/{}_seed{}/{}/', help='*events* path')
@@ -586,7 +588,7 @@ if __name__ == '__main__':
     opt.image_size = cfg_dict['image_size']
     opt.class_num = cfg_dict['class_num']
     opt.cfg = opt.cfg.format(opt.class_num)
-
+    opt.model_id = cfg_dict['model_id']
     comments = cfg_dict['comments']
     prefix = cfg_dict['prefix']
 
@@ -594,7 +596,7 @@ if __name__ == '__main__':
     hyp_cmt = cfg_dict['hyp_cmt']
     val_syn = cfg_dict['val_syn']
     val_labeled = cfg_dict['val_labeled']
-    model_id = cfg_dict['model_id']
+    val_miss = cfg_dict['val_miss']
     syn_ratios = cfg_dict['syn_ratios']
     hyp = cfg_dict['hyp']
     if 'pw' not in opt.arc:  # remove BCELoss positive weights
@@ -621,6 +623,9 @@ if __name__ == '__main__':
         elif val_labeled:
             hyp_cmt_name = hyp_cmt + '_val_labeled'
             opt.data = 'data_xview/{}_{}_cls/{}_seed{}/{}_seed{}_xview_val_labeled.data'.format(cmt, opt.class_num, cmt, opt.seed, cmt, opt.seed)
+        elif val_miss:
+            hyp_cmt_name = hyp_cmt + '_val_labeled_miss'
+            opt.data = 'data_xview/{}_{}_cls/{}_seed{}/{}_seed{}_xview_val_labeled_miss.data'.format(cmt, opt.class_num, cmt, opt.seed, cmt, opt.seed)
         else:
             hyp_cmt_name = hyp_cmt + '_val_xview'
             opt.data = 'data_xview/{}_{}_cls/{}_seed{}/{}_seed{}_xview_val.data'.format(cmt, opt.class_num, cmt, opt.seed, cmt, opt.seed)

@@ -98,7 +98,7 @@ def create_syn_data(comment='syn_xview_background_texture', seed=1024, base_pxwh
     dt = comment.split('_')[-1]
     if val_xview:
         if miss_id:
-            data_txt = open(os.path.join(data_dir, '{}_seed{}_xview_val_miss.data'.format(comment, seed)), 'w')
+            data_txt = open(os.path.join(data_dir, '{}_seed{}_xview_val_labeled_miss.data'.format(comment, seed)), 'w')
         elif label_id:
             data_txt = open(os.path.join(data_dir, '{}_seed{}_xview_val_labeled.data'.format(comment, seed)), 'w')
         else:
@@ -116,8 +116,8 @@ def create_syn_data(comment='syn_xview_background_texture', seed=1024, base_pxwh
 
     if val_xview:
         if miss_id:
-            data_txt.write('valid=./data_xview/{}_cls/{}/xviewtest_img_{}_m{}_miss.txt\n'.format(syn_args.class_num, base_pxwhrs, base_pxwhrs, miss_id))
-            data_txt.write('valid_label=./data_xview/{}_cls/{}/xviewtest_lbl_{}_m{}_miss.txt\n'.format(syn_args.class_num, base_pxwhrs, base_pxwhrs, miss_id))
+            data_txt.write('valid=./data_xview/{}_cls/{}/xviewtest_img_{}_m{}_labeled_miss.txt\n'.format(syn_args.class_num, base_pxwhrs, base_pxwhrs, miss_id))
+            data_txt.write('valid_label=./data_xview/{}_cls/{}/xviewtest_lbl_{}_m{}_labeled_miss.txt\n'.format(syn_args.class_num, base_pxwhrs, base_pxwhrs, miss_id))
         elif label_id:
             data_txt.write('valid=./data_xview/{}_cls/{}/xviewtest_img_{}_m{}_labeled.txt\n'.format(syn_args.class_num, base_pxwhrs, base_pxwhrs, label_id))
             data_txt.write('valid_label=./data_xview/{}_cls/{}/xviewtest_lbl_{}_m{}_labeled.txt\n'.format(syn_args.class_num, base_pxwhrs, base_pxwhrs, label_id))
@@ -474,6 +474,7 @@ if __name__ == '__main__':
     comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v4_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v4_mixed']
     model_cmt = 'xbw_xcolor_xbkg_gauss_model4_v4'
     label_id = 4
+    miss_id = 4
     pxwhr = 'px15whr3'
     # # comments = ['syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_models_color', 'syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_models_mixed']
     # # model_cmt = 'xbw_xrxc_spr_sml_models'
@@ -498,7 +499,7 @@ if __name__ == '__main__':
             create_syn_data(cmt, sd, base_pxwhrs, val_xview=False)
             create_syn_data(cmt, sd, base_pxwhrs, val_xview=True)
             create_syn_data(cmt, sd, base_pxwhrs, val_xview=True, label_id=label_id)
-            # create_syn_data(cmt, sd, base_pxwhrs, val_xview=True, miss_id=miss_id)
+            create_syn_data(cmt, sd, base_pxwhrs, val_xview=True, miss_id=miss_id)
             record_all_syn_xview_background(cmt, sd, pxwhr)
 
     # # comments = ['syn_xview_bkg_px23whr4_scale_models_texture', 'syn_xview_bkg_px23whr4_scale_models_color', 'syn_xview_bkg_px23whr4_scale_models_mixed']

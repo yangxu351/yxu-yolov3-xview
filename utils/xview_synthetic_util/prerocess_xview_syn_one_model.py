@@ -123,6 +123,70 @@ def create_test_dataset_of_model_id_labeled(model_id, base_pxwhrs='px23whr3_seed
     data_txt.write('names=./data_xview/{}_cls/xview.names\n'.format(args.class_num))
     data_txt.close()
 
+
+def get_annos_miss_files_empty_others_by_model_id(model_id=0):
+    '''
+    all annos files of model id are in only_one folder
+    specified miss folder (test dataset of model_id)
+    keep the miss model_id annotations, empty all other model_id files save in labeled_miss
+    :param model_id:
+    :return:
+    '''
+    base_dir = args.data_save_dir
+    base_val_lbl_files = pd.read_csv(os.path.join(base_dir, 'xviewval_lbl_px23whr3_seed17.txt'), header=None)
+
+    des_model_dir = args.annos_save_dir[:-1] + '_m{}_val_miss/'.format(model_id)
+    if not os.path.exists(des_model_dir):
+        os.mkdir(des_model_dir)
+    des_model_modelid_dir = args.annos_save_dir[:-1] + '_m{}_val_miss_with_modelid/'.format(model_id)
+    if not os.path.exists(des_model_modelid_dir):
+        os.mkdir(des_model_modelid_dir)
+
+    miss_model_dir = args.annos_save_dir[:-1] + '_m{}_miss/'.format(model_id)
+    miss_files = glob.glob(os.path.join(miss_model_dir, '*.txt'))
+    miss_file_names = [os.path.basename(f) for f in miss_files]
+    miss_model_modelid_dir = args.annos_save_dir[:-1] + '_m{}_miss_with_modelid/'.format(model_id)
+
+    for lv in base_val_lbl_files.loc[:, 0]:
+        name = os.path.basename(lv)
+        if name not in miss_file_names:
+            model_txt = open(os.path.join(des_model_dir, name), 'w')
+            model_modelid_txt = open(os.path.join(des_model_modelid_dir, name), 'w')
+            model_txt.close()
+            model_modelid_txt.close()
+        else:
+            shutil.copy(os.path.join(miss_model_dir, name), os.path.join(des_model_dir, name))
+            shutil.copy(os.path.join(miss_model_modelid_dir, name), os.path.join(des_model_modelid_dir, name))
+
+
+def create_test_dataset_of_model_id_labeled_miss(model_id, base_pxwhrs='px23whr3_seed17'):
+    miss_val_dir = args.annos_save_dir[:-1] + '_m{}_val_miss/'.format(model_id)
+    miss_val_lbl_files = glob.glob(os.path.join(miss_val_dir, '*.txt'))
+    miss_val_lbl_name = [os.path.basename(f) for f in miss_val_lbl_files]
+
+    base_dir = args.data_save_dir
+    test_lbl_files = open(os.path.join(base_dir, 'xviewtest_lbl_px23whr3_seed17_m{}_labeled_miss.txt'.format(model_id)), 'w')
+    test_img_files = open(os.path.join(base_dir, 'xviewtest_img_px23whr3_seed17_m{}_labeled_miss.txt'.format(model_id)), 'w')
+    test_lbl_with_modelid_files = open(os.path.join(base_dir, 'xviewtest_lbl_px23whr3_seed17_with_model_m{}_labeled_miss.txt'.format(model_id)), 'w')
+
+    miss_val_with_modelid_dir = args.annos_save_dir[:-1] + '_m{}_val_miss_with_modelid/'.format(model_id)
+
+    for lm in miss_val_lbl_files:
+        lbl_name = os.path.basename(lm)
+        img_name = lbl_name.replace('.txt', '.jpg')
+        test_lbl_files.write('%s\n' % lm)
+        test_lbl_with_modelid_files.write('%s\n' % os.path.join(miss_val_with_modelid_dir, lbl_name))
+        test_img_files.write('%s\n' % os.path.join(args.images_save_dir, img_name))
+    test_img_files.close()
+    test_lbl_files.close()
+
+    data_txt = open(os.path.join(base_dir, 'xviewtest_{}_with_model_m{}_labeled_miss.data'.format(base_pxwhrs, model_id)), 'w')
+    data_txt.write('classes=%s\n' % str(args.class_num))
+    data_txt.write('test=./data_xview/{}_cls/{}/xviewtest_img_{}_m{}_labeled_miss.txt\n'.format(args.class_num, base_pxwhrs, base_pxwhrs, model_id))
+    data_txt.write('test_label=./data_xview/{}_cls/{}/xviewtest_lbl_{}_with_model_m{}_labeled_miss.txt\n'.format(args.class_num, base_pxwhrs, base_pxwhrs, model_id))
+    data_txt.write('names=./data_xview/{}_cls/xview.names\n'.format(args.class_num))
+    data_txt.close()
+
 def get_txt_contain_model_id(model_id=5, copy_img=False):
     src_model_dir = args.annos_save_dir[:-1] + '_all_model/'
     des_model_dir = args.annos_save_dir[:-1] + '_m{}_all_model/'.format(model_id)
@@ -279,9 +343,25 @@ if __name__ == '__main__':
     others are empty
     '''
     # # model_id = 0
+    # model_id = 4
+    # # model_id = 1
+    # get_all_annos_only_model_id_labeled(model_id)
+
+    '''
+    get all validation txt but only specified miss model_id labeled
+    all others are empty except the miss ones
+    '''
+    model_id = 4
+    get_annos_miss_files_empty_others_by_model_id(model_id)
+
+    '''
+    get all validation txt but only specified miss model_id labeled
+    base on val miss list
+    others are empty
+    '''
     model_id = 4
     # model_id = 1
-    get_all_annos_only_model_id_labeled(model_id)
+    create_test_dataset_of_model_id_labeled_miss(model_id)
 
     '''
     create val dataset of all annos but only model_id labeled

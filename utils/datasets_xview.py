@@ -340,8 +340,7 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
             #fixme yang.xu
             # self.labels = [np.zeros((0, 5))] * n
             if self.with_modelid:
-                # self.labels = [np.zeros((0, 6))] * n
-                self.labels = [np.zeros((0, 6))*(-1)] * n
+                self.labels = [np.zeros((0, 6))] * n
             else:
                 self.labels = [np.zeros((0, 5))] * n
 
@@ -372,11 +371,14 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
                     #fixme --yang.xu to deal with empty labels
                     # continue
                     if self.with_modelid:
+                        l = np.zeros((0, 6))
                         # l = np.zeros((1, 6))
-                        l = np.ones((1, 6))*(-1)
+                        # l[0, 0] = -1
                     else:
+                        l = np.zeros((0, 5))
                         # l = np.zeros((1, 5))
-                        l = np.ones((1, 5))*(-1)
+                        # l[0, 0] = -1
+
                     # print('missing labels for image %s' % self.img_files[i])  # file missing
 
 
@@ -425,7 +427,7 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
                             assert cv2.imwrite(f, img[b[1]:b[3], b[0]:b[2]]), 'Failure extracting classifier boxes'
                 else:
                     ne += 1
-                    print('empty labels for image %s' % self.img_files[i])  # file empty
+                    # print('empty labels for image %s' % self.img_files[i])  # file empty
                     # os.system("rm '%s' '%s'" % (self.img_files[i], self.label_files[i]))  # remove
                 pbar.desc = 'Caching labels (%g found, %g missing, %g empty, %g duplicate, for %g images)' % (
                     nf, nm, ne, nd, n)
@@ -530,6 +532,7 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
             #     labels = cutout(img, labels)
 
         nL = len(labels)  # number of labels
+        # print('labels nL ', nL)
         if nL:
             # convert xyxy to xywh
             labels[:, 1:5] = xyxy2xywh(labels[:, 1:5])
@@ -557,12 +560,10 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
         #fixme --yang.xu
         if self.with_modelid:
             #fixme --yang.xu
-            # labels_out = torch.zeros((nL, 7))
-            labels_out = torch.ones((nL, 7))
-            labels_out = labels_out.mul(-1)
+            labels_out = torch.zeros((nL, 7))
+            # labels_out[:, 0] = -1
         else:
             labels_out = torch.zeros((nL, 6))
-
         if nL:
             labels_out[:, 1:] = torch.from_numpy(labels)
 

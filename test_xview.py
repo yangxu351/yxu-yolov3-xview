@@ -147,9 +147,15 @@ def test(cfg,
         # Statistics per image
         for si, pred in enumerate(output):
             # print('si', si, targets[si])
+            #fixme --yang.xu
             labels = targets[targets[:, 0] == si, 1:]
-            nl = len(labels)
+            # print('labels', labels)
+            if (labels >=0).all():
+                nl = len(labels)
+            else:
+                nl = 0
             tcls = labels[:, 0].tolist() if nl else []  # target class
+
             seen += 1
 
             if pred is None:
