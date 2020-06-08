@@ -341,8 +341,8 @@ def train(opt):
                                       data,
                                       batch_size=batch_size * 2,
                                       img_size=opt.img_size,
-                                      conf_thres= 0.1, # 0.001 if final_epoch else 0.1,  # 0.1 for speed
-                                      iou_thres=0.5, # 0.6 if final_epoch and is_xview else 0.5,
+                                      conf_thres= opt.conf_thres, # 0.1, # 0.001 if final_epoch else 0.1,  # 0.1 for speed
+                                      iou_thres= opt.iou_thres, # 0.5, # 0.6 if final_epoch and is_xview else 0.5,
                                       save_json=True,  # final_epoch and is_xview, #fixme
                                       model=model,#fixme
                                       # model=ema.ema,
@@ -447,8 +447,8 @@ def get_opt():
 
     parser.add_argument('--accumulate', type=int, default=4, help='batches to accumulate before optimizing')
     parser.add_argument('--multi_scale', action='store_true', help='adjust (67% - 150%) img_size every 10 batches')
-    parser.add_argument('--conf-thres', type=float, default=0.001, help='0.001 object confidence threshold')
-    parser.add_argument('--iou-thres', type=float, default=0.5, help='IOU threshold for NMS')
+    parser.add_argument('--conf_thres', type=float, default=0.01, help='0.001 object confidence threshold')
+    parser.add_argument('--iou_thres', type=float, default=0.5, help='IOU threshold for NMS')
     parser.add_argument('--save_json', action='store_true', help='save a cocoapi-compatible JSON results file')
     parser.add_argument('--task', default='', help="'test', 'study', 'benchmark'")
 
@@ -589,6 +589,9 @@ if __name__ == '__main__':
     opt.class_num = cfg_dict['class_num']
     opt.cfg = opt.cfg.format(opt.class_num)
     opt.model_id = cfg_dict['model_id']
+    opt.conf_thres = cfg_dict['conf_thres']
+    opt.iou_thres = cfg_dict['iou_thres']
+
     comments = cfg_dict['comments']
     prefix = cfg_dict['prefix']
 
@@ -597,13 +600,13 @@ if __name__ == '__main__':
     val_syn = cfg_dict['val_syn']
     val_labeled = cfg_dict['val_labeled']
     val_miss = cfg_dict['val_miss']
-    syn_ratios = cfg_dict['syn_ratios']
+    # syn_ratios = cfg_dict['syn_ratios']
     hyp = cfg_dict['hyp']
     if 'pw' not in opt.arc:  # remove BCELoss positive weights
         hyp['cls_pw'] = 1.
         hyp['obj_pw'] = 1.
     for cx, cmt in enumerate(comments):
-        sr = syn_ratios[cx]
+        # sr = syn_ratios[cx]
 
         cinx = cmt.find('model') # first letter index
         endstr = cmt[cinx:]
