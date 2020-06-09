@@ -62,10 +62,11 @@ def test(cfg,
          opt=None):
     device = torch_utils.select_device(opt.device, batch_size=batch_size)
     model_maps = torch.load(weights, map_location=device)
-    mp_arr = np.zeros((5))
-    mr_arr = np.zeros((5))
-    map_arr = np.zeros((5))
-    mf1_arr = np.zeros((5))
+    last_num = 1
+    mp_arr = np.zeros((last_num))
+    mr_arr = np.zeros((last_num))
+    map_arr = np.zeros((last_num))
+    mf1_arr = np.zeros((last_num))
     # Configure run
     data = parse_data_cfg(data)
     nc = int(data['classes'])  # number of classes
@@ -77,8 +78,9 @@ def test(cfg,
         path = data['test']  # path to test images
         lbl_path = data['test_label']
     names = load_classes(data['names'])  # class names
-
-    for ix, mk in enumerate(model_maps.keys()):
+    m_key = 215
+    for ix, mk in enumerate([m_key]):
+    # for ix, mk in enumerate(model_maps.keys()):
         # Initialize/load model and set device
         if model is None:
             device = torch_utils.select_device(opt.device, batch_size=batch_size)
@@ -184,6 +186,11 @@ def test(cfg,
                     # tcls = labels[:, -1].tolist() if nl else []  # target class
                     # print('tcls', tcls)
                 else:
+                    #fixme --yang.xu
+                    if (labels >=0).all():
+                        nl = len(labels)
+                    else:
+                        nl = 0
                     tcls = labels[:, 0].tolist() if nl else []  # target class
                 seen += 1
 
@@ -269,7 +276,7 @@ def test(cfg,
                 # Append statistics (correct, conf, pcls, tcls)
                 # pred (x1, y1, x2, y2, object_conf, conf, class)
                 stats.append((correct, pred[:, 4].cpu(), pred[:, 5].cpu(), tcls))
-
+                print('\n correct: {}  pred[:,4]:{}  pred[:, 5]:{} tcls:{}'.format(correct, pred[:, 4].cpu(), pred[:, 5].cpu(), tcls))
         # Compute statistics
         stats = [np.concatenate(x, 0) for x in list(zip(*stats))]  # to numpy
         if len(stats):
@@ -387,10 +394,10 @@ def get_opt(dt=None, sr=None, comments=''):
     parser.add_argument('--base_dir', type=str, default='data_xview/{}_cls/{}/', help='without syn data path')
 
     parser.add_argument('--conf-thres', type=float, default=0.1, help='0.1 0.05 0.001 object confidence threshold')
-    parser.add_argument('--iou-thres', type=float, default=0.5, help='NMS 0.5  0.6 IOU threshold for NMS')
+    parser.add_argument('--nms-iou-thres', type=float, default=0.5, help='NMS 0.5  0.6 IOU threshold for NMS')
     parser.add_argument('--save_json', action='store_true', default=True, help='save a cocoapi-compatible JSON results file')
     parser.add_argument('--task', default='test', help="'test', 'study', 'benchmark'")
-    parser.add_argument('--device', default='0', help='device id (i.e. 0 or 0,1) or cpu')
+    parser.add_argument('--device', default='1', help='device id (i.e. 0 or 0,1) or cpu')
     parser.add_argument('--name', default='', help='name')
     parser.add_argument('--cmt', default=comments, help='comments')
     parser.add_argument('--model_id', type=int, default=None, help='specified model id')
@@ -433,7 +440,7 @@ if __name__ == '__main__':
     #              opt.batch_size,
     #              opt.img_size,
     #              opt.conf_thres,
-    #              opt.iou_thres,
+    #              opt.nms_iou_thres,
     #              opt.save_json, opt=opt)
 
     '''
@@ -468,7 +475,7 @@ if __name__ == '__main__':
     #              opt.batch_size,
     #              opt.img_size,
     #              opt.conf_thres,
-    #              opt.iou_thres,
+    #              opt.nms_iou_thres,
     #              opt.save_json, opt=opt)
 
 
@@ -497,7 +504,11 @@ if __name__ == '__main__':
     # comments = ['syn_xview_bkg_px15whr3_sbw_xcolor_model4_v2_color', 'syn_xview_bkg_px15whr3_sbw_xcolor_model4_v2_mixed']
     # comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v3_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v3_mixed']
     # comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v4_color']
-    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v4_mixed']
+    # comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v4_mixed']
+    comments = ['syn_xview_bkg_px15whr3_sbw_xcolor_model4_v2_mixed']
+    model_id = 4
+    # comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v4_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v4_mixed']
+    # comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_model4_v6_color']
     # comments = ['syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_gauss_models_color', 'syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_gauss_models_mixed']
     # comments = ['syn_xview_bkg_px23whr3_sbw_xcolor_model1_color', 'syn_xview_bkg_px23whr3_sbw_xcolor_model1_mixed']
     # comments = ['syn_xview_bkg_px23whr3_xbw_xcolor_gauss_model1_v1_color', 'syn_xview_bkg_px23whr3_xbw_xcolor_gauss_model1_v1_mixed']
@@ -505,14 +516,19 @@ if __name__ == '__main__':
     # comments = ['syn_xview_bkg_px23whr3_sbw_xcolor_xbkg_unif_model1_v3_color', 'syn_xview_bkg_px23whr3_sbw_xcolor_xbkg_unif_model1_v3_mixed']
     # comments = ['syn_xview_bkg_px23whr3_xbsw_xcolor_xbkg_gauss_model1_v4_color', 'syn_xview_bkg_px23whr3_xbsw_xcolor_xbkg_gauss_model1_v4_mixed']
     base_cmt = 'px23whr3_seed{}'
-    # hyp_cmt = 'hgiou1_1gpu'
+    hyp_cmt = 'hgiou1_1gpu'
 
     # hyp_cmt = 'hgiou1_1gpu_obj29.5'
     # hyp_cmt = 'hgiou1_1gpu_xval'
     # hyp_cmt = 'hgiou1_mean_best'
     # hyp_cmt = 'hgiou1_obj3.5_val_labeled'
+    # hyp_cmt = 'hgiou1_1gpu_val_labeled_miss'
     # hyp_cmt = 'hgiou1_1gpu_val_labeled'
-    hyp_cmt = 'hgiou1_1gpu_val_syn'
+    # hyp_cmt = 'hgiou1_1gpu_val_syn'
+    # hyp_cmt = 'hgiou1_1gpu_val_xview'
+    # hyp_cmt = 'hgiou1_obj15.5_val_xview'
+    # hyp_cmt = 'hgiou0.7_1gpu'
+
     prefix = 'syn'
     px_thres = 23
     whr_thres = 3 # 4
@@ -521,6 +537,7 @@ if __name__ == '__main__':
         for cmt in comments:
             base_cmt = base_cmt.format(sd)
             opt = get_opt(comments=cmt)
+            opt.device = '1'
 
             cinx = cmt.find('model') # first letter index
             endstr = cmt[cinx:]
@@ -536,15 +553,15 @@ if __name__ == '__main__':
             opt.model_id = int(sidx)
             opt.conf_thres = 0.01
             ############# 2 images test set
-            # opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_with_model_{}_seed{}_miss'.format(hyp_cmt, sd))
-            # opt.data = 'data_xview/{}_cls/{}/xviewtest_{}_with_model_m{}_miss.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id)
+            opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_with_model_{}_seed{}_miss'.format(hyp_cmt, sd))
+            opt.data = 'data_xview/{}_cls/{}/xviewtest_{}_with_model_m{}_miss.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id)
             ############# all m* labeled validation images make up the test set
             # opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_with_model_{}_seed{}_only'.format(hyp_cmt, sd))
             # opt.data = 'data_xview/{}_cls/{}/xviewtest_{}_with_model_m{}_only.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id)
             ############# all m* labeled validation images make up the test set
-            opt.batch_size = 8
-            opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_with_model_{}_labeled_seed{}'.format(hyp_cmt, sd))
-            opt.data = 'data_xview/{}_cls/{}/xviewtest_{}_with_model_m{}_labeled.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id)
+            # opt.batch_size = 8
+            # opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_with_model_{}_labeled_seed{}'.format(hyp_cmt, sd))
+            # opt.data = 'data_xview/{}_cls/{}/xviewtest_{}_with_model_m{}_labeled.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id)
 
             ''' for whole validation dataset '''
             # opt.conf_thres = 0.1
@@ -567,7 +584,7 @@ if __name__ == '__main__':
                  opt.batch_size,
                  opt.img_size,
                  opt.conf_thres,
-                 opt.iou_thres,
+                 opt.nms_iou_thres,
                  opt.save_json, opt=opt)
 
     '''
@@ -700,7 +717,7 @@ if __name__ == '__main__':
     #          opt.batch_size,
     #          opt.img_size,
     #          opt.conf_thres,
-    #          opt.iou_thres,
+    #          opt.nms_iou_thres,
     #          opt.save_json, opt=opt)
 
     '''
@@ -755,7 +772,7 @@ if __name__ == '__main__':
     #          opt.batch_size,
     #          opt.img_size,
     #          opt.conf_thres,
-    #          opt.iou_thres,
+    #          opt.nms_iou_thres,
     #          opt.save_json, opt=opt)
 
 
