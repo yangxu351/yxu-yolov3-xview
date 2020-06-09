@@ -58,7 +58,7 @@ def split_syn_xview_background_trn_val(seed=17, comment='syn_xview_background_te
         trn_lbl_txt.write('%s\n' % os.path.join(lbl_dir, os.path.basename(all_files[j]).replace(IMG_FORMAT, TXT_FORMAT)))
     trn_img_txt.close()
     trn_lbl_txt.close()
-    for i in all_indices[num_trn: ]:
+    for i in all_indices[num_trn: num_trn + num_val]:
         val_img_txt.write('%s\n' % all_files[i])
         val_lbl_txt.write('%s\n' % os.path.join(lbl_dir, os.path.basename(all_files[i]).replace(IMG_FORMAT, TXT_FORMAT)))
     val_img_txt.close()
@@ -116,14 +116,14 @@ def create_syn_data(comment='syn_xview_background_texture', seed=1024, base_pxwh
 
     if val_xview:
         if miss_id:
-            data_txt.write('valid=./data_xview/{}_cls/{}/xviewtest_img_{}_m{}_labeled_miss.txt\n'.format(syn_args.class_num, base_pxwhrs, base_pxwhrs, miss_id))
-            data_txt.write('valid_label=./data_xview/{}_cls/{}/xviewtest_lbl_{}_m{}_labeled_miss.txt\n'.format(syn_args.class_num, base_pxwhrs, base_pxwhrs, miss_id))
+            data_txt.write('valid=./data_xview/{}_cls/{}/xviewtest_img_{}_with_model_m{}_labeled_miss.txt\n'.format(syn_args.class_num, base_pxwhrs, base_pxwhrs, miss_id))
+            data_txt.write('valid_label=./data_xview/{}_cls/{}/xviewtest_lbl_{}_with_model_m{}_labeled_miss.txt\n'.format(syn_args.class_num, base_pxwhrs, base_pxwhrs, miss_id))
         elif label_id:
-            data_txt.write('valid=./data_xview/{}_cls/{}/xviewtest_img_{}_m{}_labeled.txt\n'.format(syn_args.class_num, base_pxwhrs, base_pxwhrs, label_id))
-            data_txt.write('valid_label=./data_xview/{}_cls/{}/xviewtest_lbl_{}_m{}_labeled.txt\n'.format(syn_args.class_num, base_pxwhrs, base_pxwhrs, label_id))
+            data_txt.write('valid=./data_xview/{}_cls/{}/xviewtest_img_{}_with_model_m{}_labeled.txt\n'.format(syn_args.class_num, base_pxwhrs, base_pxwhrs, label_id))
+            data_txt.write('valid_label=./data_xview/{}_cls/{}/xviewtest_lbl_{}_with_model_m{}_labeled.txt\n'.format(syn_args.class_num, base_pxwhrs, base_pxwhrs, label_id))
         else:
-            data_txt.write('valid=./data_xview/{}_cls/{}/xviewval_img_{}.txt\n'.format(syn_args.class_num, base_pxwhrs, base_pxwhrs))
-            data_txt.write('valid_label=./data_xview/{}_cls/{}/xviewval_lbl_{}.txt\n'.format(syn_args.class_num, base_pxwhrs, base_pxwhrs))
+            data_txt.write('valid=./data_xview/{}_cls/{}/xviewval_img_{}_with_model.txt\n'.format(syn_args.class_num, base_pxwhrs, base_pxwhrs))
+            data_txt.write('valid_label=./data_xview/{}_cls/{}/xviewval_lbl_{}_with_model.txt\n'.format(syn_args.class_num, base_pxwhrs, base_pxwhrs))
     else:
         data_txt.write('valid=./data_xview/{}_{}_cls/{}_seed{}/{}_val_img_seed{}.txt\n'.format(comment, syn_args.class_num, comment, seed, comment, seed))
         data_txt.write('valid_label=./data_xview/{}_{}_cls/{}_seed{}/{}_val_lbl_seed{}.txt\n'.format(comment, syn_args.class_num, comment, seed, comment, seed))
@@ -408,17 +408,21 @@ if __name__ == '__main__':
     # comments = ['syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_gauss_model1_v2_color', 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_gauss_model1_v2_mixed']
     # model_cmt = 'xbw_xcolor_xbkg_gauss_model1_v2'
     # pxwhr = 'px23whr3'
-    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v4_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v4_mixed']
-    model_cmt = 'xbw_xcolor_xbkg_gauss_model4_v4'
+    # comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v4_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v4_mixed']
+    # model_cmt = 'xbw_xcolor_xbkg_gauss_model4_v4'
+    # comments = ['syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_gauss_model4_v5_color', 'syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_gauss_model4_v5_mixed']
+    # model_cmt = 'xbw_rndcolor_xbkg_gauss_model4_v5'
+    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_model4_v6_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_model4_v6_mixed']
+    model_cmt = 'xbw_xcolor_xbkg_unif_model4_v6'
     pxwhr = 'px15whr3'
 
-    # base_pxwhrs = 'px23whr3_seed{}'
-    # syn_args = get_syn_args(model_cmt)
-    # seeds = [17]
-    # for cmt in comments:
-    #     for sd in seeds:
-    #         base_pxwhrs = base_pxwhrs.format(sd)
-    #         split_syn_xview_background_trn_val(sd, cmt, pxwhr, base_pxwhrs)
+    base_pxwhrs = 'px23whr3_seed{}'
+    syn_args = get_syn_args(model_cmt)
+    seeds = [17]
+    for cmt in comments:
+        for sd in seeds:
+            base_pxwhrs = base_pxwhrs.format(sd)
+            split_syn_xview_background_trn_val(sd, cmt, pxwhr, base_pxwhrs)
 
     # # # comments = ['syn_xview_background_texture', 'syn_xview_background_color', 'syn_xview_background_mixed']
     # # comments = ['syn_xview_bkg_certain_models_texture', 'syn_xview_bkg_certain_models_color', 'syn_xview_bkg_certain_models_mixed']
@@ -471,8 +475,12 @@ if __name__ == '__main__':
     # model_cmt = 'sbw_xcolor_model4_v2'
     # # comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v3_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v3_mixed']
     # # model_cmt = 'xbw_xcolor_xbkg_gauss_model4_v3'
-    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v4_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v4_mixed']
-    model_cmt = 'xbw_xcolor_xbkg_gauss_model4_v4'
+    # comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v4_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v4_mixed']
+    # model_cmt = 'xbw_xcolor_xbkg_gauss_model4_v4'
+    # comments = ['syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_gauss_model4_v5_color', 'syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_gauss_model4_v5_mixed']
+    # model_cmt = 'xbw_rndcolor_xbkg_gauss_model4_v5'
+    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_model4_v6_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_model4_v6_mixed']
+    model_cmt = 'xbw_xcolor_xbkg_unif_model4_v6'
     label_id = 4
     miss_id = 4
     pxwhr = 'px15whr3'
@@ -489,7 +497,8 @@ if __name__ == '__main__':
     # model_cmt = 'xbw_xcolor_xbkg_gauss_model1_v2'
     # label_id = 1
     # pxwhr = 'px23whr3'
-
+    #fixme
+    # validation set with model_id if exists when val_xview=True
     base_pxwhrs = 'px23whr3_seed{}'
     syn_args = get_syn_args(model_cmt)
     seeds = [17]
@@ -544,17 +553,19 @@ if __name__ == '__main__':
     # # model_miss =4
     # comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v4_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v4_mixed']
     # model_cmt = 'xbw_xcolor_xbkg_gauss_model4_v4'
-    # label_id=4
-    # model_miss=4
+    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_model4_v6_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_model4_v6_mixed']
+    model_cmt = 'xbw_xcolor_xbkg_unif_model4_v6'
+    label_id=4
+    miss_id=4
     # comments = ['syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_models_color', 'syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_models_mixed']
     # model_cmt = 'xbw_xrxc_spr_sml_models'
     # comments = ['syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_gauss_models_color', 'syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_gauss_models_mixed']
     # model_cmt = 'xbw_xrxc_spr_sml_gauss_models'
-    comments = ['syn_xview_bkg_px23whr3_xbw_xcolor_gauss_model1_v1_color', 'syn_xview_bkg_px23whr3_xbw_xcolor_gauss_model1_v1_mixed']
-    model_cmt = 'xbw_xcolor_gauss_model1_v1' # v1
+    # comments = ['syn_xview_bkg_px23whr3_xbw_xcolor_gauss_model1_v1_color', 'syn_xview_bkg_px23whr3_xbw_xcolor_gauss_model1_v1_mixed']
+    # model_cmt = 'xbw_xcolor_gauss_model1_v1' # v1
     # comments = ['syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_gauss_model1_v2_color', 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_gauss_model1_v2_mixed']
     # model_cmt = 'xbw_xcolor_xbkg_gauss_model1_v2'
-    label_id = 1
+    # label_id = 1
 
     syn_args = get_syn_args(model_cmt)
     base_cmt = 'px23whr3'
@@ -563,7 +574,7 @@ if __name__ == '__main__':
         for sd in seeds:
             create_syn_data_with_model(cmt, sd, base_cmt)
             create_syn_data_with_model(cmt, sd, base_cmt, label_id=label_id)
-            # create_syn_data_with_model(cmt, sd, base_cmt, model_miss=model_miss)
+            create_syn_data_with_model(cmt, sd, base_cmt, miss_id=miss_id)
 
     '''
     combine xview and synthetic 
