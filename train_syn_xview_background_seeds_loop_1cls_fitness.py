@@ -449,9 +449,10 @@ def train(opt):
     return results
 
 
-def get_opt(seed=1024, cmt='', hyp_cmt = 'hgiou1', Train=True, sr=None):
+def get_opt(seed=1024, cmt='', hyp_cmt = 'hgiou1', Train=True, sr=None, mid=None):
     parser = argparse.ArgumentParser()
     parser.add_argument('--seed', type=int, default=seed, help='seed')
+    parser.add_argument('--model_id', type=int, default=mid, help='model_id')
     parser.add_argument('--cmt', type=str, default=cmt,
                         help='xview_syn_xview_bkg_texture, xview_syn_xview_bkg_color, xview_syn_xview_bkg_mixed')
     parser.add_argument('--syn_ratio', type=float, default=sr, help='syn_ratio')
@@ -472,7 +473,7 @@ def get_opt(seed=1024, cmt='', hyp_cmt = 'hgiou1', Train=True, sr=None):
     parser.add_argument('--class_num', type=int, default=1, help='class number')  # 60 6 1
     parser.add_argument('--single-cls', action='store_true', default='True', help='train as single-class dataset')
 
-    parser.add_argument('--conf-thres', type=float, default=0.001, help='0.001 object confidence threshold')
+    parser.add_argument('--conf-thres', type=float, default=0.01, help='0.001 object confidence threshold')
     parser.add_argument('--iou-thres', type=float, default=0.5, help='IOU threshold for NMS')
     parser.add_argument('--save_json', action='store_true', help='save a cocoapi-compatible JSON results file')
     parser.add_argument('--task', default='', help="'test', 'study', 'benchmark'")
@@ -488,7 +489,7 @@ def get_opt(seed=1024, cmt='', hyp_cmt = 'hgiou1', Train=True, sr=None):
     parser.add_argument('--arc', type=str, default='default', help='yolo architecture')  # defaultpw, uCE, uBCE
     parser.add_argument('--prebias', action='store_true', help='pretrain model biases')
     parser.add_argument('--name', default='', help='renames results.txt to results_name.txt if supplied')
-    parser.add_argument('--device', default='0, 1', help='device id (i.e. 0 or 0,1 or cpu)')
+    parser.add_argument('--device', default='0', help='device id (i.e. 0 or 0,1 or cpu)')
     parser.add_argument('--adam', action='store_true', help='use adam optimizer')
     parser.add_argument('--var', type=float, help='debug variable')
     opt = parser.parse_args()
@@ -500,7 +501,8 @@ def get_opt(seed=1024, cmt='', hyp_cmt = 'hgiou1', Train=True, sr=None):
         # opt.writer_dir = opt.writer_dir.format(opt.class_num, opt.cmt, '{}_hgiou1_seed{}'.format(time_marker, opt.seed))
         if sr is None:
             # opt.data = 'data_xview/{}_{}_cls/{}_seed{}/{}_seed{}.data'.format(cmt, opt.class_num, cmt, seed, cmt, seed)
-            opt.data = 'data_xview/{}_{}_cls/{}_seed{}/{}_seed{}_xview_val.data'.format(cmt, opt.class_num, cmt, seed, cmt, seed)
+            # opt.data = 'data_xview/{}_{}_cls/{}_seed{}/{}_seed{}_xview_val.data'.format(cmt, opt.class_num, cmt, seed, cmt, seed)
+            opt.data = 'data_xview/{}_{}_cls/{}_seed{}/{}_seed{}_xview_val_labeled_miss.data'.format(cmt, opt.class_num, cmt, opt.seed, cmt, opt.seed)
             opt.weights_dir = opt.weights_dir.format(opt.class_num, cmt, seed, '{}_{}_seed{}'.format(time_marker, hyp_cmt, seed))
             opt.writer_dir = opt.writer_dir.format(opt.class_num, cmt, seed, '{}_{}_seed{}'.format(time_marker, hyp_cmt, seed))
             opt.result_dir = opt.result_dir.format(opt.class_num, cmt, seed, '{}_{}_seed{}'.format(time_marker, hyp_cmt, seed))
@@ -569,6 +571,9 @@ if __name__ == '__main__':
     # syn_ratios = [0]
     # comments = ['syn_xview_bkg_px23whr3_small_models_color', 'syn_xview_bkg_px23whr3_small_models_mixed']
     # syn_ratios = [None]
+    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_model4_v6_mixed']
+    model_id = 4
+    syn_ratios = [None]
     # comments = ['xview_syn_xview_bkg_px23whr3_small_models_color', 'xview_syn_xview_bkg_px23whr3_small_models_mixed']
     # syn_ratios = [1]
     # comments = ['syn_xview_bkg_px23whr3_6groups_models_color', 'syn_xview_bkg_px23whr3_6groups_models_mixed'] #
@@ -578,11 +583,11 @@ if __name__ == '__main__':
     # comments = ['xview_syn_xview_bkg_px23whr3_small_models_color', 'xview_syn_xview_bkg_px23whr3_small_models_mixed', 'px23whr3']
     # comments = ['xview_syn_xview_bkg_px23whr3_6groups_models_color','xview_syn_xview_bkg_px23whr3_6groups_models_mixed',  1,]
     # syn_ratios = [ 1, 1, 0]
-    comments = ['px23whr3']
-    syn_ratios = [0]
+    # comments = ['px23whr3']
+    # syn_ratios = [0]
     pxwhrsd = 'px23whr3_seed{}'
     # pxwhrsd = 'px23whr4_seed{}'
-    hyp_cmt = 'hgiou1_fitness'
+    hyp_cmt = 'hgiou1_1gpu_val_labeled_miss'
     # hyp_cmt = 'hgiou1'
     seeds = [17] # 5,
     for sd in seeds:
@@ -590,7 +595,8 @@ if __name__ == '__main__':
             # for sr in syn_ratios:
             sr = syn_ratios[cx]
             # sr = 1
-            opt = get_opt(sd, cmt, hyp_cmt=hyp_cmt, sr=sr)
+            # opt = get_opt(sd, cmt, hyp_cmt=hyp_cmt, sr=sr)
+            opt = get_opt(sd, cmt, hyp_cmt=hyp_cmt, sr=sr, mid=model_id)
             opt.base_dir = opt.base_dir.format(opt.class_num, pxwhrsd.format(sd))
             # opt.resume = True
             if sr == 0 or sr is None:

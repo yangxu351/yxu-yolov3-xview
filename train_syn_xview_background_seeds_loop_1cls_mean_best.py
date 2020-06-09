@@ -342,7 +342,7 @@ def train(opt):
                                       batch_size=batch_size * 2,
                                       img_size=opt.img_size,
                                       conf_thres= opt.conf_thres, # 0.1, # 0.001 if final_epoch else 0.1,  # 0.1 for speed
-                                      iou_thres= opt.iou_thres, # 0.5, # 0.6 if final_epoch and is_xview else 0.5,
+                                      nms_iou_thres= opt.nms_iou_thres, # 0.5, # 0.6 if final_epoch and is_xview else 0.5,
                                       save_json=True,  # final_epoch and is_xview, #fixme
                                       model=model,#fixme
                                       # model=ema.ema,
@@ -448,7 +448,7 @@ def get_opt():
     parser.add_argument('--accumulate', type=int, default=4, help='batches to accumulate before optimizing')
     parser.add_argument('--multi_scale', action='store_true', help='adjust (67% - 150%) img_size every 10 batches')
     parser.add_argument('--conf_thres', type=float, default=0.01, help='0.001 object confidence threshold')
-    parser.add_argument('--iou_thres', type=float, default=0.5, help='IOU threshold for NMS')
+    parser.add_argument('--nms_iou_thres', type=float, default=0.5, help='IOU threshold for NMS')
     parser.add_argument('--save_json', action='store_true', help='save a cocoapi-compatible JSON results file')
     parser.add_argument('--task', default='', help="'test', 'study', 'benchmark'")
 
@@ -590,7 +590,7 @@ if __name__ == '__main__':
     opt.cfg = opt.cfg.format(opt.class_num)
     opt.model_id = cfg_dict['model_id']
     opt.conf_thres = cfg_dict['conf_thres']
-    opt.iou_thres = cfg_dict['iou_thres']
+    opt.nms_iou_thres = cfg_dict['nms_iou_thres']
 
     comments = cfg_dict['comments']
     prefix = cfg_dict['prefix']
@@ -622,6 +622,7 @@ if __name__ == '__main__':
         time_marker = time.strftime('%Y-%m-%d_%H.%M', time.localtime())
         if val_syn:
             hyp_cmt_name = hyp_cmt + '_val_syn'
+            opt.model_id = None
             opt.data = 'data_xview/{}_{}_cls/{}_seed{}/{}_seed{}.data'.format(cmt, opt.class_num, cmt, opt.seed, cmt, opt.seed)
         elif val_labeled:
             hyp_cmt_name = hyp_cmt + '_val_labeled'

@@ -55,7 +55,7 @@ def test(cfg,
          batch_size=16,
          img_size=416,
          conf_thres=0.001,
-         iou_thres=0.5,  # for nms
+         nms_iou_thres=0.5,  # for nms
          save_json=False,
          model=None,
          dataloader=None,
@@ -76,6 +76,8 @@ def test(cfg,
         attempt_download(weights)
         if weights.endswith('.pt'):  # pytorch format
             model.load_state_dict(torch.load(weights, map_location=device)['model'])
+            # m_key = opt.epochs -1
+            # model.load_state_dict(torch.load(weights, map_location=device)[m_key]['model'])
         else:  # darknet format
             _ = load_darknet_weights(model, weights)
 
@@ -91,6 +93,8 @@ def test(cfg,
     # fixme
     path = data['valid']  # path to test images
     lbl_path = data['valid_label']
+    # path = data['test']  # path to test images
+    # lbl_path = data['test_label']
     # path = data['valid_rare']  # path to test images
     # lbl_path = data['valid_rare_label']
     names = load_classes(data['names'])  # class names
@@ -142,19 +146,28 @@ def test(cfg,
                 loss += compute_loss(train_out, targets, model)[1][:3].cpu()  # GIoU, obj, cls
 
             # Run NMS
-            output = non_max_suppression(inf_out, conf_thres=conf_thres, iou_thres=iou_thres)
+            output = non_max_suppression(inf_out, conf_thres=conf_thres, iou_thres=nms_iou_thres)
 
         # Statistics per image
         for si, pred in enumerate(output):
             # print('si', si, targets[si])
-            #fixme --yang.xu
             labels = targets[targets[:, 0] == si, 1:]
-            # print('labels', labels)
-            if (labels >=0).all():
+            
+            if opt.model_id is not None:
+                labels = labels[labels[:, -1] == opt.model_id]
                 nl = len(labels)
+                tcls =labels[:, -1].tolist() if nl else []
             else:
-                nl = 0
-            tcls = labels[:, 0].tolist() if nl else []  # target class
+                #fixme --yang.xu
+                if (labels >=0).all():
+                    nl = len(labels)
+                else:
+                    nl = 0
+                tcls = labels[:, 0].tolist() if nl else []  # target class
+
+            #fixme --yang.xu
+            # tcls = labels[:, 0].tolist() if nl else []  # target class
+            # print('tcls', tcls)
 
             seen += 1
 
@@ -208,6 +221,7 @@ def test(cfg,
                 for cls in torch.unique(tcls_tensor):
                     ti = (cls == tcls_tensor).nonzero().view(-1)  # prediction indices
                     pi = (cls == pred[:, 5]).nonzero().view(-1)  # target indices
+                    print('ti', ti, 'pi ', pi)
 
                     # Search for detections
                     if len(pi):
@@ -226,11 +240,11 @@ def test(cfg,
             # Append statistics (correct, conf, pcls, tcls)
             # pred (x1, y1, x2, y2, object_conf, conf, class)
             stats.append((correct, pred[:, 4].cpu(), pred[:, 5].cpu(), tcls))
-
+            # print('\n correct: {}  pred[:,4]:{}  pred[:, 5]:{} tcls:{}'.format(correct, pred[:, 4].cpu(), pred[:, 5].cpu(), tcls))
     # Compute statistics
     stats = [np.concatenate(x, 0) for x in list(zip(*stats))]  # to numpy
     if len(stats):
-        p, r, ap, f1, ap_class = ap_per_class(*stats, pr_path=opt.result_dir, pr_name=opt.name)
+        p, r, ap, f1, ap_class = ap_per_class(*stats, pr_path=opt.result_dir, pr_name=opt.name, model_id=opt.model_id)
         # if niou > 1:
         #       p, r, ap, f1 = p[:, 0], r[:, 0], ap[:, 0], ap.mean(1)  # average across ious
         #fixme --yang.xu
@@ -306,7 +320,7 @@ def test(cfg,
     # return (mp, mr, map, mf1, *(loss / len(dataloader)).tolist())
 
 
-def get_opt(dt=None, sr=None, comments=''):
+def get_opt(dt=None, sr=None, comments='', mid=None):
     parser = argparse.ArgumentParser(prog='test.py')
 
     parser.add_argument('--cfg', type=str, default='cfg/yolov3-spp-{}cls_syn.cfg', help='*.cfg path')
@@ -315,6 +329,8 @@ def get_opt(dt=None, sr=None, comments=''):
 
     parser.add_argument('--batch-size', type=int, default=8, help='size of each image batch')
     parser.add_argument('--img_size', type=int, default=608, help='inference size (pixels)')
+    parser.add_argument('--epochs', type=int, default=220, help='number of epochs')
+    parser.add_argument('--model_id', type=int, default=mid, help='model_id')
 
     parser.add_argument('--class_num', type=int, default=1, help='class number')  # 60 6
     parser.add_argument('--label_dir', type=str, default='/media/lab/Yang/data/xView_YOLO/labels/', help='*.json path')
@@ -325,10 +341,10 @@ def get_opt(dt=None, sr=None, comments=''):
     parser.add_argument('--base_dir', type=str, default='data_xview/{}_cls/{}/', help='without syn data path')
 
     parser.add_argument('--conf-thres', type=float, default=0.1, help='0.1 0.001 object confidence threshold')
-    parser.add_argument('--iou-thres', type=float, default=0.5, help='0.5 IOU threshold for NMS')
+    parser.add_argument('--nms-iou-thres', type=float, default=0.5, help='0.5 IOU threshold for NMS')
     parser.add_argument('--save_json', action='store_true', default=True, help='save a cocoapi-compatible JSON results file')
     parser.add_argument('--task', default='test', help="'test', 'study', 'benchmark'")
-    parser.add_argument('--device', default='', help='device id (i.e. 0 or 0,1) or cpu')
+    parser.add_argument('--device', default='0', help='device id (i.e. 0 or 0,1) or cpu')
     parser.add_argument('--name', default='', help='name')
 
     opt = parser.parse_args()
@@ -368,7 +384,7 @@ if __name__ == '__main__':
     #              opt.batch_size,
     #              opt.img_size,
     #              opt.conf_thres,
-    #              opt.iou_thres,
+    #              opt.nms_iou_thres,
     #              opt.save_json, opt=opt)
     #
     #     elif opt.task == 'benchmark':
@@ -443,7 +459,7 @@ if __name__ == '__main__':
     #              opt.batch_size,
     #              opt.img_size,
     #              opt.conf_thres,
-    #              opt.iou_thres,
+    #              opt.nms_iou_thres,
     #              opt.save_json, opt=opt)
 
     '''
@@ -478,7 +494,7 @@ if __name__ == '__main__':
     #              opt.batch_size,
     #              opt.img_size,
     #              opt.conf_thres,
-    #              opt.iou_thres,
+    #              opt.nms_iou_thres,
     #              opt.save_json, opt=opt)
 
 
@@ -492,23 +508,33 @@ if __name__ == '__main__':
     # comments = ['syn_xview_bkg_px23whr4_small_models_color']
     # comments = ['syn_xview_bkg_px23whr4_small_fw_models_color']
     # comments = ['syn_xview_bkg_px23whr3_6groups_models_color', 'syn_xview_bkg_px23whr3_6groups_models_mixed']
-    comments = ['syn_xview_bkg_px23whr3_rnd_bwratio_models_color', 'syn_xview_bkg_px23whr3_rnd_bwratio_models_mixed']
+    # comments = ['syn_xview_bkg_px23whr3_rnd_bwratio_models_color', 'syn_xview_bkg_px23whr3_rnd_bwratio_models_mixed']
+    # comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_model4_v6_mixed']
+    # model_id = 4
+    comments = ['syn_xview_bkg_px15whr3_sbw_xcolor_model4_v2_mixed']
+    model_id = 4
     px_thres = 23
     whr_thres = 3 # 4
     # hyp_cmt = 'hgiou1_fitness'
-    hyp_cmt = 'hgiou1_mean_best'
+    # hyp_cmt = 'hgiou1_mean_best'
+    hyp_cmt = 'hgiou1_1gpu'
+    # hyp_cmt = 'hgiou1_1gpu_val_labeled_miss'
     seeds = [17]
+    base_cmt = 'px23whr3_seed17'
     for sd in seeds:
         for cmt in comments:
-            opt = get_opt(comments=cmt)
-            opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd , '{}_{}_seed{}_with_model'.format('test_on_original', hyp_cmt, sd))
+            # opt = get_opt(comments=cmt)
+            opt = get_opt(comments=cmt, mid = model_id)
+            opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd , '{}_{}_seed{}_with_model_miss'.format('test_on_original', hyp_cmt, sd))
             if not os.path.exists(opt.result_dir):
                 os.makedirs(opt.result_dir)
 
-            opt.weights = glob.glob(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd), '*_{}_seed{}'.format(hyp_cmt, sd), 'best_{}_seed{}.pt'.format(cmt, sd)))[-1]
+            opt.weights = glob.glob(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd), '*_{}_seed{}'.format(hyp_cmt, sd), 'best_*seed{}.pt'.format(sd)))[-1]
             print(opt.weights)
             # opt.data = 'data_xview/{}_cls/{}/{}_seed{}_with_model.data'.format(opt.class_num, 'px6whr4_ng0_seed{}'.format(sd), 'xview_px6whr4_ng0', sd)
-            opt.data = 'data_xview/{}_cls/{}/{}_seed{}_with_model.data'.format(opt.class_num, 'px{}whr{}_seed{}'.format(px_thres, whr_thres, sd), 'xview_px{}whr{}'.format(px_thres, whr_thres), sd)
+            # opt.data = 'data_xview/{}_cls/{}/{}_seed{}_with_model.data'.format(opt.class_num, 'px{}whr{}_seed{}'.format(px_thres, whr_thres, sd), 'xview_px{}whr{}'.format(px_thres, whr_thres), sd)
+            # opt.data = 'data_xview/{}_{}_cls/{}_seed{}/{}_seed{}_xview_val_labeled_miss.data'.format(cmt, opt.class_num, cmt, sd, cmt, sd)
+            opt.data = 'data_xview/{}_cls/{}/xviewtest_{}_with_model_m{}_miss.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id)
             print(opt.data)
             opt.name = '{}_seed{}_on_xview_with_model'.format(cmt, sd)
             test(opt.cfg,
@@ -517,7 +543,7 @@ if __name__ == '__main__':
                  opt.batch_size,
                  opt.img_size,
                  opt.conf_thres,
-                 opt.iou_thres,
+                 opt.num_iou_thres,
                  opt.save_json, opt=opt)
 
     '''
@@ -556,7 +582,7 @@ if __name__ == '__main__':
     #          opt.batch_size,
     #          opt.img_size,
     #          opt.conf_thres,
-    #          opt.iou_thres,
+    #          opt.nms_iou_thres,
     #          opt.save_json, opt=opt)
 
     '''
@@ -591,7 +617,7 @@ if __name__ == '__main__':
     #          opt.batch_size,
     #          opt.img_size,
     #          opt.conf_thres,
-    #          opt.iou_thres,
+    #          opt.nms_iou_thres,
     #          opt.save_json, opt=opt)
 
 
