@@ -447,8 +447,8 @@ def get_opt():
 
     parser.add_argument('--accumulate', type=int, default=4, help='batches to accumulate before optimizing')
     parser.add_argument('--multi_scale', action='store_true', help='adjust (67% - 150%) img_size every 10 batches')
-    parser.add_argument('--conf-thres', type=float, default=0.001, help='0.001 object confidence threshold')
-    parser.add_argument('--iou-thres', type=float, default=0.5, help='IOU threshold for NMS')
+    parser.add_argument('--conf-thres', type=float, default=0.01, help='0.001 object confidence threshold')
+    parser.add_argument('--nms-iou-thres', type=float, default=0.5, help='IOU threshold for NMS')
     parser.add_argument('--save_json', action='store_true', help='save a cocoapi-compatible JSON results file')
     parser.add_argument('--task', default='', help="'test', 'study', 'benchmark'")
 
@@ -587,6 +587,9 @@ if __name__ == '__main__':
     opt.batch_size = cfg_dict['batch_size']
     opt.image_size = cfg_dict['image_size']
     opt.class_num = cfg_dict['class_num']
+    opt.conf_thres = cfg_dict['conf_thres']
+    opt.num_iou_thres = cfg_dict['nms_iou_thres']
+
     opt.cfg = opt.cfg.format(opt.class_num)
     opt.model_id = cfg_dict['model_id']
     comments = cfg_dict['comments']
@@ -618,6 +621,7 @@ if __name__ == '__main__':
         opt.base_dir = opt.base_dir.format(opt.class_num, pxwhrsd.format(opt.seed))
         time_marker = time.strftime('%Y-%m-%d_%H.%M', time.localtime())
         if val_syn:
+            opt.model_id = None
             hyp_cmt_name = hyp_cmt + '_val_syn'
             opt.data = 'data_xview/{}_{}_cls/{}_seed{}/{}_seed{}.data'.format(cmt, opt.class_num, cmt, opt.seed, cmt, opt.seed)
         elif val_labeled:

@@ -32,7 +32,7 @@ from matplotlib import pyplot as plt
 from tqdm import tqdm
 import shutil
 import cv2
-import seaborn as sn
+#import seaborn as sn
 import json
 from utils.object_score_util import get_bbox_coords_from_annos_with_object_score as gbc
 import time

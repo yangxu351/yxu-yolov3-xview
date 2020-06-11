@@ -12,6 +12,7 @@ data/samples/*
 !data/samples/bus.jpg
 **/results*.txt
 *.jpg
+data_xview/*s
 
 # Neural Network weights -----------------------------------------------------------------------------------------------
 **/*.weights

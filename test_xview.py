@@ -152,7 +152,6 @@ def test(cfg,
         for si, pred in enumerate(output):
             # print('si', si, targets[si])
             labels = targets[targets[:, 0] == si, 1:]
-            
             if opt.model_id is not None:
                 labels = labels[labels[:, -1] == opt.model_id]
                 nl = len(labels)
@@ -233,7 +232,7 @@ def test(cfg,
                             d = ti[i[j]]  # detected target
                             if d not in detected:
                                 detected.append(d)
-                                correct[pi[j]] = ious[j] > iouv  # iou_thres is 1xn
+                                correct[pi[j]] = ious[j] > iouv  # nms_iou_thres is 1xn
                                 if len(detected) == nl:  # all targets already located in image
                                     break
 
@@ -543,7 +542,7 @@ if __name__ == '__main__':
                  opt.batch_size,
                  opt.img_size,
                  opt.conf_thres,
-                 opt.num_iou_thres,
+                 opt.nms_iou_thres,
                  opt.save_json, opt=opt)
 
     '''
