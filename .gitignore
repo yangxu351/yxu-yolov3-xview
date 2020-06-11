@@ -32,6 +32,7 @@ writer_output/*
 result_output/*
 weights/*
 data_xview/*
+*.swap
 
 !data/samples/zidane.jpg
 !data/samples/bus.jpg

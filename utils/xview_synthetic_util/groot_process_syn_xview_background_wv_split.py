@@ -120,7 +120,7 @@ def create_syn_data(comment='syn_xview_background_texture', seed=1024, base_pxwh
             data_txt.write('valid_label=./data_xview/{}_cls/{}/xviewtest_lbl_{}_with_model_m{}_labeled_miss.txt\n'.format(syn_args.class_num, base_pxwhrs, base_pxwhrs, miss_id))
         elif label_id:
             data_txt.write('valid=./data_xview/{}_cls/{}/xviewtest_img_{}_m{}_labeled.txt\n'.format(syn_args.class_num, base_pxwhrs, base_pxwhrs, label_id))
-            data_txt.write('valid_label=./data_xview/{}_cls/{}/xviewtest_lbl_{}_wiht_model_m{}_labeled.txt\n'.format(syn_args.class_num, base_pxwhrs, base_pxwhrs, label_id))
+            data_txt.write('valid_label=./data_xview/{}_cls/{}/xviewtest_lbl_{}_with_model_m{}_labeled.txt\n'.format(syn_args.class_num, base_pxwhrs, base_pxwhrs, label_id))
         else:
             data_txt.write('valid=./data_xview/{}_cls/{}/xviewval_img_{}.txt\n'.format(syn_args.class_num, base_pxwhrs, base_pxwhrs))
             data_txt.write('valid_label=./data_xview/{}_cls/{}/xviewval_lbl_{}_with_model.txt\n'.format(syn_args.class_num, base_pxwhrs, base_pxwhrs))

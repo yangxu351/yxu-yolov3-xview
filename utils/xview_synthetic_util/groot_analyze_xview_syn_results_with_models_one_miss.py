@@ -118,11 +118,9 @@ def get_part_syn_args():
     return syn_args
 
 
-def check_prd_gt_iou_xview_syn(miss_model_id, cmt, prefix, res_folder, hyp_cmt = 'hgiou1_1gpu',
-                               seed=17, px_thres=23, whr_thres=3, score_thres=0.1, iou_thres=0.5):
-    pxwhrs = 'px{}whr{}_seed{}'.format(px_thres, whr_thres, seed)
-    xview_dir = os.path.join(syn_args.data_xview_dir, pxwhrs)
-    data_file = 'xviewtest_{}_with_model_m{}_miss.data'.format(pxwhrs, miss_model_id)
+def check_prd_gt_iou_xview_syn(miss_model_id, cmt, prefix, res_folder, base_pxwhrs='px23whr3_seed17', hyp_cmt = 'hgiou1_1gpu', seed=17, iou_thres=0.5):
+    xview_dir = os.path.join(syn_args.data_xview_dir, base_pxwhrs)
+    data_file = 'xviewtest_{}_with_model_m{}_miss.data'.format(base_pxwhrs, miss_model_id)
     data = parse_data_cfg(os.path.join(xview_dir, data_file))
     # fixme--yang.xu
     img_path = data['test']  # path to test images
@@ -152,17 +150,21 @@ def check_prd_gt_iou_xview_syn(miss_model_id, cmt, prefix, res_folder, hyp_cmt =
     json_name = prefix + suffix + '*.json'
     print('result_path ', result_path)
     print('json_name', json_name)
+    # print(os.path.join(result_path, json_name))
     res_json_file = glob.glob(os.path.join(result_path, json_name))[-1]
     res_json = json.load(open(res_json_file))
-
+    
+    result_iou_check_dir = os.path.join(syn_args.cat_sample_dir, 'result_iou_check', 'miss_model_{}'.format(miss_model_id),  cmt, hyp_cmt)
+    if not os.path.exists(result_iou_check_dir):
+        os.makedirs(result_iou_check_dir)
     img_names = []
     for ix, f in enumerate(df_imgs.loc[:, 0]):
-        img_names.append(os.path.basename(f))
+        image_name = os.path.basename(f)
+        img_names.append(image_name)
         lbl_file = df_lbls.loc[ix, 0]
 
         img = cv2.imread(os.path.join(f))
         img_size = img.shape[0]
-        good_gt_list = []
         if pps.is_non_zero_file(lbl_file):
             gt_cat = pd.read_csv(lbl_file, header=None, sep=' ')
             gt_cat = gt_cat.to_numpy()
@@ -172,18 +174,15 @@ def check_prd_gt_iou_xview_syn(miss_model_id, cmt, prefix, res_folder, hyp_cmt =
             gt_cat[:, 3] = gt_cat[:, 1] + gt_cat[:, 3]
             gt_cat[:, 4] = gt_cat[:, 2] + gt_cat[:, 4]
             gt_cat = gt_cat[gt_cat[:, -1] == miss_model_id]
-            for gx in range(gt_cat.shape[0]):
-                w, h = gt_cat[gx, 3] - gt_cat[gx, 1], gt_cat[gx, 4] - gt_cat[gx, 2]
-                whr = np.maximum(w / (h + 1e-16), h / (w + 1e-16))
-                if whr <= whr_thres and w >= px_thres and h >= px_thres:
-                    good_gt_list.append(gt_cat[gx, :])
 
         result_list = []
-        for image_name in img_names:
-            for ri in res_json:
-                if ri['image_name'] == image_name and ri['score'] >= score_thres:  # ri['image_id'] in rare_img_id_list and
-                    result_list.append(ri)
-        for g in good_gt_list:
+
+        for ri in res_json:
+            if ri['image_name'] == image_name:  # ri['image_id'] in rare_img_id_list and
+                result_list.append(ri)
+                
+        for gx in range(gt_cat.shape[0]):
+            g = gt_cat[gx]
             g_bbx = [int(x) for x in g[1:]]
             img = cv2.rectangle(img, (g_bbx[0], g_bbx[1]), (g_bbx[2], g_bbx[3]), (0, 255, 255), 2)  # yellow
             if len(g_bbx) == 5:
@@ -196,16 +195,12 @@ def check_prd_gt_iou_xview_syn(miss_model_id, cmt, prefix, res_folder, hyp_cmt =
         for px, p in enumerate(result_list):
             # fixme
             # if p['image_id'] == img_id and p['score'] >= score_thres:
-            w, h = p['bbox'][2:]
-            whr = np.maximum(w / (h + 1e-16), h / (w + 1e-16))
-            if whr > whr_thres or w < px_thres or h < px_thres:  #
-                continue
-                # print('p-bbx ', p_bbx)
             p['bbox'][2] = p['bbox'][0] + p['bbox'][2]
             p['bbox'][3] = p['bbox'][1] + p['bbox'][3]
             p_bbx = [int(x) for x in p['bbox']]
             p_cat_id = p['category_id']
-            for g in good_gt_list:
+            p_score = p['score']
+            for g in gt_cat:
                 g_bbx = [int(x) for x in g[1:]]
                 iou = coord_iou(p_bbx, g_bbx)
 
@@ -218,26 +213,18 @@ def check_prd_gt_iou_xview_syn(miss_model_id, cmt, prefix, res_folder, hyp_cmt =
                         p_iou[px] = iou
 
                     img = cv2.rectangle(img, (p_bbx[0], p_bbx[1]), (p_bbx[2], p_bbx[3]), (255, 255, 0), 2)
-                    cv2.putText(img, text='[{}, {:.3f}]'.format(miss_model_id, p_iou[px]), org=(p_bbx[2] + 10, p_bbx[3]),
-                                # [pr_bx[0], pr[-1]]
-                                fontFace=cv2.FONT_HERSHEY_SIMPLEX,
-                                fontScale=0.5, thickness=1, lineType=cv2.LINE_AA, color=(255, 255, 0))  # cyan
-
-        result_iou_check_dir = os.path.join(syn_args.cat_sample_dir, 'result_iou_check', 'miss_model_{}'.format(miss_model_id),  cmt, hyp_cmt)
-        if not os.path.exists(result_iou_check_dir):
-            os.makedirs(result_iou_check_dir)
-
-        if len(good_gt_list):
+                    cv2.putText(img, text='[conf:{:.3f}, iou:{:.3f}]'.format(p_score, p_iou[px]), org=(p_bbx[2] + 10, p_bbx[3]), 
+                    fontFace=cv2.FONT_HERSHEY_SIMPLEX, fontScale=0.5, thickness=1, lineType=cv2.LINE_AA, color=(255, 255, 0))  # cyan
+        
+        if gt_cat.shape[0]:
+            print('image_name', image_name)
             cv2.imwrite(os.path.join(result_iou_check_dir, image_name), img)
 
 if __name__ == "__main__":
 
     syn_args = get_part_syn_args()
 
-    px_thres = 23
-    whr_thres = 3
     seed = 17
-    score_thres=0.1
     iou_thres=0.5
     # hyp_cmt = 'hgiou1_1gpu'
 
@@ -260,16 +247,18 @@ if __name__ == "__main__":
     # miss_model_id = 1
     # comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_model4_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_model4_mixed']
     # comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v4_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v4_mixed']
-    comments = ['syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_gauss_model4_v5_color', 'syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_gauss_model4_v5_mixed']
-
+    # comments = ['syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_gauss_model4_v5_color', 'syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_gauss_model4_v5_mixed']
+    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_model4_v7_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_model4_v7_mixed']
     miss_model_id = 4
     res_folder = 'test_on_xview_with_model_{}_seed{}_miss'
     # hyp_cmt = 'hgiou1_obj3.5_val_labeled'
-    hyp_cmt = 'hgiou1_1gpu_val_labeled'
-    # hyp_cmt = 'hgiou1_1gpu_val_labeled_miss'
+    # hyp_cmt = 'hgiou1_1gpu_val_labeled'
+    # hyp_cmt = 'hgiou1_1gpu_val_xview'
+    # hyp_cmt = 'hgiou1_1gpu_val_syn'
+    hyp_cmt = 'hgiou1_1gpu_val_labeled_miss'
     prefix = 'results_syn'
+    base_pxwhrs = 'px23whr3_seed17'
 
-    for cmt in comments:
-        check_prd_gt_iou_xview_syn(miss_model_id, cmt, prefix, res_folder, hyp_cmt,
-                                    seed=seed, px_thres=px_thres, whr_thres=whr_thres,
-                                    score_thres=score_thres, iou_thres=iou_thres)
+    for cmt in comments[1:]:
+        check_prd_gt_iou_xview_syn(miss_model_id, cmt, prefix, res_folder, base_pxwhrs=base_pxwhrs, hyp_cmt=hyp_cmt,
+                                    seed=seed, iou_thres=iou_thres)
