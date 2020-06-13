@@ -497,6 +497,8 @@ def get_model_loss(model_dict1, model_dict2):
 
 def get_model_hash(model_dict):
     model_dict_vlu_np = gpu_2_cpu(model_dict)
+    model_dict_vlu = [v for v in model_dict.values()]
+    model_dict_vlu_np = [a.cpu().data.numpy() for a in model_dict_vlu]
     model_dict_vlu_np_lst = [a.tolist() for a in model_dict_vlu_np]
     return hash(json.dumps(model_dict_vlu_np_lst))   
 
@@ -574,14 +576,10 @@ def check_model_hash():
             color_txt.write('{}: {}\n'.format(jx, color_hash))
             color_hash_maps[cmt].append(color_hash)
         color_txt.close()
-    color_json_file = os.path.join(save_color_hash_dir, 'color_hash_maps.json')
-    json.dump(color_hash_maps, open(color_json_file, 'w'), ensure_ascii=False, indent=2)
-    mixed_json_file = os.path.join(save_mixed_hash_dir, 'mixed_hash_maps.json')
-    json.dump(mixed_hash_maps, open(mixed_json_file, 'w'), ensure_ascii=False, indent=2) 
+        
     
 
 def check_model_hash_before_val_after():
-    import torch
     base_dir = '/data/users/yang/code/yxu-yolov3-xview' 
     mixed_file_dir = os.path.join(base_dir, 'weights/1_cls/syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_model4_v7_mixed_seed17')
     color_file_dir = os.path.join(base_dir, 'weights/1_cls/syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_model4_v7_color_seed17')
@@ -604,6 +602,7 @@ def check_model_hash_before_val_after():
         mixed_hash = get_model_hash(mixed_pt)
 #        mixed_before_files = np.sort(glob(os.path.join(mixed_file_dir, '2020-06-10_11*_{}*/last_*before*.pt'.format(cmt))))
         mixed_before_files = np.sort(glob(os.path.join(mixed_file_dir, '2020-06-10_22*_{}*/last_*before*.pt'.format(cmt))))
+
         mixed_before_pt = torch.load(mixed_before_files[0])['model']
         mixed_before_hash = get_model_hash(mixed_before_pt)
         mixed_txt = open(os.path.join(save_mixed_hash_dir, '{}_hash.txt'.format(cmt)), 'w')
@@ -670,9 +669,6 @@ def check_test_files():
         print('labeled', labeled_lbl_names)
 
 
-        print('labeled', labeled_lbl_names)
-
-
 if __name__ == "__main__":
     # display_type = ['syn_texture', 'syn_color', 'syn_mixed']
     # # display_type = ['syn_texture0', 'syn_color0']
@@ -719,5 +715,5 @@ if __name__ == "__main__":
     '''
     check test file names
     '''
-    #check_test_files()
+#    check_test_files()
 

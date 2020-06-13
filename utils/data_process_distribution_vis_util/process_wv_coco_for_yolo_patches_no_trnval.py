@@ -594,15 +594,32 @@ def create_xview_names(file_name='xview'):
 
 
 def split_trn_val_with_chips(data_name='xview', comments='', seed=17, px_thres=None, whr_thres=None):
+    '''
+    ###################### important!!!!! the difference between '*.txt' and '_*.txt'
+        # if '*.txt' 86_*.txt and 860_*.txt are included and there are duplications
+        # if '_*.txt' 86_*.txt and 860_*.txt are independent
+    ######################  set(l) will change the order of list
+                           list(dict.fromkeys(l)) doesn't change the order of list
+
+    '''
     args = get_args(px_thres, whr_thres)
+
+    # import random
+    # random.seed(seed)
 
     data_save_dir = args.data_save_dir
     if comments:
-        txt_save_dir = args.data_list_save_dir + comments[1:] + '/'
-        if not os.path.exists(txt_save_dir):
+        txt_save_dir = args.data_list_save_dir + comments[1:] + '_bh3'+ '/'
+        if os.path.exists(txt_save_dir):
+            shutil.rmtree(txt_save_dir)
             os.makedirs(txt_save_dir)
-        data_save_dir = os.path.join(data_save_dir, comments[1:])
-        if not os.path.exists(data_save_dir):
+        else:
+            os.makedirs(txt_save_dir)
+        data_save_dir = os.path.join(data_save_dir, comments[1:], '_bh3')
+        if os.path.exists(data_save_dir):
+            shutil.rmtree(data_save_dir)
+            os.makedirs(data_save_dir)
+        else:
             os.makedirs(data_save_dir)
     else:
         txt_save_dir = args.data_list_save_dir
@@ -611,57 +628,105 @@ def split_trn_val_with_chips(data_name='xview', comments='', seed=17, px_thres=N
     images_save_dir = args.images_save_dir
     all_files = glob.glob(os.path.join(lbl_path, '*.txt'))
     all_files.sort()
+    print('all_files', all_files)
     all_file_names = [os.path.basename(s).split('_')[0] for s in all_files]
-    all_name_set = list(set(all_file_names))
+    # all_name_set = list(set(all_file_names)) # seed=17 run for several times to get the desired split
+    all_name_set = list(dict.fromkeys(all_file_names)) # for seeds = 19999
+    print('all_name_set', all_name_set)
+    num_all_tif = len(all_name_set)
+    print('all_name_set ', len(all_name_set))
 
-    num_files = len(all_name_set)
-    trn_num = int(num_files * (1 - args.val_percent))
+    trn_num = int(num_all_tif * (1 - args.val_percent))
+    print('trn_num ', trn_num)
     np.random.seed(seed)
     perm_files = np.random.permutation(all_name_set)
+    print('perm_files ', perm_files)
+    # indices = np.random.permutation(num_all_tif)
+    # print('indices ', indices)
 
     # num_files = len(all_files)
     # trn_num = int(num_files * (1 - args.val_percent))
+    # print('trn_num ', trn_num)
     # np.random.seed(seed)
-    # perm_files = np.random.permutation(all_files)
+    # perm_files = np.random.permutation(all_name_set)
+    # # np.random.shuffle(all_name_set)
 
     trn_img_txt = open(os.path.join(txt_save_dir, '{}train_img{}.txt'.format(data_name, comments)), 'w')
     trn_lbl_txt = open(os.path.join(txt_save_dir, '{}train_lbl{}.txt'.format(data_name, comments)), 'w')
     val_img_txt = open(os.path.join(txt_save_dir, '{}val_img{}.txt'.format(data_name, comments)), 'w')
     val_lbl_txt = open(os.path.join(txt_save_dir, '{}val_lbl{}.txt'.format(data_name, comments)), 'w')
 
-    # for i in range(trn_num):
-    #     trn_lbl_txt.write("%s\n" % perm_files[i])
-    #     lbl_name = perm_files[i].split('/')[-1]
-    #     img_name = lbl_name.replace('.txt', '.jpg')
-    #     trn_img_txt.write("%s\n" % os.path.join(images_save_dir, img_name))
+    #fixme --yang.xu no dulplicate
+    # cnt = 0
+    # for fn in all_name_set:
+    #     #fixme --yang.xu
+    #     # ########################### important!!!!! the difference between '*.txt' and '_*.txt'
+    #     # if '*.txt' 86_*.txt and 860_*.txt are included and there are duplications
+    #     # if '_*.txt' 86_*.txt and 860_*.txt are independent
+    #     start_files = glob.glob(os.path.join(lbl_path, fn + '*.txt'))
+    #     for f in start_files:
+    #         cnt += 1
+    #         if cnt <= trn_num:
+    #             if cnt==trn_num:
+    #                 print('cnt', cnt)
+    #             trn_lbl_txt.write("%s\n" % f)
+    #             lbl_name = os.path.basename(f)
+    #             img_name = lbl_name.replace('.txt', '.jpg')
+    #             trn_img_txt.write("%s\n" % os.path.join(images_save_dir, img_name))
+    #         else:
+    #             val_lbl_txt.write("%s\n" % f)
+    #             lbl_name = os.path.basename(f)
+    #             img_name = lbl_name.replace('.txt', '.jpg')
+    #             val_img_txt.write("%s\n" % os.path.join(images_save_dir, img_name))
+    #
+    # trn_img_txt.close()
+    # trn_lbl_txt.close()
+    # val_img_txt.close()
+    # val_lbl_txt.close()
+    trn_lbl_dir = args.data_list_save_dir + comments[1:] + '_bh_trn_lbl'
+    val_lbl_dir = args.data_list_save_dir + comments[1:] + '_bh_val_lbl'
+    if os.path.exists(trn_lbl_dir):
+        shutil.rmtree(trn_lbl_dir)
+        os.mkdir(trn_lbl_dir)
+    else:
+        os.mkdir(trn_lbl_dir)
+    if os.path.exists(val_lbl_dir):
+        shutil.rmtree(val_lbl_dir)
+        os.mkdir(val_lbl_dir)
+    else:
+        os.mkdir(val_lbl_dir)
 
     for i in range(trn_num):
-        start_files = glob.glob(os.path.join(lbl_path, perm_files[i] + '*.txt'))
-        for f in start_files:
+        #fixme --yang.xu
+        # ########################### important!!!!! the difference between '*.txt' and '_*.txt'
+        # if '*.txt' 86_*.txt and 860_*.txt are included and there are duplications
+        # if '_*.txt' 86_*.txt and 860_*.txt are independent
+        start_trn_files = glob.glob(os.path.join(lbl_path, perm_files[i] + '_*.txt'))
+        # start_files = glob.glob(os.path.join(lbl_path, all_name_set[indices[i]] + '_*.txt'))
+        for f in start_trn_files:
             trn_lbl_txt.write("%s\n" % f)
             lbl_name = os.path.basename(f)
             img_name = lbl_name.replace('.txt', '.jpg')
             trn_img_txt.write("%s\n" % os.path.join(images_save_dir, img_name))
-
+            shutil.copy(f, os.path.join(trn_lbl_dir, lbl_name))
     trn_img_txt.close()
     trn_lbl_txt.close()
 
-    # for i in range(trn_num, num_files):
-    #     val_lbl_txt.write("%s\n" % perm_files[i])
-    #     lbl_name = perm_files[i].split('/')[-1]
-    #     img_name = lbl_name.replace('.txt', '.jpg')
-    #     val_img_txt.write("%s\n" % os.path.join(images_save_dir, img_name))
-
-    for i in range(trn_num, num_files):
-        start_files = glob.glob(os.path.join(lbl_path, perm_files[i] + '*.txt'))
-        for f in start_files:
+    for i in range(trn_num, num_all_tif):
+        start_val_files = glob.glob(os.path.join(lbl_path, perm_files[i] + '_*.txt'))
+        # start_files = glob.glob(os.path.join(lbl_path, all_name_set[indices[i]] + '_*.txt'))
+        for f in start_val_files:
+            if '2315' in f:
+                print('val f ', f)
             val_lbl_txt.write("%s\n" % f)
             lbl_name = os.path.basename(f)
             img_name = lbl_name.replace('.txt', '.jpg')
             val_img_txt.write("%s\n" % os.path.join(images_save_dir, img_name))
-
+            shutil.copy(f, os.path.join(val_lbl_dir, lbl_name))
+            # exit(0)
     val_img_txt.close()
     val_lbl_txt.close()
+    print('perm_files val: ', perm_files[trn_num: num_all_tif])
 
     shutil.copyfile(os.path.join(txt_save_dir, '{}train_img{}.txt'.format(data_name, comments)),
                     os.path.join(data_save_dir, '{}train_img{}.txt'.format(data_name, comments)))
@@ -672,6 +737,9 @@ def split_trn_val_with_chips(data_name='xview', comments='', seed=17, px_thres=N
     shutil.copyfile(os.path.join(txt_save_dir, '{}val_lbl{}.txt'.format(data_name, comments)),
                     os.path.join(data_save_dir, '{}val_lbl{}.txt'.format(data_name, comments)))
 
+    #judge if there are duplicates
+    # import collections
+    # print([item for item, count in collections.Counter(a).items() if count > 1])
 
 def create_json_for_train_or_val_according_to_all_json(data_name='xview', comments='', seed=1024, px_thres=None, whr_thres=None, typestr='val'):
     args = get_args(px_thres, whr_thres)
@@ -986,7 +1054,7 @@ def check_duplicate_gt_bbx_for_60_classes(cat_id, iou_thres=0.5, whr_thres=3):
                 if iou > iou_thres:
                     dup_indices.append(i)
                     dup_indices.append(j)
-        dup_indices = list(set(dup_indices))
+        dup_indices = list(dict.fromkeys(dup_indices))
         for ix in dup_indices:
             lbl = df_lbl_old[ix]
             clr = cat_color[cat_old_ids.index(lbl[0])]
@@ -1586,7 +1654,7 @@ def get_confusion_matrix(cat_ids, iou_thres=0.5, score_thres=0.3, px_thres=4, wh
                         # [pr_bx[0], pr[-1]]
                         fontFace=cv2.FONT_HERSHEY_SIMPLEX,
                         fontScale=0.5, thickness=1, lineType=cv2.LINE_AA, color=(0, 255, 0))
-        rcids = list(set(rcids))
+        rcids = list(dict.fromkeys(rcids))
         cv2.imwrite(save_dir + 'cat{}_'.format(rcids) + img_name_list[ix], img)
     np.save(confu_mat_dir + 'confusion_matrix.npy', confusion_matrix)
 
@@ -1983,7 +2051,7 @@ def get_raw_train_tifs(px_thres=23, whr_thres=3, seed=17):
         name = os.path.basename(f)
         name = name.split('_')[0] + '.tif'
         tif_list.append(name)
-    tif_list = list(set(tif_list))
+    tif_list = list(dict.fromkeys(tif_list))
 
     src_path = args.image_folder
     dst_path = args.image_folder[:-1] + '_train/'
@@ -2075,6 +2143,7 @@ def get_args(px_thres=None, whr_thres=None):
 
     parser.add_argument("--txt_save_dir", type=str, help="to save  related label files",
                         default='/media/lab/Yang/data/xView_YOLO/labels/')
+
     parser.add_argument("--data_list_save_dir", type=str, help="to save selected trn val images and labels",
                         default='/media/lab/Yang/data/xView_YOLO/labels/{}/{}_cls/data_list/')
 
@@ -2104,8 +2173,8 @@ def get_args(px_thres=None, whr_thres=None):
     parser.add_argument("--cat_bbx_origins_dir", type=str, help="to split cats bbx patches",
                         default='/media/lab/Yang/data/xView_YOLO/cat_samples/original/{}_cls/cat_split_origins/')
 
-    parser.add_argument("--val_percent", type=float, default=0.20,
-                        help="Percent to split into validation (ie .25 = val set is 25% total)")
+    parser.add_argument("--val_percent", type=float, default=0.21,
+                        help="0.24 0.2 Percent to split into validation (ie .25 = val set is 25% total)")
     parser.add_argument("--font3", type=str, help="legend font",
                         default="{'family': 'serif', 'weight': 'normal', 'size': 10}")
     parser.add_argument("-ft2", "--font2", type=str, help="legend font",
@@ -2575,10 +2644,10 @@ if __name__ == "__main__":
     crop tiff images that not contain aircrafts
     get new background images
     '''
-    px_thres = 23
-    whr_thres = 3
-    args = get_args(px_thres, whr_thres)
-    get_new_background_images_based_on_cropped_tiff()
+    # px_thres = 23
+    # whr_thres = 3
+    # args = get_args(px_thres, whr_thres)
+    # get_new_background_images_based_on_cropped_tiff()
 
 
 

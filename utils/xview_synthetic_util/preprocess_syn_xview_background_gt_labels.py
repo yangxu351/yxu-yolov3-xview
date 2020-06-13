@@ -289,7 +289,9 @@ if __name__ == '__main__':
     # cmt = 'sbw_xcolor_model4_v1'
     # cmt = 'sbw_xcolor_model4_v2'
     # cmt = 'xbw_xcolor_xbkg_gauss_model4_v3'
-    cmt = 'xbw_xcolor_xbkg_gauss_model4_v4'
+    # cmt = 'xbw_xcolor_xbkg_gauss_model4_v4'
+    # cmt = 'xbw_rndcolor_xbkg_gauss_model4_v5'
+    cmt = 'xbw_xcolor_xbkg_unif_model4_v6'
     px_thres=15 #20 #30
     # cmt = 'sbw_xcolor_model0'
     # cmt = 'xbw_xrxc_spr_sml_models_gauss'
@@ -302,7 +304,7 @@ if __name__ == '__main__':
     # px_thres=23
 
     whr_thres=3
-    display_types = ['mixed']# 'color',
+    display_types = ['color', 'mixed']#
     syn_args = get_args(cmt)
     for dt in display_types:
         group_object_annotation_and_draw_bbox(dt, px_thres, whr_thres)
@@ -336,7 +338,9 @@ if __name__ == '__main__':
     # cmt = 'sbw_xcolor_model4_v1'
     # cmt = 'sbw_xcolor_model4_v2'
     # cmt = 'xbw_xcolor_xbkg_gauss_model4_v3'
-    mt = 'xbw_xcolor_xbkg_gauss_model4_v4'
+    # mt = 'xbw_xcolor_xbkg_gauss_model4_v4'
+    # mt = 'xbw_rndcolor_xbkg_gauss_model4_v5'
+    mt = 'xbw_xcolor_xbkg_unif_model4_v6'
     px_thres=15
     # cmt = 'sbw_xcolor_model0'
     # cmt = 'sbw_xcolor_model1'
@@ -348,7 +352,7 @@ if __name__ == '__main__':
     # px_thres=23 #20 #30
 
     whr_thres=3
-    display_types = ['mixed']#'color', 'mixed']
+    display_types = ['color', 'mixed']
     syn_args = get_args(cmt)
     for dt in display_types:
         draw_bbx_on_rgb_images(dt, px_thres, whr_thres)

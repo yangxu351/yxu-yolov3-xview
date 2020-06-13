@@ -294,7 +294,7 @@ def clip_coords(boxes, img_shape):
     boxes[:, [1, 3]] = boxes[:, [1, 3]].clamp(min=0, max=img_shape[0])  # clip y
 
 
-def ap_per_class(tp, conf, pred_cls, target_cls, pr_path='', pr_name='', model_id=None):
+def ap_per_class(tp, conf, pred_cls, target_cls, ntp=None, pr_path='', pr_name='', model_id=None):
     """ Compute the average precision, given the recall and precision curves.
     Source: https://github.com/rafaelpadilla/Object-Detection-Metrics.
     # Arguments
@@ -309,9 +309,11 @@ def ap_per_class(tp, conf, pred_cls, target_cls, pr_path='', pr_name='', model_i
     # Sort by objectness
     i = np.argsort(-conf)
     tp, conf, pred_cls = tp[i], conf[i], pred_cls[i]
+    # print('tp: {} conf:{} pred_cls:{}'.format(tp, conf, pred_cls))
 
     # Find unique classes
     unique_classes = np.unique(target_cls)
+    # print('target_cls', target_cls)
 
     # Create Precision-Recall curve and compute AP for each class
     s = [len(unique_classes), tp.shape[1]]  # number class, number iou thresholds (i.e. 10 for mAP0.5...0.95)
@@ -321,13 +323,19 @@ def ap_per_class(tp, conf, pred_cls, target_cls, pr_path='', pr_name='', model_i
             i = pred_cls ==0
             n_gt = (target_cls == model_id).sum()
             n_p = i.sum()
+            print('n_gt', n_gt, 'n_p', n_p)
         else:
             i = pred_cls == c
             n_gt = (target_cls == c).sum()  # Number of ground truth objects
             n_p = i.sum()  # Number of predicted objects
 
         if n_p == 0 or n_gt == 0:
-            continue
+            r[ci] = 0
+            p[ci] = 0
+            # AP from recall-precision curve
+            for j in range(tp.shape[1]):
+                ap[ci, j] = 0
+            # continue
         else:
 
             # Accumulate FPs and TPs
@@ -371,7 +379,7 @@ def ap_per_class(tp, conf, pred_cls, target_cls, pr_path='', pr_name='', model_i
     # print('r', r.shape) #  (1,1)
     return p, r, ap, f1, unique_classes.astype('int32')
 
-def plot_roc(tp, conf, pred_cls, target_cls, pr_path='', pr_name='', model_id=None, area=0):
+def plot_roc(tp, conf, pred_cls, target_cls, ntp, pr_path='', pr_name='', model_id=None, area=0):
     """ Compute the average precision, given the recall and precision curves.
     Source: https://github.com/rafaelpadilla/Object-Detection-Metrics.
     # Arguments
@@ -386,7 +394,7 @@ def plot_roc(tp, conf, pred_cls, target_cls, pr_path='', pr_name='', model_id=No
     """
     # Sort by objectness
     i = np.argsort(-conf) # 175
-    tp, conf, pred_cls = tp[i], conf[i], pred_cls[i]
+    tp, conf, pred_cls, ntp = tp[i], conf[i], pred_cls[i], ntp[i]
 
     n_gt = len(target_cls==model_id)
     far_list = [0]
@@ -396,7 +404,7 @@ def plot_roc(tp, conf, pred_cls, target_cls, pr_path='', pr_name='', model_id=No
     for ix, t in enumerate(conf):
         if tp[ix]: # and conf[ix] >= t:
             n_t += 1
-        elif tp[ix]==0: # and conf[ix]>=t:
+        elif not tp[ix] and not ntp[ix] :
             n_f += 1
         far = n_f/area
         rec = n_t/n_gt
@@ -734,7 +742,7 @@ def compute_loss(p, targets, model):  # predictions, targets, model
             # print('tobj---', tobj.shape)
             # print('pi---', pi[..., 4].shape)
             lobj += BCEobj(pi[..., 4], tobj)  # obj loss
-            # print('lobj---', lobj)
+            print('lobj---', lobj)
 
         elif 'BCE' in arc:  # unified BCE (80 classes)
             t = torch.zeros_like(pi[..., 5:])  # targets

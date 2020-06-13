@@ -164,12 +164,15 @@ def check_prd_gt_iou_xview_syn(miss_model_id, cmt, prefix, res_folder, base_pxwh
             gt_cat[:, 4] = gt_cat[:, 2] + gt_cat[:, 4]
             gt_cat = gt_cat[gt_cat[:, -1] == miss_model_id]
 
-        result_list = []
-        for image_name in img_names:
-            for ri in res_json:
-                # if ri['image_name'] == image_name and ri['score'] >= score_thres:  # ri['image_id'] in rare_img_id_list and
-                if ri['image_name'] == image_name:
-                    result_list.append(ri)
+    result_iou_check_dir = os.path.join(syn_args.cat_sample_dir, 'result_iou_check', 'miss_model_{}'.format(miss_model_id),  cmt)
+    if not os.path.exists(result_iou_check_dir):
+        os.makedirs(result_iou_check_dir)
+    result_list = []
+    for image_name in img_names:
+        for ri in res_json:
+            # if ri['image_name'] == image_name and ri['score'] >= score_thres:  # ri['image_id'] in rare_img_id_list and
+            if ri['image_name'] == image_name:
+                result_list.append(ri)
 
         for gx in range(gt_cat.shape[0]):
             g = gt_cat[gx, :]
@@ -206,9 +209,7 @@ def check_prd_gt_iou_xview_syn(miss_model_id, cmt, prefix, res_folder, base_pxwh
                                 fontFace=cv2.FONT_HERSHEY_SIMPLEX,
                                 fontScale=0.5, thickness=1, lineType=cv2.LINE_AA, color=(255, 255, 0))  # cyan
 
-        result_iou_check_dir = os.path.join(syn_args.cat_sample_dir, 'result_iou_check', 'miss_model_{}'.format(miss_model_id),  cmt)
-        if not os.path.exists(result_iou_check_dir):
-            os.makedirs(result_iou_check_dir)
+
 
         if len(good_gt_list):
             cv2.imwrite(os.path.join(result_iou_check_dir, image_name), img)

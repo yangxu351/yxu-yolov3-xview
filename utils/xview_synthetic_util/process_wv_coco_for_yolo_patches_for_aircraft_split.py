@@ -11,7 +11,7 @@ import shutil
 from utils.data_process_distribution_vis_util import process_wv_coco_for_yolo_patches_no_trnval as pwv
 from utils.xview_synthetic_util import preprocess_xview_syn_data_distribution as pps
 from utils.object_score_util import get_bbox_coords_from_annos_with_object_score as gbc
-from utils.xview_synthetic_util import anaylze_xview_syn_results as axs
+from utils.xview_synthetic_util import analyze_xview_syn_results as axs
 
 IMG_SUFFIX = '.png'
 TXT_SUFFIX = '.txt'
@@ -487,13 +487,17 @@ if __name__ == "__main__":
     # seeds = [17, 5, 9]
     # comments = '_px23whr4_seed{}'
 
-    # seeds = [17]
-    # data_name = 'xview'
-    # px_thres= 23
-    # whr_thres = 3
-    # for sd in seeds:
-    #     comments = '_px{}whr{}_seed{}'.format(px_thres, whr_thres, sd)
-    #     pwv.split_trn_val_with_chips(data_name=data_name, comments=comments, seed=sd, px_thres=px_thres, whr_thres=whr_thres)
+    # seeds = [19999] # results are fixed
+    # seeds = [17, 17, 17] # results are variable
+    seeds = [199] # results are fixed
+    data_name = 'xview'
+    px_thres= 23
+    whr_thres = 3
+    for sd in seeds:
+        #fixme --yang.xu
+        # run for multi times to get the desired split due to the use of list(set(l)
+        comments = '_px{}whr{}_seed{}'.format(px_thres, whr_thres, sd)
+        pwv.split_trn_val_with_chips(data_name=data_name, comments=comments, seed=sd, px_thres=px_thres, whr_thres=whr_thres)
 
 
     '''
@@ -504,7 +508,8 @@ if __name__ == "__main__":
     # seeds = [17, 1024, 3, 5, 9]
     # comments = '_px20whr4_seed{}'
     # seeds = [17, 5, 9]
-    # comments = '_px23whr4_seed{}'
+    # comments = '_px23whr3_seed{}'
+
     # seeds = [17]
     # for sd in seeds:
     #     comments = '_px23whr3_seed{}'.format(sd)

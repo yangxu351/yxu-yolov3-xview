@@ -346,7 +346,7 @@ if __name__ == '__main__':
     '''
     # # model_id = 0
     model_id = 4
-    # # model_id = 1
+    # model_id = 1
     get_all_annos_only_model_id_labeled(model_id)
 
     '''
