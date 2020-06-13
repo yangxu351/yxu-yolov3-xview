@@ -275,7 +275,7 @@ def test(cfg,
                 # Append statistics (correct, conf, pcls, tcls)
                 # pred (x1, y1, x2, y2, object_conf, conf, class)
                 stats.append((correct, pred[:, 4].cpu(), pred[:, 5].cpu(), tcls))
-                print('\n correct: {}  pred[:,4]:{}  pred[:, 5]:{} tcls:{}'.format(correct, pred[:, 4].cpu(), pred[:, 5].cpu(), tcls))
+#                print('\n correct: {}  pred[:,4]:{}  pred[:, 5]:{} tcls:{}'.format(correct, pred[:, 4].cpu(), pred[:, 5].cpu(), tcls))
         # Compute statistics
         stats = [np.concatenate(x, 0) for x in list(zip(*stats))]  # to numpy
         if len(stats):
@@ -508,15 +508,17 @@ if __name__ == '__main__':
     # model_id = 4
     # comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v4_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v4_mixed']
     # comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_model4_v6_color']
-    comments = ['syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_gauss_model4_v5_color', 'syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_gauss_model4_v5_mixed']
-    # comments = ['syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_gauss_models_color', 'syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_gauss_models_mixed']
+    # comments = ['syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_gauss_model4_v5_color', 'syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_gauss_model4_v5_mixed']
+#    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_model4_v7_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_model4_v7_mixed']
+    comments = ['syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_unif_mig21_model4_v8_color', 'syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_unif_mig21_model4_v8_mixed']
+   # comments = ['syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_gauss_models_color', 'syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_gauss_models_mixed']
     # comments = ['syn_xview_bkg_px23whr3_sbw_xcolor_model1_color', 'syn_xview_bkg_px23whr3_sbw_xcolor_model1_mixed']
     # comments = ['syn_xview_bkg_px23whr3_xbw_xcolor_gauss_model1_v1_color', 'syn_xview_bkg_px23whr3_xbw_xcolor_gauss_model1_v1_mixed']
     # comments = ['syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_gauss_model1_v2_color', 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_gauss_model1_v2_mixed']
     # comments = ['syn_xview_bkg_px23whr3_sbw_xcolor_xbkg_unif_model1_v3_color', 'syn_xview_bkg_px23whr3_sbw_xcolor_xbkg_unif_model1_v3_mixed']
     # comments = ['syn_xview_bkg_px23whr3_xbsw_xcolor_xbkg_gauss_model1_v4_color', 'syn_xview_bkg_px23whr3_xbsw_xcolor_xbkg_gauss_model1_v4_mixed']
     base_cmt = 'px23whr3_seed{}'
-    hyp_cmt = 'hgiou1_1gpu'
+#    hyp_cmt = 'hgiou1_1gpu'
 
     # hyp_cmt = 'hgiou1_1gpu_obj29.5'
     # hyp_cmt = 'hgiou1_1gpu_xval'
@@ -528,8 +530,8 @@ if __name__ == '__main__':
     # hyp_cmt = 'hgiou1_1gpu_val_xview'
     # hyp_cmt = 'hgiou1_obj15.5_val_xview'
     # hyp_cmt = 'hgiou0.7_1gpu'
-    hyp_cmt = 'hgiou1_1gpu_val_labeled' 
-    # hyp_cmt = 'hgiou1_1gpu_val_labeled_miss'
+    # hyp_cmt = 'hgiou1_1gpu_val_labeled' 
+    hyp_cmt = 'hgiou1_1gpu_val_labeled_miss'
     # hyp_cmt = 'hgiou1_1gpu_val_syn'
     # hyp_cmt = 'hgiou1_1gpu_val_xview'
 
@@ -556,7 +558,16 @@ if __name__ == '__main__':
             opt.model_id = int(sidx)
             opt.conf_thres = 0.01
             ############# 2 images test set
-            opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_with_model_{}_seed{}_miss'.format(hyp_cmt, sd))
+            print(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd), '*_{}_seed{}'.format(hyp_cmt, sd), 'best_seed{}.pt'.format(sd)))
+            all_weights = glob.glob(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd), '*_{}_seed{}'.format(hyp_cmt, sd), 'best_*seed{}.pt'.format(sd)))
+            all_weights.sort()
+            print('all_weights ', all_weights)
+            opt.weights = all_weights[-3]
+
+            print(opt.weights)
+            folder_name = opt.weights.split('/')[-2].split('_hgiou1')[0]
+            print('folder_name', folder_name)
+            opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_with_model_{}_seed{}_miss'.format(hyp_cmt+folder_name, sd))
             opt.data = 'data_xview/{}_cls/{}/xviewtest_{}_with_model_m{}_miss.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id)
             ############# all m* labeled validation images make up the test set
             # opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_with_model_{}_seed{}_only'.format(hyp_cmt, sd))
@@ -577,7 +588,7 @@ if __name__ == '__main__':
             print(glob.glob(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd), '*_{}_seed{}'.format(hyp_cmt, sd), 'best_seed{}.pt'.format(sd))))
             all_weights = glob.glob(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd), '*_{}_seed{}'.format(hyp_cmt, sd), 'best_*seed{}.pt'.format(sd)))
             all_weights.sort()
-            opt.weights = all_weights[-1]
+            opt.weights = all_weights[-2]
 
             print(opt.weights)
             print(opt.data)

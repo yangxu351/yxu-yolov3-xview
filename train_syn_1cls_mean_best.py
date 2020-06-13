@@ -39,6 +39,20 @@ warnings.filterwarnings("ignore")
 #        'shear': 0.641}  # image shear (+/- deg)
 
 
+
+class MyEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        else:
+            return super(MyEncoder, self).default(obj)
+
+
+
 def infi_loop(dl):
     while True:
         for (imgs, targets, paths, _) in dl:
@@ -209,6 +223,10 @@ def train(opt):
                                              collate_fn=dataset.collate_fn)
     # Test Dataloader
     if not opt.prebias:
+        # if opt.model_id is not None:
+        #     with_modelid = True
+        # else:
+        #    with_modelid = False
         testloader = torch.utils.data.DataLoader(
             LoadImagesAndLabels(test_path, test_label_path, opt.img_size, batch_size * 2, class_num=opt.class_num,
                                 hyp=hyp,
@@ -246,6 +264,7 @@ def train(opt):
 
     print('Using %g dataloader workers' % nw)
     print('Starting %s for %g epochs...' % ('prebias' if opt.prebias else 'training', epochs))
+    trn_names_map = {}
     for epoch in range(start_epoch, epochs):  # epoch ------------------------------------------------------------------
         # if epoch == epochs-1:
         #     return
@@ -262,7 +281,9 @@ def train(opt):
         #fixme
         # pbar = tqdm(enumerate(dataloader), total=nb)  # progress bar
         # for i, (imgs, targets, paths, _) in pbar:
-
+        # record all name in the first 20 epochs
+        if epoch < 20:
+            trn_name_dict[epoch] = []
         gen_data = infi_loop(dataloader)
         for i in range(nb):
             imgs, targets, paths = next(gen_data)
@@ -279,6 +300,9 @@ def train(opt):
                 if sf != 1:
                     ns = [math.ceil(x * sf / 32.) * 32 for x in imgs.shape[2:]]  # new shape (stretched to 32-multiple)
                     imgs = F.interpolate(imgs, size=ns, mode='bilinear', align_corners=False)
+            if epoch < 20:
+                trn_names_dict[epoch].append(Path(paths[i]))
+
 
             # Plot images with bounding boxes
             if ni == 0:
@@ -342,7 +366,7 @@ def train(opt):
                                       batch_size=batch_size * 2,
                                       img_size=opt.img_size,
                                       conf_thres= 0.1, # 0.001 if final_epoch else 0.1,  # 0.1 for speed
-                                      iou_thres=0.5, # 0.6 if final_epoch and is_xview else 0.5,
+                                      nms_iou_thres=0.5, # 0.6 if final_epoch and is_xview else 0.5,
                                       save_json=True,  # final_epoch and is_xview, #fixme
                                       model=model,#fixme
                                       # model=ema.ema,
@@ -409,6 +433,9 @@ def train(opt):
             del chkpt
 
         # end epoch ----------------------------------------------------------------------------------------------------
+    
+    
+    json.dump(trn_names_dict, open('{}_trn_names_of_20_epochs.txt'.format(opt.name), 'w'), ensure_ascii=False, indent=2, cls=MyEncoder) 
     # png_name = 'results_{}_{}.png'.format(opt.syn_display_type, opt.syn_ratio)
     if tb_writer:
         tb_writer.close()
@@ -588,7 +615,7 @@ if __name__ == '__main__':
     opt.image_size = cfg_dict['image_size']
     opt.class_num = cfg_dict['class_num']
     opt.conf_thres = cfg_dict['conf_thres']
-    opt.num_iou_thres = cfg_dict['nms_iou_thres']
+    opt.nms_iou_thres = cfg_dict['nms_iou_thres']
 
     opt.cfg = opt.cfg.format(opt.class_num)
     opt.model_id = cfg_dict['model_id']

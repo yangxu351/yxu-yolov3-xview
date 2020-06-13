@@ -38,7 +38,16 @@ warnings.filterwarnings("ignore")
 #        'scale': 0.05,  # image scale (+/- gain)
 #        'shear': 0.641}  # image shear (+/- deg)
 
-
+class MyEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):             
+            return obj.tolist()                          
+        else:
+            return super(MyEncoder, self).default(obj)           
 def infi_loop(dl):
     while True:
         for (imgs, targets, paths, _) in dl:
@@ -63,6 +72,7 @@ def train(opt):
     device = torch_utils.select_device(opt.device, apex=mixed_precision, batch_size=opt.batch_size)
     print('device ', device)
     # exit(0)
+    print('hyp_cmt_name', hyp_cmt_name)
 
     if device.type == 'cpu':
         mixed_precision = False
@@ -246,6 +256,7 @@ def train(opt):
 
     print('Using %g dataloader workers' % nw)
     print('Starting %s for %g epochs...' % ('prebias' if opt.prebias else 'training', epochs))
+    trn_names_dict = {}
     for epoch in range(start_epoch, epochs):  # epoch ------------------------------------------------------------------
         # if epoch == epochs-1:
         #     return
@@ -262,7 +273,8 @@ def train(opt):
         #fixme
         # pbar = tqdm(enumerate(dataloader), total=nb)  # progress bar
         # for i, (imgs, targets, paths, _) in pbar:
-
+        if epoch < 20:
+            trn_names_dict[epoch] = []
         gen_data = infi_loop(dataloader)
         for i in range(nb):
             imgs, targets, paths = next(gen_data)
@@ -279,6 +291,11 @@ def train(opt):
                 if sf != 1:
                     ns = [math.ceil(x * sf / 32.) * 32 for x in imgs.shape[2:]]  # new shape (stretched to 32-multiple)
                     imgs = F.interpolate(imgs, size=ns, mode='bilinear', align_corners=False)
+            
+            if epoch < 20:
+                # print('i', i, 'epoch', epoch)
+                for pi in range(batch_size):
+                    trn_names_dict[epoch].append(Path(paths[pi]).name)
 
             # Plot images with bounding boxes
             if ni == 0:
@@ -330,6 +347,16 @@ def train(opt):
             # tb_writer.add_graph(model,imgs)
         #fixme ---yang.xu
         # ema.update_attr(model)
+        
+        chkpt = {'epoch': epoch,
+                   #fixme --yang.xu
+                   'model': model.module.state_dict() if type(
+                       model) is nn.parallel.DistributedDataParallel else model.state_dict()}
+
+        # Save last checkpoint
+        last_before = last.replace('.pt', '_before.pt')
+        torch.save(chkpt, last_before)
+        
         # Process epoch results
         final_epoch = epoch + 1 == epochs
         if opt.prebias:
@@ -409,6 +436,7 @@ def train(opt):
             del chkpt
 
         # end epoch ----------------------------------------------------------------------------------------------------
+    json.dump(trn_names_dict, open('input_trn_files/{}_{}_trn_names_of_20_epochs.json'.format(opt.name, hyp_cmt_name), 'w'), ensure_ascii=False, indent=2, cls=MyEncoder) 
     # png_name = 'results_{}_{}.png'.format(opt.syn_display_type, opt.syn_ratio)
     if tb_writer:
         tb_writer.close()
@@ -607,7 +635,8 @@ if __name__ == '__main__':
         hyp['obj_pw'] = 1.
     for cx, cmt in enumerate(comments):
         # sr = syn_ratios[cx]
-
+#        opt.resume = True
+        
         cinx = cmt.find('model') # first letter index
         endstr = cmt[cinx:]
         rcinx = endstr.rfind('_')
@@ -617,9 +646,7 @@ if __name__ == '__main__':
 
         opt.name = prefix + suffix
 
-
         opt.base_dir = opt.base_dir.format(opt.class_num, pxwhrsd.format(opt.seed))
-        time_marker = time.strftime('%Y-%m-%d_%H.%M', time.localtime())
         if val_syn:
             hyp_cmt_name = hyp_cmt + '_val_syn'
             opt.model_id = None

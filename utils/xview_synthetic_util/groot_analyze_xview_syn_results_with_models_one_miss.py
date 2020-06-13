@@ -248,9 +248,10 @@ if __name__ == "__main__":
     # comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_model4_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_model4_mixed']
     # comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v4_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v4_mixed']
     # comments = ['syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_gauss_model4_v5_color', 'syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_gauss_model4_v5_mixed']
-    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_model4_v7_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_model4_v7_mixed']
+#    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_model4_v7_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_model4_v7_mixed']
+    comments = ['syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_unif_mig21_model4_v8_color', 'syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_unif_mig21_model4_v8_mixed']
     miss_model_id = 4
-    res_folder = 'test_on_xview_with_model_{}_seed{}_miss'
+    res_folder = 'test_on_xview_with_model_{}*_seed{}_miss'
     # hyp_cmt = 'hgiou1_obj3.5_val_labeled'
     # hyp_cmt = 'hgiou1_1gpu_val_labeled'
     # hyp_cmt = 'hgiou1_1gpu_val_xview'
@@ -259,6 +260,6 @@ if __name__ == "__main__":
     prefix = 'results_syn'
     base_pxwhrs = 'px23whr3_seed17'
 
-    for cmt in comments[1:]:
+    for cmt in comments:
         check_prd_gt_iou_xview_syn(miss_model_id, cmt, prefix, res_folder, base_pxwhrs=base_pxwhrs, hyp_cmt=hyp_cmt,
                                     seed=seed, iou_thres=iou_thres)

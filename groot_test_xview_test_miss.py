@@ -499,8 +499,8 @@ if __name__ == '__main__':
     # comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v4_color']
     # comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v4_mixed']
     # comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v4_color','syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v4_mixed']
-
-    comments = ['syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_gauss_model4_v5_color','syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_gauss_model4_v5_mixed']
+    # comments = ['syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_gauss_model4_v5_color','syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_gauss_model4_v5_mixed']
+    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_model4_v7_color','syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_model4_v7_mixed']
     # comments = ['syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_gauss_models_color', 'syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_gauss_models_mixed']
     # comments = ['syn_xview_bkg_px23whr3_sbw_xcolor_model1_color', 'syn_xview_bkg_px23whr3_sbw_xcolor_model1_mixed']
     # comments = ['syn_xview_bkg_px23whr3_xbw_xcolor_gauss_model1_v1_color', 'syn_xview_bkg_px23whr3_xbw_xcolor_gauss_model1_v1_mixed']
@@ -515,8 +515,8 @@ if __name__ == '__main__':
     # hyp_cmt = 'hgiou1_mean_best'
     # hyp_cmt = 'hgiou1_obj3.5_val_labeled'
     # hyp_cmt = 'hgiou1_1gpu_val_labeled'
-    hyp_cmt = 'hgiou1_1gpu_val_labeled_miss'
-    #  hyp_cmt = 'hgiou1_1gpu_val_syn'
+    # hyp_cmt = 'hgiou1_1gpu_val_labeled_miss'
+    hyp_cmt = 'hgiou1_1gpu_val_syn'
     # hyp_cmt = 'hgiou1_1gpu_val_xview'
     prefix = 'syn'
     px_thres = 23

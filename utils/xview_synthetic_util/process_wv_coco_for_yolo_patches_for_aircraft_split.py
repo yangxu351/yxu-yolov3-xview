@@ -32,16 +32,16 @@ def check_difference_of_first_second_dataset():
     new_trn_lbl = pd.read_csv('/data_xview/1_cls/second_dataset_backup/xviewtrain_lbl.txt', header=None)
     new_trn_lbl = list(new_trn_lbl.loc[:, 0])
 
-    old_val = pd.read_csv('data/users/yang/code/yxu-yolov3-xview/data_xview/1_cls/first_data_set_backup/xview_val_img.txt', header=None)
+    old_val = pd.read_csv('/data/users/yang/code/yxu-yolov3-xview/data_xview/1_cls/first_data_set_backup/xview_val_img.txt', header=None)
     old_val = list(old_val.loc[:, 0])
     old_vname = [os.path.basename(f) for f in old_val]
-    old_val_lbl = pd.read_csv('data/users/yang/code/yxu-yolov3-xview/data_xview/1_cls/first_data_set_backup/xview_val_lbl.txt', header=None)
+    old_val_lbl = pd.read_csv('/data/users/yang/code/yxu-yolov3-xview/data_xview/1_cls/first_data_set_backup/xview_val_lbl.txt', header=None)
     old_val_lbl = list(old_val_lbl.loc[:, 0])
 
-    old_trn = pd.read_csv('data/users/yang/code/yxu-yolov3-xview/data_xview/1_cls/first_data_set_backup/xview_train_img.txt', header=None)
+    old_trn = pd.read_csv('/data/users/yang/code/yxu-yolov3-xview/data_xview/1_cls/first_data_set_backup/xview_train_img.txt', header=None)
     old_trn = list(old_trn.loc[:, 0])
     old_tname = [os.path.basename(f) for f in old_trn]
-    old_trn_lbl = pd.read_csv('data/users/yang/code/yxu-yolov3-xview/data_xview/1_cls/first_data_set_backup/xview_train_lbl.txt', header=None)
+    old_trn_lbl = pd.read_csv('/data/users/yang/code/yxu-yolov3-xview/data_xview/1_cls/first_data_set_backup/xview_train_lbl.txt', header=None)
     old_trn_lbl = list(old_trn_lbl.loc[:, 0])
 
     only_old_v = [v for v in old_vname if v not in new_vname]
@@ -53,7 +53,7 @@ def check_difference_of_first_second_dataset():
     print('only_new_v', len(only_new_v))
     print('only_new_t', len(only_new_t))
 
-    data_dir = 'data/users/yang/data/xView_YOLO/labels/608/1_cls_drop/'
+    data_dir = '/data/users/yang/data/xView_YOLO/labels/608/1_cls_drop/'
     only_old_t_dir = os.path.join(data_dir, 'only_in_old_trn')
     if not os.path.exists(only_old_t_dir):
         os.mkdir(only_old_t_dir)
@@ -262,7 +262,7 @@ def create_mismatch_syn_labels(mis_ratio, ratio=0.25, trial=3):
             syn_rdn_indices = np.random.permutation(syn_num)
             syn_files = list(df_lbl.loc[xview_num:, 0])
             for t in range(trial):
-                save_txt_dir = 'data/users/yang/data/xView_YOLO/labels/608/syn_1_cls_xcycwh_mismatch/{}_{}_mismatch{}_{}/'.format(dt, ratio, mr, t)
+                save_txt_dir = '/data/users/yang/data/xView_YOLO/labels/608/syn_1_cls_xcycwh_mismatch/{}_{}_mismatch{}_{}/'.format(dt, ratio, mr, t)
                 if not os.path.exists(save_txt_dir):
                     os.makedirs(save_txt_dir)
                 for i in range(mis_num):
@@ -311,41 +311,41 @@ def create_xview_syn_data(dt=None, sr=None, comments='',seed=1024):
 def get_part_syn_args(dt, sr):
     parser = argparse.ArgumentParser()
     parser.add_argument("--json_filepath", type=str, help="Filepath to GEOJSON coordinate file",
-                        default='data/users/yang/data/xView/xView_train.geojson')
+                        default='/data/users/yang/data/xView/xView_train.geojson')
 
     parser.add_argument("--syn_plane_img_anno_dir", type=str, help="images and annotations of synthetic airplanes",
-                        default='data/users/yang/data/synthetic_data/Airplanes/{}/')
+                        default='/data/users/yang/data/synthetic_data/Airplanes/{}/')
 
     parser.add_argument("--syn_plane_txt_dir", type=str, help="txt labels of synthetic airplanes",
-                        default='data/users/yang/data/synthetic_data/Airplanes_txt_xcycwh/{}/')
+                        default='/data/users/yang/data/synthetic_data/Airplanes_txt_xcycwh/{}/')
 
     parser.add_argument("--syn_plane_gt_bbox_dir", type=str, help="gt images with bbox of synthetic airplanes",
-                        default='data/users/yang/data/synthetic_data/Airplanes_gt_bbox/{}/')
+                        default='/data/users/yang/data/synthetic_data/Airplanes_gt_bbox/{}/')
 
     parser.add_argument("--syn_images_save_dir", type=str, help="rgb images of synthetic airplanes",
-                        default='data/users/yang/data/xView_YOLO/images/{}_{}/')
+                        default='/data/users/yang/data/xView_YOLO/images/{}_{}/')
     parser.add_argument("--syn_annos_save_dir", type=str, help="gt of synthetic airplanes",
-                        default='data/users/yang/data/xView_YOLO/labels/{}/{}_{}_cls_xcycwh/')
+                        default='/data/users/yang/data/xView_YOLO/labels/{}/{}_{}_cls_xcycwh/')
     parser.add_argument("--syn_txt_save_dir", type=str, help="gt related files of synthetic airplanes",
-                        default='data/users/yang/data/xView_YOLO/labels/{}/{}_{}_cls/')
+                        default='/data/users/yang/data/xView_YOLO/labels/{}/{}_{}_cls/')
 
     parser.add_argument("--data_txt_dir", type=str, help="to save txt files",
-                        default='data/users/yang/data/xView_YOLO/labels/{}/{}_cls/')
+                        default='/data/users/yang/data/xView_YOLO/labels/{}/{}_cls/')
 
     parser.add_argument("--data_xview_dir", type=str, help="to save data files",
-                        default='data/users/yang/code/yxu-yolov3-xview/data_xview/{}_cls/')
+                        default='/data/users/yang/code/yxu-yolov3-xview/data_xview/{}_cls/')
 
     parser.add_argument("--syn_data_list_dir", type=str, help="to syn data list files",
-                        default='data/users/yang/code/yxu-yolov3-xview/data_xview/{}_{}_cls/')
+                        default='/data/users/yang/code/yxu-yolov3-xview/data_xview/{}_{}_cls/')
 
     parser.add_argument("--data_list_save_dir", type=str, help="to save selected trn val images and labels",
-                        default='data/users/yang/data/xView_YOLO/labels/{}/{}_cls/data_list/')
+                        default='/data/users/yang/data/xView_YOLO/labels/{}/{}_cls/data_list/')
 
     parser.add_argument("--results_dir", type=str, help="to save category files",
-                        default='data/users/yang/code/yxu-yolov3-xview/result_output/{}_cls/{}_{}/')
+                        default='/data/users/yang/code/yxu-yolov3-xview/result_output/{}_cls/{}_{}/')
 
     parser.add_argument("--cat_sample_dir", type=str, help="to save figures",
-                        default='data/users/yang/data/xView_YOLO/cat_samples/{}/{}_cls/')
+                        default='/data/users/yang/data/xView_YOLO/cat_samples/{}/{}_cls/')
 
     parser.add_argument("--val_percent", type=float, default=0.20,
                         help="Percent to split into validation (ie .25 = val set is 25% total)")
@@ -491,15 +491,15 @@ if __name__ == "__main__":
 
     # seeds = [19999] # results are fixed
     # seeds = [17, 17, 17] # results are variable
-    seeds = [199] # results are fixed
-    data_name = 'xview'
-    px_thres= 23
-    whr_thres = 3
-    for sd in seeds:
-        #fixme --yang.xu
-        # run for multi times to get the desired split due to the use of list(set(l)
-        comments = '_px{}whr{}_seed{}'.format(px_thres, whr_thres, sd)
-        pwv.split_trn_val_with_chips(data_name=data_name, comments=comments, seed=sd, px_thres=px_thres, whr_thres=whr_thres)
+#    seeds = [199] # results are fixed
+#    data_name = 'xview'
+#    px_thres= 23
+#    whr_thres = 3
+#    for sd in seeds:
+#        #fixme --yang.xu
+#        # run for multi times to get the desired split due to the use of list(set(l)
+#        comments = '_px{}whr{}_seed{}'.format(px_thres, whr_thres, sd)
+#        pwv.split_trn_val_with_chips(data_name=data_name, comments=comments, seed=sd, px_thres=px_thres, whr_thres=whr_thres)
 
 
     '''
@@ -513,9 +513,10 @@ if __name__ == "__main__":
     # comments = '_px23whr3_seed{}'
 
     # seeds = [17]
-    # for sd in seeds:
-    #     comments = '_px23whr3_seed{}'.format(sd)
-    #     create_xview_syn_data(comments=comments, seed=sd)
+    seeds = [199]
+    for sd in seeds:
+        comments = '_px23whr3_seed{}'.format(sd)
+        create_xview_syn_data(comments=comments, seed=sd)
 
     '''
     xview

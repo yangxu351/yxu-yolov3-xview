@@ -104,7 +104,7 @@ def test(cfg,
 
     # Dataloader
     if dataloader is None:
-        dataset = LoadImagesAndLabels(path, lbl_path, img_size, batch_size, rect=True, cache_labels=True)  #
+        dataset = LoadImagesAndLabels(path, lbl_path, img_size, batch_size, rect=True, cache_labels=True, with_modelid=True)  #
         batch_size = min(batch_size, len(dataset))
         dataloader = DataLoader(dataset,
                                 batch_size=batch_size,
@@ -152,21 +152,18 @@ def test(cfg,
         for si, pred in enumerate(output):
             # print('si', si, targets[si])
             labels = targets[targets[:, 0] == si, 1:]
-            if opt.model_id is not None:
-                labels = labels[labels[:, -1] == opt.model_id]
-                nl = len(labels)
-                tcls =labels[:, -1].tolist() if nl else []
-            else:
+            #if opt.model_id is not None:
+            #    labels = labels[labels[:, -1] == opt.model_id]
+            #    nl = len(labels)
+            #    tcls =labels[:, -1].tolist() if nl else []
+            #else:
                 #fixme --yang.xu
-                if (labels >=0).all():
-                    nl = len(labels)
-                else:
-                    nl = 0
-                tcls = labels[:, 0].tolist() if nl else []  # target class
+            nl = len(labels)
+            tcls = labels[:, 0].tolist() if nl else []  # target class
 
             #fixme --yang.xu
             # tcls = labels[:, 0].tolist() if nl else []  # target class
-            # print('tcls', tcls)
+            #print('tcls', tcls)
 
             seen += 1
 
@@ -211,7 +208,13 @@ def test(cfg,
             correct = torch.zeros(len(pred), niou, dtype=torch.bool)
             if nl:
                 detected = []  # target indices
+                #fixme
                 tcls_tensor = labels[:, 0]
+                #if opt.model_id is not None:
+                #    tcls_tensor = labels[:, -1]
+                #else:
+                #    tcls_tensor = labels[:, 0]
+
 
                 # target boxes
                 tbox = xywh2xyxy(labels[:, 1:5]) * torch.Tensor([width, height, width, height]).to(device)
@@ -220,7 +223,7 @@ def test(cfg,
                 for cls in torch.unique(tcls_tensor):
                     ti = (cls == tcls_tensor).nonzero().view(-1)  # prediction indices
                     pi = (cls == pred[:, 5]).nonzero().view(-1)  # target indices
-                    print('ti', ti, 'pi ', pi)
+                    # print('ti', ti, 'pi ', pi)
 
                     # Search for detections
                     if len(pi):
@@ -243,7 +246,7 @@ def test(cfg,
     # Compute statistics
     stats = [np.concatenate(x, 0) for x in list(zip(*stats))]  # to numpy
     if len(stats):
-        p, r, ap, f1, ap_class = ap_per_class(*stats, pr_path=opt.result_dir, pr_name=opt.name, model_id=opt.model_id)
+        p, r, ap, f1, ap_class = ap_per_class(*stats, pr_path=opt.result_dir, pr_name=opt.name)
         # if niou > 1:
         #       p, r, ap, f1 = p[:, 0], r[:, 0], ap[:, 0], ap.mean(1)  # average across ious
         #fixme --yang.xu
@@ -312,8 +315,11 @@ def test(cfg,
 
     # Return results
     maps = np.zeros(nc) + map
-    for i, c in enumerate(ap_class):
-        maps[c] = ap[i]
+    #fixme
+    # for i, c in enumerate(ap_class):
+    #    maps[c] = ap[i]
+    for i in range(len(ap_class)):
+        maps[i] = ap[i]
     return (mp, mr, map, mf1, *(loss.cpu() / len(dataloader)).tolist()), maps
     # return (mp, mr, map, mf1, *(loss / len(dataloader)).tolist()), maps
     # return (mp, mr, map, mf1, *(loss / len(dataloader)).tolist())

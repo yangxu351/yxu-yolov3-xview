@@ -387,6 +387,7 @@ def plot_roc(tp, conf, pred_cls, target_cls, ntp, pr_path='', pr_name='', model_
         conf:  Objectness value from 0-1 (nparray).
         pred_cls: Predicted object classes (nparray).
         target_cls: True object classes (nparray).
+        ntp: True positives of netural labels (nparray, nx1 or nx10).
         model_id: the specified id
         area: all image covered area (square kilometers)
     # Returns
@@ -430,6 +431,7 @@ def plot_roc(tp, conf, pred_cls, target_cls, ntp, pr_path='', pr_name='', model_
         ax2.set_title(title, font_title)
         ax2.set_xlabel('FAR', font_label)
         ax2.set_ylabel('Recall', font_label)
+        ax2.set_ylim(0, 1)
         ax2.grid()
         fig2.savefig(os.path.join(pr_path, pr_name + '_ROC_curve.png'), dpi=300)
         plt.close(fig2)
