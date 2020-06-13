@@ -332,6 +332,7 @@ def ap_per_class(tp, conf, pred_cls, target_cls, ntp=None, pr_path='', pr_name='
         if n_p == 0 or n_gt == 0:
             r[ci] = 0
             p[ci] = 0
+
             # AP from recall-precision curve
             for j in range(tp.shape[1]):
                 ap[ci, j] = 0
