@@ -1,4 +1,5 @@
 import json
+import torch
 import numpy as np
 from matplotlib import pyplot as plt
 import os
@@ -476,44 +477,103 @@ def check_input_files_names():
             print('false')
 
 
-def get_model_hash(model_dict):
+def gpu_2_cpu(model_dict):
     model_dict_vlu = [v for v in model_dict.values()]
-    model_dict_vlu_np = [a.cpu().data.numpy() for a in model_dict_vlu]
+    model_dict_vlu_np = np.array([a.cpu().data.numpy().flatten() for a in model_dict_vlu])
+    return model_dict_vlu_np
+
+
+def get_model_loss(model_dict1, model_dict2):
+    mvp1 = gpu_2_cpu(model_dict1)
+    mvp2 = gpu_2_cpu(model_dict2)
+    print('mvp1 len ', len(mvp1))
+    print('mvp2 len ', len(mvp2))
+    loss = []
+    for i in range(len(mvp1)):
+        loss.append(np.sum((mvp1[i]-mvp2[i])**2)/len(mvp1[i]))
+    print('loss ', len(loss))
+    return np.mean(np.array(loss))
+
+
+def get_model_hash(model_dict):
+    model_dict_vlu_np = gpu_2_cpu(model_dict)
     model_dict_vlu_np_lst = [a.tolist() for a in model_dict_vlu_np]
     return hash(json.dumps(model_dict_vlu_np_lst))   
 
 
-def check_model_hash():
-    import torch
+def check_model_l2loss():
     base_dir = '/data/users/yang/code/yxu-yolov3-xview' 
-    mixed_file_dir = os.path.join(base_dir, 'weights/1_cls/syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_model4_v7_mixed_seed17')
-    color_file_dir = os.path.join(base_dir, 'weights/1_cls/syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_model4_v7_color_seed17')
+    mixed_file_dir = os.path.join(base_dir, 'weights/1_cls/syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_unif_mig21_model4_v8_mixed_seed17')
+    color_file_dir = os.path.join(base_dir, 'weights/1_cls/syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_unif_mig21_model4_v8_color_seed17')
+    save_color_loss_dir = os.path.join(base_dir, color_file_dir, 'l2loss_folder')
+    if not os.path.exists(save_color_loss_dir):
+        os.makedirs(save_color_loss_dir)
+    save_mixed_loss_dir = os.path.join(base_dir, mixed_file_dir, 'l2loss_folder')
+    if not os.path.exists(save_mixed_loss_dir):
+        os.makedirs(save_mixed_loss_dir)
+    
+    mixed_loss_maps = {}
+    color_loss_maps = {}
+    val_cmts = ['val_labeled_miss']
+    for cmt in val_cmts:
+        mixed_files = np.sort(glob(os.path.join(mixed_file_dir, '2020-06-11*_{}*/best_*.pt'.format(cmt))))
+        mixed_txt = open(os.path.join(save_mixed_loss_dir, '{}_loss.txt'.format(cmt)), 'w')
+        mixed_loss_maps[cmt] = [] 
+        for ix in range(1, len(mixed_files)):
+            mixed_pt0 = torch.load(mixed_files[ix-1])[215]['model']
+            mixed_pt = torch.load(mixed_files[ix])[215]['model']
+            mixed_loss = get_model_loss(mixed_pt0, mixed_pt)
+            mixed_txt.write('loss of {} {}: {}\n'.format(ix-1, ix, mixed_loss))
+            mixed_loss_maps[cmt].append(mixed_loss)
+        mixed_txt.close()
+
+        color_files = np.sort(glob(os.path.join(color_file_dir, '2020-06-11*_{}*/best_*.pt'.format(cmt))))
+        color_txt = open(os.path.join(save_color_loss_dir, '{}_loss.txt'.format(cmt)), 'w')
+        color_loss_maps[cmt] = [] 
+        for ix in range(1, len(color_files)):
+            color_pt0 = torch.load(color_files[ix-1])[215]['model']
+            color_pt = torch.load(color_files[ix])[215]['model']
+            color_loss = get_model_loss(color_pt0, color_pt)
+            color_txt.write('loss of {} {}: {}\n'.format(ix-1, ix, color_loss))
+            color_loss_maps[cmt].append(color_loss)
+        color_txt.close()
+        
+
+def check_model_hash():
+    base_dir = '/data/users/yang/code/yxu-yolov3-xview' 
+    mixed_file_dir = os.path.join(base_dir, 'weights/1_cls/syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_unif_mig21_model4_v8_mixed_seed17')
+    color_file_dir = os.path.join(base_dir, 'weights/1_cls/syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_unif_mig21_model4_v8_color_seed17')
     save_color_hash_dir = os.path.join(base_dir, color_file_dir, 'hash_folder')
-#    if not os.path.exists(save_color_hash_dir):
-#        os.makedirs(save_color_hash_dir)
+    if not os.path.exists(save_color_hash_dir):
+        os.makedirs(save_color_hash_dir)
     save_mixed_hash_dir = os.path.join(base_dir, mixed_file_dir, 'hash_folder')
-#    if not os.path.exists(save_mixed_hash_dir):
-#        os.makedirs(save_mixed_hash_dir)
+    if not os.path.exists(save_mixed_hash_dir):
+        os.makedirs(save_mixed_hash_dir)
    
     color_hash_maps = {}
     mixed_hash_maps = {}
-    val_cmts = ['val_syn', 'val_labeled_seed', 'val_labeled_miss']
+#    val_cmts = ['val_syn', 'val_labeled_seed', 'val_labeled_miss']
+    val_cmts = ['val_labeled_miss']
     for cmt in val_cmts:
-        mixed_files = np.sort(glob(os.path.join(mixed_file_dir, '2020-06-09*_{}*/best_*.pt'.format(cmt))))
-        mixed_pt = torch.load(mixed_files[0])[215]['model']
-        mixed_hash = get_model_hash(mixed_pt)
+        mixed_files = np.sort(glob(os.path.join(mixed_file_dir, '2020-06-11*_{}*/best_*.pt'.format(cmt))))
         mixed_txt = open(os.path.join(save_mixed_hash_dir, '{}_hash.txt'.format(cmt)), 'w')
-        mixed_txt.write('{}\n'.format(mixed_hash))
+        mixed_hash_maps[cmt] = [] 
+        for ix in range(len(mixed_files)):
+            mixed_pt = torch.load(mixed_files[ix])[215]['model']
+            mixed_hash = get_model_hash(mixed_pt)
+            mixed_txt.write('{}: {}\n'.format(ix, mixed_hash))
+            mixed_hash_maps[cmt].append(mixed_hash)
         mixed_txt.close()
-        mixed_hash_maps[cmt] = mixed_hash
 
-        color_files = np.sort(glob(os.path.join(color_file_dir, '2020-06-09*_{}*/best_*.pt'.format(cmt))))
-        color_pt = torch.load(color_files[0])[215]['model']
-        color_hash = get_model_hash(color_pt)
+        color_files = np.sort(glob(os.path.join(color_file_dir, '2020-06-11*_{}*/best_*.pt'.format(cmt))))
         color_txt = open(os.path.join(save_color_hash_dir, '{}_hash.txt'.format(cmt)), 'w')
-        color_txt.write('{}\n'.format(color_hash))
+        color_hash_maps[cmt] = []
+        for jx in range(len(color_files)):
+            color_pt = torch.load(color_files[jx])[215]['model']
+            color_hash = get_model_hash(color_pt)
+            color_txt.write('{}: {}\n'.format(jx, color_hash))
+            color_hash_maps[cmt].append(color_hash)
         color_txt.close()
-        color_hash_maps[cmt] = color_hash
     color_json_file = os.path.join(save_color_hash_dir, 'color_hash_maps.json')
     json.dump(color_hash_maps, open(color_json_file, 'w'), ensure_ascii=False, indent=2)
     mixed_json_file = os.path.join(save_mixed_hash_dir, 'mixed_hash_maps.json')
@@ -610,6 +670,9 @@ def check_test_files():
         print('labeled', labeled_lbl_names)
 
 
+        print('labeled', labeled_lbl_names)
+
+
 if __name__ == "__main__":
     # display_type = ['syn_texture', 'syn_color', 'syn_mixed']
     # # display_type = ['syn_texture0', 'syn_color0']
@@ -649,11 +712,12 @@ if __name__ == "__main__":
     check *.pt
     model hash
     '''
-#    check_model_hash()
-    check_model_hash_before_val_after()
+    # check_model_hash()
+    # check_model_hash_before_val_after()
+    check_model_l2loss()
 
     '''
     check test file names
     '''
-#    check_test_files()
+    #check_test_files()
 
