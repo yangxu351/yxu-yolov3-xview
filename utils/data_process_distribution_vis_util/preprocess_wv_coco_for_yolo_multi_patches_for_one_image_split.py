@@ -20,62 +20,91 @@ from utils.object_score_util import get_bbox_coords_from_annos_with_object_score
 import time
 
 
-
-
-def get_cat_2_image_tif_name():
+def get_multi_crops_of_tif_name(tif_name):
     '''
     :return:
     catid_images_name_maps
     catid_tifs_name_maps
     copy raw tif to septerate tif folder
     '''
-    json_file = os.path.join(args.txt_save_dir, 'xview_all_{}_{}cls_xtlytlwh.json'.format(args.input_size, args.class_num))
-    anns_json = json.load(open(json_file))
-    cats = anns_json['categories']
-    images = anns_json['images']
-    annos = anns_json['annotations']
-    annos_cat_imgs = [(an['category_id'], an['image_id']) for an in annos]
-    annos_cat_imgs = list(set(annos_cat_imgs))
+    coords, chips, classes, features_ids = wv.get_labels(args.json_filepath, args.class_num)
+    img_file =os.path.join(args.image_folder, tif_name)
+    arr = wv.get_image(img_file)
+    res = (args.input_size, args.input_size)
 
-    cat_ids_names = [(c['id'], c['name']) for c in cats]
-    cat_ids_names = list(set(cat_ids_names))
-    cat_ids_names.sort()
-    print('cat_ids_names ', cat_ids_names)
-    cat_images_map = {}
-    for cid, cname in cat_ids_names:
-        save_dir = os.path.join(args.base_tif_folder, 'raw_{}_tifs/'.format(cid))
-        if not os.path.exists(save_dir):
-            os.mkdir(save_dir)
-        if cid not in cat_images_map.keys():
-            cat_images_map[cid] = []
+    img_save_dir = args.images_save_dir[:-1] + '_of_{}'.format(tif_name.split('.')[0])
+    if not os.path.exists(img_save_dir):
+        os.mkdir(img_save_dir)
 
-        for acid, iid in annos_cat_imgs:
-            if acid == cid:
-                for img in images:
-                    if img['id'] == iid:
-                        cat_images_map[cid].append(img['file_name'])
-                        break
-    json_file = os.path.join(args.txt_save_dir,
-                             'xview_catid_imagename_maps_{}_{}cls.json'.format(args.input_size, args.class_num))  # topleft
-    json.dump(cat_images_map, open(json_file, 'w'), ensure_ascii=False, indent=2, cls=pwv.MyEncoder)
+    ims, img_names, box, classes_final, box_ids = wv.chip_image_with_sliding_widow(arr, coords[chips == tif_name],
+                                                                    classes[chips == tif_name],
+                                                                    features_ids[chips == tif_name], res,
+                                                                    tif_name.split('.')[0], img_save_dir)
 
-    cat_tif_maps = {}
-    for id in cat_images_map.keys():
-        c_images = cat_images_map[id]
-        c_tifs = [name.split('_')[0]+'.tif' for name in c_images]
-        c_tifs = list(set(c_tifs))
-        cat_tif_maps[id] = c_tifs
+    txt_norm_dir = args.annos_save_dir[:-1] + '_of_{}'.format(tif_name.split('.')[0])
+    if not os.path.exists(txt_norm_dir):
+        os.makedirs(txt_norm_dir)
 
-        for tif in c_tifs:
-            shutil.copy(os.path.join(args.image_folder, tif),
-                        os.path.join(os.path.join(args.base_tif_folder, 'raw_{}_tifs/'.format(id)), tif))
+    txt_save_dir = args.txt_save_dir[:-1] + '_of_{}'.format(tif_name.split('.')[0])
+    if not os.path.exists(txt_save_dir):
+        os.mkdir(txt_save_dir)
 
-    json_file = os.path.join(args.txt_save_dir,
-                             'xview_catid_tifname_maps_{}_{}cls.json'.format(args.input_size, args.class_num))  # topleft
-    json.dump(cat_tif_maps, open(json_file, 'w'), ensure_ascii=False, indent=2, cls=pwv.MyEncoder)
+    _img_num = 0
+    img_num_list = []
+    image_info_list = []
+    annotation_list = []
+    image_names_list = []
+    ks = [k for k in ims.keys()]
+    # print('ks ', len(ks))
+    for k in ks:
+        file_name = img_names[k]
+        file_name_pref = file_name.split('.')[0]
+        image_names_list.append(file_name)
+        ana_txt_name = file_name.split(".")[0] + ".txt"
+        f_txt = open(os.path.join(txt_norm_dir, ana_txt_name), 'w')
+        img = wv.get_image(os.path.join(img_save_dir, file_name))
+        image_info = {
+            "id": _img_num,
+            "file_name": file_name,
+            "height": img.shape[0],
+            "width": img.shape[1],
+            "date_captured": datetime.datetime.utcnow().isoformat(' '),
+            "license": 1,
+            "coco_url": "",
+            "flickr_url": ""
+        }
+        image_info_list.append(image_info)
 
-    inter = [a for a in cat_tif_maps[0] if a in cat_tif_maps[1]]
-    print('inter ', inter) # ['1702.tif']
+        for d in range(box_ids[k].shape[0]):
+            # create annotation_info
+            bbx = box[k][d]
+            annotation_info = {
+                "id": box_ids[k][d],
+                "image_id": _img_num,
+                # "image_name": img_name, #fixme: there isn't 'image_name'
+                "category_id": np.int(classes_final[k][d]),
+                "iscrowd": 0,
+                "area": (bbx[2] - bbx[0] + 1) * (bbx[3] - bbx[1] + 1),
+                "bbox": [bbx[0], bbx[1], bbx[2] - bbx[0], bbx[3] - bbx[1]],  # (w1, h1, w, h)
+                # "segmentation": [],
+            }
+            annotation_list.append(annotation_info)
+
+            bbx = [np.int(b) for b in box[k][d]]
+            cvt_bbx = pwv.convert_norm(res, bbx)
+            f_txt.write(
+                "%s %s %s %s %s\n" % (np.int(classes_final[k][d]), cvt_bbx[0], cvt_bbx[1], cvt_bbx[2], cvt_bbx[3]))
+        img_num_list.append(_img_num)
+        _img_num += 1
+        f_txt.close()
+    print('_img_num', _img_num)
+
+    trn_instance = {'info': '{} {} cls chips 608 yx185 created {}'.format(file_name, args.class_num, time.strftime('%Y-%m-%d_%H.%M', time.localtime())),
+                    'license': 'license', 'images': image_info_list,
+                    'annotations': annotation_list, 'categories': wv.get_all_categories(args.class_num)}
+    json_file = os.path.join(txt_save_dir,
+                             'xview_{}_{}_{}cls_xtlytlwh.json'.format(file_name_pref, args.input_size, args.class_num))  # topleft
+    json.dump(trn_instance, open(json_file, 'w'), ensure_ascii=False, indent=2, cls=pwv.MyEncoder)
 
 
 def get_args(px_thres=None, whr=None): #
@@ -112,7 +141,7 @@ def get_args(px_thres=None, whr=None): #
     parser.add_argument("--cat_sample_dir", type=str, help="to save figures",
                         default='/media/lab/Yang/data/xView_YOLO/cat_samples/')
 
-    parser.add_argument("--class_num", type=int, default=2, help="Number of Total Categories")  # 60  6
+    parser.add_argument("--class_num", type=int, default=1, help="Number of Total Categories")  # 60  6
     parser.add_argument("--input_size", type=int, default=608, help="Number of Total Categories")
     parser.add_argument("--seed", type=int, default=17, help="random seed")
 
@@ -155,6 +184,12 @@ if __name__ == '__main__':
     # pwv.create_chips_and_txt_geojson_2_json(args)
 
     '''
+    create multi chips (for one specified tif) and label txt and get all images json, convert from *.geojson to *.json
+    '''
+    # tif_name = '2315.tif'
+    # get_multi_crops_of_tif_name(tif_name)
+
+    '''
     catid_images_name_maps
     catid_tifs_name_maps
     copy raw tif to septerate tif folder 
@@ -187,15 +222,23 @@ if __name__ == '__main__':
     # pwv.remove_txt_and_json_of_bad_image(bad_img_names, args)
 
 
-
-    whr_thres = 3 # 3.5
-    px_thres= 23
-    args = get_args(px_thres, whr_thres)
-    save_path = args.cat_sample_dir + 'image_with_bbox/'
+    '''
+    cheke bbox on images
+    '''
+    # whr_thres = 3 # 3.5
+    # # px_thres= 23
+    # px_thres= 15
+    # args = get_args(px_thres, whr_thres)
+    args = get_args()
+    save_path = args.cat_sample_dir + 'image_with_bbox/m4_2315/'
     if not os.path.exists(save_path):
-        os.mkdir(save_path)
-    img_list = np.sort(glob.glob(os.path.join(args.images_save_dir, '*.jpg')))
+        os.makedirs(save_path)
+    images_dir = args.images_save_dir[:-1] + '_of_2315/m4_2315/'
+    annos_dir = args.annos_save_dir[:-1] + '_of_2315/m4_2315/'
+    print('images_dir', images_dir)
+    print('annos_dir', annos_dir)
+    img_list = np.sort(glob.glob(os.path.join(images_dir, '*.jpg')))
     for img in img_list:
         lbl_name = os.path.basename(img).replace('.jpg', '.txt')
-        lbl_file = os.path.join(args.annos_save_dir, lbl_name)
+        lbl_file = os.path.join(annos_dir, lbl_name)
         gbc.plot_img_with_bbx(img, lbl_file, save_path, label_index=False)

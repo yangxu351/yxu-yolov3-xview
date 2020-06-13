@@ -35,10 +35,10 @@ def get_cat_2_image_tif_name():
     images = anns_json['images']
     annos = anns_json['annotations']
     annos_cat_imgs = [(an['category_id'], an['image_id']) for an in annos]
-    annos_cat_imgs = list(set(annos_cat_imgs))
+    annos_cat_imgs = list(dict.fromkeys(annos_cat_imgs))
 
     cat_ids_names = [(c['id'], c['name']) for c in cats]
-    cat_ids_names = list(set(cat_ids_names))
+    cat_ids_names = list(dict.fromkeys(cat_ids_names))
     cat_ids_names.sort()
     print('cat_ids_names ', cat_ids_names)
     cat_images_map = {}
@@ -63,7 +63,7 @@ def get_cat_2_image_tif_name():
     for id in cat_images_map.keys():
         c_images = cat_images_map[id]
         c_tifs = [name.split('_')[0]+'.tif' for name in c_images]
-        c_tifs = list(set(c_tifs))
+        c_tifs = list(dict.fromkeys(c_tifs))
         cat_tif_maps[id] = c_tifs
 
         for tif in c_tifs:

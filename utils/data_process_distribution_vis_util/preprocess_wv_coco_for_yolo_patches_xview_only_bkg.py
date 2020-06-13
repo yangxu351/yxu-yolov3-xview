@@ -30,7 +30,7 @@ def get_xview_bkg_and_lbl_files_create_realated_list_files():
     airc_images = glob.glob(os.path.join(airc_dir, '*.jpg'))
     airc_img_names = [os.path.basename(f) for f in airc_images]
     airc_img_prefixes = [x.split('_')[0] for x in airc_img_names]
-    airc_img_prefixes = list(set(airc_img_prefixes))
+    airc_img_prefixes = list(dict.fromkeys(airc_img_prefixes))
 
     bkg_img_names = [n for n in all_img_names if n.split('_')[0] not in airc_img_prefixes]
 
@@ -75,7 +75,7 @@ def get_test_xview_bkg_and_lbl_files():
     airc_images = glob.glob(os.path.join(airc_dir, '*.jpg'))
     airc_img_names = [os.path.basename(f) for f in airc_images]
     airc_img_prefixes = [x.split('_')[0] for x in airc_img_names]
-    airc_img_prefixes = list(set(airc_img_prefixes))
+    airc_img_prefixes = list(dict.fromkeys(airc_img_prefixes))
 
     bkg_img_names = [n for n in all_img_names if n.split('_')[0] not in airc_img_prefixes]
 

@@ -685,7 +685,7 @@ def rare_cats_split_crop_bbx_from_tiles(rare_cat_ids, rare_cat_names, whr_thres=
     json_file = os.path.join(args.ori_lbl_dir, 'xView_rare_clabel_2_imgs_maps.json') # topleft
     json.dump(rare_cat_imgs_dict, open(json_file, 'w'), ensure_ascii=False, indent=2, cls=MyEncoder)
 
-    rare_img_names = list(set(rare_img_names))
+    rare_img_names = list(dict.fromkeys(rare_img_names))
     rare_img_cid_bbxs_dict = {}
     for n in rare_img_names:
         rare_img_cid_bbxs_dict[n] = []
@@ -1014,7 +1014,7 @@ def get_confusion_matrix(cat_ids, iou_thres=0.5, score_thres=0.3, whr_thres=3):
     img_name_list = []
     for rc in cat_ids:
         img_name_list.extend(cat_id_2_img_names_json[str(rc)])
-    img_name_list = list(set(img_name_list))
+    img_name_list = list(dict.fromkeys(img_name_list))
     print('len images', len(img_name_list))
     img_id_list = [img_ids[img_names.index(n)] for n in img_name_list]
 
@@ -1064,7 +1064,7 @@ def get_confusion_matrix(cat_ids, iou_thres=0.5, score_thres=0.3, whr_thres=3):
                 cv2.putText(img, text=str(pr_bx[0]), org=(pr_bx[1] + 5, pr_bx[2] + 10), # [pr_bx[0], pr[-1]]
                             fontFace=cv2.FONT_HERSHEY_SIMPLEX,
                             fontScale=0.5, thickness=1, lineType=cv2.LINE_AA, color=(0, 255, 0))
-            rcids = list(set(rcids))
+            rcids = list(dict.fromkeys(rcids))
         cv2.imwrite(save_dir + 'cat{}_'.format(rcids) + img_name_list[ix], img)
     np.save(confu_mat_dir + 'confusion_matrix.npy', confusion_matrix)
 
@@ -1108,7 +1108,7 @@ def get_train_or_val_imgs_by_rare_cat_id(rare_cat_ids, typestr='val'):
         rare_all_cats_val_imgs.extend(cat_img_names)
         rare_cat_val_imgs[rc] = cat_img_names
     # print(len(rare_all_cats_val_imgs))
-    rare_all_cats_val_imgs = list(set(rare_all_cats_val_imgs))
+    rare_all_cats_val_imgs = list(dict.fromkeys(rare_all_cats_val_imgs))
     # print(len(rare_all_cats_val_imgs))
     for rimg in rare_all_cats_val_imgs:
         val_rare_img_txt.write("%s\n" % (img_path + rimg))
@@ -1132,7 +1132,7 @@ def get_confusion_matrix_rare(rare_cat_ids, iou_thres=0.5, score_thres=0.3, whr_
     rare_img_name_list = []
     for rc in rare_cat_ids:
         rare_img_name_list.extend(rare_cat_id_2_img_names_json[str(rc)])
-    rare_img_name_list = list(set(rare_img_name_list))
+    rare_img_name_list = list(dict.fromkeys(rare_img_name_list))
     print('len rare images', len(rare_img_name_list))
     rare_img_id_list = [img_ids[img_names.index(n)] for n in rare_img_name_list]
 
@@ -1185,7 +1185,7 @@ def get_confusion_matrix_rare(rare_cat_ids, iou_thres=0.5, score_thres=0.3, whr_
                 cv2.putText(img, text=str(pr_bx[0]), org=(pr_bx[1] + 5, pr_bx[2] + 10), # [pr_bx[0], pr[-1]]
                             fontFace=cv2.FONT_HERSHEY_SIMPLEX,
                             fontScale=0.5, thickness=1, lineType=cv2.LINE_AA, color=(0, 255, 0))
-            rcids = list(set(rcids))
+            rcids = list(dict.fromkeys(rcids))
         cv2.imwrite(save_dir + 'cat{}_'.format(rcids) + rare_img_name_list[ix], img)
     np.save(confu_mat_dir + 'rare_confusion_matrix.npy', confusion_matrix)
 

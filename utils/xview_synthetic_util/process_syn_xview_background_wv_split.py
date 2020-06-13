@@ -92,7 +92,28 @@ def record_all_syn_xview_background(comment='syn_xview_background_texture', seed
 
 
 def record_target_neutral_of_model_id(pxwhr='px23whr3', base_pxwhrs='', model_id=None):
-    annos_dir = syn_args.data_annos_dir[:-1] + '_{}_m{}_val_tgt_neu_with_modelid/'.format(pxwhr, model_id)
+    annos_dir = syn_args.data_annos_dir[:-1] + '_{}_m{}_val_rc1_with_modelid/'.format(pxwhr, model_id)
+    all_files = glob.glob(os.path.join(annos_dir, '*.txt'))
+    data_xview_dir = os.path.join(syn_args.data_xview_dir.format(syn_args.class_num), base_pxwhrs)
+    all_img_txt = open(os.path.join(data_xview_dir, 'xviewtest_img_{}_m{}_tgt_neu.txt'.format(base_pxwhrs, model_id)), 'w')
+    all_lbl_txt = open(os.path.join(data_xview_dir, 'xviewtest_lbl_{}_with_model_m{}_tgt_neu.txt'.format(base_pxwhrs, model_id)), 'w')
+    img_dir = syn_args.data_img_dir
+    for f in all_files:
+        all_lbl_txt.write('%s\n' % f)
+        all_img_txt.write('%s\n' % os.path.join(img_dir, os.path.basename(f).replace(TXT_FORMAT, '.jpg')))
+    all_img_txt.close()
+    all_lbl_txt.close()
+
+    data_txt = open(os.path.join(data_xview_dir, 'xviewtest_{}_with_model_m{}_tgt_neu.data'.format(base_pxwhrs, model_id)), 'w')
+    data_txt.write('test=./data_xview/{}_cls/{}/xviewtest_img_{}_m{}_tgt_neu.txt\n'.format(syn_args.class_num, base_pxwhrs, base_pxwhrs, label_id))
+    data_txt.write('test_label=./data_xview/{}_cls/{}/xviewtest_lbl_{}_with_model_m{}_tgt_neu.txt\n'.format(syn_args.class_num, base_pxwhrs, base_pxwhrs, label_id))
+    data_txt.write('classes=%s\n' % str(syn_args.class_num))
+    data_txt.write('names=./data_xview/{}_cls/xview.names\n'.format(syn_args.class_num))
+    data_txt.close()
+
+
+def record_target_neutral_of_model_id(pxwhr='px23whr3', base_pxwhrs='', model_id=None):
+    annos_dir = syn_args.data_annos_dir[:-1] + '_{}_m{}_val_rc1_with_modelid/'.format(pxwhr, model_id)
     all_files = glob.glob(os.path.join(annos_dir, '*.txt'))
     data_xview_dir = os.path.join(syn_args.data_xview_dir.format(syn_args.class_num), base_pxwhrs)
     all_img_txt = open(os.path.join(data_xview_dir, 'xviewtest_img_{}_m{}_tgt_neu.txt'.format(base_pxwhrs, model_id)), 'w')
