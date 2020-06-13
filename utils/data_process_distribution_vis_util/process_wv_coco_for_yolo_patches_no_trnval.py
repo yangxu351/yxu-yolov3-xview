@@ -180,11 +180,11 @@ def shuffle_images_and_boxes_classes(sh_ims, sh_img_names, sh_box, sh_classes_fi
 
 
 def get_raw_airplane_tifs():
-    tif_names = pd.read_csv('/media/lab/Yang/data/xView/airplane_tif_names.txt', header=None)
-    tif_path = '/media/lab/Yang/data/xView/airplane_tifs/'
+    tif_names = pd.read_csv('/data/users/yang/data/xView/airplane_tif_names.txt', header=None)
+    tif_path = '/data/users/yang/data/xView/airplane_tifs/'
     if not os.path.exists(tif_path):
         os.mkdir(tif_path)
-    src_path =  '/media/lab/Yang/data/xView/train_images/'
+    src_path =  '/data/users/yang/data/xView/train_images/'
     for name in tif_names.loc[:, 0].to_list():
         shutil.copy(os.path.join(src_path, name), tif_path)
 
@@ -200,7 +200,7 @@ def remove_bad_image(bad_img_path, src_dir):
 def create_chips_and_txt_geojson_2_json(args):
 
     coords, chips, classes, features_ids = wv.get_labels(args.json_filepath, args.class_num)
-    # gs = json.load(open('/media/lab/Yang/data/xView/xView_train.geojson'))
+    # gs = json.load(open('/data/users/yang/data/xView/xView_train.geojson'))
     # print('chips', chips.shape)
 
     res = (args.input_size, args.input_size)
@@ -465,7 +465,7 @@ def clean_backup_xview_plane_with_constraints(px_thres=20, whr_thres=4):
 def check_xview_plane_drops():
     args = get_args()
     before_path = args.annos_save_dir[:-1] + '_backup/'
-    txt_path = '/media/lab/Yang/data/xView_YOLO/labels/{}'.format(args.input_size)
+    txt_path = '/data/users/yang/data/xView_YOLO/labels/{}'.format(args.input_size)
     before_constrain = os.listdir(before_path)
     after_constrain = os.listdir(args.annos_save_dir)
     drop_list = [f for f in before_constrain if f not in after_constrain]
@@ -478,7 +478,7 @@ def check_xview_plane_drops():
     drop_lbl_dir = os.path.join(txt_path, '1_cls_drop', 'lbl')
     if not os.path.exists(drop_lbl_dir):
         os.makedirs(drop_lbl_dir)
-    xview_all_img_dir = '/media/lab/Yang/data/xView_YOLO/images/{}/'.format(args.input_size)
+    xview_all_img_dir = '/data/users/yang/data/xView_YOLO/images/{}/'.format(args.input_size)
     for f in drop_list:
         shutil.copy(os.path.join(before_path, f), os.path.join(drop_lbl_dir, f))
         im = f.replace('.txt', '.jpg')
@@ -565,17 +565,17 @@ def recover_xview_val_list():
     recover xview val list with constriants of px_theres=4, whr_thres=3
     :return:
     '''
-    lbl_path = '/media/lab/Yang/data/xView_YOLO/labels/608/1_cls_xcycwh_backup/'
+    lbl_path = '/data/users/yang/data/xView_YOLO/labels/608/1_cls_xcycwh_backup/'
     all_files = glob.glob(lbl_path + '*.txt')
     all_names = [os.path.basename(v) for v in all_files]
-    txt_save_dir = '/media/lab/Yang/data/xView_YOLO/labels/608/1_cls/data_list/Feb_backup/first_data_set_backup/'
+    txt_save_dir = '/data/users/yang/data/xView_YOLO/labels/608/1_cls/data_list/Feb_backup/first_data_set_backup/'
     val_img_txt = open(os.path.join(txt_save_dir, 'xview_val_img.txt'), 'w')
     val_lbl_txt = open(os.path.join(txt_save_dir, 'xview_val_lbl.txt'), 'w')
 
-    trn_lbl_list = pd.read_csv('/media/lab/Yang/code/yolov3/data_xview/1_cls/first_data_set_backup/xview_train_lbl.txt', header=None).loc[:, 0]
+    trn_lbl_list = pd.read_csv('/data/users/yang/code/yxu-yolov3-xview/data_xview/1_cls/first_data_set_backup/xview_train_lbl.txt', header=None).loc[:, 0]
     trn_lbl_names = [os.path.basename(f) for f in trn_lbl_list]
     val_lbl_name = [v for v in all_names if v not in trn_lbl_names]
-    img_path = '/media/lab/Yang/data/xView_YOLO/images/608/'
+    img_path = '/data/users/yang/data/xView_YOLO/images/608/'
     for v in val_lbl_name:
         val_lbl_txt.write('%s\n' % os.path.join(lbl_path, v))
         val_img_txt.write('%s\n' % os.path.join(img_path, v.replace('.txt', '.jpg')))
@@ -628,7 +628,7 @@ def split_trn_val_with_chips(data_name='xview', comments='', seed=17, px_thres=N
     images_save_dir = args.images_save_dir
     all_files = glob.glob(os.path.join(lbl_path, '*.txt'))
     all_files.sort()
-    print('all_files', all_files)
+    # print('all_files', all_files)
     all_file_names = [os.path.basename(s).split('_')[0] for s in all_files]
     # all_name_set = list(set(all_file_names)) # seed=17 run for several times to get the desired split
     all_name_set = list(dict.fromkeys(all_file_names)) # for seeds = 19999
@@ -1018,7 +1018,7 @@ def check_duplicate_gt_bbx_for_60_classes(cat_id, iou_thres=0.5, whr_thres=3):
 
     b_str = 'cat_{}_'.format(cat_id)
 
-    dup_dir = '/media/lab/Yang/data/xView_YOLO/labels/608/6_cls/gt_iou_overlap/'
+    dup_dir = '/data/users/yang/data/xView_YOLO/labels/608/6_cls/gt_iou_overlap/'
     dup_files = glob.glob(dup_dir + '*.txt')
     img_names = [os.path.basename(x) for x in dup_files]
     img_names = [x.split(b_str)[-1] for x in img_names if x.startswith(b_str)]
@@ -1128,9 +1128,9 @@ def remove_duplicate_gt_bbx(cat_id, syn = False):
 
 
 # def discard_bad_deviation_bbx_of_images():
-#     false_bx_files = pd.read_csv('/media/lab/Yang/data/xView/airplane_to_be_reomved_false_bbox.txt', header=None)
-#     deviation_files = pd.read_csv('/media/lab/Yang/data/xView/airplane_to_be_adjust_jpg_bbox.txt', header=None)
-#     missed_files = pd.read_csv('/media/lab/Yang/data/xView/airplane_to_add_missed_bbox.txt', header=None)
+#     false_bx_files = pd.read_csv('/data/users/yang/data/xView/airplane_to_be_reomved_false_bbox.txt', header=None)
+#     deviation_files = pd.read_csv('/data/users/yang/data/xView/airplane_to_be_adjust_jpg_bbox.txt', header=None)
+#     missed_files = pd.read_csv('/data/users/yang/data/xView/airplane_to_add_missed_bbox.txt', header=None)
 #     src_img_bbx_path = args.cat_sample_dir + 'image_with_bbox/'
 #     des_img_bbx_path = args.cat_sample_dir + 'image_with_bbox/discarded/'
 #     if not os.path.exists(des_img_bbx_path):
@@ -2127,51 +2127,51 @@ def get_args(px_thres=None, whr_thres=None):
     parser = argparse.ArgumentParser()
     # parser.add_argument("--image_folder", type=str,
     #                     help="Path to folder containing image chips (ie 'Image_Chips/') ",
-    #                     default='/media/lab/Yang/data/xView/train_images/')
+    #                     default='/data/users/yang/data/xView/train_images/')
     parser.add_argument("--image_folder", type=str,
                         help="Path to folder containing image chips (ie 'Image_Chips/') ",
-                        default='/media/lab/Yang/data/xView/airplane_tifs/')
+                        default='/data/users/yang/data/xView/airplane_tifs/')
 
     parser.add_argument("--json_filepath", type=str, help="Filepath to GEOJSON coordinate file",
-                        default='/media/lab/Yang/data/xView/xView_train.geojson')
+                        default='/data/users/yang/data/xView/xView_train.geojson')
 
     parser.add_argument("--xview_yolo_dir", type=str, help="dir to xViewYOLO",
-                        default='/media/lab/Yang/data/xView_YOLO/')
+                        default='/data/users/yang/data/xView_YOLO/')
 
     parser.add_argument("--images_save_dir", type=str, help="to save chip trn val images files",
-                        default='/media/lab/Yang/data/xView_YOLO/images/')
+                        default='/data/users/yang/data/xView_YOLO/images/')
 
     parser.add_argument("--txt_save_dir", type=str, help="to save  related label files",
-                        default='/media/lab/Yang/data/xView_YOLO/labels/')
+                        default='/data/users/yang/data/xView_YOLO/labels/')
 
     parser.add_argument("--data_list_save_dir", type=str, help="to save selected trn val images and labels",
-                        default='/media/lab/Yang/data/xView_YOLO/labels/{}/{}_cls/data_list/')
+                        default='/data/users/yang/data/xView_YOLO/labels/{}/{}_cls/data_list/')
 
     parser.add_argument("--annos_save_dir", type=str, help="to save txt annotation files",
-                        default='/media/lab/Yang/data/xView_YOLO/labels/')
+                        default='/data/users/yang/data/xView_YOLO/labels/')
 
     parser.add_argument("--ori_lbl_dir", type=str, help="to save original labels files",
-                        default='/media/lab/Yang/data/xView_YOLO/labels/original/')
+                        default='/data/users/yang/data/xView_YOLO/labels/original/')
 
     parser.add_argument("--fig_save_dir", type=str, help="to save figures",
-                        default='/media/lab/Yang/data/xView_YOLO/figures/')
+                        default='/data/users/yang/data/xView_YOLO/figures/')
 
     parser.add_argument("--data_save_dir", type=str, help="to save data files",
-                        default='/media/lab/Yang/code/yolov3/data_xview/{}_cls/')
+                        default='/data/users/yang/code/yxu-yolov3-xview/data_xview/{}_cls/')
 
     parser.add_argument("--results_dir", type=str, help="to save category files",
-                        default='/media/lab/Yang/code/yolov3/result_output/{}_cls/')
+                        default='/data/users/yang/code/yxu-yolov3-xview/result_output/{}_cls/')
 
     parser.add_argument("--cat_sample_dir", type=str, help="to save figures",
-                        default='/media/lab/Yang/data/xView_YOLO/cat_samples/')
+                        default='/data/users/yang/data/xView_YOLO/cat_samples/')
 
     # parser.add_argument("--img_bbx_figures_dir", type=str, help="to save figures",
-    #                     default='/media/lab/Yang/data/xView_YOLO/cat_samples/{}/{}_cls/img_name_2_gt_bbx_figures/')
+    #                     default='/data/users/yang/data/xView_YOLO/cat_samples/{}/{}_cls/img_name_2_gt_bbx_figures/')
 
     parser.add_argument("--cat_bbx_patches_dir", type=str, help="to split cats bbx patches",
-                        default='/media/lab/Yang/data/xView_YOLO/cat_samples/{}/{}_cls/cat_split_patches/')
+                        default='/data/users/yang/data/xView_YOLO/cat_samples/{}/{}_cls/cat_split_patches/')
     parser.add_argument("--cat_bbx_origins_dir", type=str, help="to split cats bbx patches",
-                        default='/media/lab/Yang/data/xView_YOLO/cat_samples/original/{}_cls/cat_split_origins/')
+                        default='/data/users/yang/data/xView_YOLO/cat_samples/original/{}_cls/cat_split_origins/')
 
     parser.add_argument("--val_percent", type=float, default=0.21,
                         help="0.24 0.2 Percent to split into validation (ie .25 = val set is 25% total)")
@@ -2283,16 +2283,16 @@ if __name__ == "__main__":
     # get_raw_airplane_tifs()
 
     '''
-     remove bad tifs ***** /media/lab/Yang/data/xView/airplane_bad_raw_tif_names.txt
+     remove bad tifs ***** /data/users/yang/data/xView/airplane_bad_raw_tif_names.txt
      '''
     # args = get_args()
-    # bad_img_path = '/media/lab/Yang/data/xView/airplane_bad_raw_tif_names.txt'
+    # bad_img_path = '/data/users/yang/data/xView/airplane_bad_raw_tif_names.txt'
     # src_dir = args.image_folder
     # remove_bad_image(bad_img_path, src_dir)
 
     '''
     create chips and label txt and get all images json, convert from *.geojson to *.json
-    then manually *****  remove bad images according to  /media/lab/Yang/data/xView/airplane_part_occlusion_raw_tif_names.txt
+    then manually *****  remove bad images according to  /data/users/yang/data/xView/airplane_part_occlusion_raw_tif_names.txt
     '''
     # syn=False
     # if syn:
@@ -2311,17 +2311,17 @@ if __name__ == "__main__":
 
     '''
     remove bad cropped .jpg 
-    manually get ***** /media/lab/Yang/data/xView/airplane_removed_cropped_jpg_names.txt
+    manually get ***** /data/users/yang/data/xView/airplane_removed_cropped_jpg_names.txt
     '''
     # args = get_args()
-    # bad_img_path = '/media/lab/Yang/data/xView/airplane_removed_cropped_jpg_names.txt'
+    # bad_img_path = '/data/users/yang/data/xView/airplane_removed_cropped_jpg_names.txt'
     # src_dir = args.images_save_dir
     # remove_bad_image(bad_img_path, src_dir)
 
     '''
     backup ground truth *.txt 
     remove bbox and annotations of bad cropped .jpg 
-    manually get ***** /media/lab/Yang/data/xView/airplane_removed_cropped_jpg_names.txt
+    manually get ***** /data/users/yang/data/xView/airplane_removed_cropped_jpg_names.txt
     '''
     # px_thres = 23
     # whr_thres = 3
@@ -2329,7 +2329,7 @@ if __name__ == "__main__":
     #     args = get_args(px_thres, whr_thres)
     # else:
     #     args = get_args()
-    # bad_img_names = '/media/lab/Yang/data/xView/airplane_removed_cropped_jpg_names.txt'
+    # bad_img_names = '/data/users/yang/data/xView/airplane_removed_cropped_jpg_names.txt'
     # remove_txt_and_json_of_bad_image(bad_img_names, args,px_thres, whr_thres)
 
     '''
@@ -2369,7 +2369,7 @@ if __name__ == "__main__":
     '''
     remove duplicate ground truth bbox by cat_id
     ** manually replace old overlap bbox with new lbl**** 
-    /media/lab/Yang/data/xView_YOLO/labels/608/1_cls_xcycwh_part_new
+    /data/users/yang/data/xView_YOLO/labels/608/1_cls_xcycwh_part_new
     '''
     #fixme Not Done
     # cat_id = 0
