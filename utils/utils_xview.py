@@ -323,7 +323,7 @@ def ap_per_class(tp, conf, pred_cls, target_cls, ntp=None, pr_path='', pr_name='
             i = pred_cls ==0
             n_gt = (target_cls == model_id).sum()
             n_p = i.sum()
-            print('n_gt', n_gt, 'n_p', n_p)
+#            print('n_gt', n_gt, 'n_p', n_p)
         else:
             i = pred_cls == c
             n_gt = (target_cls == c).sum()  # Number of ground truth objects
@@ -744,7 +744,7 @@ def compute_loss(p, targets, model):  # predictions, targets, model
             # print('tobj---', tobj.shape)
             # print('pi---', pi[..., 4].shape)
             lobj += BCEobj(pi[..., 4], tobj)  # obj loss
-            print('lobj---', lobj)
+            # print('lobj---', lobj)
 
         elif 'BCE' in arc:  # unified BCE (80 classes)
             t = torch.zeros_like(pi[..., 5:])  # targets

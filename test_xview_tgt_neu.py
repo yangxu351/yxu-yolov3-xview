@@ -425,7 +425,7 @@ def get_opt(dt=None, sr=None, comments=''):
     parser.add_argument('--syn_display_type', type=str, default=dt, help='syn_texture0, syn_color0, syn_texture, syn_color, syn_mixed, syn')
     parser.add_argument('--base_dir', type=str, default='data_xview/{}_cls/{}/', help='without syn data path')
 
-    parser.add_argument('--conf-thres', type=float, default=0.1, help='0.1 0.05 0.001 object confidence threshold')
+    parser.add_argument('--conf-thres', type=float, default=0.01, help='0.1 0.05 0.001 object confidence threshold')
     parser.add_argument('--nms-iou-thres', type=float, default=0.5, help='NMS 0.5  0.6 IOU threshold for NMS')
     parser.add_argument('--save_json', action='store_true', default=True, help='save a cocoapi-compatible JSON results file')
     parser.add_argument('--task', default='test', help="'test', 'study', 'benchmark'")
@@ -564,7 +564,8 @@ if __name__ == '__main__':
     prefix = 'syn'
     px_thres = 23
     whr_thres = 3 # 4
-    seeds = [17]
+#    seeds = [17]
+    seeds = [199] # 17
     for sd in seeds:
         for cmt in comments:
             base_cmt = base_cmt.format(sd)
@@ -577,6 +578,8 @@ if __name__ == '__main__':
             fstr = endstr[rcinx:] # '_' is included
             sstr = endstr[:rcinx]
             suffix = fstr + '_' + sstr
+            if cinx < 0:
+                suffix = ''
             opt.name = prefix + suffix
 
             ''' for specified model id '''
