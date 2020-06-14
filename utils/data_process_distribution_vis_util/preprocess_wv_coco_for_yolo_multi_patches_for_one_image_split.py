@@ -20,7 +20,7 @@ from utils.object_score_util import get_bbox_coords_from_annos_with_object_score
 import time
 
 
-def get_multi_crops_of_tif_name(tif_name):
+def get_multi_chips_and_txt_geojson_2_json_of_tif_name(tif_name):
     '''
     :return:
     catid_images_name_maps
@@ -179,58 +179,20 @@ if __name__ == '__main__':
     args = get_args()
 
     '''
-    create chips and label txt and get all images json, convert from *.geojson to *.json
-    '''
-    # pwv.create_chips_and_txt_geojson_2_json(args)
-
-    '''
     create multi chips (for one specified tif) and label txt and get all images json, convert from *.geojson to *.json
     w:3475
     h:3197
     '''
     # tif_name = '2315.tif'
-    get_multi_crops_of_tif_name(tif_name)
-
-    '''
-    catid_images_name_maps
-    catid_tifs_name_maps
-    copy raw tif to septerate tif folder 
-    '''
-    # get_cat_2_image_tif_name()
-
-    '''
-    remove bad images according to  /media/lab/Yang/data/xView/sailboat_bad_raw_tif_names.txt
-    983.tif
-    '''
-    # bad_img_path = '/media/lab/Yang/data/xView/sailboat_bad_raw_tif_names.txt'
-    # src_dir = os.path.join(args.base_tif_folder, 'raw_1_tifs')
-    # pwv.remove_bad_image(bad_img_path, src_dir)
-
-    # bad_img_path = '/media/lab/Yang/data/xView/sailboat_bad_image_names.txt'
-    # src_dir = args.images_save_dir
-    # pwv.remove_bad_image(bad_img_path, src_dir)
-
-    # bad_img_path = '/media/lab/Yang/data/xView/airplane_bad_raw_tif_names.txt'
-    # src_dir = os.path.join(args.base_tif_folder, 'raw_0_tifs')
-    # pwv.remove_bad_image(bad_img_path, src_dir)
-
-    '''
-    backup ground truth *.txt 
-    remove bbox and annotations of bad cropped .jpg 
-    manually get ***** /media/lab/Yang/data/xView/sailboat_airplane_removed_cropped_jpg_names.txt
-    '''
-    # bad_img_names = '/media/lab/Yang/data/xView/sailboat_airplane_removed_cropped_jpg_names.txt'
-    # args = get_args(px_thres=23, whr=3)
-    # pwv.remove_txt_and_json_of_bad_image(bad_img_names, args)
-
+    # get_multi_chips_and_txt_geojson_2_json_of_tif_name(tif_name)
 
     '''
     cheke bbox on images
     '''
-    # whr_thres = 3 # 3.5
-    # # px_thres= 23
-    # px_thres= 15
-    # args = get_args(px_thres, whr_thres)
+    # # whr_thres = 3 # 3.5
+    # # # px_thres= 23
+    # # px_thres= 15
+    # # args = get_args(px_thres, whr_thres)
 
     # args = get_args()
     # save_path = args.cat_sample_dir + 'image_with_bbox/m4_2315/'
@@ -251,15 +213,24 @@ if __name__ == '__main__':
     manually determine which contains multi-types of models, which should be deleted
     remove label files that contains others type of models
     '''
-    args = get_args()
-    images_dir = args.images_save_dir[:-1] + '_of_2315/m4_2315/' # 282
-    annos_dir = args.annos_save_dir[:-1] + '_of_2315/m4_2315/'
-    image_files = glob.glob(os.path.join(images_dir, '*.jpg'))
-    image_names = [os.path.basename(f).split('.jpg')[0] for f in image_files]
-    anno_files = glob.glob(os.path.join(annos_dir, '*.txt'))
-    for af in anno_files:
-        lbl_name = os.path.basename(af).split('.')[0]
-        if lbl_name not in image_names:
-            os.remove(af)
+    # args = get_args()
+    # images_dir = args.images_save_dir[:-1] + '_of_2315/m4_2315/' # 282
+    # annos_dir = args.annos_save_dir[:-1] + '_of_2315/m4_2315/'
+    # image_files = glob.glob(os.path.join(images_dir, '*.jpg'))
+    # image_names = [os.path.basename(f).split('.jpg')[0] for f in image_files]
+    # anno_files = glob.glob(os.path.join(annos_dir, '*.txt'))
+    # for af in anno_files:
+    #     lbl_name = os.path.basename(af).split('.')[0]
+    #     if lbl_name not in image_names:
+    #         os.remove(af)
 
-
+    '''
+    clean and backup annotations with some costraints
+    '''
+    # px_thres = 15
+    # whr_thres = 3
+    # args = get_args()
+    # tif_name = '2315.tif'
+    # txt_norm_dir = args.annos_save_dir[:-1] + '_of_{}/'.format(tif_name.split('.')[0]) + 'm4_{}'.format(tif_name.split('.')[0])
+    # print('txt_norm_dir ', txt_norm_dir)
+    # pwv.clean_backup_xview_plane_with_constraints(args, txt_norm_dir, px_thres, whr_thres)

@@ -489,15 +489,15 @@ if __name__ == "__main__":
 
     # seeds = [19999] # results are fixed
     # seeds = [17, 17, 17] # results are variable
-    seeds = [199] # results are fixed
-    data_name = 'xview'
-    px_thres= 23
-    whr_thres = 3
-    for sd in seeds:
-        #fixme --yang.xu
-        # run for multi times to get the desired split due to the use of list(set(l)
-        comments = '_px{}whr{}_seed{}'.format(px_thres, whr_thres, sd)
-        pwv.split_trn_val_with_chips(data_name=data_name, comments=comments, seed=sd, px_thres=px_thres, whr_thres=whr_thres)
+    # seeds = [199] # results are fixed
+    # data_name = 'xview'
+    # px_thres= 23
+    # whr_thres = 3
+    # for sd in seeds:
+    #     #fixme --yang.xu
+    #     # run for multi times to get the desired split due to the use of list(set(l)
+    #     comments = '_px{}whr{}_seed{}'.format(px_thres, whr_thres, sd)
+    #     pwv.split_trn_val_with_chips(data_name=data_name, comments=comments, seed=sd, px_thres=px_thres, whr_thres=whr_thres)
 
 
     '''
@@ -511,6 +511,7 @@ if __name__ == "__main__":
     # comments = '_px23whr3_seed{}'
 
     # seeds = [17]
+    # seeds = [199]
     # for sd in seeds:
     #     comments = '_px23whr3_seed{}'.format(sd)
     #     create_xview_syn_data(comments=comments, seed=sd)
