@@ -75,9 +75,9 @@ def test(cfg,
         # Load weights
         attempt_download(weights)
         if weights.endswith('.pt'):  # pytorch format
-            model.load_state_dict(torch.load(weights, map_location=device)['model'])
-            # m_key = opt.epochs -1
-            # model.load_state_dict(torch.load(weights, map_location=device)[m_key]['model'])
+            # model.load_state_dict(torch.load(weights, map_location=device)['model'])
+            m_key = opt.epochs -1
+            model.load_state_dict(torch.load(weights, map_location=device)[m_key]['model'])
         else:  # darknet format
             _ = load_darknet_weights(model, weights)
 
@@ -104,7 +104,7 @@ def test(cfg,
 
     # Dataloader
     if dataloader is None:
-        dataset = LoadImagesAndLabels(path, lbl_path, img_size, batch_size, rect=True, cache_labels=True)  #
+        dataset = LoadImagesAndLabels(path, lbl_path, img_size, batch_size, rect=True, cache_labels=True, with_modelid=True)  #
         batch_size = min(batch_size, len(dataset))
         dataloader = DataLoader(dataset,
                                 batch_size=batch_size,
@@ -122,13 +122,14 @@ def test(cfg,
     loss = torch.zeros(3)
     jdict, stats, ap, ap_class = [], [], [], []
     # fixme
+    tcls = []
     for batch_i, (imgs, targets, paths, shapes) in enumerate(tqdm(dataloader, desc=s)):
         imgs = imgs.to(device).float() / 255.0  # uint8 to float32, 0 - 255 to 0.0 - 1.0
         targets = targets.to(device)
         # print('targets--', targets.shape)
-        # print('paths--', paths)
-        # print('shapes', shapes)
-        # print(targets)
+        # print('paths--', len(paths), paths)
+        # # print('shapes', shapes)
+        # print('targets', targets)
         # exit(0)
         _, _, height, width = imgs.shape  # batch size, channels, height, width
 
@@ -144,27 +145,32 @@ def test(cfg,
             # Compute loss
             if hasattr(model, 'hyp'):  # if model has loss hyperparameters
                 loss += compute_loss(train_out, targets, model)[1][:3].cpu()  # GIoU, obj, cls
-
+            # print('inf_out', inf_out)
             # Run NMS
             output = non_max_suppression(inf_out, conf_thres=conf_thres, iou_thres=nms_iou_thres)
-
+            # print('output', output)
         # Statistics per image
+        print('opt.model_id', opt.model_id)
         for si, pred in enumerate(output):
             # print('si', si, targets[si])
             labels = targets[targets[:, 0] == si, 1:]
-            
-            if opt.model_id is not None:
-                labels = labels[labels[:, -1] == opt.model_id]
-                nl = len(labels)
-                tcls =labels[:, -1].tolist() if nl else []
-            else:
-                #fixme --yang.xu
-                if (labels >=0).all():
-                    nl = len(labels)
-                else:
-                    nl = 0
-                tcls = labels[:, 0].tolist() if nl else []  # target class
-
+            print('labels', labels.shape)
+            print('labels', labels)
+            #fixme --yang.xu
+            # if opt.model_id is not None:
+            #     nl = len(labels)
+            #     if nl:
+            #         labels = labels[labels[:, -1] == opt.model_id]
+            #         nl = len(labels)
+            #     tcls =labels[:, -1].tolist() if nl else []
+            # else:
+            #     nl = len(labels)
+            #     tcls = labels[:, 0].tolist() if nl else []  # target class
+            #fixme --yang.xu
+            labels = targets[targets[:, 0] == si, 1:]
+            print('labels', labels)
+            nl = len(labels)
+            tcls = labels[:, 0].tolist() if nl else []  # target class
             #fixme --yang.xu
             # tcls = labels[:, 0].tolist() if nl else []  # target class
             # print('tcls', tcls)
@@ -212,8 +218,14 @@ def test(cfg,
             correct = torch.zeros(len(pred), niou, dtype=torch.bool)
             if nl:
                 detected = []  # target indices
-                tcls_tensor = labels[:, 0]
 
+                tcls_tensor = labels[:, 0]
+                #fixme --yang.xu
+                # if opt.model_id is not None:
+                #     tcls_tensor = labels[:, -1]
+                #     print(tcls_tensor)
+                # else:
+                #     tcls_tensor = labels[:, 0]
                 # target boxes
                 tbox = xywh2xyxy(labels[:, 1:5]) * torch.Tensor([width, height, width, height]).to(device)
 
@@ -244,7 +256,7 @@ def test(cfg,
     # Compute statistics
     stats = [np.concatenate(x, 0) for x in list(zip(*stats))]  # to numpy
     if len(stats):
-        p, r, ap, f1, ap_class = ap_per_class(*stats, pr_path=opt.result_dir, pr_name=opt.name, model_id=opt.model_id)
+        p, r, ap, f1, ap_class = ap_per_class(*stats, pr_path=opt.result_dir, pr_name=opt.name)
         # if niou > 1:
         #       p, r, ap, f1 = p[:, 0], r[:, 0], ap[:, 0], ap.mean(1)  # average across ious
         #fixme --yang.xu
@@ -313,8 +325,12 @@ def test(cfg,
 
     # Return results
     maps = np.zeros(nc) + map
-    for i, c in enumerate(ap_class):
-        maps[c] = ap[i]
+    # print('ap', ap, 'ap_class', ap_class)
+    #fixme
+    # for i, c in enumerate(ap_class):
+    #     maps[c] = ap[i]
+    for i in range(len(ap_class)):
+        maps[i] = ap[i]
     return (mp, mr, map, mf1, *(loss.cpu() / len(dataloader)).tolist()), maps
     # return (mp, mr, map, mf1, *(loss / len(dataloader)).tolist()), maps
     # return (mp, mr, map, mf1, *(loss / len(dataloader)).tolist())
@@ -543,7 +559,7 @@ if __name__ == '__main__':
                  opt.batch_size,
                  opt.img_size,
                  opt.conf_thres,
-                 opt.num_iou_thres,
+                 opt.nms_iou_thres,
                  opt.save_json, opt=opt)
 
     '''

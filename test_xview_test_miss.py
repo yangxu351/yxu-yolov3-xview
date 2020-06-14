@@ -138,10 +138,14 @@ def test(cfg,
         p, r, f1, mp, mr, map, mf1 = 0., 0., 0., 0., 0., 0., 0.
         loss = torch.zeros(3)
         jdict, stats, ap, ap_class = [], [], [], []
-        # fixme
+        # fixme --yang.xu
+        imgs_hash_list = []
+        tgt_hash_list = []
         for batch_i, (imgs, targets, paths, shapes) in enumerate(tqdm(dataloader, desc=s)):
+
             imgs = imgs.to(device).float() / 255.0  # uint8 to float32, 0 - 255 to 0.0 - 1.0
             targets = targets.to(device)
+
             # print('imgs--', imgs.shape)
             # print('targets--', targets.shape)
             # print('targets ', targets)
@@ -162,10 +166,10 @@ def test(cfg,
                 # Compute loss
                 if hasattr(model, 'hyp'):  # if model has loss hyperparameters
                     loss += compute_loss(train_out, targets, model)[1][:3].cpu()  # GIoU, obj, cls
-
+                    # TODO: RECORD LOSS
                 # Run NMS
                 output = non_max_suppression(inf_out, conf_thres=conf_thres, iou_thres=iou_thres)
-
+                # TODO: VALUE
             # Statistics per image
             for si, pred in enumerate(output):
                 # print('si ', si, targets[si])
@@ -205,7 +209,7 @@ def test(cfg,
 
                 # Clip boxes to image bounds
                 clip_coords(pred, (height, width))
-
+                #TODO: PRED ????
                 # Append to pycocotools JSON dictionary
                 if save_json:
                     # [{"image_id": 42, "category_id": 18, "bbox": [258.15, 41.29, 348.26, 243.78], "score": 0.236}, ...
@@ -277,6 +281,8 @@ def test(cfg,
                 # pred (x1, y1, x2, y2, object_conf, conf, class)
                 stats.append((correct, pred[:, 4].cpu(), pred[:, 5].cpu(), tcls))
                 print('\n correct: {}  pred[:,4]:{}  pred[:, 5]:{} tcls:{}'.format(correct, pred[:, 4].cpu(), pred[:, 5].cpu(), tcls))
+
+
         # Compute statistics
         stats = [np.concatenate(x, 0) for x in list(zip(*stats))]  # to numpy
         if len(stats):

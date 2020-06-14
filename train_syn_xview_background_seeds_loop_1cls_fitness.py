@@ -71,6 +71,19 @@ hyp = {'giou': 1.0,  # giou loss gain
        'scale': 0.05,  # image scale (+/- gain)
        'shear': 0.641}  # image shear (+/- deg)
 
+
+class MyEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        else:
+            return super(MyEncoder, self).default(obj)
+
+
 def infi_loop(dl):
     while True:
         for (imgs, targets, paths, _) in dl:
@@ -272,6 +285,8 @@ def train(opt):
 
     print('Using %g dataloader workers' % nw)
     print('Starting %s for %g epochs...' % ('prebias' if opt.prebias else 'training', epochs))
+
+    trn_name_dict = {}
     for epoch in range(start_epoch, epochs):  # epoch ------------------------------------------------------------------
         model.train()
         print(('\n' + '%10s' * 8) % ('Epoch', 'gpu_mem', 'GIoU', 'obj', 'cls', 'total', 'targets', 'img_size'))
@@ -286,7 +301,8 @@ def train(opt):
         #fixme
         # pbar = tqdm(enumerate(dataloader), total=nb)  # progress bar
         # for i, (imgs, targets, paths, _) in pbar:
-
+        if epoch < 20:
+            trn_name_dict[epoch] = []
         gen_data = infi_loop(dataloader)
         for i in range(nb):
             imgs, targets, paths = next(gen_data)
@@ -309,7 +325,9 @@ def train(opt):
                 plot_images(imgs=imgs, targets=targets, paths=paths, fname=fname)
                 if tb_writer:
                     tb_writer.add_image(fname, cv2.imread(fname)[:, :, ::-1], dataformats='HWC')
-
+            if epoch < 20:
+                for bs in range(batch_size):
+                    trn_name_dict[epoch].append(Path(paths[i]).name)
             # Run model
             pred = model(imgs)
 
@@ -344,7 +362,6 @@ def train(opt):
             print(s)
             # pbar.set_description(s)
             # end batch ------------------------------------------------------------------------------------------------
-
         # Update scheduler
         scheduler.step()
         print(scheduler.get_lr())
@@ -372,7 +389,7 @@ def train(opt):
                                       batch_size=batch_size * 2,
                                       img_size=opt.img_size,
                                       conf_thres= 0.1, # 0.001 if final_epoch else 0.1,  # 0.1 for speed
-                                      iou_thres=0.5, # 0.6 if final_epoch and is_xview else 0.5,
+                                      nms_iou_thres=0.5, # 0.6 if final_epoch and is_xview else 0.5,
                                       save_json=True,  # final_epoch and is_xview, #fixme
                                       model=model,#fixme
                                       # model=ema.ema,
@@ -438,6 +455,7 @@ def train(opt):
             del chkpt
 
         # end epoch ----------------------------------------------------------------------------------------------------
+    json.dump(trn_name_dict, open('trn_names_for_20_epoch.json', 'w'), ensure_ascii=False, indent=2, cls=MyEncoder)
 
     # png_name = 'results_{}_{}.png'.format(opt.syn_display_type, opt.syn_ratio)
     png_name = 'results_{}.png'.format(opt.name)
@@ -449,10 +467,10 @@ def train(opt):
     return results
 
 
-def get_opt(seed=1024, cmt='', hyp_cmt = 'hgiou1', Train=True, sr=None, mid=None):
+def get_opt(seed=1024, cmt='', hyp_cmt = 'hgiou1', Train=True, sr=None):
     parser = argparse.ArgumentParser()
     parser.add_argument('--seed', type=int, default=seed, help='seed')
-    parser.add_argument('--model_id', type=int, default=mid, help='model_id')
+    parser.add_argument('--model_id', type=int, default=None, help='model_id')
     parser.add_argument('--cmt', type=str, default=cmt,
                         help='xview_syn_xview_bkg_texture, xview_syn_xview_bkg_color, xview_syn_xview_bkg_mixed')
     parser.add_argument('--syn_ratio', type=float, default=sr, help='syn_ratio')
@@ -595,9 +613,9 @@ if __name__ == '__main__':
             # for sr in syn_ratios:
             sr = syn_ratios[cx]
             # sr = 1
-            # opt = get_opt(sd, cmt, hyp_cmt=hyp_cmt, sr=sr)
-            opt = get_opt(sd, cmt, hyp_cmt=hyp_cmt, sr=sr, mid=model_id)
+            opt = get_opt(sd, cmt, hyp_cmt=hyp_cmt, sr=sr)
             opt.base_dir = opt.base_dir.format(opt.class_num, pxwhrsd.format(sd))
+            opt.model_id = model_id
             # opt.resume = True
             if sr == 0 or sr is None:
                 results_file = os.path.join(opt.result_dir, 'results_{}_seed{}.txt'.format(opt.cmt, opt.seed))
