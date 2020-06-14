@@ -18,6 +18,9 @@ import cv2
 import seaborn as sn
 import time
 
+def is_non_zero_file(fpath):
+    return os.path.isfile(fpath) and os.path.getsize(fpath) > 0
+
 
 def get_annos_of_model_id(model_id=0):
     src_model_dir = args.annos_save_dir[:-1] + '_all_model/'
@@ -230,6 +233,94 @@ def get_image_list_contain_model_id(model_id):
     return image_list
 
 
+def create_model_rareclass_hard_easy_set_backup(model_id, rare_id, non_rare_id=0, seed=199, pxwhr='px23whr3'):
+    '''
+    create hard easy validation dataset of model* rc*
+    '''
+    val_labeled_dir = os.path.join(args.data_list_save_dir, pxwhr + '_seed{}'.format(seed) + '_val_lbl_with_modelid')
+    val_labeled_m_rc_easy = os.path.join(args.data_list_save_dir, pxwhr + '_seed{}'.format(seed) +
+                                      '_val_lbl_m{}_rc{}_easy'.format(model_id, rare_id))
+    if not os.path.exists(val_labeled_m_rc_easy):
+        os.mkdir(val_labeled_m_rc_easy)
+
+    val_labeled_m_rc_hard = os.path.join(args.data_list_save_dir, pxwhr + '_seed{}'.format(seed) +
+                                      '_val_lbl_m{}_rc{}_hard'.format(model_id, rare_id))
+    if not os.path.exists(val_labeled_m_rc_hard):
+        os.mkdir(val_labeled_m_rc_hard)
+
+    val_m_rc_path = args.annos_save_dir[:-1] + '_m{}_rc{}'.format(model_id, rare_id)
+    print('val_m_rc_path', val_m_rc_path)
+    m_rc_files = glob.glob(os.path.join(val_m_rc_path, '*.txt'))
+    m_rc_names = [os.path.basename(f) for f in m_rc_files]
+    print('m_rc_names', m_rc_names)
+
+    des_hard_dir = args.annos_save_dir[:-1] + \
+                   '_val_m{}_rc{}_hard_seed{}'.format(model_id, rare_id, seed)
+    if not os.path.exists(des_hard_dir):
+        os.mkdir(des_hard_dir)
+    print('des_hard_dir', des_hard_dir)
+
+    des_easy_dir = args.annos_save_dir[:-1] + \
+                   '_val_m{}_rc{}_easy_seed{}'.format(model_id, rare_id, seed)
+    if not os.path.exists(des_easy_dir):
+        os.mkdir(des_easy_dir)
+    print('des_easy_dir', des_easy_dir)
+
+    val_files = glob.glob(os.path.join(val_labeled_dir, '*.txt'))
+    for vf in val_files:
+        f_name = os.path.basename(vf)
+        if is_non_zero_file(vf):
+            df_txt_easy = pd.read_csv(vf, header=None, sep=' ')
+            if f_name not in m_rc_names:
+                df_txt_easy.loc[:, 5] = non_rare_id
+            else:
+                df_txt_easy.loc[:, 5] = rare_id
+            df_txt_easy.to_csv(os.path.join(val_labeled_m_rc_easy, f_name), header=False, index=False, sep=' ')
+
+            shutil.copy(os.path.join(val_labeled_m_rc_easy, f_name), os.path.join(des_easy_dir, f_name))
+
+            if f_name not in m_rc_names:
+                txt_hard = open(os.path.join(val_labeled_m_rc_hard, f_name), 'w')
+                txt_hard.close()
+            else:
+                df_txt_hard = pd.read_csv(vf, header=None, sep=' ')
+                df_txt_hard.loc[:, 5] = rare_id
+                df_txt_hard.to_csv(os.path.join(val_labeled_m_rc_hard, f_name), header=False, index=False, sep=' ')
+
+            shutil.copy(os.path.join(val_labeled_m_rc_hard, f_name), os.path.join(des_hard_dir, f_name))
+        else:
+            shutil.copy(vf, os.path.join(val_labeled_m_rc_easy, f_name))
+            shutil.copy(vf, os.path.join(val_labeled_m_rc_hard, f_name))
+
+            shutil.copy(vf, os.path.join(des_easy_dir, f_name))
+            shutil.copy(vf, os.path.join(des_hard_dir, f_name))
+
+
+def create_test_dataset_of_m_rc(model_id, rare_id, type='hard', seed=199, pxwhrs='px23whr3_seed199'):
+    val_dir = args.annos_save_dir[:-1] + '_val_m{}_rc{}_{}_seed{}'.format(model_id, rare_id, type, seed)
+    print('val_dir', val_dir)
+    val_lbl_files = glob.glob(os.path.join(val_dir, '*.txt'))
+
+    base_dir = args.data_save_dir
+    test_lbl_txt = open(os.path.join(base_dir, 'xviewtest_lbl_{}_m{}_rc{}_{}.txt'.format(pxwhrs, model_id, rare_id, type)), 'w')
+    test_img_txt = open(os.path.join(base_dir, 'xviewtest_img_{}_m{}_rc{}_{}.txt'.format(pxwhrs, model_id, rare_id, type)), 'w')
+
+    for lf in val_lbl_files:
+        lbl_name = os.path.basename(lf)
+        img_name = lbl_name.replace('.txt', '.jpg')
+        test_lbl_txt.write('%s\n' % lf)
+        test_img_txt.write('%s\n' % os.path.join(args.images_save_dir, img_name))
+    test_img_txt.close()
+    test_lbl_txt.close()
+
+    data_txt = open(os.path.join(base_dir, 'xviewtest_{}_m{}_rc{}_{}.data'.format(pxwhrs, model_id, rare_id, type)), 'w')
+    data_txt.write('classes=%s\n' % str(args.class_num))
+    data_txt.write('test=./data_xview/{}_cls/{}/xviewtest_img_{}_m{}_rc{}_{}.txt\n'.format(args.class_num, pxwhrs, pxwhrs, model_id, rare_id, type))
+    data_txt.write('test_label=./data_xview/{}_cls/{}/xviewtest_lbl_{}_m{}_rc{}_{}.txt\n'.format(args.class_num, pxwhrs, pxwhrs, model_id, rare_id, type))
+    data_txt.write('names=./data_xview/{}_cls/xview.names\n'.format(args.class_num))
+    data_txt.close()
+
+
 def get_args(px_thres=None, whr_thres=None, seed=17):
     parser = argparse.ArgumentParser()
 
@@ -244,8 +335,10 @@ def get_args(px_thres=None, whr_thres=None, seed=17):
 
     parser.add_argument("--data_list_save_dir", type=str, help="to save selected trn val images and labels",
                         default='/media/lab/Yang/data/xView_YOLO/labels/{}/{}_cls/data_list/')
+
     parser.add_argument("--data_save_dir", type=str, help="to save data files",
                         default='/media/lab/Yang/code/yolov3/data_xview/{}_cls/')
+
     parser.add_argument("--cat_sample_dir", type=str, help="to save figures",
                         default='/media/lab/Yang/data/xView_YOLO/cat_samples/')
     parser.add_argument("--annos_save_dir", type=str, help="to save txt annotation files",
@@ -283,6 +376,8 @@ def get_args(px_thres=None, whr_thres=None, seed=17):
         os.makedirs(args.cat_sample_dir)
 
     return args
+
+
 
 
 if __name__ == '__main__':
@@ -343,40 +438,82 @@ if __name__ == '__main__':
     others are empty
     '''
     # # model_id = 0
-    model_id = 4
-    # model_id = 1
-    get_all_annos_only_model_id_labeled(model_id)
+    # model_id = 4
+    # # model_id = 1
+    # get_all_annos_only_model_id_labeled(model_id)
 
     '''
     get all validation txt but only specified miss model_id labeled
     all others are empty except the miss ones
     '''
-    model_id = 4
-    get_annos_miss_files_empty_others_by_model_id(model_id)
+    # model_id = 4
+    # get_annos_miss_files_empty_others_by_model_id(model_id)
 
     '''
     get all validation txt but only specified miss model_id labeled
     base on val miss list
     others are empty
     '''
-    model_id = 4
-    # model_id = 1
-    create_test_dataset_of_model_id_labeled_miss(model_id)
+    # model_id = 4
+    # # model_id = 1
+    # create_test_dataset_of_model_id_labeled_miss(model_id)
 
     '''
     create val dataset of all annos but only model_id labeled
     others are empty
     '''
     # model_id = 1
-    model_id = 4
-    create_test_dataset_of_model_id_labeled(model_id)
+    # model_id = 4
+    # create_test_dataset_of_model_id_labeled(model_id)
+
+    '''
+    create testdataset of 2315_*.jpg -- m4 rc1
+    '''
+
+    '''                                                                                                 
+    create the validation set of model 4 that used for zero-learning (easy) and zero-learning (hard)
+    hard------> val set : only rc* labeled, others empty
+    easy------> val set : rc* labeled as rc, others labeled as non-rc(0)    
+    seed = 17                                                                                           
+    seed = 199                                                                                          
+    all models that are not belong to the rare object will be labeled as 0                              
+    '''
+    # seed = 17
+    # # seed = 199
+    # px_thres = 23
+    # whr_thres = 3
+    # args = get_args(px_thres, whr_thres, seed)
+    # pxwhr = 'px{}whr{}'.format(px_thres, whr_thres)
+    # model_id = 4
+    # rare_id = 1
+    # non_rare_id = 0
+    # create_model_rareclass_hard_easy_set_backup(model_id, rare_id, non_rare_id, seed, pxwhr)
+
+    '''                                                                                                 
+    create *.data for zero-learning (easy) and zero-learning (hard)
+    hard------> val set : only rc* labeled, others empty
+    easy------> val set : rc* labeled as rc, others labeled as non-rc(0)    
+    seed = 17                                                                                           
+    seed = 199                                                                                          
+    '''
+    # seed = 17
+    # # seed = 199
+    # px_thres = 23
+    # whr_thres = 3
+    # args = get_args(px_thres, whr_thres, seed)
+    # pxwhrs = 'px{}whr{}_seed{}'.format(px_thres, whr_thres, seed)
+    # model_id = 4
+    # rare_id = 1
+    # non_rare_id = 0
+    # types = ['hard', 'easy']
+    # for type in types:
+    #     create_test_dataset_of_m_rc(model_id, rare_id, type, seed, pxwhrs)
 
 
 
 
 
-
-
-
+    # import collections
+    # print([item for item, count in collections.Counter(trn_names).items() if count > 1])
 
 

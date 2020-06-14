@@ -107,6 +107,50 @@ def get_multi_chips_and_txt_geojson_2_json_of_tif_name(tif_name):
     json.dump(trn_instance, open(json_file, 'w'), ensure_ascii=False, indent=2, cls=pwv.MyEncoder)
 
 
+def create_testset_txt_list_txt_data_of_tif_name(tif_name):
+    args = get_args()
+    txt_norm_dir = args.annos_save_dir[:-1] + '_of_{}/'.format(tif_name) + 'm4_{}'.format(tif_name)
+    print('txt_norm_dir ', txt_norm_dir)
+    txt_modelid_dir = args.annos_save_dir[:-1] + '_of_{}/'.format(tif_name) + 'm4_{}'.format(tif_name) + '_with_modelid'
+    if not os.path.exists(txt_modelid_dir):
+        os.mkdir(txt_modelid_dir)
+
+    lbl_files = glob.glob(os.path.join(txt_norm_dir, '*.txt'))
+    for lf in lbl_files:
+        lbl_name = os.path.basename(lf)
+        df_lbl = pd.read_csv(lf, header=None, names =[0, 1, 2, 3, 4, 5], sep=' ')
+        df_lbl[5] = 4
+        df_lbl.to_csv(os.path.join(txt_modelid_dir, lbl_name), header=False, index=False, sep=' ')
+
+    args = get_args()
+    tif_name = '2315.tif'.split('.')[0]
+    model_id = 4
+    txt_norm_dir = args.annos_save_dir[:-1] + '_of_{}/'.format(tif_name) + 'm{}_{}'.format(model_id, tif_name)
+    base_pxwhrs = 'px23whr3_seed17'
+
+    base_dir = args.data_save_dir
+    img_dir = args.images_save_dir
+    test_lbl_txt = open(os.path.join(base_dir, base_pxwhrs, 'xviewtest_lbl_{}_m{}_{}.txt'.format(base_pxwhrs, model_id, tif_name)), 'w')
+    test_img_txt = open(os.path.join(base_dir, base_pxwhrs, 'xviewtest_img_{}_m{}_{}.txt'.format(base_pxwhrs, model_id, tif_name)), 'w')
+
+    lbl_modeled_files = glob.glob(os.path.join(txt_modelid_dir, '*.txt'))
+    for mf in lbl_modeled_files:
+        lbl_name = os.path.basename(mf)
+        img_name = lbl_name.replace('.txt', '.jpg')
+        test_lbl_txt.write('%s\n' % mf)
+        test_img_txt.write('%s\n' % os.path.join(img_dir, img_name))
+    test_img_txt.close()
+    test_lbl_txt.close()
+
+    data_txt = open(os.path.join(base_dir, base_pxwhrs, 'xviewtest_{}_m{}_{}.data'.format(base_pxwhrs, model_id, tif_name)), 'w')
+    data_txt.write('classes=%s\n' % str(args.class_num))
+    data_txt.write('test=./data_xview/{}_cls/{}/xviewtest_lbl_{}_m{}_{}.txt\n'.format(args.class_num, base_pxwhrs, base_pxwhrs, model_id, tif_name))
+    data_txt.write('test_label=./data_xview/{}_cls/{}/xviewtest_lbl_{}_m{}_{}.txt\n'.format(args.class_num, base_pxwhrs, base_pxwhrs, model_id, tif_name))
+    data_txt.write('names=./data_xview/{}_cls/xview.names\n'.format(args.class_num))
+    data_txt.close()
+
+
+
 def get_args(px_thres=None, whr=None): #
     parser = argparse.ArgumentParser()
     parser.add_argument("--image_folder", type=str,
@@ -126,6 +170,7 @@ def get_args(px_thres=None, whr=None): #
 
     parser.add_argument("--txt_save_dir", type=str, help="to save  related label files",
                         default='/media/lab/Yang/data/xView_YOLO/labels/')
+
     parser.add_argument("--data_list_save_dir", type=str, help="to save selected trn val images and labels",
                         default='/media/lab/Yang/data/xView_YOLO/labels/{}/{}_cls/data_list/')
 
@@ -234,3 +279,13 @@ if __name__ == '__main__':
     # txt_norm_dir = args.annos_save_dir[:-1] + '_of_{}/'.format(tif_name.split('.')[0]) + 'm4_{}'.format(tif_name.split('.')[0])
     # print('txt_norm_dir ', txt_norm_dir)
     # pwv.clean_backup_xview_plane_with_constraints(args, txt_norm_dir, px_thres, whr_thres)
+
+
+    '''
+    labeled the bbox with m4
+    create lbl list *.txt
+    cresate *.data
+    '''
+    # tif_name = '2315.tif'.split('.')[0]
+    # create_testset_txt_list_txt_data_of_tif_name(tif_name)
+
