@@ -609,13 +609,13 @@ def split_trn_val_with_chips(data_name='xview', comments='', seed=17, px_thres=N
 
     data_save_dir = args.data_save_dir
     if comments:
-        txt_save_dir = args.data_list_save_dir + comments[1:] + '_bh3'+ '/'
+        txt_save_dir = args.data_list_save_dir + comments[1:] + '_bh'+ '/'
         if os.path.exists(txt_save_dir):
             shutil.rmtree(txt_save_dir)
             os.makedirs(txt_save_dir)
         else:
             os.makedirs(txt_save_dir)
-        data_save_dir = os.path.join(data_save_dir, comments[1:], '_bh3')
+        data_save_dir = os.path.join(data_save_dir, comments[1:])
         if os.path.exists(data_save_dir):
             shutil.rmtree(data_save_dir)
             os.makedirs(data_save_dir)

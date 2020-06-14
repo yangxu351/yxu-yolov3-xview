@@ -185,9 +185,11 @@ if __name__ == '__main__':
 
     '''
     create multi chips (for one specified tif) and label txt and get all images json, convert from *.geojson to *.json
+    w:3475
+    h:3197
     '''
     # tif_name = '2315.tif'
-    # get_multi_crops_of_tif_name(tif_name)
+    get_multi_crops_of_tif_name(tif_name)
 
     '''
     catid_images_name_maps
@@ -229,16 +231,35 @@ if __name__ == '__main__':
     # # px_thres= 23
     # px_thres= 15
     # args = get_args(px_thres, whr_thres)
+
+    # args = get_args()
+    # save_path = args.cat_sample_dir + 'image_with_bbox/m4_2315/'
+    # if not os.path.exists(save_path):
+    #     os.makedirs(save_path)
+    # images_dir = args.images_save_dir[:-1] + '_of_2315/m4_2315/' # 282
+    # annos_dir = args.annos_save_dir[:-1] + '_of_2315/m4_2315/'
+    # print('images_dir', images_dir)
+    # print('annos_dir', annos_dir)
+    # img_list = np.sort(glob.glob(os.path.join(images_dir, '*.jpg')))
+    # for img in img_list:
+    #     lbl_name = os.path.basename(img).replace('.jpg', '.txt')
+    #     lbl_file = os.path.join(annos_dir, lbl_name)
+    #     gbc.plot_img_with_bbx(img, lbl_file, save_path, label_index=False)
+
+
+    '''
+    manually determine which contains multi-types of models, which should be deleted
+    remove label files that contains others type of models
+    '''
     args = get_args()
-    save_path = args.cat_sample_dir + 'image_with_bbox/m4_2315/'
-    if not os.path.exists(save_path):
-        os.makedirs(save_path)
-    images_dir = args.images_save_dir[:-1] + '_of_2315/m4_2315/'
+    images_dir = args.images_save_dir[:-1] + '_of_2315/m4_2315/' # 282
     annos_dir = args.annos_save_dir[:-1] + '_of_2315/m4_2315/'
-    print('images_dir', images_dir)
-    print('annos_dir', annos_dir)
-    img_list = np.sort(glob.glob(os.path.join(images_dir, '*.jpg')))
-    for img in img_list:
-        lbl_name = os.path.basename(img).replace('.jpg', '.txt')
-        lbl_file = os.path.join(annos_dir, lbl_name)
-        gbc.plot_img_with_bbx(img, lbl_file, save_path, label_index=False)
+    image_files = glob.glob(os.path.join(images_dir, '*.jpg'))
+    image_names = [os.path.basename(f).split('.jpg')[0] for f in image_files]
+    anno_files = glob.glob(os.path.join(annos_dir, '*.txt'))
+    for af in anno_files:
+        lbl_name = os.path.basename(af).split('.')[0]
+        if lbl_name not in image_names:
+            os.remove(af)
+
+
