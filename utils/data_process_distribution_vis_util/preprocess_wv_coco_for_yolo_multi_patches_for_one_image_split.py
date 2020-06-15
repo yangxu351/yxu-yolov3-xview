@@ -129,7 +129,7 @@ def create_testset_txt_list_txt_data_of_tif_name(tif_name):
     base_pxwhrs = 'px23whr3_seed17'
 
     base_dir = args.data_save_dir
-    img_dir = args.images_save_dir
+    img_dir = os.path.join(args.images_save_dir[:-1] + '_of_{}'.format(tif_name),  'm{}_{}'.format(model_id, tif_name))
     test_lbl_txt = open(os.path.join(base_dir, base_pxwhrs, 'xviewtest_lbl_{}_m{}_{}.txt'.format(base_pxwhrs, model_id, tif_name)), 'w')
     test_img_txt = open(os.path.join(base_dir, base_pxwhrs, 'xviewtest_img_{}_m{}_{}.txt'.format(base_pxwhrs, model_id, tif_name)), 'w')
 
@@ -144,7 +144,7 @@ def create_testset_txt_list_txt_data_of_tif_name(tif_name):
 
     data_txt = open(os.path.join(base_dir, base_pxwhrs, 'xviewtest_{}_m{}_{}.data'.format(base_pxwhrs, model_id, tif_name)), 'w')
     data_txt.write('classes=%s\n' % str(args.class_num))
-    data_txt.write('test=./data_xview/{}_cls/{}/xviewtest_lbl_{}_m{}_{}.txt\n'.format(args.class_num, base_pxwhrs, base_pxwhrs, model_id, tif_name))
+    data_txt.write('test=./data_xview/{}_cls/{}/xviewtest_img_{}_m{}_{}.txt\n'.format(args.class_num, base_pxwhrs, base_pxwhrs, model_id, tif_name))
     data_txt.write('test_label=./data_xview/{}_cls/{}/xviewtest_lbl_{}_m{}_{}.txt\n'.format(args.class_num, base_pxwhrs, base_pxwhrs, model_id, tif_name))
     data_txt.write('names=./data_xview/{}_cls/xview.names\n'.format(args.class_num))
     data_txt.close()

@@ -91,10 +91,10 @@ def test(cfg,
     data = parse_data_cfg(data)
     nc = int(data['classes'])  # number of classes
     # fixme
-    path = data['valid']  # path to test images
-    lbl_path = data['valid_label']
-    # path = data['test']  # path to test images
-    # lbl_path = data['test_label']
+    # path = data['valid']  # path to test images
+    # lbl_path = data['valid_label']
+    path = data['test']  # path to test images
+    lbl_path = data['test_label']
     # path = data['valid_rare']  # path to test images
     # lbl_path = data['valid_rare_label']
     names = load_classes(data['names'])  # class names
@@ -155,7 +155,7 @@ def test(cfg,
             # print('si', si, targets[si])
             labels = targets[targets[:, 0] == si, 1:]
             print('labels', labels.shape)
-            print('labels', labels)
+            # print('labels', labels)
             #fixme --yang.xu
             # if opt.model_id is not None:
             #     nl = len(labels)
@@ -167,13 +167,13 @@ def test(cfg,
             #     nl = len(labels)
             #     tcls = labels[:, 0].tolist() if nl else []  # target class
             #fixme --yang.xu
-            labels = targets[targets[:, 0] == si, 1:]
-            print('labels', labels)
+            # labels = targets[targets[:, 0] == si, 1:]
+            # print('labels', labels)
             nl = len(labels)
             tcls = labels[:, 0].tolist() if nl else []  # target class
             #fixme --yang.xu
             # tcls = labels[:, 0].tolist() if nl else []  # target class
-            # print('tcls', tcls)
+            print('tcls', tcls)
 
             seen += 1
 
@@ -550,7 +550,8 @@ if __name__ == '__main__':
             # opt.data = 'data_xview/{}_cls/{}/{}_seed{}_with_model.data'.format(opt.class_num, 'px6whr4_ng0_seed{}'.format(sd), 'xview_px6whr4_ng0', sd)
             # opt.data = 'data_xview/{}_cls/{}/{}_seed{}_with_model.data'.format(opt.class_num, 'px{}whr{}_seed{}'.format(px_thres, whr_thres, sd), 'xview_px{}whr{}'.format(px_thres, whr_thres), sd)
             # opt.data = 'data_xview/{}_{}_cls/{}_seed{}/{}_seed{}_xview_val_labeled_miss.data'.format(cmt, opt.class_num, cmt, sd, cmt, sd)
-            opt.data = 'data_xview/{}_cls/{}/xviewtest_{}_with_model_m{}_miss.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id)
+            # opt.data = 'data_xview/{}_cls/{}/xviewtest_{}_with_model_m{}_miss.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id)
+            opt.data = 'data_xview/{}_cls/{}/xviewtest_{}_m{}_2315.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id)
             print(opt.data)
             opt.name = '{}_seed{}_on_xview_with_model'.format(cmt, sd)
             test(opt.cfg,
