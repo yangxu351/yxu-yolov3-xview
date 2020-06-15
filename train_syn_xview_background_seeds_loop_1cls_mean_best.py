@@ -224,7 +224,7 @@ def train(opt):
                                 hyp=hyp,
                                 rect=True,
                                 cache_labels=True,
-                                cache_images=opt.cache_images),
+                                cache_images=opt.cache_images, with_modelid=False if opt.model_id < 0 else True),
             batch_size=batch_size * 2,
             num_workers=nw,
             pin_memory=True,
@@ -642,7 +642,10 @@ if __name__ == '__main__':
         rcinx = endstr.rfind('_')
         fstr = endstr[rcinx:] # '_' is included
         sstr = endstr[:rcinx]
-        suffix = fstr + '_' + sstr
+        if cinx >= 0:
+            suffix = fstr + '_' + sstr
+        else:
+            suffix = ''
 
         opt.name = prefix + suffix
 
@@ -657,6 +660,9 @@ if __name__ == '__main__':
         elif val_miss:
             hyp_cmt_name = hyp_cmt + '_val_labeled_miss'
             opt.data = 'data_xview/{}_{}_cls/{}_seed{}/{}_seed{}_xview_val_labeled_miss.data'.format(cmt, opt.class_num, cmt, opt.seed, cmt, opt.seed)
+        elif opt.model_id < 0:
+            hyp_cmt_name = hyp_cmt + 'xview_only'
+            opt.data = 'data_xview/{}_cls/{}_seed{}/xview_{}_seed{}.data'.format(opt.class_num, cmt, opt.seed, cmt, opt.seed)
         else:
             hyp_cmt_name = hyp_cmt + '_val_xview'
             opt.data = 'data_xview/{}_{}_cls/{}_seed{}/{}_seed{}_xview_val.data'.format(cmt, opt.class_num, cmt, opt.seed, cmt, opt.seed)

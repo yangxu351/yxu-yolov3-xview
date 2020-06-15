@@ -75,9 +75,9 @@ def test(cfg,
         # Load weights
         attempt_download(weights)
         if weights.endswith('.pt'):  # pytorch format
-            model.load_state_dict(torch.load(weights, map_location=device)['model'])
-            # m_key = opt.epochs -1
-            # model.load_state_dict(torch.load(weights, map_location=device)[m_key]['model'])
+            # model.load_state_dict(torch.load(weights, map_location=device)['model'])
+            m_key = opt.epochs -1
+            model.load_state_dict(torch.load(weights, map_location=device)[m_key]['model'])
         else:  # darknet format
             _ = load_darknet_weights(model, weights)
 
@@ -91,10 +91,10 @@ def test(cfg,
     data = parse_data_cfg(data)
     nc = int(data['classes'])  # number of classes
     # fixme
-    path = data['valid']  # path to test images
-    lbl_path = data['valid_label']
-    # path = data['test']  # path to test images
-    # lbl_path = data['test_label']
+    # path = data['valid']  # path to test images
+    # lbl_path = data['valid_label']
+    path = data['test']  # path to test images
+    lbl_path = data['test_label']
     # path = data['valid_rare']  # path to test images
     # lbl_path = data['valid_rare_label']
     names = load_classes(data['names'])  # class names
@@ -122,13 +122,14 @@ def test(cfg,
     loss = torch.zeros(3)
     jdict, stats, ap, ap_class = [], [], [], []
     # fixme
+    tcls = []
     for batch_i, (imgs, targets, paths, shapes) in enumerate(tqdm(dataloader, desc=s)):
         imgs = imgs.to(device).float() / 255.0  # uint8 to float32, 0 - 255 to 0.0 - 1.0
         targets = targets.to(device)
         # print('targets--', targets.shape)
-        # print('paths--', paths)
-        # print('shapes', shapes)
-        # print(targets)
+        # print('paths--', len(paths), paths)
+        # # print('shapes', shapes)
+        # print('targets', targets)
         # exit(0)
         _, _, height, width = imgs.shape  # batch size, channels, height, width
 
@@ -144,26 +145,35 @@ def test(cfg,
             # Compute loss
             if hasattr(model, 'hyp'):  # if model has loss hyperparameters
                 loss += compute_loss(train_out, targets, model)[1][:3].cpu()  # GIoU, obj, cls
-
+            # print('inf_out', inf_out)
             # Run NMS
             output = non_max_suppression(inf_out, conf_thres=conf_thres, iou_thres=nms_iou_thres)
-
+            # print('output', output)
         # Statistics per image
+        print('opt.model_id', opt.model_id)
         for si, pred in enumerate(output):
             # print('si', si, targets[si])
             labels = targets[targets[:, 0] == si, 1:]
-            #if opt.model_id is not None:
-            #    labels = labels[labels[:, -1] == opt.model_id]
-            #    nl = len(labels)
-            #    tcls =labels[:, -1].tolist() if nl else []
-            #else:
-                #fixme --yang.xu
+            print('labels', labels.shape)
+            # print('labels', labels)
+            #fixme --yang.xu
+            # if opt.model_id is not None:
+            #     nl = len(labels)
+            #     if nl:
+            #         labels = labels[labels[:, -1] == opt.model_id]
+            #         nl = len(labels)
+            #     tcls =labels[:, -1].tolist() if nl else []
+            # else:
+            #     nl = len(labels)
+            #     tcls = labels[:, 0].tolist() if nl else []  # target class
+            #fixme --yang.xu
+            # labels = targets[targets[:, 0] == si, 1:]
+            # print('labels', labels)
             nl = len(labels)
             tcls = labels[:, 0].tolist() if nl else []  # target class
-
             #fixme --yang.xu
             # tcls = labels[:, 0].tolist() if nl else []  # target class
-            #print('tcls', tcls)
+            print('tcls', tcls)
 
             seen += 1
 
@@ -208,14 +218,14 @@ def test(cfg,
             correct = torch.zeros(len(pred), niou, dtype=torch.bool)
             if nl:
                 detected = []  # target indices
-                #fixme
+
                 tcls_tensor = labels[:, 0]
-                #if opt.model_id is not None:
-                #    tcls_tensor = labels[:, -1]
-                #else:
-                #    tcls_tensor = labels[:, 0]
-
-
+                #fixme --yang.xu
+                # if opt.model_id is not None:
+                #     tcls_tensor = labels[:, -1]
+                #     print(tcls_tensor)
+                # else:
+                #     tcls_tensor = labels[:, 0]
                 # target boxes
                 tbox = xywh2xyxy(labels[:, 1:5]) * torch.Tensor([width, height, width, height]).to(device)
 
@@ -315,9 +325,10 @@ def test(cfg,
 
     # Return results
     maps = np.zeros(nc) + map
+    # print('ap', ap, 'ap_class', ap_class)
     #fixme
     # for i, c in enumerate(ap_class):
-    #    maps[c] = ap[i]
+    #     maps[c] = ap[i]
     for i in range(len(ap_class)):
         maps[i] = ap[i]
     return (mp, mr, map, mf1, *(loss.cpu() / len(dataloader)).tolist()), maps
@@ -539,7 +550,8 @@ if __name__ == '__main__':
             # opt.data = 'data_xview/{}_cls/{}/{}_seed{}_with_model.data'.format(opt.class_num, 'px6whr4_ng0_seed{}'.format(sd), 'xview_px6whr4_ng0', sd)
             # opt.data = 'data_xview/{}_cls/{}/{}_seed{}_with_model.data'.format(opt.class_num, 'px{}whr{}_seed{}'.format(px_thres, whr_thres, sd), 'xview_px{}whr{}'.format(px_thres, whr_thres), sd)
             # opt.data = 'data_xview/{}_{}_cls/{}_seed{}/{}_seed{}_xview_val_labeled_miss.data'.format(cmt, opt.class_num, cmt, sd, cmt, sd)
-            opt.data = 'data_xview/{}_cls/{}/xviewtest_{}_with_model_m{}_miss.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id)
+            # opt.data = 'data_xview/{}_cls/{}/xviewtest_{}_with_model_m{}_miss.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id)
+            opt.data = 'data_xview/{}_cls/{}/xviewtest_{}_m{}_2315.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id)
             print(opt.data)
             opt.name = '{}_seed{}_on_xview_with_model'.format(cmt, sd)
             test(opt.cfg,

@@ -414,7 +414,7 @@ def remove_txt_and_json_of_bad_image(bad_img_names, args):
         os.remove(json_file)
     json.dump(trn_instance, open(json_file, 'w'), ensure_ascii=False, indent=2, cls=MyEncoder)
 
-def clean_backup_xview_plane_with_constraints(px_thres=20, whr_thres=4):
+def clean_backup_xview_plane_with_constraints(args, annos_dir, px_thres=20, whr_thres=4):
     '''
     backupu *.txt first
     then remove labels with some constraints
@@ -422,15 +422,16 @@ def clean_backup_xview_plane_with_constraints(px_thres=20, whr_thres=4):
     :param whr_thres:
     :return:
     '''
-    args = get_args(px_thres, whr_thres)
-    # gt_files = np.sort(glob.glob(os.path.join(args.annos_save_dir.split('_px')[0], '*.txt')))
-    # if os.path.exists(args.annos_save_dir):
-    #     shutil.rmtree(args.annos_save_dir)
-    #     os.mkdir(args.annos_save_dir)
-    #     for f in gt_files:
-    #         shutil.copy(f, args.annos_save_dir)
+    gt_files = np.sort(glob.glob(os.path.join(annos_dir.split('_px')[0], '*.txt')))
+    backup_dir = args.annos_save_dir[:-1] + '_backup/'
+    print('backup_dir ', backup_dir)
+    if os.path.exists(backup_dir):
+        shutil.rmtree(backup_dir)
+        os.mkdir(backup_dir)
+        for f in gt_files:
+            shutil.copy(f, backup_dir)
 
-    txt_files = np.sort(glob.glob(os.path.join(args.annos_save_dir, '*.txt')))
+    txt_files = np.sort(glob.glob(os.path.join(annos_dir, '*.txt')))
     for f in txt_files:
         if pps.is_non_zero_file(f):
             df_txt = pd.read_csv(f, header=None, sep=' ')
@@ -609,13 +610,13 @@ def split_trn_val_with_chips(data_name='xview', comments='', seed=17, px_thres=N
 
     data_save_dir = args.data_save_dir
     if comments:
-        txt_save_dir = args.data_list_save_dir + comments[1:] + '_bh3'+ '/'
+        txt_save_dir = args.data_list_save_dir + comments[1:] + '_bh'+ '/'
         if os.path.exists(txt_save_dir):
             shutil.rmtree(txt_save_dir)
             os.makedirs(txt_save_dir)
         else:
             os.makedirs(txt_save_dir)
-        data_save_dir = os.path.join(data_save_dir, comments[1:], '_bh3')
+        data_save_dir = os.path.join(data_save_dir, comments[1:])
         if os.path.exists(data_save_dir):
             shutil.rmtree(data_save_dir)
             os.makedirs(data_save_dir)
@@ -2344,7 +2345,8 @@ if __name__ == "__main__":
     # whr_thres = 3 # 3.5
     # px_thres= 23
     # iou_thres = 0.5
-    # clean_backup_xview_plane_with_constraints(px_thres, whr_thres)
+    # args = get_args(px_thres, whr_thres)
+    # clean_backup_xview_plane_with_constraints(args, args.annos_save_dir, px_thres, whr_thres)
     # cnt_ground_truth_overlap_from_pathces(cat_ids, iou_thres, px_thres, whr_thres)
 
     '''

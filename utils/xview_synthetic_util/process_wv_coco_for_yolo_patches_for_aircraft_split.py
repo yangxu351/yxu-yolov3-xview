@@ -307,6 +307,31 @@ def create_xview_syn_data(dt=None, sr=None, comments='',seed=1024):
     data_txt.write('eval=xview')
     data_txt.close()
 
+def remove_duplicates_train_and_val():
+    '''
+    remove duplicates in train and val
+    :return:
+    '''
+    pxwhrs = 'px{}whr{}_seed{}'.format(px_thres, whr_thres, seed)
+    data_save_dir = args.data_save_dir
+    df_trn = pd.read_csv(os.path.join(data_save_dir, 'xviewtrain_lbl_{}.txt'.format(pxwhrs)), header=None)
+    df_trn_img = pd.read_csv(os.path.join(data_save_dir, 'xviewtrain_img_{}.txt'.format(pxwhrs)), header=None)
+    trn_files = [f for f in df_trn.loc[:, 0]]
+    trn_ls = list(set(trn_files))
+    print('trn_ls len', len(trn_ls))
+
+    df_val = pd.read_csv(os.path.join(data_save_dir, 'xviewval_lbl_{}.txt'.format(pxwhrs)), header=None)
+    val_files = [f for f in df_val.loc[:, 0]]
+    val_ls = list(set(val_files))
+    same = [f for f in trn_ls if f in val_ls]
+    print('same', same)
+    for ix, f in enumerate(df_trn.loc[:, 0]):
+        if f in same:
+            df_trn = df_trn.drop(ix)
+            df_trn_img = df_trn_img.drop(ix)
+    df_trn.to_csv(os.path.join(data_save_dir, 'xviewtrain_lbl_{}.txt'.format(pxwhrs)), header=False, index=False)
+    df_trn_img.to_csv(os.path.join(data_save_dir, 'xviewtrain_img_{}.txt'.format(pxwhrs)), header=False, index=False)
+
 
 def get_part_syn_args(dt, sr):
     parser = argparse.ArgumentParser()
@@ -491,15 +516,71 @@ if __name__ == "__main__":
 
     # seeds = [19999] # results are fixed
     # seeds = [17, 17, 17] # results are variable
-#    seeds = [199] # results are fixed
-#    data_name = 'xview'
-#    px_thres= 23
-#    whr_thres = 3
-#    for sd in seeds:
-#        #fixme --yang.xu
-#        # run for multi times to get the desired split due to the use of list(set(l)
-#        comments = '_px{}whr{}_seed{}'.format(px_thres, whr_thres, sd)
-#        pwv.split_trn_val_with_chips(data_name=data_name, comments=comments, seed=sd, px_thres=px_thres, whr_thres=whr_thres)
+
+    # seeds = [199] # results are fixed
+    # data_name = 'xview'
+    # px_thres= 23
+    # whr_thres = 3
+    # for sd in seeds:
+    #     #fixme --yang.xu
+    #     # run for multi times to get the desired split due to the use of list(set(l)
+    #     comments = '_px{}whr{}_seed{}'.format(px_thres, whr_thres, sd)
+    #     pwv.split_trn_val_with_chips(data_name=data_name, comments=comments, seed=sd, px_thres=px_thres, whr_thres=whr_thres)
+
+    '''
+    remove duplicates of training set and val set
+    '''
+    # seed = 17
+    # px_thres = 23
+    # whr_thres = 3
+    # args = pwv.get_args(px_thres, whr_thres)
+    # remove_duplicates_train_and_val()
+
+    '''
+    get val labeled annos of all models from all 
+    for seed = 199
+    '''
+    #fixme --yang.xu
+    # seed = 199
+    # px_thres = 23
+    # whr_thres = 3
+    # args = pwv.get_args(px_thres, whr_thres)
+    # comment = 'px{}whr{}_seed{}'.format(px_thres, whr_thres, seed)
+    # all_labeled_lbl_dir =args.annos_save_dir[:-1] + '_all_model'
+    # lbl_dir = os.path.join(args.data_list_save_dir, comment + '_val_lbl')
+    # labeled_lbl_dir = os.path.join(args.data_list_save_dir, comment + '_val_lbl_with_modelid')
+    # if not os.path.exists(labeled_lbl_dir):
+    #     os.mkdir(labeled_lbl_dir)
+    # lbl_files = glob.glob(os.path.join(lbl_dir, '*.txt'))
+    # lbl_names = [os.path.basename(f) for f in lbl_files]
+    # for ln in lbl_names:
+    #     shutil.copy(os.path.join(all_labeled_lbl_dir, ln),
+    #                 os.path.join(labeled_lbl_dir, ln))
+
+    #fixme --yang.xu
+    # ############## get the lbl files from previou record in lbl*.txt
+    # seed = 17
+    # px_thres = 23
+    # whr_thres = 3
+    # args = pwv.get_args(px_thres, whr_thres)
+    # pxwhrs = 'px{}whr{}_seed{}'.format(px_thres, whr_thres, seed)
+    # lbl_dir = os.path.join(args.data_list_save_dir, pxwhrs + '_val_lbl')
+    # labeled_lbl_dir = os.path.join(args.data_list_save_dir, pxwhrs + '_val_lbl_with_modelid')
+    # if not os.path.exists(lbl_dir):
+    #     os.mkdir(lbl_dir)
+    # if not os.path.exists(labeled_lbl_dir):
+    #     os.mkdir(labeled_lbl_dir)
+    # lbl_list_dir = os.path.join(args.data_list_save_dir, pxwhrs)
+    # all_labeled_lbl_dir = args.annos_save_dir[:-1] + '_all_model'
+    # df_val_txt = pd.read_csv(os.path.join(lbl_list_dir, 'xviewval_lbl_{}.txt'.format(pxwhrs)), header=None)
+    # for vf in df_val_txt.loc[:, 0]:
+    #     lbl_name = os.path.basename(vf)
+    #     shutil.copy(vf, os.path.join(lbl_dir, lbl_name))
+    #     shutil.copy(os.path.join(all_labeled_lbl_dir, lbl_name),
+    #                 os.path.join(labeled_lbl_dir, lbl_name))
+
+
+>>>>>>> master
 
 
     '''
@@ -513,10 +594,10 @@ if __name__ == "__main__":
     # comments = '_px23whr3_seed{}'
 
     # seeds = [17]
-    seeds = [199]
-    for sd in seeds:
-        comments = '_px23whr3_seed{}'.format(sd)
-        create_xview_syn_data(comments=comments, seed=sd)
+    # # seeds = [199]
+    # for sd in seeds:
+    #     comments = '_px23whr3_seed{}'.format(sd)
+    #     create_xview_syn_data(comments=comments, seed=sd)
 
     '''
     xview

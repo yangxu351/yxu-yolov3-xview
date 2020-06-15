@@ -294,7 +294,7 @@ def clip_coords(boxes, img_shape):
     boxes[:, [1, 3]] = boxes[:, [1, 3]].clamp(min=0, max=img_shape[0])  # clip y
 
 
-def ap_per_class(tp, conf, pred_cls, target_cls, ntp=None, pr_path='', pr_name='', model_id=None):
+def ap_per_class(tp, conf, pred_cls, target_cls, ntp=None, pr_path='', pr_name='', rare_class=None):
     """ Compute the average precision, given the recall and precision curves.
     Source: https://github.com/rafaelpadilla/Object-Detection-Metrics.
     # Arguments
@@ -312,18 +312,28 @@ def ap_per_class(tp, conf, pred_cls, target_cls, ntp=None, pr_path='', pr_name='
     # print('tp: {} conf:{} pred_cls:{}'.format(tp, conf, pred_cls))
 
     # Find unique classes
-    unique_classes = np.unique(target_cls)
+    #fixme
+    # unique_classes = np.unique(target_cls)
+    if rare_class is not None:
+        unique_classes = np.array([rare_class])
+    else:
+        unique_classes = np.unique(target_cls)
     # print('target_cls', target_cls)
 
     # Create Precision-Recall curve and compute AP for each class
+    #fixme
     s = [len(unique_classes), tp.shape[1]]  # number class, number iou thresholds (i.e. 10 for mAP0.5...0.95)
     ap, p, r = np.zeros(s), np.zeros(s), np.zeros(s)
     for ci, c in enumerate(unique_classes):
-        if model_id is not None:
+        if rare_class is not None:
             i = pred_cls ==0
-            n_gt = (target_cls == model_id).sum()
+            n_gt = (target_cls == rare_class).sum()
             n_p = i.sum()
+<<<<<<< HEAD
 #            print('n_gt', n_gt, 'n_p', n_p)
+=======
+            # print('n_gt', n_gt, 'n_p', n_p)
+>>>>>>> master
         else:
             i = pred_cls == c
             n_gt = (target_cls == c).sum()  # Number of ground truth objects
@@ -365,12 +375,12 @@ def ap_per_class(tp, conf, pred_cls, target_cls, ntp=None, pr_path='', pr_name='
                 # ax.plot(np.concatenate(([0.], recall)), np.concatenate(([0.], precision)))
                 np.savetxt(os.path.join(pr_path, 'recall.txt'), recall)
                 np.savetxt(os.path.join(pr_path, 'precision.txt'), precision)
-                ax1.plot(recall, precision, label=pr_name + '  mAP: %.3f' % ap[ci])
+                ax1.plot(recall, precision, label=pr_name + '  AP$_{%.2f}$: %.3f' % (0.5, ap[ci]))
                 ax1.legend()
-                ax1.set_title('YOLOv3-SPP PR-Curve')
+                ax1.set_title('PR-Curve')
                 ax1.set_xlabel('Recall')
                 ax1.set_ylabel('Precision')
-                ax1.set_xlim(0, 1)
+                ax1.set_ylim(0, 1)
                 ax1.grid()
                 fig1.savefig(os.path.join(pr_path, pr_name + '_PR_curve.png'), dpi=300)
 
@@ -380,7 +390,7 @@ def ap_per_class(tp, conf, pred_cls, target_cls, ntp=None, pr_path='', pr_name='
     # print('r', r.shape) #  (1,1)
     return p, r, ap, f1, unique_classes.astype('int32')
 
-def plot_roc(tp, conf, pred_cls, target_cls, ntp, pr_path='', pr_name='', model_id=None, area=0):
+def plot_roc(tp, conf, pred_cls, target_cls, ntp, pr_path='', pr_name='', rare_class=None, area=0):
     """ Compute the average precision, given the recall and precision curves.
     Source: https://github.com/rafaelpadilla/Object-Detection-Metrics.
     # Arguments
@@ -398,9 +408,9 @@ def plot_roc(tp, conf, pred_cls, target_cls, ntp, pr_path='', pr_name='', model_
     i = np.argsort(-conf) # 175
     tp, conf, pred_cls, ntp = tp[i], conf[i], pred_cls[i], ntp[i]
 
-    n_gt = len(target_cls==model_id)
-    far_list = [0]
-    rec_list = [0]
+    n_gt = len(target_cls==rare_class)
+    far_list = []
+    rec_list = []
     n_t = 0
     n_f = 0
     for ix, t in enumerate(conf):
@@ -418,10 +428,10 @@ def plot_roc(tp, conf, pred_cls, target_cls, ntp, pr_path='', pr_name='', model_
     far_arr = np.array(far_list)
     fx = np.where(far_arr[1:] != far_arr[:-1])[0]
     auc = np.sum((far_arr[fx + 1] - far_arr[fx]) * rec_arr[fx + 1])
-    if model_id is not None:
-        title = 'YOLOv3-SPP ROC of $T_{%s}$' % 'xview\_model{}'.format(model_id)
+    if rare_class is not None:
+        title = 'ROC of $T_{%s}$' % 'xview\_rare\_class{}'.format(rare_class)
     else:
-        title = 'YOLOv3-SPP ROC of $T_{xview}$ '
+        title = 'ROC of $T_{xview}$'
     if pr_path:
         font_title = {'family': 'serif', 'weight': 'normal', 'size': 15}
         font_label = {'family': 'serif', 'weight': 'normal', 'size': 12}

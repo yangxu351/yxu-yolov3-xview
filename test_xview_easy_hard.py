@@ -71,12 +71,8 @@ def test(cfg,
     data = parse_data_cfg(data)
     nc = int(data['classes'])  # number of classes
     # fixme--yang.xu
-    if opt.model_id is None:
-        path = data['valid']  # path to test images
-        lbl_path = data['valid_label']
-    else:
-        path = data['test']  # path to test images
-        lbl_path = data['test_label']
+    path = data['test']  # path to test images
+    lbl_path = data['test_label']
     names = load_classes(data['names'])  # class names
     m_key = 215
     for ix, mk in enumerate([m_key]):
@@ -163,10 +159,8 @@ def test(cfg,
                 # Compute loss
                 if hasattr(model, 'hyp'):  # if model has loss hyperparameters
                     loss += compute_loss(train_out, targets, model)[1][:3].cpu()  # GIoU, obj, cls
-                    # TODO: RECORD LOSS
                 # Run NMS
                 output = non_max_suppression(inf_out, conf_thres=conf_thres, iou_thres=iou_thres)
-                # TODO: VALUE
             # Statistics per image
             for si, pred in enumerate(output):
                 # print('si ', si, targets[si])
@@ -174,27 +168,15 @@ def test(cfg,
                 labels = targets[targets[:, 0] == si, 1:]
                 # print('labels--', labels.shape)
                 # print(labels)
-                # exit(0)
-
-                #fixme --yang.xu
-                # nl = len(labels)
+                nl = len(labels)
+                #fixme ---yang.xu
                 # tcls = labels[:, 0].tolist() if nl else []  # target class
-                if opt.model_id is not None:
-                    # print('labels[:, -1] type', type(labels[:, -1]))
-                    labels = labels[np.abs(labels[:, -1].cpu()) == opt.model_id]
-                    nl = len(labels)
-                    tcls = labels[:, -1].tolist() if nl else []
-                    #fixme --yang.xu
-                    # tcls = labels[:, -1].tolist() if nl else []  # target class
-                    # print('tcls', tcls)
-                else:
-                    #fixme --yang.xu
-                    nl = len(labels)
-                    tcls = labels[:, 0].tolist() if nl else []  # target class
+                tcls = labels[:, -1].tolist() if nl else []
+
                 seen += 1
 
                 if pred is None:
-                    if nl:
+                    if nl :
                         stats.append((torch.zeros(0, 1), torch.Tensor(), torch.Tensor(), tcls, torch.zeros(0, 1)))
                     continue
 
@@ -204,7 +186,6 @@ def test(cfg,
 
                 # Clip boxes to image bounds
                 clip_coords(pred, (height, width))
-                #TODO: PRED ????
                 # Append to pycocotools JSON dictionary
                 if save_json:
                     # [{"image_id": 42, "category_id": 18, "bbox": [258.15, 41.29, 348.26, 243.78], "score": 0.236}, ...
@@ -234,75 +215,87 @@ def test(cfg,
                     detected = []  # target indices
 
                     #fixme --yang.xu
-                    # tcls_tensor = labels[:, 0]
-                    if opt.model_id is not None:
-                        tcls_tensor = labels[:, -1]
-                    else:
-                        tcls_tensor = labels[:, 0]
+                    tcls_tensor = labels[:, -1]
 
                     # target boxes
                     tbox = xywh2xyxy(labels[:, 1:5]) * torch.Tensor([width, height, width, height]).to(device)
 
                     # Per target class
-                    for cls in torch.unique(tcls_tensor):
+                    # for cls in torch.unique(tcls_tensor):
 
-                        #fixme --yang.xu
-                        # ti = (cls == tcls_tensor).nonzero().view(-1)  # target indices
-                        # pi = (cls == pred[:, 5]).nonzero().view(-1)  # prediction indices
-                        #fixme --yang.xu
-                        ti = (cls == tcls_tensor).nonzero().view(-1) # target indices
-                        neu_cls = -1 * cls
-                        tneu = (neu_cls == tcls_tensor).nonzero().view(-1) # target neutral indices
-                        pi = (0 == pred[:, 5]).nonzero().view(-1)
+                    #fixme --yang.xu
+                    # ti = (cls == tcls_tensor).nonzero().view(-1)  # target indices
+                    # pi = (cls == pred[:, 5]).nonzero().view(-1)  # prediction indices
+                    #fixme --yang.xu
+                    ti = (opt.rare_class == tcls_tensor).nonzero().view(-1) # target indices
+                    pi = (0 == pred[:, 5]).nonzero().view(-1)  # prediction indices
+                    print('\nti ', len(ti), ti)
 
-                        # Search for detections
-                        if len(pi) and len(ti) and not len(tneu):
-                            ious, i = box_iou(pred[pi, :4], tbox[ti]).max(1)  # best ious, indices
-                            # Append detections
-                            for j in (ious > iouv[0]).nonzero():
-                                d = ti[i[j]]  # detected target
-                                if d not in detected:
-                                    detected.append(d)
-                                    correct[pi[j]] = ious[j] > iouv  # iou_thres is 1xn
-                                    neu_correct[pi[j]] = False
-                                    if len(detected) == nl:  # all targets already located in image
-                                        break
-                        elif len(pi) and len(tneu) and not len(ti):
-                            neu_ious, ni = box_iou(pred[pi, :4], tbox[tneu]).max(1)
-                            for s in (neu_ious > iouv[0]).nonzero():
-                                d = tneu[ni[s]]  # detected target
-                                if d not in detected:
-                                    detected.append(d)
-                                    neu_correct[pi[s]] = neu_ious[s] > iouv  # iou_thres is 1xn
-                                    correct[pi[s]] = False
-                                    if len(detected) == nl:  # all targets already located in image
-                                        break
-                        elif len(pi) and len(tneu) and len(ti):
-                            ious, i = box_iou(pred[pi, :4], tbox[ti]).max(1)  # best ious, indices
-                            neu_ious, ni = box_iou(pred[pi, :4], tbox[tneu]).max(1)
-                            for j in (ious > iouv[0]).nonzero():
-                                d = ti[i[j]]  # detected target
-                                if d not in detected:
-                                    detected.append(d)
-                                    correct[pi[j]] = ious[j] > iouv  # iou_thres is 1xn
-                                    neu_correct[pi[j]] = False
-                                    if len(detected) == nl:  # all targets already located in image
-                                        break
-                            for s in (neu_ious > iouv[0]).nonzero():
-                                d = tneu[ni[s]]  # detected target
-                                if d not in detected:
-                                    detected.append(d)
-                                    neu_correct[pi[s]] = neu_ious[s] > iouv  # iou_thres is 1xn
-                                    correct[pi[s]] = False
-                                    if len(detected) == nl:  # all targets already located in image
-                                        break
+                    if opt.type == 'easy':
+                        neu_cls = 0
+                        ni = (neu_cls == tcls_tensor).nonzero().view(-1) # target neutral indices
+                        print('ni ', len(ni), ni)
+                    else:
+                        ni = []
 
+                    # if len(pi):
+                    #     ious, i = box_iou(pred[pi, :4], tbox[ti]).max(1)  # best ious, indices
+                    #     # Append detections
+                    #     for j in (ious > iouv[0]).nonzero():
+                    #         d = ti[i[j]]  # detected target
+                    #         if d not in detected:
+                    #             detected.append(d)
+                    #             correct[pi[j]] = ious[j] > iouv  # iou_thres is 1xn
+                    #             if len(detected) == nl:  # all targets already located in image
+                    #                 break
+
+                    # Search for detections
+                    if len(pi) and len(ti) and not len(ni):
+                        ious, i = box_iou(pred[pi, :4], tbox[ti]).max(1)  # best ious, indices
+                        # Append detections
+                        for j in (ious > iouv[0]).nonzero():
+                            d = ti[i[j]]  # detected target
+                            # print('d', d)
+                            if d not in detected:
+                                detected.append(d)
+                                correct[pi[j]] = ious[j] > iouv  # iou_thres is 1xn
+                                if len(detected) == nl:  # all targets already located in image
+                                    break
+                    elif len(pi) and not len(ti) and len(ni):
+                        neu_ious, nix = box_iou(pred[pi, :4], tbox[ni]).max(1)
+                        for s in (neu_ious > iouv[0]).nonzero():
+                            print('s --------> ', s)
+                            d = ni[nix[s]]  # detected target
+                            if d not in detected:
+                                detected.append(d)
+                                neu_correct[pi[s]] = neu_ious[s] > iouv  # iou_thres is 1xn
+                                if len(detected) == nl:  # all targets already located in image
+                                    break
+                    elif len(pi) and len(ti) and len(ni):
+                        ious, i = box_iou(pred[pi, :4], tbox[ti]).max(1)  # best ious, indices
+                        neu_ious, nix = box_iou(pred[pi, :4], tbox[ni]).max(1)
+                        for j in (ious > iouv[0]).nonzero():
+                            d = ti[i[j]]  # detected target
+                            if d not in detected:
+                                detected.append(d)
+                                correct[pi[j]] = ious[j] > iouv  # iou_thres is 1xn
+                                if len(detected) == nl:  # all targets already located in image
+                                    break
+                        for s in (neu_ious > iouv[0]).nonzero():
+                            print('s --------> ', s)
+                            d = ni[nix[s]]  # detected neutral target
+                            if d not in detected:
+                                detected.append(d)
+                                neu_correct[pi[s]] = neu_ious[s] > iouv  # iou_thres is 1xn
+                                if len(detected) == nl:  # all targets already located in image
+                                    break
+                    print('detected ', detected)
                 # Append statistics (correct, conf, pcls, tcls, neu_correct)
                 # pred (x1, y1, x2, y2, object_conf, conf, class)
                 stats.append((correct, pred[:, 4].cpu(), pred[:, 5].cpu(), tcls, neu_correct))
-                if len(correct):
+                if len(tcls) and len(correct):
                     print('\n correct: {}  pred[:,4]:{}  pred[:, 5]:{} tcls:{}'.format(correct, pred[:, 4].cpu(), pred[:, 5].cpu(), tcls))
-                if len(neu_correct):
+                # if len(tcls) and len(neu_correct):
                     print('\n neu_correct: {}  pred[:,4]:{}  pred[:, 5]:{} tcls:{}'.format(neu_correct, pred[:, 4].cpu(), pred[:, 5].cpu(), tcls))
 
         # Compute statistics
@@ -310,12 +303,12 @@ def test(cfg,
         if len(stats):
             pr_name= opt.name + '  @IoU: {:.2f} '.format(iouv[0]) + '  conf_thres: {} '.format(conf_thres)
             # print('*stats', *stats)
-            p, r, ap, f1, ap_class = ap_per_class(*stats, pr_path=opt.result_dir, pr_name= pr_name, model_id=opt.model_id)
+            p, r, ap, f1, ap_class = ap_per_class(*stats, pr_path=opt.result_dir, pr_name= pr_name, rare_class=opt.rare_class)
 
             # print('dataset.batch ', dataset.batch.shape)
             # exit(0)
             area = (img_size*opt.res)*(img_size*opt.res)*dataset.batch.shape[0]*1e-6
-            plot_roc(*stats, pr_path=opt.result_dir, pr_name= pr_name, model_id=opt.model_id, area=area)
+            plot_roc(*stats, pr_path=opt.result_dir, pr_name= pr_name, rare_class=opt.rare_class, area=area)
             # if niou > 1:
             #       p, r, ap, f1 = p[:, 0], r[:, 0], ap[:, 0], ap.mean(1)  # average across ious
             #fixme --yang.xu
@@ -324,8 +317,9 @@ def test(cfg,
             mp, mr, map, mf1 = p.mean(), r.mean(), ap.mean(), f1.mean()
             #fixme --yang.xu compute before
             # nt = np.bincount(stats[3].astype(np.int64), minlength=nc)  # number of targets per class
-            st3p = stats[3][stats[3]>0]
-            nt = np.bincount(st3p.astype(np.int64), minlength=nc)
+            if opt.rare_class is not None:
+                st3 = stats[3][stats[3] == opt.rare_class]
+                nt = np.bincount(st3.astype(np.int64), minlength=nc)  # number of targets per class
         else:
             nt = torch.zeros(1)
 
@@ -407,7 +401,7 @@ def test(cfg,
 
 
 def get_opt(dt=None, sr=None, comments=''):
-    parser = argparse.ArgumentParser(prog='test.py')
+    parser = argparse.ArgumentParser() # prog='test.py'
 
     parser.add_argument('--cfg', type=str, default='cfg/yolov3-spp-{}cls_syn.cfg', help='*.cfg path')
     parser.add_argument('--data', type=str, default='data_xview/{}_cls/{}/xview_{}_{}.data', help='*.data path')
@@ -433,6 +427,8 @@ def get_opt(dt=None, sr=None, comments=''):
     parser.add_argument('--name', default='', help='name')
     parser.add_argument('--cmt', default=comments, help='comments')
     parser.add_argument('--model_id', type=int, default=None, help='specified model id')
+    parser.add_argument('--rare_class', type=int, default=None, help='specified rare class')
+    parser.add_argument('--type', default='hard', help='hard, easy')
     opt = parser.parse_args()
     # opt.save_json = opt.save_json or any([x in opt.data for x in ['xview.data']])
     opt.cfg = opt.cfg.format(opt.class_num)
@@ -598,9 +594,18 @@ if __name__ == '__main__':
             # opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_with_model_{}_labeled_seed{}'.format(hyp_cmt, sd))
             # opt.data = 'data_xview/{}_cls/{}/xviewtest_{}_with_model_m{}_labeled.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id)
             ############# all m* labeled validation images with target and neutral labels
+            # opt.batch_size = 8
+            # opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_with_model_{}_tgt_neu_seed{}'.format(hyp_cmt, sd))
+            # opt.data = 'data_xview/{}_cls/{}/xviewtest_{}_with_model_m{}_tgt_neu.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id)
+            ############# all m* labeled validation images with target and neutral labels
             opt.batch_size = 8
-            opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_with_model_{}_tgt_neu_seed{}'.format(hyp_cmt, sd))
-            opt.data = 'data_xview/{}_cls/{}/xviewtest_{}_with_model_m{}_tgt_neu.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id)
+            opt.rare_class = 1
+            opt.type = 'easy'
+            opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_with_model_{}_easy_seed{}'.format(hyp_cmt, sd))
+            opt.data = 'data_xview/{}_cls/{}/xviewtest_{}_m{}_rc{}_easy.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id, opt.rare_class)
+            # opt.type = 'hard'
+            # opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_with_model_{}_hard_seed{}'.format(hyp_cmt, sd))
+            # opt.data = 'data_xview/{}_cls/{}/xviewtest_{}_m{}_rc{}_hard.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id, opt.rare_class)
 
             ''' for whole validation dataset '''
             # opt.conf_thres = 0.1
