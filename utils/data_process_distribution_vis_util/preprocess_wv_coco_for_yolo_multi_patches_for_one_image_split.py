@@ -107,11 +107,14 @@ def get_multi_chips_and_txt_geojson_2_json_of_tif_name(tif_name):
     json.dump(trn_instance, open(json_file, 'w'), ensure_ascii=False, indent=2, cls=pwv.MyEncoder)
 
 
-def create_testset_txt_list_txt_data_of_tif_name(tif_name):
+def create_testset_txt_list_txt_data_of_tif_name(tif_name, model_id=4):
+    '''
+    for m4
+    '''
     args = get_args()
-    txt_norm_dir = args.annos_save_dir[:-1] + '_of_{}/'.format(tif_name) + 'm4_{}'.format(tif_name)
+    txt_norm_dir = args.annos_save_dir[:-1] + '_of_{}/'.format(tif_name) + 'm{}_{}'.format(model_id, tif_name)
     print('txt_norm_dir ', txt_norm_dir)
-    txt_modelid_dir = args.annos_save_dir[:-1] + '_of_{}/'.format(tif_name) + 'm4_{}'.format(tif_name) + '_with_modelid'
+    txt_modelid_dir = args.annos_save_dir[:-1] + '_of_{}/'.format(tif_name) + 'm{}_{}'.format(model_id, tif_name) + '_with_modelid'
     if not os.path.exists(txt_modelid_dir):
         os.mkdir(txt_modelid_dir)
 
@@ -119,10 +122,9 @@ def create_testset_txt_list_txt_data_of_tif_name(tif_name):
     for lf in lbl_files:
         lbl_name = os.path.basename(lf)
         df_lbl = pd.read_csv(lf, header=None, names =[0, 1, 2, 3, 4, 5], sep=' ')
-        df_lbl[5] = 4
+        df_lbl[5] = model_id
         df_lbl.to_csv(os.path.join(txt_modelid_dir, lbl_name), header=False, index=False, sep=' ')
 
-    args = get_args()
     tif_name = '2315.tif'.split('.')[0]
     model_id = 4
     txt_norm_dir = args.annos_save_dir[:-1] + '_of_{}/'.format(tif_name) + 'm{}_{}'.format(model_id, tif_name)
@@ -148,6 +150,48 @@ def create_testset_txt_list_txt_data_of_tif_name(tif_name):
     data_txt.write('test_label=./data_xview/{}_cls/{}/xviewtest_lbl_{}_m{}_{}.txt\n'.format(args.class_num, base_pxwhrs, base_pxwhrs, model_id, tif_name))
     data_txt.write('names=./data_xview/{}_cls/xview.names\n'.format(args.class_num))
     data_txt.close()
+
+    '''
+    for m4_rc1
+    '''
+    rare_class = 1
+    args = get_args()
+    tif_name = '2315.tif'.split('.')[0]
+    txt_norm_dir = args.annos_save_dir[:-1] + '_of_{}/'.format(tif_name) + 'm{}_{}'.format(model_id, tif_name)
+    base_pxwhrs = 'px23whr3_seed17'
+
+    txt_rc_dir = args.annos_save_dir[:-1] + '_of_{}/'.format(tif_name) + 'm{}_rc{}_{}'.format(model_id, rare_class, tif_name) + '_with_modelid'
+    if not os.path.exists(txt_rc_dir):
+        os.mkdir(txt_rc_dir)
+
+    lbl_files = glob.glob(os.path.join(txt_norm_dir, '*.txt'))
+    for lf in lbl_files:
+        lbl_name = os.path.basename(lf)
+        df_lbl = pd.read_csv(lf, header=None, names =[0, 1, 2, 3, 4, 5], sep=' ')
+        df_lbl[5] = rare_class
+        df_lbl.to_csv(os.path.join(txt_rc_dir, lbl_name), header=False, index=False, sep=' ')
+
+    base_dir = args.data_save_dir
+    img_dir = os.path.join(args.images_save_dir[:-1] + '_of_{}'.format(tif_name),  'm{}_{}'.format(model_id, tif_name))
+    test_lbl_txt = open(os.path.join(base_dir, base_pxwhrs, 'xviewtest_lbl_{}_m{}_rc{}_{}.txt'.format(base_pxwhrs, model_id, rare_class, tif_name)), 'w')
+    test_img_txt = open(os.path.join(base_dir, base_pxwhrs, 'xviewtest_img_{}_m{}_rc{}_{}.txt'.format(base_pxwhrs, model_id, rare_class, tif_name)), 'w')
+
+    lbl_modeled_files = glob.glob(os.path.join(txt_rc_dir, '*.txt'))
+    for mf in lbl_modeled_files:
+        lbl_name = os.path.basename(mf)
+        img_name = lbl_name.replace('.txt', '.jpg')
+        test_lbl_txt.write('%s\n' % mf)
+        test_img_txt.write('%s\n' % os.path.join(img_dir, img_name))
+    test_img_txt.close()
+    test_lbl_txt.close()
+
+    data_txt = open(os.path.join(base_dir, base_pxwhrs, 'xviewtest_{}_m{}_rc{}_{}.data'.format(base_pxwhrs, model_id, rare_class, tif_name)), 'w')
+    data_txt.write('classes=%s\n' % str(args.class_num))
+    data_txt.write('test=./data_xview/{}_cls/{}/xviewtest_img_{}_m{}_rc{}_{}.txt\n'.format(args.class_num, base_pxwhrs, base_pxwhrs, model_id, rare_class, tif_name))
+    data_txt.write('test_label=./data_xview/{}_cls/{}/xviewtest_lbl_{}_m{}_rc{}_{}.txt\n'.format(args.class_num, base_pxwhrs, base_pxwhrs, model_id, rare_class, tif_name))
+    data_txt.write('names=./data_xview/{}_cls/xview.names\n'.format(args.class_num))
+    data_txt.close()
+
 
 
 
@@ -286,6 +330,6 @@ if __name__ == '__main__':
     create lbl list *.txt
     cresate *.data
     '''
-    # tif_name = '2315.tif'.split('.')[0]
-    # create_testset_txt_list_txt_data_of_tif_name(tif_name)
+    tif_name = '2315.tif'.split('.')[0]
+    create_testset_txt_list_txt_data_of_tif_name(tif_name)
 
