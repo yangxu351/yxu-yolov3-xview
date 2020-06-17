@@ -165,10 +165,8 @@ def test(cfg,
                 # Compute loss
                 if hasattr(model, 'hyp'):  # if model has loss hyperparameters
                     loss += compute_loss(train_out, targets, model)[1][:3].cpu()  # GIoU, obj, cls
-                    # TODO: RECORD LOSS
                 # Run NMS
                 output = non_max_suppression(inf_out, conf_thres=conf_thres, iou_thres=iou_thres)
-                # TODO: VALUE
             # Statistics per image
             for si, pred in enumerate(output):
                 # print('si ', si, targets[si])
@@ -187,13 +185,10 @@ def test(cfg,
                     tcls =labels[:, -1].tolist() if nl else []
                     #fixme --yang.xu
                     # tcls = labels[:, -1].tolist() if nl else []  # target class
-                    # print('tcls', tcls)
+                    print('tcls', tcls)
                 else:
                     #fixme --yang.xu
-                    if (labels >=0).all():
-                        nl = len(labels)
-                    else:
-                        nl = 0
+                    nl = len(labels)
                     tcls = labels[:, 0].tolist() if nl else []  # target class
                 seen += 1
 
@@ -286,7 +281,7 @@ def test(cfg,
         stats = [np.concatenate(x, 0) for x in list(zip(*stats))]  # to numpy
         if len(stats):
             pr_name= opt.name + '  @IoU: {:.2f} '.format(iouv[0]) + '  conf_thres: {} '.format(conf_thres)
-            p, r, ap, f1, ap_class = ap_per_class(*stats, pr_path=opt.result_dir, pr_name= pr_name, model_id=opt.model_id)
+            p, r, ap, f1, ap_class = ap_per_class(*stats, pr_path=opt.result_dir, pr_name= pr_name, rare_class=opt.model_id)
 
             # print('dataset.batch ', dataset.batch.shape)
             # exit(0)
@@ -591,7 +586,7 @@ if __name__ == '__main__':
             if not os.path.exists(opt.result_dir):
                 os.makedirs(opt.result_dir)
             print(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd), '*_{}_seed{}'.format(hyp_cmt, sd), 'best_seed{}.pt'.format(sd)))
-            print(glob.glob(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd), '*_{}_seed{}'.format(hyp_cmt, sd), 'best_seed{}.pt'.format(sd))))
+            # print(glob.glob(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd), '*_{}_seed{}'.format(hyp_cmt, sd), 'best_seed{}.pt'.format(sd))))
             all_weights = glob.glob(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd), '*_{}_seed{}'.format(hyp_cmt, sd), 'best_*seed{}.pt'.format(sd)))
             all_weights.sort()
             opt.weights = all_weights[-2]

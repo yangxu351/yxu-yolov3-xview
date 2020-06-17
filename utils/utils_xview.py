@@ -326,7 +326,7 @@ def ap_per_class(tp, conf, pred_cls, target_cls, ntp=None, pr_path='', pr_name='
     ap, p, r = np.zeros(s), np.zeros(s), np.zeros(s)
     for ci, c in enumerate(unique_classes):
         if rare_class is not None:
-            i = pred_cls ==0
+            i = pred_cls == 0
             n_gt = (target_cls == rare_class).sum()
             n_p = i.sum()
 <<<<<<< HEAD
@@ -352,8 +352,8 @@ def ap_per_class(tp, conf, pred_cls, target_cls, ntp=None, pr_path='', pr_name='
             # Accumulate FPs and TPs
             fpc = (1 - tp[i]).cumsum(0)
             tpc = tp[i].cumsum(0)
-            # print('fpc', fpc.shape) # (178, 1)  , np.concatenate(([0.], recall).shape)
-            # print('tp', tp.shape) #  , np.concatenate(([0.], recall).shape)
+            print('fpc', fpc.shape) # (178, 1)  , np.concatenate(([0.], recall).shape)
+            print('tp', tp.shape) #  , np.concatenate(([0.], recall).shape)
 
             # Recall
             recall = tpc / (n_gt + 1e-16)  # recall curve
@@ -390,7 +390,7 @@ def ap_per_class(tp, conf, pred_cls, target_cls, ntp=None, pr_path='', pr_name='
     # print('r', r.shape) #  (1,1)
     return p, r, ap, f1, unique_classes.astype('int32')
 
-def plot_roc(tp, conf, pred_cls, target_cls, ntp, pr_path='', pr_name='', rare_class=None, area=0):
+def plot_roc_easy_hard(tp, conf, pred_cls, target_cls, ntp, pr_path='', pr_name='', rare_class=None, area=0, ehtype=''):
     """ Compute the average precision, given the recall and precision curves.
     Source: https://github.com/rafaelpadilla/Object-Detection-Metrics.
     # Arguments
@@ -408,7 +408,8 @@ def plot_roc(tp, conf, pred_cls, target_cls, ntp, pr_path='', pr_name='', rare_c
     i = np.argsort(-conf) # 175
     tp, conf, pred_cls, ntp = tp[i], conf[i], pred_cls[i], ntp[i]
 
-    n_gt = len(target_cls==rare_class)
+    n_gt = (target_cls == rare_class).sum()
+    print('n_gt', n_gt)
     far_list = []
     rec_list = []
     n_t = 0
@@ -416,12 +417,14 @@ def plot_roc(tp, conf, pred_cls, target_cls, ntp, pr_path='', pr_name='', rare_c
     for ix, t in enumerate(conf):
         if tp[ix]: # and conf[ix] >= t:
             n_t += 1
-        elif not tp[ix] and not ntp[ix] :
+        elif not tp[ix] and not ntp[ix]:
             n_f += 1
         far = n_f/area
-        rec = n_t/n_gt
+        rec = n_t/(n_gt + 1e-16)
         far_list.append(far)
         rec_list.append(rec)
+    print('far_list ', len(far_list))
+    print('rec_list ', len(rec_list))
     np.savetxt(os.path.join(pr_path, 'far_list.txt'), far_list)
     np.savetxt(os.path.join(pr_path, 'rec_list.txt'), rec_list)
     rec_arr = np.array(rec_list)
@@ -429,7 +432,7 @@ def plot_roc(tp, conf, pred_cls, target_cls, ntp, pr_path='', pr_name='', rare_c
     fx = np.where(far_arr[1:] != far_arr[:-1])[0]
     auc = np.sum((far_arr[fx + 1] - far_arr[fx]) * rec_arr[fx + 1])
     if rare_class is not None:
-        title = 'ROC of $T_{%s}$' % 'xview\_rare\_class{}'.format(rare_class)
+        title = 'ROC of $T_{xview}^{%s}(rc{%d})$' % (ehtype, rare_class)
     else:
         title = 'ROC of $T_{xview}$'
     if pr_path:
@@ -443,6 +446,7 @@ def plot_roc(tp, conf, pred_cls, target_cls, ntp, pr_path='', pr_name='', rare_c
         ax2.set_xlabel('FAR', font_label)
         ax2.set_ylabel('Recall', font_label)
         ax2.set_ylim(0, 1)
+        ax2.set_xlim(0, 30)
         ax2.grid()
         fig2.savefig(os.path.join(pr_path, pr_name + '_ROC_curve.png'), dpi=300)
         plt.close(fig2)
@@ -544,6 +548,68 @@ def plot_roc(tp, conf, pred_cls, target_cls, ntp, pr_path='', pr_name='', rare_c
     # f1 = 2 * p * r / (p + r + 1e-16)
     # # print('r', r.shape) #  (1,1)
     # return p, r, ap, f1, unique_classes.astype('int32')
+
+
+def plot_roc(tp, conf, pred_cls, target_cls, pr_path='', pr_name='', model_id=None, area=0):
+    """ Compute the average precision, given the recall and precision curves.
+    Source: https://github.com/rafaelpadilla/Object-Detection-Metrics.
+    # Arguments
+        tp:    True positives (nparray, nx1 or nx10).
+        conf:  Objectness value from 0-1 (nparray).
+        pred_cls: Predicted object classes (nparray).
+        target_cls: True object classes (nparray).
+        model_id: the specified id
+        area: all image covered area (square kilometers)
+    # Returns
+        The average precision as computed in py-faster-rcnn.
+    """
+    # Sort by objectness
+    i = np.argsort(-conf) # 175
+    tp, conf, pred_cls = tp[i], conf[i], pred_cls[i]
+
+    # n_gt = len([x==rare_class for x in target_cls])
+    n_gt = (target_cls == model_id).sum()
+    print('n_gt', n_gt)
+    far_list = []
+    rec_list = []
+    n_t = 0
+    n_f = 0
+    for ix, t in enumerate(conf):
+        if tp[ix]: # and conf[ix] >= t:
+            n_t += 1
+        elif not tp[ix]:
+            n_f += 1
+        far = n_f/area
+        rec = n_t/(n_gt + 1e-16)
+        far_list.append(far)
+        rec_list.append(rec)
+    print('far_list ', len(far_list))
+    print('rec_list ', len(rec_list))
+    np.savetxt(os.path.join(pr_path, 'far_list.txt'), far_list)
+    np.savetxt(os.path.join(pr_path, 'rec_list.txt'), rec_list)
+    rec_arr = np.array(rec_list)
+    far_arr = np.array(far_list)
+    fx = np.where(far_arr[1:] != far_arr[:-1])[0]
+    auc = np.sum((far_arr[fx + 1] - far_arr[fx]) * rec_arr[fx + 1])
+    if model_id is not None:
+        title = 'ROC of $T_{xview}({%d})$' % (model_id)
+    else:
+        title = 'ROC of $T_{xview}$'
+    if pr_path:
+        font_title = {'family': 'serif', 'weight': 'normal', 'size': 15}
+        font_label = {'family': 'serif', 'weight': 'normal', 'size': 12}
+
+        fig2, ax2= plt.subplots(1, figsize=(10, 8))
+        ax2.plot(far_list, rec_list, label=pr_name + '  AUC: %.3f'%(auc))
+        ax2.legend()
+        ax2.set_title(title, font_title)
+        ax2.set_xlabel('FAR', font_label)
+        ax2.set_ylabel('Recall', font_label)
+        ax2.set_ylim(0, 1)
+        ax2.set_xlim(0, 30)
+        ax2.grid()
+        fig2.savefig(os.path.join(pr_path, pr_name + '_ROC_curve.png'), dpi=300)
+        plt.close(fig2)
 
 
 def compute_ap(recall, precision):

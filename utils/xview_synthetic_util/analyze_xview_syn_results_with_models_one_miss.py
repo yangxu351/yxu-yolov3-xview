@@ -117,11 +117,11 @@ def get_part_syn_args():
     return syn_args
 
 
-def check_prd_gt_iou_xview_syn(miss_model_id, cmt, prefix, res_folder, base_pxwhrs='px23whr3_seed17', hyp_cmt = 'hgiou1_1gpu',
+def check_prd_gt_iou_xview_syn(data_file, miss_model_id, rare_class, cmt, prefix, res_folder, base_pxwhrs='px23whr3_seed17', hyp_cmt='hgiou1_1gpu',
                                seed=17,  iou_thres=0.5):
 
     xview_dir = os.path.join(syn_args.data_xview_dir, base_pxwhrs)
-    data_file = 'xviewtest_{}_with_model_m{}_miss.data'.format(base_pxwhrs, miss_model_id)
+
     data = parse_data_cfg(os.path.join(xview_dir, data_file))
     # fixme--yang.xu
     img_path = data['test']  # path to test images
@@ -139,19 +139,21 @@ def check_prd_gt_iou_xview_syn(miss_model_id, cmt, prefix, res_folder, base_pxwh
     suffix = fstr + '_' + sstr
     print('suffix', suffix)
     if miss_model_id:
-        result_path = syn_args.results_dir.format(syn_args.class_num, cmt, seed, res_folder.format(hyp_cmt, seed))
+        result_path = syn_args.results_dir.format(syn_args.class_num, cmt, seed, res_folder)
     json_name = prefix + suffix + '*.json'
     print('result_path ', result_path)
     print('json_name', json_name)
     res_json_file = glob.glob(os.path.join(result_path, json_name))[-1]
     res_json = json.load(open(res_json_file))
+    result_iou_check_dir = os.path.join(syn_args.cat_sample_dir, 'result_iou_check', 'miss_model_{}'.format(miss_model_id), cmt, res_folder)
+    if not os.path.exists(result_iou_check_dir):
+        os.makedirs(result_iou_check_dir)
 
     img_names = []
     for ix, f in enumerate(df_imgs.loc[:, 0]):
         img_names.append(os.path.basename(f))
         lbl_file = df_lbls.loc[ix, 0]
-
-        img = cv2.imread(os.path.join(f))
+        img = cv2.imread(f)
         img_size = img.shape[0]
         good_gt_list = []
         if pps.is_non_zero_file(lbl_file):
@@ -162,57 +164,54 @@ def check_prd_gt_iou_xview_syn(miss_model_id, cmt, prefix, res_folder, base_pxwh
             gt_cat[:, 2] = gt_cat[:, 2] - gt_cat[:, 4] / 2
             gt_cat[:, 3] = gt_cat[:, 1] + gt_cat[:, 3]
             gt_cat[:, 4] = gt_cat[:, 2] + gt_cat[:, 4]
-            gt_cat = gt_cat[gt_cat[:, -1] == miss_model_id]
+            # gt_cat = gt_cat[gt_cat[:, -1] == miss_model_id]
+            gt_cat = gt_cat[gt_cat[:, -1] == rare_class]
+            good_gt_list = gt_cat.tolist()
+        result_list = []
+        for image_name in img_names:
+            for ri in res_json:
+                # if ri['image_name'] == image_name and ri['score'] >= score_thres:  # ri['image_id'] in rare_img_id_list and
+                if ri['image_name'] == image_name:
+                    result_list.append(ri)
 
-    result_iou_check_dir = os.path.join(syn_args.cat_sample_dir, 'result_iou_check', 'miss_model_{}'.format(miss_model_id),  cmt)
-    if not os.path.exists(result_iou_check_dir):
-        os.makedirs(result_iou_check_dir)
-    result_list = []
-    for image_name in img_names:
-        for ri in res_json:
-            # if ri['image_name'] == image_name and ri['score'] >= score_thres:  # ri['image_id'] in rare_img_id_list and
-            if ri['image_name'] == image_name:
-                result_list.append(ri)
-
-        for gx in range(gt_cat.shape[0]):
-            g = gt_cat[gx, :]
-            g_bbx = [int(x) for x in g[1:]]
-            img = cv2.rectangle(img, (g_bbx[0], g_bbx[1]), (g_bbx[2], g_bbx[3]), (0, 255, 255), 2)  # yellow
-            if len(g_bbx) == 5:
-                cv2.putText(img, text='{}'.format(g_bbx[4]), org=(g_bbx[0] + 10, g_bbx[1] + 20),
-                            fontFace=cv2.FONT_HERSHEY_SIMPLEX,
-                            fontScale=0.5, thickness=1, lineType=cv2.LINE_AA, color=(0, 255, 255))  # yellow
-        p_iou = {}  # to keep the larger iou
-        for px, p in enumerate(result_list):
-            # fixme
-            p['bbox'][2] = p['bbox'][0] + p['bbox'][2]
-            p['bbox'][3] = p['bbox'][1] + p['bbox'][3]
-            p_bbx = [int(x) for x in p['bbox']]
-            p_cat_id = p['category_id']
-            p_score = p['score']
+        if len(good_gt_list):
             for gx in range(gt_cat.shape[0]):
                 g = gt_cat[gx, :]
                 g_bbx = [int(x) for x in g[1:]]
-                iou = coord_iou(p_bbx, g_bbx)
-
-                if iou >= iou_thres:
-                    print('iou---------------------------------->', iou)
-                    print('gbbx', g_bbx)
-                    if px not in p_iou.keys():  # **********keep the largest iou
-                        p_iou[px] = iou
-                    elif iou > p_iou[px]:
-                        p_iou[px] = iou
-
-                    img = cv2.rectangle(img, (p_bbx[0], p_bbx[1]), (p_bbx[2], p_bbx[3]), (255, 255, 0), 2)
-                    cv2.putText(img, text='[iou:{:.3f}, conf:{:.3f}]'.format(p_iou[px], p_score), org=(p_bbx[2] + 10, p_bbx[3]),
-                                # [pr_bx[0], pr[-1]]
+                img = cv2.rectangle(img, (g_bbx[0], g_bbx[1]), (g_bbx[2], g_bbx[3]), (0, 255, 255), 2)  # yellow
+                if len(g_bbx) == 5:
+                    cv2.putText(img, text='{}'.format(g_bbx[4]), org=(g_bbx[0] + 10, g_bbx[1] + 20),
                                 fontFace=cv2.FONT_HERSHEY_SIMPLEX,
-                                fontScale=0.5, thickness=1, lineType=cv2.LINE_AA, color=(255, 255, 0))  # cyan
+                                fontScale=0.5, thickness=1, lineType=cv2.LINE_AA, color=(0, 255, 255))  # yellow
+            p_iou = {}  # to keep the larger iou
+            for px, p in enumerate(result_list):
+                # fixme
+                p['bbox'][2] = p['bbox'][0] + p['bbox'][2]
+                p['bbox'][3] = p['bbox'][1] + p['bbox'][3]
+                p_bbx = [int(x) for x in p['bbox']]
+                p_cat_id = p['category_id']
+                p_score = p['score']
+                if len(good_gt_list):
+                    for gx in range(gt_cat.shape[0]):
+                        g = gt_cat[gx, :]
+                        g_bbx = [int(x) for x in g[1:]]
+                        iou = coord_iou(p_bbx, g_bbx)
 
+                        if iou >= iou_thres:
+                            print('iou---------------------------------->', iou)
+                            print('gbbx', g_bbx)
+                            if px not in p_iou.keys():  # **********keep the largest iou
+                                p_iou[px] = iou
+                            elif iou > p_iou[px]:
+                                p_iou[px] = iou
 
+                            img = cv2.rectangle(img, (p_bbx[0], p_bbx[1]), (p_bbx[2], p_bbx[3]), (255, 255, 0), 2)
+                            cv2.putText(img, text='[iou:{:.3f}, conf:{:.3f}]'.format(p_iou[px], p_score), org=(p_bbx[2] + 10, p_bbx[3]),
+                                        # [pr_bx[0], pr[-1]]
+                                        fontFace=cv2.FONT_HERSHEY_SIMPLEX,
+                                        fontScale=0.5, thickness=1, lineType=cv2.LINE_AA, color=(255, 255, 0))  # cyan
 
-        if len(good_gt_list):
-            cv2.imwrite(os.path.join(result_iou_check_dir, image_name), img)
+                    cv2.imwrite(os.path.join(result_iou_check_dir, image_name), img)
 
 if __name__ == "__main__":
 
@@ -243,7 +242,7 @@ if __name__ == "__main__":
     # miss_model_id = 4
     comments = ['syn_xview_bkg_px15whr3_sbw_xcolor_model4_v2_mixed']
     miss_model_id = 4
-    res_folder = 'test_on_xview_with_model_{}_seed{}_miss'
+
     hyp_cmt = 'hgiou1_1gpu'
     # hyp_cmt = 'hgiou1_obj3.5_val_labeled'
     # hyp_cmt = 'hgiou1_1gpu_val_labeled'
@@ -252,7 +251,11 @@ if __name__ == "__main__":
     # px_thres = 23
     seed = 17
     iou_thres=0.5
-
+    # res_folder = 'test_on_xview_with_model_{}_seed{}_miss'.format(hyp_cmt, seed)
+    # data_file = 'xviewtest_{}_with_model_m{}_miss.data'.format(base_pxwhrs, miss_model_id)
+    rare_class = 1
+    res_folder = 'test_on_xview_with_model_{}_m4_rc1_2315'.format(hyp_cmt)
+    data_file = 'xviewtest_{}_m{}_rc1_2315.data'.format(base_pxwhrs, miss_model_id)
     for cmt in comments:
-        check_prd_gt_iou_xview_syn(miss_model_id, cmt, prefix, res_folder, base_pxwhrs, hyp_cmt,
+        check_prd_gt_iou_xview_syn(data_file, miss_model_id, rare_class, cmt, prefix, res_folder, base_pxwhrs, hyp_cmt,
                                     seed=seed, iou_thres=iou_thres)
