@@ -622,7 +622,7 @@ if __name__ == '__main__':
             opt.rare_class = 1
             opt.type = 'easy'
             # opt.type = 'hard'
-            opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_with_model_{}_m{}_rc{}_2315'.format(hyp_cmt, opt.model_id, opt.rare_class))
+            opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_with_model_{}_m{}_rc{}_2315'.format(hyp_cmt, sd, opt.model_id, opt.rare_class))
             opt.data = 'data_xview/{}_cls/{}/xviewtest_{}_m{}_rc{}_2315.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id, opt.rare_class)
 
             ''' for whole validation dataset '''
