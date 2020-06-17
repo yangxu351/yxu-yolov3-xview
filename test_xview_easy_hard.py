@@ -55,7 +55,7 @@ def test(cfg,
          batch_size=16,
          img_size=416,
          conf_thres=0.001,
-         iou_thres=0.5,  # for nms
+         nms_iou_thres=0.5,  # for nms
          save_json=False,
          model=None,
          dataloader=None,
@@ -160,19 +160,28 @@ def test(cfg,
                 if hasattr(model, 'hyp'):  # if model has loss hyperparameters
                     loss += compute_loss(train_out, targets, model)[1][:3].cpu()  # GIoU, obj, cls
                 # Run NMS
-                output = non_max_suppression(inf_out, conf_thres=conf_thres, iou_thres=iou_thres)
+                output = non_max_suppression(inf_out, conf_thres=conf_thres, iou_thres=nms_iou_thres)
             # Statistics per image
             for si, pred in enumerate(output):
                 # print('si ', si, targets[si])
                 # print('targets--', targets)
                 labels = targets[targets[:, 0] == si, 1:]
-                # print('labels--', labels.shape)
-                # print(labels)
+                # # print('labels--', labels.shape)
+                # # print(labels)
                 nl = len(labels)
+                #fixme --yang.xu
+                # if opt.type == 'hard':
+                #     labels = labels[labels[:, -1] == opt.rare_class]
+                #     nl = len(labels)
+                #     tcls =labels[:, -1].tolist() if nl else []
+                #     # print('tcls', tcls)
+                # else:
+                #     #fixme --yang.xu
+                #     nl = len(labels)
+                #     tcls = labels[:, 0].tolist() if nl else []  # target class
+                    # print('tcls', tcls)
                 #fixme ---yang.xu
-                # tcls = labels[:, 0].tolist() if nl else []  # target class
-                tcls = labels[:, -1].tolist() if nl else []
-
+                tcls = labels[:, -1].tolist() if nl else []  # target class
                 seen += 1
 
                 if pred is None:
@@ -216,6 +225,8 @@ def test(cfg,
 
                     #fixme --yang.xu
                     tcls_tensor = labels[:, -1]
+                    print('tcls_tensor', tcls_tensor)
+                    # exit(0)
 
                     # target boxes
                     tbox = xywh2xyxy(labels[:, 1:5]) * torch.Tensor([width, height, width, height]).to(device)
@@ -229,14 +240,14 @@ def test(cfg,
                     #fixme --yang.xu
                     ti = (opt.rare_class == tcls_tensor).nonzero().view(-1) # target indices
                     pi = (0 == pred[:, 5]).nonzero().view(-1)  # prediction indices
-                    print('\nti ', len(ti), ti)
+                    # print('\n ti ', len(ti), ti)
 
                     if opt.type == 'easy':
                         neu_cls = 0
                         ni = (neu_cls == tcls_tensor).nonzero().view(-1) # target neutral indices
                         print('ni ', len(ni), ni)
                     else:
-                        ni = []
+                        ni = torch.tensor([])
 
                     # if len(pi):
                     #     ious, i = box_iou(pred[pi, :4], tbox[ti]).max(1)  # best ious, indices
@@ -293,7 +304,8 @@ def test(cfg,
                 # Append statistics (correct, conf, pcls, tcls, neu_correct)
                 # pred (x1, y1, x2, y2, object_conf, conf, class)
                 stats.append((correct, pred[:, 4].cpu(), pred[:, 5].cpu(), tcls, neu_correct))
-                if len(tcls) and len(correct):
+                # if len(tcls) and len(correct):
+                if 1 in tcls:
                     print('\n correct: {}  pred[:,4]:{}  pred[:, 5]:{} tcls:{}'.format(correct, pred[:, 4].cpu(), pred[:, 5].cpu(), tcls))
                 # if len(tcls) and len(neu_correct):
                     print('\n neu_correct: {}  pred[:,4]:{}  pred[:, 5]:{} tcls:{}'.format(neu_correct, pred[:, 4].cpu(), pred[:, 5].cpu(), tcls))
@@ -308,7 +320,7 @@ def test(cfg,
             # print('dataset.batch ', dataset.batch.shape)
             # exit(0)
             area = (img_size*opt.res)*(img_size*opt.res)*dataset.batch.shape[0]*1e-6
-            plot_roc(*stats, pr_path=opt.result_dir, pr_name= pr_name, rare_class=opt.rare_class, area=area)
+            plot_roc_easy_hard(*stats, pr_path=opt.result_dir, pr_name= pr_name, rare_class=opt.rare_class, area=area, ehtype=opt.type)
             # if niou > 1:
             #       p, r, ap, f1 = p[:, 0], r[:, 0], ap[:, 0], ap.mean(1)  # average across ious
             #fixme --yang.xu
@@ -419,7 +431,7 @@ def get_opt(dt=None, sr=None, comments=''):
     parser.add_argument('--syn_display_type', type=str, default=dt, help='syn_texture0, syn_color0, syn_texture, syn_color, syn_mixed, syn')
     parser.add_argument('--base_dir', type=str, default='data_xview/{}_cls/{}/', help='without syn data path')
 
-    parser.add_argument('--conf-thres', type=float, default=0.1, help='0.1 0.05 0.001 object confidence threshold')
+    parser.add_argument('--conf-thres', type=float, default=0.01, help='0.1 0.05 0.001 object confidence threshold')
     parser.add_argument('--nms-iou-thres', type=float, default=0.5, help='NMS 0.5  0.6 IOU threshold for NMS')
     parser.add_argument('--save_json', action='store_true', default=True, help='save a cocoapi-compatible JSON results file')
     parser.add_argument('--task', default='test', help="'test', 'study', 'benchmark'")
@@ -581,6 +593,8 @@ if __name__ == '__main__':
             opt.model_id = int(sidx)
             opt.conf_thres = 0.01
             ############# 2 images test set
+            # opt.type = 'easy'
+            # opt.rare_class = 1
             # opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_with_model_{}_seed{}_miss'.format(hyp_cmt, sd))
             # opt.data = 'data_xview/{}_cls/{}/xviewtest_{}_with_model_m{}_miss.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id)
             ############# all m* labeled validation images make up the test set
@@ -595,14 +609,21 @@ if __name__ == '__main__':
             # opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_with_model_{}_tgt_neu_seed{}'.format(hyp_cmt, sd))
             # opt.data = 'data_xview/{}_cls/{}/xviewtest_{}_with_model_m{}_tgt_neu.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id)
             ############# all m* labeled validation images with target and neutral labels
+            # opt.batch_size = 8
+            # opt.rare_class = 1
+            # # opt.type = 'easy'
+            # opt.type = 'hard'
+            # opt.conf_thres = 0.01
+            # opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_with_model_{}_seed{}_{}'.format(hyp_cmt, sd, opt.type))
+            # opt.data = 'data_xview/{}_cls/{}/xviewtest_{}_m{}_rc{}_{}.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id, opt.rare_class, opt.type)
+
+            ############# all m* labeled validation images make up the test set
             opt.batch_size = 8
             opt.rare_class = 1
             opt.type = 'easy'
-            opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_with_model_{}_easy_seed{}'.format(hyp_cmt, sd))
-            opt.data = 'data_xview/{}_cls/{}/xviewtest_{}_m{}_rc{}_easy.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id, opt.rare_class)
             # opt.type = 'hard'
-            # opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_with_model_{}_hard_seed{}'.format(hyp_cmt, sd))
-            # opt.data = 'data_xview/{}_cls/{}/xviewtest_{}_m{}_rc{}_hard.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id, opt.rare_class)
+            opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_with_model_{}_m{}_rc{}_2315'.format(hyp_cmt, opt.model_id, opt.rare_class))
+            opt.data = 'data_xview/{}_cls/{}/xviewtest_{}_m{}_rc{}_2315.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id, opt.rare_class)
 
             ''' for whole validation dataset '''
             # opt.conf_thres = 0.1
