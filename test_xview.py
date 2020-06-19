@@ -91,10 +91,10 @@ def test(cfg,
     data = parse_data_cfg(data)
     nc = int(data['classes'])  # number of classes
     # fixme
-    # path = data['valid']  # path to test images
-    # lbl_path = data['valid_label']
-    path = data['test']  # path to test images
-    lbl_path = data['test_label']
+    path = data['valid']  # path to test images
+    lbl_path = data['valid_label']
+    # path = data['test']  # path to test images
+    # lbl_path = data['test_label']
     # path = data['valid_rare']  # path to test images
     # lbl_path = data['valid_rare_label']
     names = load_classes(data['names'])  # class names
@@ -150,11 +150,11 @@ def test(cfg,
             output = non_max_suppression(inf_out, conf_thres=conf_thres, iou_thres=nms_iou_thres)
             # print('output', output)
         # Statistics per image
-        print('opt.model_id', opt.model_id)
+        # print('opt.model_id', opt.model_id)
         for si, pred in enumerate(output):
             # print('si', si, targets[si])
             labels = targets[targets[:, 0] == si, 1:]
-            print('labels', labels.shape)
+            # print('labels', labels.shape)
             # print('labels', labels)
             #fixme --yang.xu
             # if opt.model_id is not None:
@@ -173,7 +173,7 @@ def test(cfg,
             tcls = labels[:, 0].tolist() if nl else []  # target class
             #fixme --yang.xu
             # tcls = labels[:, 0].tolist() if nl else []  # target class
-            print('tcls', tcls)
+            # print('tcls', tcls)
 
             seen += 1
 
@@ -527,13 +527,16 @@ if __name__ == '__main__':
     # comments = ['syn_xview_bkg_px23whr3_rnd_bwratio_models_color', 'syn_xview_bkg_px23whr3_rnd_bwratio_models_mixed']
     # comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_model4_v6_mixed']
     # model_id = 4
-    comments = ['syn_xview_bkg_px15whr3_sbw_xcolor_model4_v2_mixed']
+    # comments = ['syn_xview_bkg_px15whr3_sbw_xcolor_model4_v2_mixed']
+#    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_model4_v7_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_model4_v7_mixed']
+    comments = ['syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_unif_mig21_model4_v8_color', 'syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_unif_mig21_model4_v8_mixed']
     model_id = 4
     px_thres = 23
     whr_thres = 3 # 4
     # hyp_cmt = 'hgiou1_fitness'
     # hyp_cmt = 'hgiou1_mean_best'
-    hyp_cmt = 'hgiou1_1gpu'
+#    hyp_cmt = 'hgiou1_1gpu'
+    hyp_cmt = 'hgiou1_1gpu_val_syn'
     # hyp_cmt = 'hgiou1_1gpu_val_labeled_miss'
     seeds = [17]
     base_cmt = 'px23whr3_seed17'
@@ -545,7 +548,7 @@ if __name__ == '__main__':
             if not os.path.exists(opt.result_dir):
                 os.makedirs(opt.result_dir)
 
-            opt.weights = glob.glob(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd), '*_{}_seed{}'.format(hyp_cmt, sd), 'best_*seed{}.pt'.format(sd)))[-1]
+            opt.weights = np.sort(glob.glob(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd), '*_{}_seed{}'.format(hyp_cmt, sd), 'best_*seed{}.pt'.format(sd))))[-1]
             print(opt.weights)
             # opt.data = 'data_xview/{}_cls/{}/{}_seed{}_with_model.data'.format(opt.class_num, 'px6whr4_ng0_seed{}'.format(sd), 'xview_px6whr4_ng0', sd)
             # opt.data = 'data_xview/{}_cls/{}/{}_seed{}_with_model.data'.format(opt.class_num, 'px{}whr{}_seed{}'.format(px_thres, whr_thres, sd), 'xview_px{}whr{}'.format(px_thres, whr_thres), sd)

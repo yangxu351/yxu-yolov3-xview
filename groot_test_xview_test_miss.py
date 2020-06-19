@@ -274,12 +274,12 @@ def test(cfg,
         stats = [np.concatenate(x, 0) for x in list(zip(*stats))]  # to numpy
         if len(stats):
             pr_name= opt.name + '  @IoU: {:.2f} '.format(iouv[0]) + '  conf_thres: {} '.format(conf_thres)
-            p, r, ap, f1, ap_class = ap_per_class(*stats, pr_path=opt.result_dir, pr_name= pr_name, model_id=opt.model_id)
+            p, r, ap, f1, ap_class = ap_per_class(*stats, pr_path=opt.result_dir, pr_name= pr_name, rare_class=opt.rare_class)
 
             # print('dataset.batch ', dataset.batch.shape)
             # exit(0)
             area = (img_size*opt.res)*(img_size*opt.res)*dataset.batch.shape[0]*1e-6
-            plot_roc(*stats, pr_path=opt.result_dir, pr_name= pr_name, model_id=opt.model_id, area=area)
+            plot_roc(*stats, pr_path=opt.result_dir, pr_name= pr_name, rare_class=opt.rare_class, area=area)
             # if niou > 1:
             #       p, r, ap, f1 = p[:, 0], r[:, 0], ap[:, 0], ap.mean(1)  # average across ious
             #fixme --yang.xu
@@ -394,6 +394,8 @@ def get_opt(dt=None, sr=None, comments=''):
     parser.add_argument('--name', default='', help='name')
     parser.add_argument('--cmt', default=comments, help='comments')
     parser.add_argument('--model_id', type=int, default=None, help='specified model id')
+    parser.add_argument('--rare_class', type=int, default=None, help='specified rareclass num')
+    parser.add_argument('--type', type=str, default='hard', help='hard, easy')
     opt = parser.parse_args()
     # opt.save_json = opt.save_json or any([x in opt.data for x in ['xview.data']])
     opt.cfg = opt.cfg.format(opt.class_num)
@@ -500,7 +502,8 @@ if __name__ == '__main__':
     # comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v4_mixed']
     # comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v4_color','syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v4_mixed']
     # comments = ['syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_gauss_model4_v5_color','syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_gauss_model4_v5_mixed']
-    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_model4_v7_color','syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_model4_v7_mixed']
+#    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_model4_v7_color','syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_model4_v7_mixed']
+    comments = ['syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_unif_mig21_model4_v8_color','syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_unif_mig21_model4_v8_mixed']
     # comments = ['syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_gauss_models_color', 'syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_gauss_models_mixed']
     # comments = ['syn_xview_bkg_px23whr3_sbw_xcolor_model1_color', 'syn_xview_bkg_px23whr3_sbw_xcolor_model1_mixed']
     # comments = ['syn_xview_bkg_px23whr3_xbw_xcolor_gauss_model1_v1_color', 'syn_xview_bkg_px23whr3_xbw_xcolor_gauss_model1_v1_mixed']
@@ -541,8 +544,8 @@ if __name__ == '__main__':
             opt.model_id = int(sidx)
             opt.conf_thres = 0.01
             ############# 2 images test set
-            opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_with_model_{}_seed{}_miss'.format(hyp_cmt, sd))
-            opt.data = 'data_xview/{}_cls/{}/xviewtest_{}_with_model_m{}_miss.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id)
+            # opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_with_model_{}_seed{}_miss'.format(hyp_cmt, sd))
+            # opt.data = 'data_xview/{}_cls/{}/xviewtest_{}_with_model_m{}_miss.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id)
             ############# all m* labeled validation images make up the test set
             # opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_with_model_{}_seed{}_only'.format(hyp_cmt, sd))
             # opt.data = 'data_xview/{}_cls/{}/xviewtest_{}_with_model_m{}_only.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id)
@@ -550,6 +553,13 @@ if __name__ == '__main__':
             # opt.batch_size = 8
             # opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_with_model_{}_labeled_seed{}'.format(hyp_cmt, sd))
             # opt.data = 'data_xview/{}_cls/{}/xviewtest_{}_with_model_m{}_labeled.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id)
+            ############# all m* labeled validation images make up the test set
+            opt.batch_size = 8
+            opt.rare_class = 1
+            # opt.type = 'easy'
+            opt.type = 'hard'
+            opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_with_model_{}_{}_seed{}'.format(hyp_cmt, sd, opt.type))
+            opt.data = 'data_xview/{}_cls/{}/xviewtest_{}_m{}_rc{}_{}.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id, opt.rare_class, opt.type)
 
             ''' for whole validation dataset '''
             # opt.conf_thres = 0.1

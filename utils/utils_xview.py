@@ -329,11 +329,7 @@ def ap_per_class(tp, conf, pred_cls, target_cls, ntp=None, pr_path='', pr_name='
             i = pred_cls == 0
             n_gt = (target_cls == rare_class).sum()
             n_p = i.sum()
-<<<<<<< HEAD
-#            print('n_gt', n_gt, 'n_p', n_p)
-=======
             # print('n_gt', n_gt, 'n_p', n_p)
->>>>>>> master
         else:
             i = pred_cls == c
             n_gt = (target_cls == c).sum()  # Number of ground truth objects
@@ -352,8 +348,8 @@ def ap_per_class(tp, conf, pred_cls, target_cls, ntp=None, pr_path='', pr_name='
             # Accumulate FPs and TPs
             fpc = (1 - tp[i]).cumsum(0)
             tpc = tp[i].cumsum(0)
-            print('fpc', fpc.shape) # (178, 1)  , np.concatenate(([0.], recall).shape)
-            print('tp', tp.shape) #  , np.concatenate(([0.], recall).shape)
+            # print('fpc', fpc.shape) # (178, 1)  , np.concatenate(([0.], recall).shape)
+            # print('tp', tp.shape) #  , np.concatenate(([0.], recall).shape)
 
             # Recall
             recall = tpc / (n_gt + 1e-16)  # recall curve
@@ -390,7 +386,7 @@ def ap_per_class(tp, conf, pred_cls, target_cls, ntp=None, pr_path='', pr_name='
     # print('r', r.shape) #  (1,1)
     return p, r, ap, f1, unique_classes.astype('int32')
 
-def plot_roc_easy_hard(tp, conf, pred_cls, target_cls, ntp, pr_path='', pr_name='', rare_class=None, area=0, ehtype=''):
+def plot_roc_easy_hard(tp, conf, pred_cls, target_cls, ntp, pr_path='', pr_name='', rare_class=None, area=0, ehtype='', title_data_name='xview'):
     """ Compute the average precision, given the recall and precision curves.
     Source: https://github.com/rafaelpadilla/Object-Detection-Metrics.
     # Arguments
@@ -401,6 +397,7 @@ def plot_roc_easy_hard(tp, conf, pred_cls, target_cls, ntp, pr_path='', pr_name=
         ntp: True positives of netural labels (nparray, nx1 or nx10).
         model_id: the specified id
         area: all image covered area (square kilometers)
+        ehtype: easy or hard
     # Returns
         The average precision as computed in py-faster-rcnn.
     """
@@ -423,8 +420,8 @@ def plot_roc_easy_hard(tp, conf, pred_cls, target_cls, ntp, pr_path='', pr_name=
         rec = n_t/(n_gt + 1e-16)
         far_list.append(far)
         rec_list.append(rec)
-    print('far_list ', len(far_list))
-    print('rec_list ', len(rec_list))
+    # print('far_list ', len(far_list))
+    # print('rec_list ', len(rec_list))
     np.savetxt(os.path.join(pr_path, 'far_list.txt'), far_list)
     np.savetxt(os.path.join(pr_path, 'rec_list.txt'), rec_list)
     rec_arr = np.array(rec_list)
@@ -432,7 +429,7 @@ def plot_roc_easy_hard(tp, conf, pred_cls, target_cls, ntp, pr_path='', pr_name=
     fx = np.where(far_arr[1:] != far_arr[:-1])[0]
     auc = np.sum((far_arr[fx + 1] - far_arr[fx]) * rec_arr[fx + 1])
     if rare_class is not None:
-        title = 'ROC of $T_{xview}^{%s}(rc{%d})$' % (ehtype, rare_class)
+        title = 'ROC of $T_{%s}^{%s}(rc{%d})$' % (title_data_name, ehtype, rare_class)
     else:
         title = 'ROC of $T_{xview}$'
     if pr_path:
@@ -446,7 +443,8 @@ def plot_roc_easy_hard(tp, conf, pred_cls, target_cls, ntp, pr_path='', pr_name=
         ax2.set_xlabel('FAR', font_label)
         ax2.set_ylabel('Recall', font_label)
         ax2.set_ylim(0, 1)
-        ax2.set_xlim(0, 30)
+        # ax2.set_xlim(0, 30)
+        ax2.set_xlim(0, 12)
         ax2.grid()
         fig2.savefig(os.path.join(pr_path, pr_name + '_ROC_curve.png'), dpi=300)
         plt.close(fig2)
@@ -583,8 +581,8 @@ def plot_roc(tp, conf, pred_cls, target_cls, pr_path='', pr_name='', model_id=No
         rec = n_t/(n_gt + 1e-16)
         far_list.append(far)
         rec_list.append(rec)
-    print('far_list ', len(far_list))
-    print('rec_list ', len(rec_list))
+    # print('far_list ', len(far_list))
+    # print('rec_list ', len(rec_list))
     np.savetxt(os.path.join(pr_path, 'far_list.txt'), far_list)
     np.savetxt(os.path.join(pr_path, 'rec_list.txt'), rec_list)
     rec_arr = np.array(rec_list)

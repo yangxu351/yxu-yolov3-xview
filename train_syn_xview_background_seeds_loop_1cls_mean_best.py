@@ -224,7 +224,7 @@ def train(opt):
                                 hyp=hyp,
                                 rect=True,
                                 cache_labels=True,
-                                cache_images=opt.cache_images, with_modelid=False if opt.model_id < 0 else True),
+                                cache_images=opt.cache_images, with_modelid=False),
             batch_size=batch_size * 2,
             num_workers=nw,
             pin_memory=True,

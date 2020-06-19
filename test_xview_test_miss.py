@@ -286,7 +286,7 @@ def test(cfg,
             # print('dataset.batch ', dataset.batch.shape)
             # exit(0)
             area = (img_size*opt.res)*(img_size*opt.res)*dataset.batch.shape[0]*1e-6
-            plot_roc(*stats, pr_path=opt.result_dir, pr_name= pr_name, model_id=opt.model_id, area=area)
+            plot_roc(*stats, pr_path=opt.result_dir, pr_name= pr_name, rare_class=opt.model_id, area=area)
             # if niou > 1:
             #       p, r, ap, f1 = p[:, 0], r[:, 0], ap[:, 0], ap.mean(1)  # average across ious
             #fixme --yang.xu

@@ -448,14 +448,20 @@ if __name__ == '__main__':
     # model_cmt = 'xbw_rndcolor_xbkg_gauss_model4_v5'
 #    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_model4_v7_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_model4_v7_mixed']
 #    model_cmt = 'xbw_xcolor_xbkg_unif_mig21_model4_v7'
-    comments = ['syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_unif_mig21_model4_v8_color', 'syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_unif_mig21_model4_v8_mixed']
-    model_cmt = 'xbw_rndcolor_xbkg_unif_mig21_model4_v8'
+#    comments = ['syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_unif_mig21_model4_v8_color', 'syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_unif_mig21_model4_v8_mixed']
+#    model_cmt = 'xbw_rndcolor_xbkg_unif_mig21_model4_v8'
+#    comments = ['syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_unif_mig21_rndp_model4_v9_color', 'syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_unif_mig21_rndp_model4_v9_mixed']
+#    model_cmt = 'xbw_rndcolor_xbkg_unif_mig21_rndp_model4_v9'
+#    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_rndp_light_model4_v10_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_rndp_light_model4_v10_mixed']
+#    model_cmt = 'xbw_xcolor_xbkg_unif_mig21_rndp_light_model4_v10'
+    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_rndp_model4_v7_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_rndp_model4_v7_mixed']
+    model_cmt = 'xbw_xcolor_xbkg_unif_mig21_rndp_model4_v7'
     pxwhr = 'px15whr3'
 
     base_pxwhrs = 'px23whr3_seed{}'
     syn_args = get_syn_args(model_cmt)
-    # seeds = [17]
-    seeds = [199]
+    seeds = [17]
+    # seeds = [199]
     for cmt in comments:
         for sd in seeds:
             base_pxwhrs = base_pxwhrs.format(sd)
@@ -520,8 +526,14 @@ if __name__ == '__main__':
     # model_cmt = 'xbw_nolor_xbkg_unif_mig21_model4_v7'                                                               
 #    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_model4_v7_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_model4_v7_mixed']
 #    model_cmt = 'xbw_xcolor_xbkg_unif_mig21_model4_v7'
-    comments = ['syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_unif_mig21_model4_v8_color', 'syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_unif_mig21_model4_v8_mixed']
-    model_cmt = 'xbw_rndcolor_xbkg_unif_mig21_model4_v8'
+#    comments = ['syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_unif_mig21_model4_v8_color', 'syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_unif_mig21_model4_v8_mixed']
+#    model_cmt = 'xbw_rndcolor_xbkg_unif_mig21_model4_v8'
+#   comments = ['syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_unif_mig21_rndp_model4_v9_color', 'syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_unif_mig21_rndp_model4_v9_mixed']
+#    model_cmt = 'xbw_rndcolor_xbkg_unif_mig21_rndp_model4_v9'
+#    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_rndp_light_model4_v10_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_rndp_light_model4_v10_mixed']
+#    model_cmt = 'xbw_xcolor_xbkg_unif_mig21_rndp_light_model4_v10'
+    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_rndp_model4_v7_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_rndp_model4_v7_mixed']
+    model_cmt = 'xbw_xcolor_xbkg_unif_mig21_rndp_model4_v7'
     label_id = 4
     miss_id=4
     # # comments = ['syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_models_color', 'syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_models_mixed']
@@ -540,8 +552,8 @@ if __name__ == '__main__':
 
     base_pxwhrs = 'px23whr3_seed{}'
     syn_args = get_syn_args(model_cmt)
-    # seeds = [17]
-    seeds = [199]
+    seeds = [17]
+    # seeds = [199]
     for cmt in comments:
         for sd in seeds:
             base_pxwhrs = base_pxwhrs.format(sd)
@@ -551,7 +563,7 @@ if __name__ == '__main__':
 #            create_syn_data(cmt, sd, base_pxwhrs, val_xview=True, miss_id=miss_id)
             record_all_syn_xview_background(cmt, sd, pxwhr)
     # record all target_neu files
-    record_target_neutral_of_model_id(pxwhr='px23whr3', base_pxwhrs=base_pxwhrs, model_id=miss_id)
+#    record_target_neutral_of_model_id(pxwhr='px23whr3', base_pxwhrs=base_pxwhrs, model_id=miss_id)
     
     # # comments = ['syn_xview_bkg_px23whr4_scale_models_texture', 'syn_xview_bkg_px23whr4_scale_models_color', 'syn_xview_bkg_px23whr4_scale_models_mixed']
     # # seeds = [17, 5, 9]
@@ -597,11 +609,15 @@ if __name__ == '__main__':
     # model_cmt = 'xbw_xcolor_xbkg_gauss_model4_v4'
 #    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_model4_v7_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_model4_v7_mixed']
 #    model_cmt = 'xbw_nolor_xbkg_unif_mig21_model4_v7'
-    comments = ['syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_unif_mig21_model4_v8_color', 'syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_unif_mig21_model4_v8_mixed']
-    model_cmt = 'xbw_rndcolor_xbkg_unif_mig21_model4_v8'
-
-    label_id=4
-    miss_id=4
+#    comments = ['syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_unif_mig21_model4_v8_color', 'syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_unif_mig21_model4_v8_mixed']
+#    model_cmt = 'xbw_rndcolor_xbkg_unif_mig21_model4_v8'
+#   comments = ['syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_unif_mig21_rndp_model4_v9_color', 'syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_unif_mig21_rndp_model4_v9_mixed']
+#    model_cmt = 'xbw_rndcolor_xbkg_unif_mig21_rndp_model4_v9'
+#    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_rndp_light_model4_v10_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_rndp_light_model4_v10_mixed']
+#    model_cmt = 'xbw_xcolor_xbkg_unif_mig21_rndp_light_model4_v10'
+#
+#    label_id=4
+#    miss_id=4
     # comments = ['syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_models_color', 'syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_models_mixed']
     # model_cmt = 'xbw_xrxc_spr_sml_models'
     # comments = ['syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_gauss_models_color', 'syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_gauss_models_mixed']
@@ -614,8 +630,8 @@ if __name__ == '__main__':
 
 #    syn_args = get_syn_args(model_cmt)
 #    base_cmt = 'px23whr3'
-##    seeds = [17]
-#    seeds = [199]
+#    seeds = [17]
+##    seeds = [199]
 #    for cmt in comments:
 #        for sd in seeds:
 #            create_syn_data_with_model(cmt, sd, base_cmt)

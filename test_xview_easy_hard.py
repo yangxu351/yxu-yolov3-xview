@@ -62,7 +62,7 @@ def test(cfg,
          opt=None):
     device = torch_utils.select_device(opt.device, batch_size=batch_size)
     model_maps = torch.load(weights, map_location=device)
-    last_num = 1
+    last_num = 5 
     mp_arr = np.zeros((last_num))
     mr_arr = np.zeros((last_num))
     map_arr = np.zeros((last_num))
@@ -74,9 +74,9 @@ def test(cfg,
     path = data['test']  # path to test images
     lbl_path = data['test_label']
     names = load_classes(data['names'])  # class names
-    m_key = 215
-    for ix, mk in enumerate([m_key]):
-    # for ix, mk in enumerate(model_maps.keys()):
+#    m_key = 215
+#    for ix, mk in enumerate([m_key]):
+    for ix, mk in enumerate(model_maps.keys()):
         # Initialize/load model and set device
         if model is None:
             device = torch_utils.select_device(opt.device, batch_size=batch_size)
@@ -91,7 +91,7 @@ def test(cfg,
 
             # Load weights
             # attempt_download(weights)
-             # pytorch format
+            # pytorch format
             model.load_state_dict(model_maps[mk]['model'])
             # else:  # darknet format
             #     _ = load_darknet_weights(model, model_maps[mk])
@@ -135,6 +135,7 @@ def test(cfg,
         loss = torch.zeros(3)
         jdict, stats, ap, ap_class = [], [], [], []
         # fixme --yang.xu
+        sum_labels = 0
         for batch_i, (imgs, targets, paths, shapes) in enumerate(tqdm(dataloader, desc=s)):
             imgs = imgs.to(device).float() / 255.0  # uint8 to float32, 0 - 255 to 0.0 - 1.0
             targets = targets.to(device)
@@ -164,28 +165,22 @@ def test(cfg,
             # Statistics per image
             for si, pred in enumerate(output):
                 # print('si ', si, targets[si])
-                # print('targets--', targets)
+                # print('targets--', targets.shape)
                 labels = targets[targets[:, 0] == si, 1:]
                 # # print('labels--', labels.shape)
                 # # print(labels)
                 nl = len(labels)
-                #fixme --yang.xu
-                # if opt.type == 'hard':
-                #     labels = labels[labels[:, -1] == opt.rare_class]
-                #     nl = len(labels)
-                #     tcls =labels[:, -1].tolist() if nl else []
-                #     # print('tcls', tcls)
-                # else:
-                #     #fixme --yang.xu
-                #     nl = len(labels)
-                #     tcls = labels[:, 0].tolist() if nl else []  # target class
-                    # print('tcls', tcls)
+                sum_labels += nl
                 #fixme ---yang.xu
-                tcls = labels[:, -1].tolist() if nl else []  # target class
+                # tcls = labels[:, 0].tolist() if nl else []  # target class
+                tcls = labels[:, -1].tolist() if nl else []
+                # print('tcls ', len(tcls))
+                # exit(0)
+
                 seen += 1
 
                 if pred is None:
-                    if nl :
+                    if nl:
                         stats.append((torch.zeros(0, 1), torch.Tensor(), torch.Tensor(), tcls, torch.zeros(0, 1)))
                     continue
 
@@ -225,7 +220,7 @@ def test(cfg,
 
                     #fixme --yang.xu
                     tcls_tensor = labels[:, -1]
-                    print('tcls_tensor', tcls_tensor)
+                    # print('tcls_tensor', tcls_tensor)
                     # exit(0)
 
                     # target boxes
@@ -240,12 +235,13 @@ def test(cfg,
                     #fixme --yang.xu
                     ti = (opt.rare_class == tcls_tensor).nonzero().view(-1) # target indices
                     pi = (0 == pred[:, 5]).nonzero().view(-1)  # prediction indices
-                    # print('\n ti ', len(ti), ti)
+#                    if len(ti):
+#                        print('\nti ', len(ti), ti)
 
                     if opt.type == 'easy':
                         neu_cls = 0
                         ni = (neu_cls == tcls_tensor).nonzero().view(-1) # target neutral indices
-                        print('ni ', len(ni), ni)
+#                        print('ni ', len(ni), ni)
                     else:
                         ni = torch.tensor([])
 
@@ -263,6 +259,7 @@ def test(cfg,
                     # Search for detections
                     if len(pi) and len(ti) and not len(ni):
                         ious, i = box_iou(pred[pi, :4], tbox[ti]).max(1)  # best ious, indices
+                        # print('ious ', ious.shape)
                         # Append detections
                         for j in (ious > iouv[0]).nonzero():
                             d = ti[i[j]]  # detected target
@@ -275,7 +272,7 @@ def test(cfg,
                     elif len(pi) and not len(ti) and len(ni):
                         neu_ious, nix = box_iou(pred[pi, :4], tbox[ni]).max(1)
                         for s in (neu_ious > iouv[0]).nonzero():
-                            print('s --------> ', s)
+#                            print('s --------> ', s)
                             d = ni[nix[s]]  # detected target
                             if d not in detected:
                                 detected.append(d)
@@ -293,23 +290,23 @@ def test(cfg,
                                 if len(detected) == nl:  # all targets already located in image
                                     break
                         for s in (neu_ious > iouv[0]).nonzero():
-                            print('s --------> ', s)
+#                            print('s --------> ', s)
                             d = ni[nix[s]]  # detected neutral target
                             if d not in detected:
                                 detected.append(d)
                                 neu_correct[pi[s]] = neu_ious[s] > iouv  # iou_thres is 1xn
                                 if len(detected) == nl:  # all targets already located in image
                                     break
-                    print('detected ', detected)
+#                    print('detected ', detected)
                 # Append statistics (correct, conf, pcls, tcls, neu_correct)
                 # pred (x1, y1, x2, y2, object_conf, conf, class)
                 stats.append((correct, pred[:, 4].cpu(), pred[:, 5].cpu(), tcls, neu_correct))
-                # if len(tcls) and len(correct):
-                if 1 in tcls:
-                    print('\n correct: {}  pred[:,4]:{}  pred[:, 5]:{} tcls:{}'.format(correct, pred[:, 4].cpu(), pred[:, 5].cpu(), tcls))
+#                if len(tcls) and len(correct):
+#                    print('\n correct: {}  pred[:,4]:{}  pred[:, 5]:{} tcls:{}'.format(correct, pred[:, 4].cpu(), pred[:, 5].cpu(), tcls))
                 # if len(tcls) and len(neu_correct):
-                    print('\n neu_correct: {}  pred[:,4]:{}  pred[:, 5]:{} tcls:{}'.format(neu_correct, pred[:, 4].cpu(), pred[:, 5].cpu(), tcls))
+#                    print('\n neu_correct: {}  pred[:,4]:{}  pred[:, 5]:{} tcls:{}'.format(neu_correct, pred[:, 4].cpu(), pred[:, 5].cpu(), tcls))
 
+        print('sum all labels', sum_labels)
         # Compute statistics
         stats = [np.concatenate(x, 0) for x in list(zip(*stats))]  # to numpy
         if len(stats):
@@ -320,7 +317,7 @@ def test(cfg,
             # print('dataset.batch ', dataset.batch.shape)
             # exit(0)
             area = (img_size*opt.res)*(img_size*opt.res)*dataset.batch.shape[0]*1e-6
-            plot_roc_easy_hard(*stats, pr_path=opt.result_dir, pr_name= pr_name, rare_class=opt.rare_class, area=area, ehtype=opt.type)
+            plot_roc_easy_hard(*stats, pr_path=opt.result_dir, pr_name= pr_name, rare_class=opt.rare_class, area=area, ehtype=opt.type, title_data_name=tif_name)
             # if niou > 1:
             #       p, r, ap, f1 = p[:, 0], r[:, 0], ap[:, 0], ap.mean(1)  # average across ious
             #fixme --yang.xu
@@ -329,9 +326,8 @@ def test(cfg,
             mp, mr, map, mf1 = p.mean(), r.mean(), ap.mean(), f1.mean()
             #fixme --yang.xu compute before
             # nt = np.bincount(stats[3].astype(np.int64), minlength=nc)  # number of targets per class
-            if opt.rare_class is not None:
-                st3 = stats[3][stats[3] == opt.rare_class]
-                nt = np.bincount(st3.astype(np.int64), minlength=nc)  # number of targets per class
+            st3 = stats[3][stats[3] == opt.rare_class]
+            nt = np.bincount(st3.astype(np.int64), minlength=nc)  # number of targets per class
         else:
             nt = torch.zeros(1)
 
@@ -545,7 +541,10 @@ if __name__ == '__main__':
     # comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v3_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v3_mixed']
     # comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v4_color']
     # comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v4_mixed']
-    comments = ['syn_xview_bkg_px15whr3_sbw_xcolor_model4_v2_mixed']
+    # comments = ['syn_xview_bkg_px15whr3_sbw_xcolor_model4_v2_mixed']
+    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_model4_v7_color','syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_model4_v7_mixed']
+#    comments = ['syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_unif_mig21_model4_v8_color','syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_unif_mig21_model4_v8_mixed']
+#    comments = ['syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_unif_mig21_rndp_model4_v9_color','syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_unif_mig21_rndp_model4_v9_mixed']
     model_id = 4
     # comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v4_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v4_mixed']
     # comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_model4_v6_color']
@@ -556,7 +555,7 @@ if __name__ == '__main__':
     # comments = ['syn_xview_bkg_px23whr3_sbw_xcolor_xbkg_unif_model1_v3_color', 'syn_xview_bkg_px23whr3_sbw_xcolor_xbkg_unif_model1_v3_mixed']
     # comments = ['syn_xview_bkg_px23whr3_xbsw_xcolor_xbkg_gauss_model1_v4_color', 'syn_xview_bkg_px23whr3_xbsw_xcolor_xbkg_gauss_model1_v4_mixed']
     base_cmt = 'px23whr3_seed{}'
-    hyp_cmt = 'hgiou1_1gpu'
+    # hyp_cmt = 'hgiou1_1gpu'
 
     # hyp_cmt = 'hgiou1_1gpu_obj29.5'
     # hyp_cmt = 'hgiou1_1gpu_xval'
@@ -564,7 +563,7 @@ if __name__ == '__main__':
     # hyp_cmt = 'hgiou1_obj3.5_val_labeled'
     # hyp_cmt = 'hgiou1_1gpu_val_labeled_miss'
     # hyp_cmt = 'hgiou1_1gpu_val_labeled'
-    # hyp_cmt = 'hgiou1_1gpu_val_syn'
+    hyp_cmt = 'hgiou1_1gpu_val_syn'
     # hyp_cmt = 'hgiou1_1gpu_val_xview'
     # hyp_cmt = 'hgiou1_obj15.5_val_xview'
     # hyp_cmt = 'hgiou0.7_1gpu'
@@ -572,13 +571,13 @@ if __name__ == '__main__':
     prefix = 'syn'
     px_thres = 23
     whr_thres = 3 # 4
-#    seeds = [17]
-    seeds = [199] # 17
+    seeds = [17]
+#    seeds = [199] # 17
     for sd in seeds:
         for cmt in comments:
             base_cmt = base_cmt.format(sd)
             opt = get_opt(comments=cmt)
-            opt.device = '1'
+            opt.device = '0'
 
             cinx = cmt.find('model') # first letter index
             endstr = cmt[cinx:]
@@ -591,42 +590,27 @@ if __name__ == '__main__':
             opt.name = prefix + suffix
 
             ''' for specified model id '''
-            opt.batch_size = 2
+            opt.batch_size = 8
             sidx = cmt.split('model')[-1][0]
             opt.model_id = int(sidx)
+            print('opt.model_id', opt.model_id)
             opt.conf_thres = 0.01
+            tif_name = 'xview'
             ############# 2 images test set
-            # opt.type = 'easy'
-            # opt.rare_class = 1
-            # opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_with_model_{}_seed{}_miss'.format(hyp_cmt, sd))
-            # opt.data = 'data_xview/{}_cls/{}/xviewtest_{}_with_model_m{}_miss.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id)
-            ############# all m* labeled validation images make up the test set
-            # opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_with_model_{}_seed{}_only'.format(hyp_cmt, sd))
-            # opt.data = 'data_xview/{}_cls/{}/xviewtest_{}_with_model_m{}_only.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id)
-            ############# all m* labeled validation images make up the test set
-            # opt.batch_size = 8
-            # opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_with_model_{}_labeled_seed{}'.format(hyp_cmt, sd))
-            # opt.data = 'data_xview/{}_cls/{}/xviewtest_{}_with_model_m{}_labeled.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id)
-            ############# all m* labeled validation images with target and neutral labels
-            # opt.batch_size = 8
-            # opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_with_model_{}_tgt_neu_seed{}'.format(hyp_cmt, sd))
-            # opt.data = 'data_xview/{}_cls/{}/xviewtest_{}_with_model_m{}_tgt_neu.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id)
-            ############# all m* labeled validation images with target and neutral labels
-            # opt.batch_size = 8
-            # opt.rare_class = 1
-            # # opt.type = 'easy'
-            # opt.type = 'hard'
-            # opt.conf_thres = 0.01
-            # opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_with_model_{}_seed{}_{}'.format(hyp_cmt, sd, opt.type))
-            # opt.data = 'data_xview/{}_cls/{}/xviewtest_{}_m{}_rc{}_{}.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id, opt.rare_class, opt.type)
-
-            ############# all m* labeled validation images make up the test set
-            opt.batch_size = 8
-            opt.rare_class = 1
             opt.type = 'easy'
-            # opt.type = 'hard'
-            opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_with_model_{}_m{}_rc{}_2315'.format(hyp_cmt, sd, opt.model_id, opt.rare_class))
-            opt.data = 'data_xview/{}_cls/{}/xviewtest_{}_m{}_rc{}_2315.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id, opt.rare_class)
+            #opt.type = 'hard'
+            opt.rare_class = 1
+            opt.name += '_{}'.format(opt.type)
+            opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_{}_m{}_rc{}_{}'.format(hyp_cmt, opt.model_id, opt.rare_class, opt.type))
+            opt.data = 'data_xview/{}_cls/{}/xviewtest_{}_m{}_rc{}_{}.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id, opt.rare_class, opt.type)
+            ############ all 2315 patches 171
+#            tif_name = '2315'
+#            opt.batch_size = 8
+#            opt.rare_class = 1
+#            opt.type = 'hard'
+#            opt.name += '_{}_{}'.format(tif_name, opt.type)
+#            opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_with_model_{}_{}_{}'.format(hyp_cmt, tif_name, opt.type))
+#            opt.data = 'data_xview/{}_cls/{}/xviewtest_{}_m{}_rc{}_{}.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id, opt.rare_class, tif_name)
 
             ''' for whole validation dataset '''
             # opt.conf_thres = 0.1
@@ -835,7 +819,7 @@ if __name__ == '__main__':
     #          opt.data,
     #          opt.weights,
     #          opt.batch_size,
-    #          opt.img_size,
+    #          opt.img_siz,
     #          opt.conf_thres,
     #          opt.nms_iou_thres,
     #          opt.save_json, opt=opt)

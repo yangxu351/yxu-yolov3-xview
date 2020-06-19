@@ -2,7 +2,8 @@ import glob
 import numpy as np
 import argparse
 import os
-
+import sys
+sys.path.append('/data/users/yang/code/yxu-yolov3-xview/')
 import utils.wv_util as wv
 from utils.utils_xview import coord_iou, compute_iou
 from utils.xview_synthetic_util import preprocess_xview_syn_data_distribution as pps
@@ -107,49 +108,49 @@ def get_multi_chips_and_txt_geojson_2_json_of_tif_name(tif_name):
     json.dump(trn_instance, open(json_file, 'w'), ensure_ascii=False, indent=2, cls=pwv.MyEncoder)
 
 
-def create_testset_txt_list_txt_data_of_tif_name(tif_name, model_id=4):
+def create_testset_txt_list_txt_data_of_tif_name(tif_name, model_id=4, rare_class=1):
     '''
     for m4
     '''
-    args = get_args()
-    txt_norm_dir = args.annos_save_dir[:-1] + '_of_{}/'.format(tif_name) + 'm{}_{}'.format(model_id, tif_name)
-    print('txt_norm_dir ', txt_norm_dir)
-    txt_modelid_dir = args.annos_save_dir[:-1] + '_of_{}/'.format(tif_name) + 'm{}_{}'.format(model_id, tif_name) + '_with_modelid'
-    if not os.path.exists(txt_modelid_dir):
-        os.mkdir(txt_modelid_dir)
-
-    lbl_files = glob.glob(os.path.join(txt_norm_dir, '*.txt'))
-    for lf in lbl_files:
-        lbl_name = os.path.basename(lf)
-        df_lbl = pd.read_csv(lf, header=None, names =[0, 1, 2, 3, 4, 5], sep=' ')
-        df_lbl[5] = model_id
-        df_lbl.to_csv(os.path.join(txt_modelid_dir, lbl_name), header=False, index=False, sep=' ')
-
-    tif_name = '2315.tif'.split('.')[0]
-    model_id = 4
-    txt_norm_dir = args.annos_save_dir[:-1] + '_of_{}/'.format(tif_name) + 'm{}_{}'.format(model_id, tif_name)
-    base_pxwhrs = 'px23whr3_seed17'
-
-    base_dir = args.data_save_dir
-    img_dir = os.path.join(args.images_save_dir[:-1] + '_of_{}'.format(tif_name),  'm{}_{}'.format(model_id, tif_name))
-    test_lbl_txt = open(os.path.join(base_dir, base_pxwhrs, 'xviewtest_lbl_{}_m{}_{}.txt'.format(base_pxwhrs, model_id, tif_name)), 'w')
-    test_img_txt = open(os.path.join(base_dir, base_pxwhrs, 'xviewtest_img_{}_m{}_{}.txt'.format(base_pxwhrs, model_id, tif_name)), 'w')
-
-    lbl_modeled_files = glob.glob(os.path.join(txt_modelid_dir, '*.txt'))
-    for mf in lbl_modeled_files:
-        lbl_name = os.path.basename(mf)
-        img_name = lbl_name.replace('.txt', '.jpg')
-        test_lbl_txt.write('%s\n' % mf)
-        test_img_txt.write('%s\n' % os.path.join(img_dir, img_name))
-    test_img_txt.close()
-    test_lbl_txt.close()
-
-    data_txt = open(os.path.join(base_dir, base_pxwhrs, 'xviewtest_{}_m{}_{}.data'.format(base_pxwhrs, model_id, tif_name)), 'w')
-    data_txt.write('classes=%s\n' % str(args.class_num))
-    data_txt.write('test=./data_xview/{}_cls/{}/xviewtest_img_{}_m{}_{}.txt\n'.format(args.class_num, base_pxwhrs, base_pxwhrs, model_id, tif_name))
-    data_txt.write('test_label=./data_xview/{}_cls/{}/xviewtest_lbl_{}_m{}_{}.txt\n'.format(args.class_num, base_pxwhrs, base_pxwhrs, model_id, tif_name))
-    data_txt.write('names=./data_xview/{}_cls/xview.names\n'.format(args.class_num))
-    data_txt.close()
+#    args = get_args()
+#    txt_norm_dir = args.annos_save_dir[:-1] + '_of_{}/'.format(tif_name) + 'm{}_{}'.format(model_id, tif_name)
+#    print('txt_norm_dir ', txt_norm_dir)
+#    txt_modelid_dir = args.annos_save_dir[:-1] + '_of_{}/'.format(tif_name) + 'm{}_{}'.format(model_id, tif_name) + '_with_modelid'
+#    if not os.path.exists(txt_modelid_dir):
+#        os.mkdir(txt_modelid_dir)
+#
+#    lbl_files = glob.glob(os.path.join(txt_norm_dir, '*.txt'))
+#    for lf in lbl_files:
+#        lbl_name = os.path.basename(lf)
+#        df_lbl = pd.read_csv(lf, header=None, names =[0, 1, 2, 3, 4, 5], sep=' ')
+#        df_lbl[5] = model_id
+#        df_lbl.to_csv(os.path.join(txt_modelid_dir, lbl_name), header=False, index=False, sep=' ')
+#
+#    tif_name = '2315.tif'.split('.')[0]
+#    model_id = 4
+#    txt_norm_dir = args.annos_save_dir[:-1] + '_of_{}/'.format(tif_name) + 'm{}_{}'.format(model_id, tif_name)
+#    base_pxwhrs = 'px23whr3_seed17'
+#
+#    base_dir = args.data_save_dir
+#    img_dir = os.path.join(args.images_save_dir[:-1] + '_of_{}'.format(tif_name),  'm{}_{}'.format(model_id, tif_name))
+#    test_lbl_txt = open(os.path.join(base_dir, base_pxwhrs, 'xviewtest_lbl_{}_m{}_{}.txt'.format(base_pxwhrs, model_id, tif_name)), 'w')
+#    test_img_txt = open(os.path.join(base_dir, base_pxwhrs, 'xviewtest_img_{}_m{}_{}.txt'.format(base_pxwhrs, model_id, tif_name)), 'w')
+#
+#    lbl_modeled_files = glob.glob(os.path.join(txt_modelid_dir, '*.txt'))
+#    for mf in lbl_modeled_files:
+#        lbl_name = os.path.basename(mf)
+#        img_name = lbl_name.replace('.txt', '.jpg')
+#        test_lbl_txt.write('%s\n' % mf)
+#        test_img_txt.write('%s\n' % os.path.join(img_dir, img_name))
+#    test_img_txt.close()
+#    test_lbl_txt.close()
+#
+#    data_txt = open(os.path.join(base_dir, base_pxwhrs, 'xviewtest_{}_m{}_{}.data'.format(base_pxwhrs, model_id, tif_name)), 'w')
+#    data_txt.write('classes=%s\n' % str(args.class_num))
+#    data_txt.write('test=./data_xview/{}_cls/{}/xviewtest_img_{}_m{}_{}.txt\n'.format(args.class_num, base_pxwhrs, base_pxwhrs, model_id, tif_name))
+#    data_txt.write('test_label=./data_xview/{}_cls/{}/xviewtest_lbl_{}_m{}_{}.txt\n'.format(args.class_num, base_pxwhrs, base_pxwhrs, model_id, tif_name))
+#    data_txt.write('names=./data_xview/{}_cls/xview.names\n'.format(args.class_num))
+#    data_txt.close()
 
     '''
     for m4_rc1
@@ -157,14 +158,16 @@ def create_testset_txt_list_txt_data_of_tif_name(tif_name, model_id=4):
     rare_class = 1
     args = get_args()
     tif_name = '2315.tif'.split('.')[0]
-    txt_norm_dir = args.annos_save_dir[:-1] + '_of_{}/'.format(tif_name) + 'm{}_{}'.format(model_id, tif_name)
+    txt_norm_dir = args.annos_save_dir[:-1] + '_of_{}/'.format(tif_name) + 'm{}_{}_with_modelid'.format(model_id, tif_name)
     base_pxwhrs = 'px23whr3_seed17'
+    print('txt_norm_dir', txt_norm_dir)
 
     txt_rc_dir = args.annos_save_dir[:-1] + '_of_{}/'.format(tif_name) + 'm{}_rc{}_{}'.format(model_id, rare_class, tif_name) + '_with_modelid'
     if not os.path.exists(txt_rc_dir):
         os.mkdir(txt_rc_dir)
 
     lbl_files = glob.glob(os.path.join(txt_norm_dir, '*.txt'))
+    print('lbl_files', len(lbl_files))
     for lf in lbl_files:
         lbl_name = os.path.basename(lf)
         df_lbl = pd.read_csv(lf, header=None, names =[0, 1, 2, 3, 4, 5], sep=' ')
@@ -199,36 +202,36 @@ def get_args(px_thres=None, whr=None): #
     parser = argparse.ArgumentParser()
     parser.add_argument("--image_folder", type=str,
                         help="Path to folder containing image chips (ie 'Image_Chips/') ",
-                        default='/media/lab/Yang/data/xView/train_images/')
+                        default='/data/users/yang/data/xView/train_images/')
     parser.add_argument("--base_tif_folder", type=str,
                         help="Path to folder containing tifs ",
-                        default='/media/lab/Yang/data/xView/')
+                        default='/data/users/yang/data/xView/')
     parser.add_argument("--images_save_dir", type=str, help="to save chip trn val images files",
-                        default='/media/lab/Yang/data/xView_YOLO/images/')
+                        default='/data/users/yang/data/xView_YOLO/images/')
 
     parser.add_argument("--json_filepath", type=str, help="Filepath to GEOJSON coordinate file",
-                        default='/media/lab/Yang/data/xView/xView_train.geojson')
+                        default='/data/users/yang/data/xView/xView_train.geojson')
 
     parser.add_argument("--xview_yolo_dir", type=str, help="dir to xViewYOLO",
-                        default='/media/lab/Yang/data/xView_YOLO/')
+                        default='/data/users/yang/data/xView_YOLO/')
 
     parser.add_argument("--txt_save_dir", type=str, help="to save  related label files",
-                        default='/media/lab/Yang/data/xView_YOLO/labels/')
+                        default='/data/users/yang/data/xView_YOLO/labels/')
 
     parser.add_argument("--data_list_save_dir", type=str, help="to save selected trn val images and labels",
-                        default='/media/lab/Yang/data/xView_YOLO/labels/{}/{}_cls/data_list/')
+                        default='/data/users/yang/data/xView_YOLO/labels/{}/{}_cls/data_list/')
 
     parser.add_argument("--annos_save_dir", type=str, help="to save txt annotation files",
-                        default='/media/lab/Yang/data/xView_YOLO/labels/')
+                        default='/data/users/yang/data/xView_YOLO/labels/')
 
     parser.add_argument("--fig_save_dir", type=str, help="to save figures",
-                        default='/media/lab/Yang/data/xView_YOLO/figures/')
+                        default='/data/users/yang/data/xView_YOLO/figures/')
 
     parser.add_argument("--data_save_dir", type=str, help="to save data files",
-                        default='/media/lab/Yang/code/yolov3/data_xview/{}_cls/')
+                        default='/data/users/yang/code/yxu-yolov3-xview/data_xview/{}_cls/')
 
     parser.add_argument("--cat_sample_dir", type=str, help="to save figures",
-                        default='/media/lab/Yang/data/xView_YOLO/cat_samples/')
+                        default='/data/users/yang/data/xView_YOLO/cat_samples/')
 
     parser.add_argument("--class_num", type=int, default=1, help="Number of Total Categories")  # 60  6
     parser.add_argument("--input_size", type=int, default=608, help="Number of Total Categories")
