@@ -1355,6 +1355,24 @@ def plot_images(imgs, targets, paths=None, fname='images.jpg'):
     fig.savefig(fname, dpi=200)
     plt.close()
 
+def plot_grids(trn_output, batch_i, paths=None, save_dir=''):
+    # grids = trn_output.cpu().numpy()
+
+    for i, grid in enumerate(trn_output): # 8, 3, 19, 19, 6
+        fig = plt.figure(figsize=(10, 10))
+        for bi in range(grid.shape[0]):
+            gd = grid[bi]
+            # print('gd shape', gd.shape)  # 3, 19, 19, 6
+            img = gd[...,0]
+            # print('img shape', img.shape) # 3, 19, 19
+            img = img.cpu().numpy()
+            img = img.transpose(1,2,0).astype('uint8')
+            plt.subplot(3, 3, bi + 1).imshow(img)
+            plt.axis('off')
+            s = Path(paths[bi]).name
+            plt.title(s[:min(len(s), 40)], fontdict={'size': 8})
+        fig.savefig(os.path.join(save_dir, 'bs{}_grid{}.png'.format(batch_i, i)), dpi=200)
+        plt.close()
 
 def plot_test_txt():  # from utils.utils import *; plot_test()
     # Plot test.txt histograms
