@@ -2,7 +2,8 @@ import glob
 import numpy as np
 import argparse
 import os
-
+import sys
+sys.path.append('/data/users/yang/code/yxu-yolov3-xview/')
 import utils.wv_util as wv
 from utils.utils_xview import coord_iou, compute_iou
 from utils.xview_synthetic_util import preprocess_xview_syn_data_distribution as pps
@@ -15,7 +16,6 @@ from matplotlib import pyplot as plt
 from tqdm import tqdm
 import shutil
 import cv2
-import seaborn as sn
 import time
 
 def is_non_zero_file(fpath):
@@ -394,24 +394,24 @@ def get_args(px_thres=None, whr_thres=None, seed=17):
     parser = argparse.ArgumentParser()
 
     parser.add_argument("--xview_yolo_dir", type=str, help="dir to xViewYOLO",
-                        default='/media/lab/Yang/data/xView_YOLO/')
+                        default='/data/users/yang/data/xView_YOLO/')
 
     parser.add_argument("--images_save_dir", type=str, help="to save chip trn val images files",
-                        default='/media/lab/Yang/data/xView_YOLO/images/')
+                        default='/data/users/yang/data/xView_YOLO/images/')
 
     parser.add_argument("--txt_save_dir", type=str, help="to save  related label files",
-                        default='/media/lab/Yang/data/xView_YOLO/labels/')
+                        default='/data/users/yang/data/xView_YOLO/labels/')
 
     parser.add_argument("--data_list_save_dir", type=str, help="to save selected trn val images and labels",
-                        default='/media/lab/Yang/data/xView_YOLO/labels/{}/{}_cls/data_list/')
+                        default='/data/users/yang/data/xView_YOLO/labels/{}/{}_cls/data_list/')
 
     parser.add_argument("--data_save_dir", type=str, help="to save data files",
-                        default='/media/lab/Yang/code/yolov3/data_xview/{}_cls/')
+                        default='/data/users/yang/code/yxu-yolov3-xview/data_xview/{}_cls/')
 
     parser.add_argument("--cat_sample_dir", type=str, help="to save figures",
-                        default='/media/lab/Yang/data/xView_YOLO/cat_samples/')
+                        default='/data/users/yang/data/xView_YOLO/cat_samples/')
     parser.add_argument("--annos_save_dir", type=str, help="to save txt annotation files",
-                        default='/media/lab/Yang/data/xView_YOLO/labels/')
+                        default='/data/users/yang/data/xView_YOLO/labels/')
     parser.add_argument("--font3", type=str, help="legend font",
                         default="{'family': 'serif', 'weight': 'normal', 'size': 10}")
     parser.add_argument("-ft2", "--font2", type=str, help="legend font",
@@ -551,20 +551,20 @@ if __name__ == '__main__':
     seed = 17                                                                                           
     seed = 199                                                                                          
     '''
-    # seed = 17
-    # # seed = 199
-    # px_thres = 23
-    # whr_thres = 3
-    # args = get_args(px_thres, whr_thres, seed)
-    # pxwhrs = 'px{}whr{}_seed{}'.format(px_thres, whr_thres, seed)
-    # # model_id = 4
-    # # rare_id = 1
-    # model_id = 1
-    # rare_id = 2
-    # non_rare_id = 0
-    # types = ['hard', 'easy']
-    # for type in types:
-    #     create_test_dataset_of_m_rc(model_id, rare_id, type, seed, pxwhrs)
+    seed = 17
+    # seed = 199
+    px_thres = 23
+    whr_thres = 3
+    args = get_args(px_thres, whr_thres, seed)
+    pxwhrs = 'px{}whr{}_seed{}'.format(px_thres, whr_thres, seed)
+    # model_id = 4
+    # rare_id = 1
+    model_id = 1
+    rare_id = 2
+    non_rare_id = 0
+    types = ['hard', 'easy']
+    for type in types:
+        create_test_dataset_of_m_rc(model_id, rare_id, type, seed, pxwhrs)
 
 
 

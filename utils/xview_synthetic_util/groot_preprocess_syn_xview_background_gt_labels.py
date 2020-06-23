@@ -294,10 +294,14 @@ if __name__ == '__main__':
     # cmt = 'xbw_xcolor_xbkg_gauss_model4_v3'
     # cmt = 'xbw_xcolor_xbkg_gauss_model4_v4'
     # cmt = 'xbw_xcolor_xbkg_unif_mig21_model4_v7'
-    cmt = 'xbw_xcolor_xbkg_unif_mig21_rndp_model4_v7'
+#    cmt = 'xbw_xcolor_xbkg_unif_mig21_rndp_model4_v7'
     # cmt = 'xbw_rndcolor_xbkg_unif_mig21_model4_v8'
 #    cmt = 'xbw_rndcolor_xbkg_unif_mig21_rndp_model4_v9'
-#    cmt = 'xbw_xcolor_xbkg_unif_mig21_rndp_light_model4_v10'
+#    cmt = 'xbw_xcolor_xbkg_unif_mig21_rndp_shdw_model4_v10'
+#    cmt = 'xbw_rndcolor_xbkg_unif_mig21_rndp_shdw_model4_v11'
+#    cmt = 'xbw_xcolor_xbkg_unif_mig21_rndp_shdw_dense_model4_v12'
+#    cmt = 'xbw_xcolor_xbkg_unif_mig21_rndp_shdw_dense_angle_model4_v13'
+    cmt = 'xbw_xcolor_xbkg_unif_mig21_rndp_shdw_dense_angle_fwc_model4_v14'
     px_thres=15 #20 #30
     # cmt = 'sbw_xcolor_model0'
     # cmt = 'xbw_xrxc_spr_sml_models_gauss'
@@ -307,7 +311,11 @@ if __name__ == '__main__':
     # cmt = 'xbw_xcolor_xbkg_gauss_model1_v2'
     # cmt = 'sbw_xcolor_xbkg_unif_model1_v3'
     # cmt = 'xbsw_xcolor_xbkg_gauss_model1_v4'
-    # px_thres=23
+#    cmt = 'xbsw_xcolor_xbkg_unif_rndp_model1_v6'
+#    cmt = 'xbsw_rndcolor_xbkg_unif_rndp_model1_v7'
+#    cmt = 'xbsw_xwing_color_xbkg_unif_rndp_model1_v8'
+#    cmt = 'xbsw_xwing_color_xbkg_unif_rndp_shdw_model1_v9'
+#    px_thres=23
 
     whr_thres=3
     display_types = ['color', 'mixed']# 'color',
@@ -346,10 +354,14 @@ if __name__ == '__main__':
     # cmt = 'xbw_xcolor_xbkg_gauss_model4_v3'
     # cmt = 'xbw_xcolor_xbkg_gauss_model4_v4'
     # cmt = 'xbw_xcolor_xbkg_unif_mig21_model4_v7'
-    cmt = 'xbw_xcolor_xbkg_unif_mig21_rndp_model4_v7'
+#    cmt = 'xbw_xcolor_xbkg_unif_mig21_rndp_model4_v7'
 #    cmt = 'xbw_rndcolor_xbkg_unif_mig21_model4_v8'
 #    cmt = 'xbw_rndcolor_xbkg_unif_mig21_rndp_model4_v9'
-#    cmt = 'xbw_xcolor_xbkg_unif_mig21_rndp_light_model4_v10'
+#    cmt = 'xbw_xcolor_xbkg_unif_mig21_rndp_shdw_model4_v10'
+#    cmt = 'xbw_rndcolor_xbkg_unif_mig21_rndp_shdw_model4_v11'
+#    cmt = 'xbw_xcolor_xbkg_unif_mig21_rndp_shdw_dense_model4_v12'
+#    cmt = 'xbw_xcolor_xbkg_unif_mig21_rndp_shdw_dense_angle_model4_v13'
+    cmt = 'xbw_xcolor_xbkg_unif_mig21_rndp_shdw_dense_angle_fwc_model4_v14'
     px_thres=15
     # cmt = 'sbw_xcolor_model0'
     # cmt = 'sbw_xcolor_model1'
@@ -358,7 +370,11 @@ if __name__ == '__main__':
     # cmt = 'xbw_xcolor_xbkg_gauss_model1_v2'
     # cmt = 'sbw_xcolor_xbkg_unif_model1_v3'
     # cmt = 'xbsw_xcolor_xbkg_gauss_model1_v4'
-    # px_thres=23 #20 #30
+#    cmt = 'xbsw_xcolor_xbkg_unif_rndp_model1_v6'
+#    cmt = 'xbsw_rndcolor_xbkg_unif_rndp_model1_v7'
+#    cmt = 'xbsw_xwing_color_xbkg_unif_rndp_model1_v8'
+#    cmt = 'xbsw_xwing_color_xbkg_unif_rndp_shdw_model1_v9'
+#    px_thres=23 #20 #30
 
     whr_thres=3
     display_types = ['color', 'mixed']
