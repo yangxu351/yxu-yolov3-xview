@@ -143,11 +143,10 @@ def test(cfg,
                 # Run model
                 inf_out, train_out = model(imgs)  # inference and training outputs
                 # print('train_out----', len(train_out), len(train_out[0]), train_out[0][0].shape, train_out[0][1].shape)
-                # print('inf_out ', len(inf_out))
+                # print('inf_out ', len(inf_out), inf_out[0].shape) # inf_out  8 torch.Size([22743, 6])
                 save_dir = 'trn_patch_images/grid_images/'
-                if os.path.exists(opt.grids_dir):
-                    plot_grids(train_out, batch_i, paths=paths, save_dir=opt.grids_dir)
-                exit(0)
+                # plot_grids(train_out, batch_i, paths=paths, save_dir=opt.grids_dir)
+                # exit(0)
 
                 # Compute loss
                 if hasattr(model, 'hyp'):  # if model has loss hyperparameters
@@ -185,7 +184,10 @@ def test(cfg,
 
                 # Clip boxes to image bounds
                 clip_coords(pred, (height, width))
-
+                #fixme --yang.xu
+                print('before dropping', len(pred))
+                pred = drop_boundary(pred, (height, width), margin_thres=opt.margin)
+                print('after dropping', len(pred))
                 # Append to pycocotools JSON dictionary
                 if save_json:
                     # [{"image_id": 42, "category_id": 18, "bbox": [258.15, 41.29, 348.26, 243.78], "score": 0.236}, ...
@@ -352,6 +354,7 @@ def get_opt(dt=None, sr=None, comments=''):
 
     parser.add_argument('--batch-size', type=int, default=8, help='size of each image batch')
     parser.add_argument('--img_size', type=int, default=608, help='inference size (pixels)')
+    parser.add_argument('--margin', type=int, default=30, help='margin size (pixels)')
 
     parser.add_argument('--class_num', type=int, default=1, help='class number')  # 60 6
     parser.add_argument('--label_dir', type=str, default='/media/lab/Yang/data/xView_YOLO/labels/', help='*.json path')

@@ -292,6 +292,26 @@ def clip_coords(boxes, img_shape):
     boxes[:, [0, 2]] = boxes[:, [0, 2]].clamp(min=0, max=img_shape[1])  # clip x
     boxes[:, [1, 3]] = boxes[:, [1, 3]].clamp(min=0, max=img_shape[0])  # clip y
 
+def drop_boundary(boxes, img_shape, margin_thres=30):
+    '''
+    drop bbox that at the edge and edge of bbox less than margin_thres
+    :param boxes:
+    :param img_shape:
+    :param margin_thres:
+    :return:
+    '''
+    tl_w = margin_thres
+    tl_h = margin_thres
+    br_w = img_shape[0] - margin_thres
+    br_h = img_shape[1] - margin_thres
+    ixs = (((boxes[:, 0] < br_w) & (boxes[:, 0] >= tl_w)) |
+                        ((boxes[:, 2] < br_w) & (boxes[:, 2] >= tl_w)))
+    box_ixs = boxes[ixs]
+    iys = (((box_ixs[:, 1] < br_h) & (box_ixs[:, 1] >= tl_h)) |
+                        ((box_ixs[:, 3] < br_h) & (box_ixs[:, 3] >= tl_h)))
+    box_out = box_ixs[iys]
+    return box_out
+
 
 def ap_per_class(tp, conf, pred_cls, target_cls, ntp=None, pr_path='', pr_name='', rare_class=None):
     """ Compute the average precision, given the recall and precision curves.
