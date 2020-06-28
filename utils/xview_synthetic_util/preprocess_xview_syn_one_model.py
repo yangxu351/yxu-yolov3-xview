@@ -272,6 +272,7 @@ def label_m_val_model_with_other_label(rare_class, model_id=1, other_label=0):
             continue
         # for easy label
         df_easy_txt = pd.read_csv(f, header=None, sep=' ')
+        # df_easy_txt.loc[:, 5] = other_label
         df_easy_txt.loc[df_easy_txt.loc[:, 5] != model_id, 5] = other_label
         df_easy_txt.loc[df_easy_txt.loc[:, 5] == model_id, 5] = rare_class
         df_easy_txt.to_csv(os.path.join(des_easy_dir, lbl_name), sep=' ', header=False, index=False)
@@ -319,8 +320,10 @@ def create_model_rareclass_hard_easy_set_backup(val_m_rc_path, model_id, rare_id
 
 
     print('val_m_rc_path', val_m_rc_path)
-    m_rc_files = glob.glob(os.path.join(val_m_rc_path, '*.txt'))
-    m_rc_names = [os.path.basename(f) for f in m_rc_files]
+    easy_m_rc_path = val_m_rc_path + '_easy'
+    hard_m_rc_path = val_m_rc_path + '_hard'
+    hard_m_rc_files = np.sort(glob.glob(os.path.join(hard_m_rc_path, '*.txt')))
+    m_rc_names = [os.path.basename(f) for f in hard_m_rc_files]
     print('m_rc_names', m_rc_names)
 
     des_hard_dir = args.annos_save_dir[:-1] + \
@@ -339,24 +342,22 @@ def create_model_rareclass_hard_easy_set_backup(val_m_rc_path, model_id, rare_id
     for vf in val_files:
         f_name = os.path.basename(vf)
         if is_non_zero_file(vf):
-            df_txt_easy = pd.read_csv(vf, header=None, sep=' ')
             if f_name not in m_rc_names:
+                df_txt_easy = pd.read_csv(vf, header=None, sep=' ')
                 df_txt_easy.loc[:, 5] = non_rare_id
-            else:
-                df_txt_easy.loc[:, 5] = rare_id
-            df_txt_easy.to_csv(os.path.join(val_labeled_m_rc_easy, f_name), header=False, index=False, sep=' ')
-
-            shutil.copy(os.path.join(val_labeled_m_rc_easy, f_name), os.path.join(des_easy_dir, f_name))
+            else: # easy txt have been changed for m_rc_names
+                df_txt_easy = pd.read_csv(os.path.join(easy_m_rc_path, f_name), header=None, sep=' ')
+            df_txt_easy.to_csv(os.path.join(des_easy_dir, f_name), header=False, index=False, sep=' ')
+            shutil.copy(os.path.join(des_easy_dir, f_name), os.path.join(val_labeled_m_rc_easy, f_name))
 
             if f_name not in m_rc_names:
-                txt_hard = open(os.path.join(val_labeled_m_rc_hard, f_name), 'w')
+                txt_hard = open(os.path.join(des_hard_dir, f_name), 'w')
                 txt_hard.close()
             else:
-                df_txt_hard = pd.read_csv(vf, header=None, sep=' ')
-                df_txt_hard.loc[:, 5] = rare_id
-                df_txt_hard.to_csv(os.path.join(val_labeled_m_rc_hard, f_name), header=False, index=False, sep=' ')
+                df_txt_hard = pd.read_csv(os.path.join(hard_m_rc_path, f_name), header=None, sep=' ')
+                df_txt_hard.to_csv(os.path.join(des_hard_dir, f_name), header=False, index=False, sep=' ')
+            shutil.copy(os.path.join(des_hard_dir, f_name), os.path.join(val_labeled_m_rc_hard, f_name))
 
-            shutil.copy(os.path.join(val_labeled_m_rc_hard, f_name), os.path.join(des_hard_dir, f_name))
         else:
             shutil.copy(vf, os.path.join(val_labeled_m_rc_easy, f_name))
             shutil.copy(vf, os.path.join(val_labeled_m_rc_hard, f_name))
@@ -497,16 +498,19 @@ if __name__ == '__main__':
     '''
     # model_id = 4
     # model_id = 1
+    # model_id = 5
     # type = 'val'
     # get_txt_contain_model_id(model_id, copy_img=True, type=type)
 
     '''
     manually backup _m*_val_model as _m*_miss_val_model  
     manually select rc2 from m1_val_model 
-    except rc2 all other of model1 labeled as 0
+    except rc2 all others of model1 labeled as 0
     '''
     # model_id = 1
     # rare_class = 2
+    # model_id = 5
+    # rare_class = 3
     # other_label = 0
     # label_m_val_model_with_other_label(rare_class, model_id, other_label)
 
@@ -526,23 +530,23 @@ if __name__ == '__main__':
     seed = 17                                                                                           
     seed = 199                                                                                          
     all models that are not belong to the rare object will be labeled as 0  
-    if necessary, manually copy files in  m1_to_rc2_easy to m1_rc2_easy_seed*    
-                  manually copy files in  m1_to_rc2_hard to m1_rc2_hard_seed*    
     '''
-    # seed = 17
-    # # seed = 199
-    # px_thres = 23
-    # whr_thres = 3
-    # args = get_args(px_thres, whr_thres, seed)
-    # pxwhr = 'px{}whr{}'.format(px_thres, whr_thres)
-    # non_rare_id = 0
-    # # model_id = 4
-    # # rare_id = 1
-    # # val_m_rc_path = args.annos_save_dir[:-1] + '_m{}_rc{}'.format(model_id, rare_id)
+    seed = 17
+    # seed = 199
+    px_thres = 23
+    whr_thres = 3
+    args = get_args(px_thres, whr_thres, seed)
+    pxwhr = 'px{}whr{}'.format(px_thres, whr_thres)
+    non_rare_id = 0
+    # model_id = 4
+    # rare_id = 1
+    # val_m_rc_path = args.annos_save_dir[:-1] + '_m{}_rc{}'.format(model_id, rare_id)
     # model_id = 1
     # rare_id = 2
-    # val_m_rc_path = args.annos_save_dir[:-1] + '_val_m{}_to_rc{}'.format(model_id, rare_id)
-    # create_model_rareclass_hard_easy_set_backup(val_m_rc_path, model_id, rare_id, non_rare_id, seed, pxwhr)
+    model_id = 5
+    rare_id = 3
+    val_m_rc_path = args.annos_save_dir[:-1] + '_val_m{}_to_rc{}'.format(model_id, rare_id)
+    create_model_rareclass_hard_easy_set_backup(val_m_rc_path, model_id, rare_id, non_rare_id, seed, pxwhr)
 
     '''                                                                                                 
     create *.data for zero-learning (easy) and zero-learning (hard)
