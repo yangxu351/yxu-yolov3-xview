@@ -58,6 +58,31 @@ def merge_clean_origin_syn_image_files(seedians, dt):
             shutil.copy(lbl, des_lbl_path)
 
 
+def resize_crop(comments, display_types, scale=2):
+    for dt in display_types:
+        for cmt in comments:
+            sys_args = get_args(cmt)
+            step = sys_args.resolution * sys_args.tile_size
+            save_img_dir = os.path.join(sys_args.syn_data_dir.format(dt), 'upscale_{}_all_images_step{}'.format(dt, step))
+            save_lbl_dir = os.path.join(sys_args.syn_data_dir.format(dt), 'upscale_{}_lbl_images_step{}'.format(dt, step))
+            img_path = os.path.join(sys_args.syn_data_dir.format(dt), '{}_all_images_step{}'.format(dt, step))
+            lbl_path = os.path.join(sys_args.syn_data_dir.format(dt), '{}_all_annos_step{}'.format(dt, step))
+            img_list = np.sort(glob.glob(os.path.join(img_path, '*.png')))
+            for f in img_list:
+                img = cv2.imread(f)
+                h, w, _ = img.shape
+                img2 = cv2.resize(img, (h*scale, w*scale), interpolation=cv2.INTER_LINEAR)
+                name = os.path.basename(f)
+                lbl = cv2.imread(os.path.join(lbl_path, name))
+                lbl2 = cv2.resize(lbl, (h*scale, w*scale), interpolation=cv2.INTER_LINEAR)
+                for i in range(scale):
+                    for j in range(scale):
+                        img_s = img2[i*w: (i+1)*w, j*w: (j+1)*w]
+                        cv2.imwrite(os.path.join(save_img_dir, name.split('.')[0] + '_i{}j{}.png'.format(i, j)), img_s)
+                        lbl_s = lbl2[i*w: (i+1)*w, j*w: (j+1)*w]
+                        cv2.imwrite(os.path.join(save_lbl_dir, name.split('.')[0] + '_i{}j{}.png'.format(i, j)), lbl_s)
+
+
 def group_object_annotation_and_draw_bbox(dt, px_thresh=20, whr_thres=4):
     '''
     group annotation files, generate bbox for each object,
@@ -291,8 +316,8 @@ if __name__ == '__main__':
     # cmt = 'xbw_xcolor_xbkg_gauss_model4_v3'
     # cmt = 'xbw_xcolor_xbkg_gauss_model4_v4'
     # cmt = 'xbw_rndcolor_xbkg_gauss_model4_v5'
-    cmt = 'xbw_xcolor_xbkg_unif_model4_v6'
-    px_thres=15 #20 #30
+    # cmt = 'xbw_xcolor_xbkg_unif_model4_v6'
+    # px_thres=15 #20 #30
     # cmt = 'sbw_xcolor_model0'
     # cmt = 'xbw_xrxc_spr_sml_models_gauss'
     # cmt = 'xbw_xrxc_spr_sml_models_gauss'
@@ -303,11 +328,11 @@ if __name__ == '__main__':
     # cmt = 'xbsw_xcolor_xbkg_gauss_model1_v4'
     # px_thres=23
 
-    whr_thres=3
-    display_types = ['color', 'mixed']#
-    syn_args = get_args(cmt)
-    for dt in display_types:
-        group_object_annotation_and_draw_bbox(dt, px_thres, whr_thres)
+    # whr_thres=3
+    # display_types = ['color', 'mixed']#
+    # syn_args = get_args(cmt)
+    # for dt in display_types:
+    #     group_object_annotation_and_draw_bbox(dt, px_thres, whr_thres)
 
     '''
     draw bbox on rgb images for syn_xveiw_background data
@@ -340,8 +365,8 @@ if __name__ == '__main__':
     # cmt = 'xbw_xcolor_xbkg_gauss_model4_v3'
     # mt = 'xbw_xcolor_xbkg_gauss_model4_v4'
     # mt = 'xbw_rndcolor_xbkg_gauss_model4_v5'
-    mt = 'xbw_xcolor_xbkg_unif_model4_v6'
-    px_thres=15
+    # mt = 'xbw_xcolor_xbkg_unif_model4_v6'
+    # px_thres=15
     # cmt = 'sbw_xcolor_model0'
     # cmt = 'sbw_xcolor_model1'
     # cmt = 'xbw_xrxc_spr_sml_models_gauss'
@@ -351,21 +376,25 @@ if __name__ == '__main__':
     # cmt = 'xbsw_xcolor_xbkg_gauss_model1_v4'
     # px_thres=23 #20 #30
 
-    whr_thres=3
+    # whr_thres=3
+    # display_types = ['color', 'mixed']
+    # syn_args = get_args(cmt)
+    # for dt in display_types:
+    #     draw_bbx_on_rgb_images(dt, px_thres, whr_thres)
+
+
+
+    img_path = '/media/lab/Yang/data/synthetic_data/syn_xview_bkg_xbw_xcolor_xbkg_unif_model4_v6_color/color_all_images_step182.4/color_airplanes_xview_background_sd12_3.png'
+    lbl_path = '/media/lab/Yang/data/synthetic_data/syn_xview_bkg_xbw_xcolor_xbkg_unif_model4_v6_color/color_all_annos_step182.4/color_airplanes_xview_background_sd12_3.png'
+    save_dir = '/media/lab/Yang/data/synthetic_data/syn_xview_bkg_xbw_xcolor_xbkg_unif_model4_v6_color/'
+
+    comments = ['xbw_xcolor_xbkg_unif_model4_v6_color']
     display_types = ['color', 'mixed']
-    syn_args = get_args(cmt)
-    for dt in display_types:
-        draw_bbx_on_rgb_images(dt, px_thres, whr_thres)
+    resize_crop(comments, display_types)
+
+    # lbl = Image.open(lbl_path)
+    # lbl2 = lbl.resize((2*w, 2*h))
+    # lbl2.save(os.path.join(save_dir, 'up_lbl.png'))
 
 
-
-
-
-
-# 0 100
-# 1 42
-# 1 52
-
-# 1 71
-# 1 72
 
