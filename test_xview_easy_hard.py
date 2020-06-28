@@ -156,10 +156,13 @@ def test(cfg,
             with torch.no_grad():
                 # Run model
                 inf_out, train_out = model(imgs)  # inference and training outputs
+                # plot_grids(train_out, batch_i, paths=paths, save_dir=opt.grids_dir)
+                # exit(0)
 
                 # Compute loss
                 if hasattr(model, 'hyp'):  # if model has loss hyperparameters
                     loss += compute_loss(train_out, targets, model)[1][:3].cpu()  # GIoU, obj, cls
+            
                 # Run NMS
                 output = non_max_suppression(inf_out, conf_thres=conf_thres, iou_thres=nms_iou_thres)
             # Statistics per image
@@ -423,6 +426,7 @@ def get_opt(dt=None, sr=None, comments=''):
     parser.add_argument('--label_dir', type=str, default='/media/lab/Yang/data/xView_YOLO/labels/', help='*.json path')
     parser.add_argument('--weights_dir', type=str, default='weights/{}_cls/{}_seed{}/', help='to save weights path')
     parser.add_argument('--result_dir', type=str, default='result_output/{}_cls/{}_seed{}/{}/', help='to save result files path')
+    parser.add_argument('--grids_dir', type=str, default='grids_dir/{}_cls/{}_seed{}/', help='to save grids images')
     parser.add_argument("--syn_ratio", type=float, default=sr, help="ratio of synthetic data: 0 0.25, 0.5, 0.75")
     parser.add_argument('--syn_display_type', type=str, default=dt, help='syn_texture0, syn_color0, syn_texture, syn_color, syn_mixed, syn')
     parser.add_argument('--base_dir', type=str, default='data_xview/{}_cls/{}/', help='without syn data path')
@@ -549,7 +553,15 @@ if __name__ == '__main__':
 #    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_rndp_shdw_model4_v10_color','syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_rndp_shdw_model4_v10_mixed']
 #    comments = ['syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_unif_mig21_rndp_shdw_model4_v11_color','syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_unif_mig21_rndp_shdw_model4_v11_mixed']
 #    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_rndp_shdw_dense_model4_v12_color','syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_rndp_shdw_dense_model4_v12_mixed']
-    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_rndp_shdw_dense_angle_model4_v13_color','syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_rndp_shdw_dense_angle_model4_v13_mixed']
+#    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_rndp_shdw_dense_angle_model4_v13_color','syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_rndp_shdw_dense_angle_model4_v13_mixed']
+#    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_rndp_shdw_dense_angle_fwc_model4_v14_color','syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_rndp_shdw_dense_angle_fwc_model4_v14_mixed']
+#    comments = ['syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_mig21_rndp_shdw_dense_angle_fwc_model4_v14_color','syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_mig21_rndp_shdw_dense_angle_fwc_model4_v14_mixed']
+#    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_angle_fwc_scatter_gauss_dense_model4_v15_color','syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_angle_fwc_scatter_gauss_dense_model4_v15_mixed']
+#    comments = ['syn_xview_bkg_px30whr3_xbw_xcolor_xbkg_unif_mig21_shdw_angle_fwc_scatter_gauss_dense_model4_v15_color','syn_xview_bkg_px30whr3_xbw_xcolor_xbkg_unif_mig21_shdw_angle_fwc_scatter_gauss_dense_model4_v15_mixed']
+#    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_angle_fwc_scatter_gauss_dense_model4_v16_color','syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_angle_fwc_scatter_gauss_dense_model4_v16_mixed']
+#    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_dense_model4_v17_color','syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_dense_model4_v17_mixed']
+#    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_dense_solar_model4_v18_color','syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_dense_solar_model4_v18_mixed']
+    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_uniform_50_model4_v19_color','syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_uniform_50_model4_v19_mixed']
     model_id = 4
     # comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v4_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v4_mixed']
     # comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_model4_v6_color']
@@ -563,6 +575,9 @@ if __name__ == '__main__':
 #    comments = ['syn_xview_bkg_px23whr3_xbsw_xwing_color_xbkg_unif_rndp_model1_v8_color', 'syn_xview_bkg_px23whr3_xbsw_xwing_color_xbkg_unif_rndp_model1_v8_mixed']
 #    comments = ['syn_xview_bkg_px23whr3_xbsw_xwing_color_xbkg_unif_rndp_shdw_model1_v9_color', 'syn_xview_bkg_px23whr3_xbsw_xwing_color_xbkg_unif_rndp_shdw_model1_v9_mixed']
 #    model_id = 1
+#    comments = ['syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_scatter_uniform_model5_v1_color','syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_scatter_uniform_model5_v1_mixed']
+#    comments = ['syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_rndp_model5_v2_color','syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_rndp_model5_v2_mixed']
+#    model_id = 5
     base_cmt = 'px23whr3_seed{}'
     # hyp_cmt = 'hgiou1_1gpu'
 
@@ -573,11 +588,18 @@ if __name__ == '__main__':
     # hyp_cmt = 'hgiou1_1gpu_val_labeled_miss'
     # hyp_cmt = 'hgiou1_1gpu_val_labeled'
     hyp_cmt = 'hgiou1_1gpu_val_syn'
+    prefix = 'syn'
+
+#    hyp_cmt = 'hgiou1_1gpu_noaffine_val_syn'
+#    prefix = 'syn_noaffine'
+
+#    hyp_cmt = 'hgiou1_1gpu_noaug_val_syn'
+#    prefix = 'syn_noaug'
+
     # hyp_cmt = 'hgiou1_1gpu_val_xview'
     # hyp_cmt = 'hgiou1_obj15.5_val_xview'
     # hyp_cmt = 'hgiou0.7_1gpu'
 
-    prefix = 'syn'
     px_thres = 23
     whr_thres = 3 # 4
     seeds = [17]
@@ -586,7 +608,7 @@ if __name__ == '__main__':
         for cmt in comments:
             base_cmt = base_cmt.format(sd)
             opt = get_opt(comments=cmt)
-            opt.device = '0'
+            opt.device = '3'
 
             cinx = cmt.find('model') # first letter index
             endstr = cmt[cinx:]
@@ -606,13 +628,17 @@ if __name__ == '__main__':
             opt.conf_thres = 0.01
             tif_name = 'xview'
             ############# 2 images test set
-            opt.type = 'easy'
-#            opt.type = 'hard'
+#            opt.type = 'easy'
+            opt.type = 'hard'
             opt.rare_class = 1
 #            opt.rare_class = 2
+#            opt.rare_class = 3
             opt.name += '_{}'.format(opt.type)
             opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_{}_m{}_rc{}_{}'.format(hyp_cmt, opt.model_id, opt.rare_class, opt.type))
             opt.data = 'data_xview/{}_cls/{}/xviewtest_{}_m{}_rc{}_{}.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id, opt.rare_class, opt.type)
+#            opt.grids_dir = opt.grids_dir.format(opt.class_num, cmt, sd)
+#            if not os.path.exists(opt.grids_dir):
+#                os.makedirs(opt.grids_dir)
             ############ all 2315 patches 171
 #            tif_name = '2315'
 #            opt.batch_size = 8

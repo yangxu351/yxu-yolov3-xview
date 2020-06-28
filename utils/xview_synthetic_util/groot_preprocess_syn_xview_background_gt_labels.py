@@ -301,8 +301,16 @@ if __name__ == '__main__':
 #    cmt = 'xbw_rndcolor_xbkg_unif_mig21_rndp_shdw_model4_v11'
 #    cmt = 'xbw_xcolor_xbkg_unif_mig21_rndp_shdw_dense_model4_v12'
 #    cmt = 'xbw_xcolor_xbkg_unif_mig21_rndp_shdw_dense_angle_model4_v13'
-    cmt = 'xbw_xcolor_xbkg_unif_mig21_rndp_shdw_dense_angle_fwc_model4_v14'
+#    cmt = 'xbw_xcolor_xbkg_unif_mig21_rndp_shdw_dense_angle_fwc_model4_v14'
+#    cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_angle_fwc_scatter_gauss_dense_model4_v15'
+#    cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_angle_fwc_scatter_gauss_dense_model4_v16'
+#    cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_dense_model4_v17'
+#    cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_dense_model4_v17'
+#    cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_dense_solar_model4_v18'
+#    cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_uniform_50_model4_v19'
+    cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_50_model4_v20'
     px_thres=15 #20 #30
+#    px_thres = 30
     # cmt = 'sbw_xcolor_model0'
     # cmt = 'xbw_xrxc_spr_sml_models_gauss'
     # cmt = 'xbw_xrxc_spr_sml_models_gauss'
@@ -316,6 +324,10 @@ if __name__ == '__main__':
 #    cmt = 'xbsw_xwing_color_xbkg_unif_rndp_model1_v8'
 #    cmt = 'xbsw_xwing_color_xbkg_unif_rndp_shdw_model1_v9'
 #    px_thres=23
+
+#    cmt = 'xbw_xcolor_xbkg_unif_shdw_scatter_uniform_model5_v1'
+#    cmt = 'xbw_xcolor_xbkg_unif_shdw_rndp_model5_v2'
+#    px_thres = 23
 
     whr_thres=3
     display_types = ['color', 'mixed']# 'color',
@@ -361,8 +373,15 @@ if __name__ == '__main__':
 #    cmt = 'xbw_rndcolor_xbkg_unif_mig21_rndp_shdw_model4_v11'
 #    cmt = 'xbw_xcolor_xbkg_unif_mig21_rndp_shdw_dense_model4_v12'
 #    cmt = 'xbw_xcolor_xbkg_unif_mig21_rndp_shdw_dense_angle_model4_v13'
-    cmt = 'xbw_xcolor_xbkg_unif_mig21_rndp_shdw_dense_angle_fwc_model4_v14'
-    px_thres=15
+#    cmt = 'xbw_xcolor_xbkg_unif_mig21_rndp_shdw_dense_angle_fwc_model4_v14'
+#    cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_angle_fwc_scatter_gauss_dense_model4_v15'
+#    cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_angle_fwc_scatter_gauss_dense_model4_v16'
+#    cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_dense_model4_v17'
+#    cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_dense_solar_model4_v18'
+#    cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_uniform_50_model4_v19'
+    cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_50_model4_v20'
+    px_thres = 15
+#    px_thres=30
     # cmt = 'sbw_xcolor_model0'
     # cmt = 'sbw_xcolor_model1'
     # cmt = 'xbw_xrxc_spr_sml_models_gauss'
@@ -375,6 +394,10 @@ if __name__ == '__main__':
 #    cmt = 'xbsw_xwing_color_xbkg_unif_rndp_model1_v8'
 #    cmt = 'xbsw_xwing_color_xbkg_unif_rndp_shdw_model1_v9'
 #    px_thres=23 #20 #30
+#    cmt = 'xbw_xcolor_xbkg_unif_shdw_scatter_uniform_model5_v1'
+#    cmt = 'xbw_xcolor_xbkg_unif_shdw_rndp_model5_v2'
+
+#    px_thres = 23
 
     whr_thres=3
     display_types = ['color', 'mixed']

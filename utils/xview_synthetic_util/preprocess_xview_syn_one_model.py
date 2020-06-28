@@ -559,8 +559,10 @@ if __name__ == '__main__':
     pxwhrs = 'px{}whr{}_seed{}'.format(px_thres, whr_thres, seed)
     # model_id = 4
     # rare_id = 1
-    model_id = 1
-    rare_id = 2
+#    model_id = 1
+#    rare_id = 2
+    model_id = 5
+    rare_id = 3
     non_rare_id = 0
     types = ['hard', 'easy']
     for type in types:

@@ -141,16 +141,18 @@ def check_prd_gt_iou_xview_syn(data_file, miss_model_id, rare_class, cmt, prefix
     # exit(0)
     if miss_model_id:
         result_path = syn_args.results_dir.format(syn_args.class_num, cmt, seed, res_folder)
+    #    print('result_path ', result_path)
     # if len(lcmt) > 1:
     #     suffix = lcmt[1] + '_' + lcmt[0]
     #     result_path = syn_args.results_dir.format(syn_args.class_num, cmt, seed, res_folder.format(hyp_cmt, seed))
     # else:
     #     suffix = 'model{}'.format(miss_model_id)
     #     result_path = syn_args.results_dir.format(syn_args.class_num, cmt, seed, res_folder.format(hyp_cmt, seed, miss_model_id))
-    json_name = prefix + suffix + '*.json'
+#    json_name = prefix + suffix + '*.json'
+    json_name = 'results*.json'
 #    print('result_path ', result_path)
 #    print('json_name', json_name)
-    # print(os.path.join(result_path, json_name))
+    print(os.path.join(result_path, json_name))
     res_json_files = glob.glob(os.path.join(result_path, json_name))
     print('res_json_files ', res_json_files)
     if not len(res_json_files):
@@ -263,7 +265,12 @@ if __name__ == "__main__":
 #    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_rndp_shdw_model4_v10_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_rndp_shdw_model4_v10_mixed']
 #    comments = ['syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_unif_mig21_rndp_shdw_model4_v11_color', 'syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_unif_mig21_rndp_shdw_model4_v11_mixed']
 #    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_rndp_shdw_dense_model4_v12_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_rndp_shdw_dense_model4_v12_mixed']
-    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_rndp_shdw_dense_angle_model4_v13_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_rndp_shdw_dense_angle_model4_v13_mixed']
+#    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_rndp_shdw_dense_angle_model4_v13_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_rndp_shdw_dense_angle_model4_v13_mixed']
+#    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_rndp_shdw_dense_angle_fwc_model4_v14_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_rndp_shdw_dense_angle_fwc_model4_v14_mixed']
+#    comments = ['syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_mig21_rndp_shdw_dense_angle_fwc_model4_v14_color', 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_mig21_rndp_shdw_dense_angle_fwc_model4_v14_mixed']
+#    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_angle_fwc_scatter_gauss_dense_model4_v15_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_angle_fwc_scatter_gauss_dense_model4_v15_mixed']
+#    comments = ['syn_xview_bkg_px30whr3_xbw_xcolor_xbkg_unif_mig21_shdw_angle_fwc_scatter_gauss_dense_model4_v15_color', 'syn_xview_bkg_px30whr3_xbw_xcolor_xbkg_unif_mig21_shdw_angle_fwc_scatter_gauss_dense_model4_v15_mixed']
+#    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_dense_model4_v17_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_dense_model4_v17_mixed']
     miss_model_id = 4
     rare_class = 1
 #    comments = ['syn_xview_bkg_px23whr3_xbsw_xcolor_xbkg_unif_rndp_model1_v6_color', 'syn_xview_bkg_px23whr3_xbsw_xcolor_xbkg_unif_rndp_model1_v6_mixed']
@@ -272,15 +279,19 @@ if __name__ == "__main__":
 #    comments = ['syn_xview_bkg_px23whr3_xbsw_xwing_color_xbkg_unif_rndp_shdw_model1_v9_color', 'syn_xview_bkg_px23whr3_xbsw_xwing_color_xbkg_unif_rndp_shdw_model1_v9_mixed']
 #    miss_model_id = 1
 #    rare_class = 2
-#    res_folder = 'test_on_xview_with_model_{}*_seed{}_miss'
-#    res_folder = 'test_on_xview_with_model_{}_seed*_hard'
-#    res_folder = 'test_on_xview_{}_m{}_rc{}_easy'
-#    res_folder = 'test_on_xview_with_model_{}_2315_hard'
-    # hyp_cmt = 'hgiou1_obj3.5_val_labeled'
-    # hyp_cmt = 'hgiou1_1gpu_val_labeled'
-    # hyp_cmt = 'hgiou1_1gpu_val_xview'
+#    comments = ['syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_scatter_uniform_model5_v1_color']
+#    miss_model_id = 5
+#    rare_class = 3
+##    res_folder = 'test_on_xview_with_model_{}*_seed{}_miss'
+##    res_folder = 'test_on_xview_with_model_{}_seed*_hard'
+##    res_folder = 'test_on_xview_{}_m{}_rc{}_easy'
+##    res_folder = 'test_on_xview_with_model_{}_2315_hard'
+#    # hyp_cmt = 'hgiou1_obj3.5_val_labeled'
+#    # hyp_cmt = 'hgiou1_1gpu_val_labeled'
+#    # hyp_cmt = 'hgiou1_1gpu_val_xview'
     hyp_cmt = 'hgiou1_1gpu_val_syn'
-    # hyp_cmt = 'hgiou1_1gpu_val_labeled_miss'
+##    hyp_cmt = 'hgiou1_1gpu_noaug_val_syn'
+#    # hyp_cmt = 'hgiou1_1gpu_val_labeled_miss'
     prefix = 'results_syn'
     base_pxwhrs = 'px23whr3_seed17'
 #    data_file = 'xviewtest_{}_with_model_m{}_miss.data'.format(base_pxwhrs, miss_model_id)
