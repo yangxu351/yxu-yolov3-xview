@@ -193,6 +193,8 @@ def test(cfg,
 
                 # Clip boxes to image bounds
                 clip_coords(pred, (height, width))
+                #fixme --yang.xu
+                pred = drop_boundary(pred, (height, width), margin_thres=opt.margin)
                 # Append to pycocotools JSON dictionary
                 if save_json:
                     # [{"image_id": 42, "category_id": 18, "bbox": [258.15, 41.29, 348.26, 243.78], "score": 0.236}, ...
@@ -420,7 +422,8 @@ def get_opt(dt=None, sr=None, comments=''):
 
     parser.add_argument('--batch-size', type=int, default=8, help='size of each image batch') # 2
     parser.add_argument('--img_size', type=int, default=608, help='inference size (pixels)')
-    parser.add_argument('--res', type=float, default=0.3, help='inference size (pixels)')
+    parser.add_argument('--res', type=float, default=0.3, help='resolution')
+    parser.add_argument('--margin', type=int, default=30, help='margin size (pixels)')
 
     parser.add_argument('--class_num', type=int, default=1, help='class number')  # 60 6
     parser.add_argument('--label_dir', type=str, default='/media/lab/Yang/data/xView_YOLO/labels/', help='*.json path')
@@ -628,8 +631,8 @@ if __name__ == '__main__':
             opt.conf_thres = 0.01
             tif_name = 'xview'
             ############# 2 images test set
-#            opt.type = 'easy'
-            opt.type = 'hard'
+            opt.type = 'easy'
+#            opt.type = 'hard'
             opt.rare_class = 1
 #            opt.rare_class = 2
 #            opt.rare_class = 3
