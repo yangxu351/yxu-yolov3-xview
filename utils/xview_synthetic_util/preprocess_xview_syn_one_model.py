@@ -2,7 +2,8 @@ import glob
 import numpy as np
 import argparse
 import os
-
+import sys
+sys.path.append('/media/lab/Yang/code/yolov3/')
 import utils.wv_util as wv
 from utils.utils_xview import coord_iou, compute_iou
 from utils.xview_synthetic_util import preprocess_xview_syn_data_distribution as pps
@@ -390,6 +391,118 @@ def create_test_dataset_of_m_rc(model_id, rare_id, type='hard', seed=199, pxwhrs
     data_txt.write('names=./data_xview/{}_cls/xview.names\n'.format(args.class_num))
     data_txt.close()
 
+def convert_norm(size, box):
+    '''
+    https://blog.csdn.net/xuanlang39/article/details/88642010
+    '''
+    dh = 1. / (size[0])  # h--0--y
+    dw = 1. / (size[1])  # w--1--x
+
+    x = (box[0] + box[2]) / 2.0
+    y = (box[1] + box[3]) / 2.0  # (box[1] + box[3]) / 2.0 - 1
+    w = box[2] - box[0]
+    h = box[3] - box[1]
+
+    x = x * dw
+    w = w * dw
+    y = y * dh
+    h = h * dh
+    return [x, y, w, h]
+
+
+def val_resize_crop(scale=2, pxwhrs='px23whr3_seed17', model_id=4, rare_id=1, type='hard', px_thres=30):
+
+    img_path ='../../data_xview/{}_cls/{}/xviewtest_img_{}_m{}_rc{}_{}.txt'.format(args.class_num, pxwhrs, pxwhrs, model_id, rare_id, type)
+    lbl_path ='../../data_xview/{}_cls/{}/xviewtest_lbl_{}_m{}_rc{}_{}.txt'.format(args.class_num, pxwhrs, pxwhrs, model_id, rare_id, type)
+    df_img_files = pd.read_csv(img_path, header=None)
+    df_lbl_files = pd.read_csv(lbl_path, header=None)
+    for ix in range(df_img_files.shape[0]):
+        img_file = df_img_files.loc[ix, 0]
+        save_img_dir = os.path.dirname(img_file) + '_upscale'
+        if not os.path.exists(save_img_dir):
+            os.mkdir(save_img_dir)
+        # print('img_file ', img_file)
+        img = cv2.imread(img_file)
+        h, w = img.shape[0], img.shape[1]
+        img2 = cv2.resize(img, (h*scale, w*scale), interpolation=cv2.INTER_LINEAR)
+        lbl_file = df_lbl_files.loc[ix, 0]
+        save_lbl_dir = os.path.dirname(lbl_file) + '_upscale'
+        if not os.path.exists(save_lbl_dir):
+            os.mkdir(save_lbl_dir)
+        name = os.path.basename(lbl_file)
+
+        up_h = h*scale
+        up_w = w*scale
+        for i in range(scale):
+            for j in range(scale):
+                img_s = img2[i*w: (i+1)*w, j*w: (j+1)*w]
+                cv2.imwrite(os.path.join(save_img_dir, name.split('.')[0] + '_i{}j{}.png'.format(i, j)), img_s)
+                if not is_non_zero_file(lbl_file):
+                    f_txt = open(os.path.join(save_lbl_dir, name.split('.')[0] + '_i{}j{}.txt'.format(i, j)), 'w')
+                    f_txt.close()
+        if not is_non_zero_file(lbl_file):
+            continue
+        if name == '2315_359.txt':
+            print(lbl_file)
+        lbl = pd.read_csv(lbl_file, header=None, sep=' ').to_numpy() #xcycwh
+        b0_list = []
+        b1_list = []
+        b2_list = []
+        b3_list = []
+        for ti in range(lbl.shape[0]):
+            class_id = lbl[ti, 0]
+            model_id = lbl[ti, -1]
+
+            bbox = lbl[ti, 1:-1]
+            print('bbox', bbox)
+            bbox[0] = bbox[0] * up_h
+            bbox[1] = bbox[1] * up_w
+            bbox[2] = bbox[2] * up_h
+            bbox[3] = bbox[3] * up_w
+            bbox[0] = bbox[0] - bbox[2]/2
+            bbox[1] = bbox[1] - bbox[3]/2
+            bbox[2] = bbox[0] + bbox[2]
+            bbox[3] = bbox[1] + bbox[3]
+            tr_w = 0
+            tr_h = 0
+            c_w = up_w/2
+            c_h = up_h/2
+            bl_w = up_w
+            bl_h = up_h
+            b0 = np.clip(bbox, [tr_h, tr_w, tr_h, tr_w], [c_h-1, c_w-1, c_h-1, c_w-1])
+            b1 = np.clip(bbox, [tr_h, c_w, tr_h, c_w], [c_h-1, bl_w-1, c_h-1, bl_w-1])
+            b2 = np.clip(bbox, [c_h, tr_w, c_h, tr_w], [bl_h-1, c_w-1, bl_h-1, c_w-1])
+            b3 = np.clip(bbox, [c_h, c_w, c_h, c_w], [bl_h-1, bl_w-1, bl_h-1, bl_w-1])
+            if b0[2]-b0[0] > px_thres and b0[3]-b0[1] > px_thres:
+               b0_list.append([class_id] + convert_norm((h, w), b0) + [model_id])
+            if b1[2]-b1[0] > px_thres and b1[3]-b1[1] > px_thres:
+               b1_list.append([class_id] + convert_norm((h, w), b1) + [model_id])
+            if b2[2]-b2[0] > px_thres and b2[3]-b2[1] > px_thres:
+               b2_list.append([class_id] + convert_norm((h, w), b2) + [model_id])
+            if b3[2]-b3[0] > px_thres and b3[3]-b3[1] > px_thres:
+               b3_list.append([class_id] + convert_norm((h, w), b3) + [model_id])
+        if len(b0_list):
+            f_txt = open(os.path.join(save_lbl_dir, name.split('.')[0] + '_i0j0.txt'), 'w')
+            for i0 in b0_list:
+                f_txt.write( "%s %s %s %s %s %s\n" % (np.int(i0[0]), i0[1], i0[2], i0[3], i0[4], np.int(i0[5])))
+            f_txt.close()
+        if len(b1_list):
+            f_txt = open(os.path.join(save_lbl_dir, name.split('.')[0] + '_i0j1.txt'), 'w')
+            for i1 in b1_list:
+                print('i1', i1)
+                f_txt.write( "%s %s %s %s %s %s\n" % (np.int(i1[0]), i1[1], i1[2], i1[3], i1[4], np.int(i1[5])))
+            f_txt.close()
+        if len(b2_list):
+            f_txt = open(os.path.join(save_lbl_dir, name.split('.')[0] + '_i1j0.txt'), 'w')
+            for i2 in b2_list:
+                f_txt.write( "%s %s %s %s %s %s\n" % (np.int(i2[0]), i2[1], i2[2], i2[3], i2[4], np.int(i2[5])))
+            f_txt.close()
+        if len(b3_list):
+            f_txt = open(os.path.join(save_lbl_dir, name.split('.')[0] + '_i1j1.txt'), 'w')
+            for i3 in b3_list:
+                f_txt.write( "%s %s %s %s %s %s\n" % (np.int(i3[0]), i3[1], i3[2], i3[3], i3[4], np.int(i3[5])))
+            f_txt.close()
+
 
 def get_args(px_thres=None, whr_thres=None, seed=17):
     parser = argparse.ArgumentParser()
@@ -531,22 +644,22 @@ if __name__ == '__main__':
     seed = 199                                                                                          
     all models that are not belong to the rare object will be labeled as 0  
     '''
-    seed = 17
-    # seed = 199
-    px_thres = 23
-    whr_thres = 3
-    args = get_args(px_thres, whr_thres, seed)
-    pxwhr = 'px{}whr{}'.format(px_thres, whr_thres)
-    non_rare_id = 0
-    # model_id = 4
-    # rare_id = 1
-    # val_m_rc_path = args.annos_save_dir[:-1] + '_m{}_rc{}'.format(model_id, rare_id)
-    # model_id = 1
-    # rare_id = 2
-    model_id = 5
-    rare_id = 3
-    val_m_rc_path = args.annos_save_dir[:-1] + '_val_m{}_to_rc{}'.format(model_id, rare_id)
-    create_model_rareclass_hard_easy_set_backup(val_m_rc_path, model_id, rare_id, non_rare_id, seed, pxwhr)
+    # seed = 17
+    # # seed = 199
+    # px_thres = 23
+    # whr_thres = 3
+    # args = get_args(px_thres, whr_thres, seed)
+    # pxwhr = 'px{}whr{}'.format(px_thres, whr_thres)
+    # non_rare_id = 0
+    # # model_id = 4
+    # # rare_id = 1
+    # # val_m_rc_path = args.annos_save_dir[:-1] + '_m{}_rc{}'.format(model_id, rare_id)
+    # # model_id = 1
+    # # rare_id = 2
+    # model_id = 5
+    # rare_id = 3
+    # val_m_rc_path = args.annos_save_dir[:-1] + '_val_m{}_to_rc{}'.format(model_id, rare_id)
+    # create_model_rareclass_hard_easy_set_backup(val_m_rc_path, model_id, rare_id, non_rare_id, seed, pxwhr)
 
     '''                                                                                                 
     create *.data for zero-learning (easy) and zero-learning (hard)
@@ -563,15 +676,14 @@ if __name__ == '__main__':
     # pxwhrs = 'px{}whr{}_seed{}'.format(px_thres, whr_thres, seed)
     # # model_id = 4
     # # rare_id = 1
-    # model_id = 1
-    # rare_id = 2
+    # # model_id = 1
+    # # rare_id = 2
+    # model_id = 5
+    # rare_id = 3
     # non_rare_id = 0
     # types = ['hard', 'easy']
     # for type in types:
     #     create_test_dataset_of_m_rc(model_id, rare_id, type, seed, pxwhrs)
-
-
-
 
 
     # import collections
@@ -612,3 +724,17 @@ if __name__ == '__main__':
     # model_id = 1
     # model_id = 4
     # create_test_dataset_of_model_id_labeled(model_id)
+
+
+    '''
+    resize validation images and labels
+    crop
+    '''
+    scale=2
+    px_thres = 30
+    pxwhrs='px23whr3_seed17'
+    model_id=4
+    rare_id=1
+    # type='hard'
+    type='easy'
+    val_resize_crop(scale, pxwhrs, model_id, rare_id, type, px_thres)
