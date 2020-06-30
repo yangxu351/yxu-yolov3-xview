@@ -410,10 +410,10 @@ def convert_norm(size, box):
     return [x, y, w, h]
 
 
-def val_resize_crop(scale=2, pxwhrs='px23whr3_seed17', model_id=4, rare_id=1, type='hard', px_thres=30):
-
-    img_path ='../../data_xview/{}_cls/{}/xviewtest_img_{}_m{}_rc{}_{}.txt'.format(args.class_num, pxwhrs, pxwhrs, model_id, rare_id, type)
-    lbl_path ='../../data_xview/{}_cls/{}/xviewtest_lbl_{}_m{}_rc{}_{}.txt'.format(args.class_num, pxwhrs, pxwhrs, model_id, rare_id, type)
+def val_resize_crop_by_easy_hard(scale=2, pxwhrs='px23whr3_seed17', model_id=4, rare_id=1, type='hard', px_thres=30):
+    base_dir = args.data_save_dir
+    img_path = os.path.join(base_dir, 'xviewtest_img_{}_m{}_rc{}_{}.txt'.format(args.class_num, pxwhrs, pxwhrs, model_id, rare_id, type))
+    lbl_path = os.path.join(base_dir, 'xviewtest_lbl_{}_m{}_rc{}_{}.txt'.format(args.class_num, pxwhrs, pxwhrs, model_id, rare_id, type))
     df_img_files = pd.read_csv(img_path, header=None)
     df_lbl_files = pd.read_csv(lbl_path, header=None)
     for ix in range(df_img_files.shape[0]):
@@ -442,8 +442,8 @@ def val_resize_crop(scale=2, pxwhrs='px23whr3_seed17', model_id=4, rare_id=1, ty
                     f_txt.close()
         if not is_non_zero_file(lbl_file):
             continue
-        if name == '2315_359.txt':
-            print(lbl_file)
+        # if name == '2315_359.txt':
+        #     print(lbl_file)
         lbl = pd.read_csv(lbl_file, header=None, sep=' ').to_numpy() #xcycwh
         b0_list = []
         b1_list = []
@@ -454,7 +454,7 @@ def val_resize_crop(scale=2, pxwhrs='px23whr3_seed17', model_id=4, rare_id=1, ty
             model_id = lbl[ti, -1]
 
             bbox = lbl[ti, 1:-1]
-            print('bbox', bbox)
+            # print('bbox', bbox)
             bbox[0] = bbox[0] * up_h
             bbox[1] = bbox[1] * up_w
             bbox[2] = bbox[2] * up_h
@@ -489,7 +489,7 @@ def val_resize_crop(scale=2, pxwhrs='px23whr3_seed17', model_id=4, rare_id=1, ty
         if len(b1_list):
             f_txt = open(os.path.join(save_lbl_dir, name.split('.')[0] + '_i0j1.txt'), 'w')
             for i1 in b1_list:
-                print('i1', i1)
+                # print('i1', i1)
                 f_txt.write( "%s %s %s %s %s %s\n" % (np.int(i1[0]), i1[1], i1[2], i1[3], i1[4], np.int(i1[5])))
             f_txt.close()
         if len(b2_list):
@@ -502,6 +502,31 @@ def val_resize_crop(scale=2, pxwhrs='px23whr3_seed17', model_id=4, rare_id=1, ty
             for i3 in b3_list:
                 f_txt.write( "%s %s %s %s %s %s\n" % (np.int(i3[0]), i3[1], i3[2], i3[3], i3[4], np.int(i3[5])))
             f_txt.close()
+
+
+def create_upsample_test_dataset_of_m_rc(model_id, rare_id, type='hard', seed=17, pxwhrs='px23whr3_seed17'):
+    val_dir = args.annos_save_dir[:-1] + '_val_m{}_rc{}_{}_seed{}_upscale'.format(model_id, rare_id, type, seed)
+    print('val_dir', val_dir)
+    val_lbl_files = glob.glob(os.path.join(val_dir, '*.txt'))
+
+    base_dir = args.data_save_dir
+    test_lbl_txt = open(os.path.join(base_dir, 'xviewtest_lbl_{}_upscale_m{}_rc{}_{}.txt'.format(pxwhrs, model_id, rare_id, type)), 'w')
+    test_img_txt = open(os.path.join(base_dir, 'xviewtest_img_{}_upscale_m{}_rc{}_{}.txt'.format(pxwhrs, model_id, rare_id, type)), 'w')
+
+    for lf in val_lbl_files:
+        lbl_name = os.path.basename(lf)
+        img_name = lbl_name.replace('.txt', '.png')
+        test_lbl_txt.write('%s\n' % lf)
+        test_img_txt.write('%s\n' % os.path.join(args.images_save_dir[:-1] + '_upscale', img_name))
+    test_img_txt.close()
+    test_lbl_txt.close()
+
+    data_txt = open(os.path.join(base_dir, 'xviewtest_{}_upscale_m{}_rc{}_{}.data'.format(pxwhrs, model_id, rare_id, type)), 'w')
+    data_txt.write('classes=%s\n' % str(args.class_num))
+    data_txt.write('test=./data_xview/{}_cls/{}/xviewtest_img_{}_upscale_m{}_rc{}_{}.txt\n'.format(args.class_num, pxwhrs, pxwhrs, model_id, rare_id, type))
+    data_txt.write('test_label=./data_xview/{}_cls/{}/xviewtest_lbl_{}_upscale_m{}_rc{}_{}.txt\n'.format(args.class_num, pxwhrs, pxwhrs, model_id, rare_id, type))
+    data_txt.write('names=./data_xview/{}_cls/xview.names\n'.format(args.class_num))
+    data_txt.close()
 
 
 def get_args(px_thres=None, whr_thres=None, seed=17):
@@ -729,6 +754,7 @@ if __name__ == '__main__':
     '''
     resize validation images and labels
     crop
+    create new val*_upscale*.data
     '''
     scale=2
     px_thres = 30
@@ -737,4 +763,6 @@ if __name__ == '__main__':
     rare_id=1
     # type='hard'
     type='easy'
-    val_resize_crop(scale, pxwhrs, model_id, rare_id, type, px_thres)
+    # val_resize_crop_by_easy_hard(scale, pxwhrs, model_id, rare_id, type, px_thres)
+
+    create_upsample_test_dataset_of_m_rc(model_id, rare_id, type, seed=17, pxwhrs='px23whr3_seed17')
