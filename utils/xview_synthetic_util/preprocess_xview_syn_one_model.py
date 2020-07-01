@@ -7,7 +7,7 @@ sys.path.append('/media/lab/Yang/code/yolov3/')
 import utils.wv_util as wv
 from utils.utils_xview import coord_iou, compute_iou
 from utils.xview_synthetic_util import preprocess_xview_syn_data_distribution as pps
-from utils.xview_synthetic_util import process_syn_xview_background_wv_split as psx
+from utils.object_score_util import get_bbox_coords_from_annos_with_object_score as gbc
 import pandas as pd
 from ast import literal_eval
 import json
@@ -393,9 +393,12 @@ def create_test_dataset_of_m_rc(model_id, rare_id, type='hard', seed=199, pxwhrs
 def convert_norm(size, box):
     '''
     https://blog.csdn.net/xuanlang39/article/details/88642010
+    :param size:  w h
+    :param box: y1 x1 y2 x2
+    :return: xc yc w h  (relative values)
     '''
-    dh = 1. / (size[0])  # h--0--y
-    dw = 1. / (size[1])  # w--1--x
+    dh = 1. / (size[1])  # h--1--y
+    dw = 1. / (size[0])  # w--0--x
 
     x = (box[0] + box[2]) / 2.0
     y = (box[1] + box[3]) / 2.0  # (box[1] + box[3]) / 2.0 - 1
@@ -411,13 +414,13 @@ def convert_norm(size, box):
 
 def val_resize_crop_by_easy_hard(scale=2, pxwhrs='px23whr3_seed17', model_id=4, rare_id=1, type='hard', px_thres=30):
     base_dir = args.data_save_dir
-    img_path = os.path.join(base_dir, 'xviewtest_img_{}_m{}_rc{}_{}.txt'.format(args.class_num, pxwhrs, pxwhrs, model_id, rare_id, type))
-    lbl_path = os.path.join(base_dir, 'xviewtest_lbl_{}_m{}_rc{}_{}.txt'.format(args.class_num, pxwhrs, pxwhrs, model_id, rare_id, type))
+    img_path = os.path.join(base_dir, 'xviewtest_img_{}_m{}_rc{}_{}.txt'.format(pxwhrs, model_id, rare_id, type))
+    lbl_path = os.path.join(base_dir, 'xviewtest_lbl_{}_m{}_rc{}_{}.txt'.format(pxwhrs, model_id, rare_id, type))
     df_img_files = pd.read_csv(img_path, header=None)
     df_lbl_files = pd.read_csv(lbl_path, header=None)
     for ix in range(df_img_files.shape[0]):
         img_file = df_img_files.loc[ix, 0]
-        save_img_dir = os.path.dirname(img_file) + '_upscale'
+        save_img_dir = os.path.dirname(img_file) + '_{}_upscale'.format(type)
         if not os.path.exists(save_img_dir):
             os.mkdir(save_img_dir)
         # print('img_file ', img_file)
@@ -443,7 +446,7 @@ def val_resize_crop_by_easy_hard(scale=2, pxwhrs='px23whr3_seed17', model_id=4, 
             continue
         # if name == '2315_359.txt':
         #     print(lbl_file)
-        lbl = pd.read_csv(lbl_file, header=None, sep=' ').to_numpy() #xcycwh
+        lbl = pd.read_csv(lbl_file, header=None, sep=' ').to_numpy() #xc yc w h
         b0_list = []
         b1_list = []
         b2_list = []
@@ -452,34 +455,101 @@ def val_resize_crop_by_easy_hard(scale=2, pxwhrs='px23whr3_seed17', model_id=4, 
             class_id = lbl[ti, 0]
             model_id = lbl[ti, -1]
 
-            bbox = lbl[ti, 1:-1]
+            bbox = lbl[ti, 1:-1] #cid, xc, yc, w, h, mid
             # print('bbox', bbox)
-            bbox[0] = bbox[0] * up_h
-            bbox[1] = bbox[1] * up_w
-            bbox[2] = bbox[2] * up_h
-            bbox[3] = bbox[3] * up_w
+        #     bbox[0] = bbox[0] * up_w
+        #     bbox[1] = bbox[1] * up_h
+        #     bbox[2] = bbox[2] * up_w
+        #     bbox[3] = bbox[3] * up_h
+        #     bbox[0] = bbox[0] - bbox[2]/2
+        #     bbox[1] = bbox[1] - bbox[3]/2
+        #     bbox[2] = bbox[0] + bbox[2]
+        #     bbox[3] = bbox[1] + bbox[3]
+        #     tl_w = 0
+        #     tl_h = 0
+        #     c_w = up_w/2
+        #     c_h = up_h/2
+        #     br_w = up_w
+        #     br_h = up_h
+        #     b0 = np.clip(bbox, [tl_w, tl_h, tl_w, tl_h], [c_w-1, c_h-1, c_w-1, c_h-1])
+        #     b1 = np.clip(bbox, [c_w, tl_h, c_w, tl_h], [br_w-1, c_h-1, br_w-1, c_h-1])
+        #     b2 = np.clip(bbox, [tl_w, c_h, tl_w, c_h], [c_w-1, br_h-1, c_w-1, br_h-1])
+        #     b3 = np.clip(bbox, [c_w, c_h, c_w, c_h], [br_w-1, br_h-1, br_w-1, br_h-1])
+        #     if b0[2]-b0[0] > px_thres and b0[3]-b0[1] > px_thres:
+        #         b0_list.append([class_id] + convert_norm((w, h), b0) + [model_id])
+        #     if b1[2]-b1[0] > px_thres and b1[3]-b1[1] > px_thres:
+        #         b1[0] = b1[0] - w
+        #         b1[2] = b1[2] - w
+        #         b1_list.append([class_id] + convert_norm((w, h), b1) + [model_id])
+        #     if b2[2]-b2[0] > px_thres and b2[3]-b2[1] > px_thres:
+        #         b2[1] = b2[1] - h
+        #         b2[3] = b2[3] - h
+        #         b2_list.append([class_id] + convert_norm((w, h), b2) + [model_id])
+        #     if b3[2]-b3[0] > px_thres and b3[3]-b3[1] > px_thres:
+        #         b3 = [bx - w for bx in b3]
+        #         b3_list.append([class_id] + convert_norm((w, h), b3) + [model_id])  # cid xc, yc, w, h mid
+        # if len(b0_list):
+        #     f_txt = open(os.path.join(save_lbl_dir, name.split('.')[0] + '_i0j0.txt'), 'w')
+        #     for i0 in b0_list: # xc, yc, w, h
+        #         f_txt.write( "%s %s %s %s %s %s\n" % (np.int(i0[0]), i0[2], i0[1], i0[4], i0[3], np.int(i0[5])))
+        #     f_txt.close()
+        # if len(b1_list):
+        #     f_txt = open(os.path.join(save_lbl_dir, name.split('.')[0] + '_i0j1.txt'), 'w')
+        #     for i1 in b1_list:
+        #         # print('i1', i1)
+        #         f_txt.write( "%s %s %s %s %s %s\n" % (np.int(i1[0]), i1[2], i1[1], i1[4], i1[3], np.int(i1[5])))
+        #     f_txt.close()
+        # if len(b2_list):
+        #     f_txt = open(os.path.join(save_lbl_dir, name.split('.')[0] + '_i1j0.txt'), 'w')
+        #     for i2 in b2_list:
+        #         f_txt.write( "%s %s %s %s %s %s\n" % (np.int(i2[0]), i2[2], i2[1], i2[4], i2[3], np.int(i2[5])))
+        #     f_txt.close()
+        # if len(b3_list):
+        #     f_txt = open(os.path.join(save_lbl_dir, name.split('.')[0] + '_i1j1.txt'), 'w')
+        #     for i3 in b3_list:
+        #         f_txt.write( "%s %s %s %s %s %s\n" % (np.int(i3[0]), i3[2], i3[1], i3[4], i3[3], np.int(i3[5])))
+        #     f_txt.close()
+
+            #cid, xc, yc, w, h, mid
+            # bbox[0] = bbox[0] * up_h
+            # bbox[1] = bbox[1] * up_w
+            # bbox[2] = bbox[2] * up_h
+            # bbox[3] = bbox[3] * up_w
+            # bbox[0] = bbox[0] - bbox[2]/2
+            # bbox[1] = bbox[1] - bbox[3]/2
+            # bbox[2] = bbox[0] + bbox[2]
+            # bbox[3] = bbox[1] + bbox[3]
+            bbox[0] = bbox[0] * up_w
+            bbox[1] = bbox[1] * up_h
+            bbox[2] = bbox[2] * up_w
+            bbox[3] = bbox[3] * up_h
             bbox[0] = bbox[0] - bbox[2]/2
             bbox[1] = bbox[1] - bbox[3]/2
             bbox[2] = bbox[0] + bbox[2]
             bbox[3] = bbox[1] + bbox[3]
-            tr_w = 0
-            tr_h = 0
+            tl_w = 0
+            tl_h = 0
             c_w = up_w/2
             c_h = up_h/2
-            bl_w = up_w
-            bl_h = up_h
-            b0 = np.clip(bbox, [tr_h, tr_w, tr_h, tr_w], [c_h-1, c_w-1, c_h-1, c_w-1])
-            b1 = np.clip(bbox, [tr_h, c_w, tr_h, c_w], [c_h-1, bl_w-1, c_h-1, bl_w-1])
-            b2 = np.clip(bbox, [c_h, tr_w, c_h, tr_w], [bl_h-1, c_w-1, bl_h-1, c_w-1])
-            b3 = np.clip(bbox, [c_h, c_w, c_h, c_w], [bl_h-1, bl_w-1, bl_h-1, bl_w-1])
+            br_w = up_w
+            br_h = up_h
+            b0 = np.clip(bbox, [tl_w, tl_h, tl_w, tl_h], [c_w-1, c_h-1, c_w-1, c_h-1])
+            b1 = np.clip(bbox, [c_w, tl_h, c_w, tl_h], [br_w-1, c_h-1, br_w-1, c_h-1])
+            b2 = np.clip(bbox, [tl_w, c_h, tl_w, c_h], [c_w-1, br_h-1, c_w-1, br_h-1])
+            b3 = np.clip(bbox, [c_w, c_h, c_w, c_h], [br_w-1, br_h-1, br_w-1, br_h-1])
             if b0[2]-b0[0] > px_thres and b0[3]-b0[1] > px_thres:
-               b0_list.append([class_id] + convert_norm((h, w), b0) + [model_id])
+                b0_list.append([class_id] + convert_norm((w, h), b0) + [model_id])
             if b1[2]-b1[0] > px_thres and b1[3]-b1[1] > px_thres:
-               b1_list.append([class_id] + convert_norm((h, w), b1) + [model_id])
+                b1[0] = b1[0] - w
+                b1[2] = b1[2] - w
+                b1_list.append([class_id] + convert_norm((w, h), b1) + [model_id])
             if b2[2]-b2[0] > px_thres and b2[3]-b2[1] > px_thres:
-               b2_list.append([class_id] + convert_norm((h, w), b2) + [model_id])
+                b2[1] = b2[1] - h
+                b2[3] = b2[3] - h
+                b2_list.append([class_id] + convert_norm((w, h), b2) + [model_id])
             if b3[2]-b3[0] > px_thres and b3[3]-b3[1] > px_thres:
-               b3_list.append([class_id] + convert_norm((h, w), b3) + [model_id])
+                b3 = [bx - w for bx in b3]
+                b3_list.append([class_id] + convert_norm((w, h), b3) + [model_id]) #cid, xc, yc, w, h, mid
         if len(b0_list):
             f_txt = open(os.path.join(save_lbl_dir, name.split('.')[0] + '_i0j0.txt'), 'w')
             for i0 in b0_list:
@@ -498,9 +568,10 @@ def val_resize_crop_by_easy_hard(scale=2, pxwhrs='px23whr3_seed17', model_id=4, 
             f_txt.close()
         if len(b3_list):
             f_txt = open(os.path.join(save_lbl_dir, name.split('.')[0] + '_i1j1.txt'), 'w')
-            for i3 in b3_list:
+            for i3 in b3_list: #cid, xc, yc, w, h, mid
                 f_txt.write( "%s %s %s %s %s %s\n" % (np.int(i3[0]), i3[1], i3[2], i3[3], i3[4], np.int(i3[5])))
             f_txt.close()
+
 
 
 def create_upsample_test_dataset_of_m_rc(model_id, rare_id, type='hard', seed=17, pxwhrs='px23whr3_seed17'):
@@ -516,7 +587,7 @@ def create_upsample_test_dataset_of_m_rc(model_id, rare_id, type='hard', seed=17
         lbl_name = os.path.basename(lf)
         img_name = lbl_name.replace('.txt', '.png')
         test_lbl_txt.write('%s\n' % lf)
-        test_img_txt.write('%s\n' % os.path.join(args.images_save_dir[:-1] + '_upscale', img_name))
+        test_img_txt.write('%s\n' % os.path.join(args.images_save_dir[:-1] + '_{}_upscale'.format(type), img_name))
     test_img_txt.close()
     test_lbl_txt.close()
 
@@ -761,6 +832,17 @@ if __name__ == '__main__':
     rare_id=1
     # type='hard'
     type='easy'
-    # val_resize_crop_by_easy_hard(scale, pxwhrs, model_id, rare_id, type, px_thres)
-
+    val_resize_crop_by_easy_hard(scale, pxwhrs, model_id, rare_id, type, px_thres)
     create_upsample_test_dataset_of_m_rc(model_id, rare_id, type, seed=17, pxwhrs='px23whr3_seed17')
+
+    save_dir = '/media/lab/Yang/data/xView_YOLO/cat_samples/608/1_cls/image_with_bbox/2315_{}_upscale/'.format(type)
+    if not os.path.exists(save_dir):
+        os.mkdir(save_dir)
+    lbl_dir = '/media/lab/Yang/data/xView_YOLO/labels/608/1_cls_xcycwh_px23whr3_val_m4_rc1_{}_seed17_upscale/'.format(type)
+    img_dir = '/media/lab/Yang/data/xView_YOLO/images/608_1cls_{}_upscale/'.format(type)
+    img_list = glob.glob(os.path.join(img_dir, '2315_359*.png'))
+    for f in img_list:
+        print('f ', f)
+        name = os.path.basename(f)
+        lbl_file = os.path.join(lbl_dir, name.replace('.png', '.txt'))
+        gbc.plot_img_with_bbx(f, lbl_file, save_dir)
