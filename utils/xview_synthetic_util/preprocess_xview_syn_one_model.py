@@ -836,12 +836,15 @@ if __name__ == '__main__':
     type='easy'
     val_resize_crop_by_easy_hard(scale, pxwhrs, model_id, rare_id, type, px_thres)
     create_upsample_test_dataset_of_m_rc(model_id, rare_id, type, seed=17, pxwhrs='px23whr3_seed17')
-
-    save_dir = '/media/lab/Yang/data/xView_YOLO/cat_samples/608/1_cls/image_with_bbox/2315_{}_upscale/'.format(type)
+    '''
+    check annotation
+     plot images with bbox
+    '''
+    save_dir = os.path.join(args.cat_sample_dir, 'image_with_bbox/2315_{}_upscale/'.format(type))
     if not os.path.exists(save_dir):
         os.mkdir(save_dir)
-    lbl_dir = '/media/lab/Yang/data/xView_YOLO/labels/608/1_cls_xcycwh_px23whr3_val_m4_rc1_{}_seed17_upscale/'.format(type)
-    img_dir = '/media/lab/Yang/data/xView_YOLO/images/608_1cls_{}_upscale/'.format(type)
+    lbl_dir = args.annos_save_dir[:-1] + '_val_m4_rc1_{}_seed17_upscale/'.format(type)
+    img_dir = args.images_save_dir[:-1] + '_{}_upscale/'.format(type)
     img_list = glob.glob(os.path.join(img_dir, '2315_359*.png'))
     for f in img_list:
         print('f ', f)
