@@ -419,34 +419,44 @@ def val_resize_crop_by_easy_hard(scale=2, pxwhrs='px23whr3_seed17', model_id=4, 
     lbl_path = os.path.join(base_dir, 'xviewtest_lbl_{}_m{}_rc{}_{}.txt'.format(pxwhrs, model_id, rare_id, type))
     df_img_files = pd.read_csv(img_path, header=None)
     df_lbl_files = pd.read_csv(lbl_path, header=None)
+
+    save_img_dir = os.path.dirname(df_img_files.loc[0, 0]) + '_{}_upscale'.format(type)
+    if not os.path.exists(save_img_dir):
+        os.mkdir(save_img_dir)
+    else:
+        shutil.rmtree(save_img_dir)
+        os.mkdir(save_img_dir)
+    save_lbl_dir = os.path.dirname(df_lbl_files.loc[0, 0]) + '_upscale'
+    if not os.path.exists(save_lbl_dir):
+        os.mkdir(save_lbl_dir)
+    else:
+        shutil.rmtree(save_lbl_dir)
+        os.mkdir(save_lbl_dir)
+
     for ix in range(df_img_files.shape[0]):
         img_file = df_img_files.loc[ix, 0]
-        save_img_dir = os.path.dirname(img_file) + '_{}_upscale'.format(type)
-        if not os.path.exists(save_img_dir):
-            os.mkdir(save_img_dir)
+
         # print('img_file ', img_file)
         img = cv2.imread(img_file)
         h, w = img.shape[0], img.shape[1]
         img2 = cv2.resize(img, (h*scale, w*scale), interpolation=cv2.INTER_LINEAR)
         lbl_file = df_lbl_files.loc[ix, 0]
-        save_lbl_dir = os.path.dirname(lbl_file) + '_upscale'
-        if not os.path.exists(save_lbl_dir):
-            os.mkdir(save_lbl_dir)
+
         name = os.path.basename(lbl_file)
 
         up_h = h*scale
         up_w = w*scale
         for i in range(scale):
             for j in range(scale):
-                img_s = img2[i*w: (i+1)*w, j*w: (j+1)*w]
+                img_s = img2[i*h: (i+1)*h, j*w: (j+1)*w]
                 cv2.imwrite(os.path.join(save_img_dir, name.split('.')[0] + '_i{}j{}.png'.format(i, j)), img_s)
                 if not is_non_zero_file(lbl_file):
                     f_txt = open(os.path.join(save_lbl_dir, name.split('.')[0] + '_i{}j{}.txt'.format(i, j)), 'w')
                     f_txt.close()
         if not is_non_zero_file(lbl_file):
             continue
-        # if name == '2315_359.txt':
-        #     print(lbl_file)
+        if name == '2315_359.txt':
+            print(lbl_file)
         lbl = pd.read_csv(lbl_file, header=None, sep=' ').to_numpy() #xc yc w h
         b0_list = []
         b1_list = []
@@ -551,27 +561,23 @@ def val_resize_crop_by_easy_hard(scale=2, pxwhrs='px23whr3_seed17', model_id=4, 
             if b3[2]-b3[0] > px_thres and b3[3]-b3[1] > px_thres:
                 b3 = [bx - w for bx in b3]
                 b3_list.append([class_id] + convert_norm((w, h), b3) + [model_id]) #cid, xc, yc, w, h, mid
-        if len(b0_list):
-            f_txt = open(os.path.join(save_lbl_dir, name.split('.')[0] + '_i0j0.txt'), 'w')
-            for i0 in b0_list:
-                f_txt.write( "%s %s %s %s %s %s\n" % (np.int(i0[0]), i0[1], i0[2], i0[3], i0[4], np.int(i0[5])))
-            f_txt.close()
-        if len(b1_list):
-            f_txt = open(os.path.join(save_lbl_dir, name.split('.')[0] + '_i0j1.txt'), 'w')
-            for i1 in b1_list:
-                # print('i1', i1)
-                f_txt.write( "%s %s %s %s %s %s\n" % (np.int(i1[0]), i1[1], i1[2], i1[3], i1[4], np.int(i1[5])))
-            f_txt.close()
-        if len(b2_list):
-            f_txt = open(os.path.join(save_lbl_dir, name.split('.')[0] + '_i1j0.txt'), 'w')
-            for i2 in b2_list:
-                f_txt.write( "%s %s %s %s %s %s\n" % (np.int(i2[0]), i2[1], i2[2], i2[3], i2[4], np.int(i2[5])))
-            f_txt.close()
-        if len(b3_list):
-            f_txt = open(os.path.join(save_lbl_dir, name.split('.')[0] + '_i1j1.txt'), 'w')
-            for i3 in b3_list: #cid, xc, yc, w, h, mid
-                f_txt.write( "%s %s %s %s %s %s\n" % (np.int(i3[0]), i3[1], i3[2], i3[3], i3[4], np.int(i3[5])))
-            f_txt.close()
+        f_txt = open(os.path.join(save_lbl_dir, name.split('.')[0] + '_i0j0.txt'), 'w')
+        for i0 in b0_list:
+            f_txt.write( "%s %s %s %s %s %s\n" % (np.int(i0[0]), i0[1], i0[2], i0[3], i0[4], np.int(i0[5])))
+        f_txt.close()
+        f_txt = open(os.path.join(save_lbl_dir, name.split('.')[0] + '_i0j1.txt'), 'w')
+        for i1 in b1_list:
+            # print('i1', i1)
+            f_txt.write( "%s %s %s %s %s %s\n" % (np.int(i1[0]), i1[1], i1[2], i1[3], i1[4], np.int(i1[5])))
+        f_txt.close()
+        f_txt = open(os.path.join(save_lbl_dir, name.split('.')[0] + '_i1j0.txt'), 'w')
+        for i2 in b2_list:
+            f_txt.write( "%s %s %s %s %s %s\n" % (np.int(i2[0]), i2[1], i2[2], i2[3], i2[4], np.int(i2[5])))
+        f_txt.close()
+        f_txt = open(os.path.join(save_lbl_dir, name.split('.')[0] + '_i1j1.txt'), 'w')
+        for i3 in b3_list: #cid, xc, yc, w, h, mid
+            f_txt.write( "%s %s %s %s %s %s\n" % (np.int(i3[0]), i3[1], i3[2], i3[3], i3[4], np.int(i3[5])))
+        f_txt.close()
 
 
 
@@ -840,12 +846,14 @@ if __name__ == '__main__':
     check annotation
      plot images with bbox
     '''
+    # type='hard'
+    type='easy'
     save_dir = os.path.join(args.cat_sample_dir, 'image_with_bbox/2315_{}_upscale/'.format(type))
     if not os.path.exists(save_dir):
         os.mkdir(save_dir)
     lbl_dir = args.annos_save_dir[:-1] + '_val_m4_rc1_{}_seed17_upscale/'.format(type)
     img_dir = args.images_save_dir[:-1] + '_{}_upscale/'.format(type)
-    img_list = glob.glob(os.path.join(img_dir, '2315_359*.png'))
+    img_list = glob.glob(os.path.join(img_dir, '2315_*.png'))
     for f in img_list:
         print('f ', f)
         name = os.path.basename(f)
