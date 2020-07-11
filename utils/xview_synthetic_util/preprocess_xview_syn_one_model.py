@@ -288,7 +288,6 @@ def label_m_val_model_with_other_label(rare_class, model_id=1, other_label=0):
                 df_hard_txt.loc[t, 5] = rare_class
         df_hard_txt.to_csv(os.path.join(des_hard_dir, lbl_name), sep=' ', header=False, index=False)
 
-
 def get_image_list_contain_model_id(model_id):
     src_model_dir = args.annos_save_dir[:-1] + '_all_model/'
     image_list = []
@@ -606,6 +605,42 @@ def create_upsample_test_dataset_of_m_rc(model_id, rare_id, type='hard', seed=17
     data_txt.write('names=./data_xview/{}_cls/xview.names\n'.format(args.class_num))
     data_txt.close()
 
+
+
+def get_rotated_point(x,y,angle):
+    '''
+    https://blog.csdn.net/weixin_44135282/article/details/89003793
+    '''
+    # (h, w) = image.shape[:2]
+    # # 将图像中心设为旋转中心
+    w, h = 1, 1
+    (cX, cY) = (0.5, 0.5)
+
+    #假设图像的宽度x高度为col*row, 图像中某个像素P(x1, y1)，绕某个像素点Q(x2, y2)
+    #旋转θ角度后, 则该像素点的新坐标位置为(x, y)，其计算公式为：
+
+    x = x
+    y = h - y
+    cX = cX
+    cY = h - cY
+    new_x = (x - cX) * math.cos(math.pi / 180.0 * angle) - (y - cY) * math.sin(math.pi / 180.0 * angle) + cX
+    new_y = (x - cX) * math.sin(math.pi / 180.0 * angle) + (y - cY) * math.cos(math.pi / 180.0 * angle) + cY
+    new_x = new_x
+    new_y = h - new_y
+    # return round(new_x), round(new_y) #四舍五入取整
+    return new_x, new_y
+
+def get_flipped_point(x, y, flip='tb'):
+    w, h = 1, 1
+    if flip == 'tb':
+        new_y = h - y
+        new_x = x
+    elif flip == 'lr':
+        new_x = w - x
+        new_y = y
+    return new_x, new_y
+
+
 def get_args(px_thres=None, whr_thres=None, seed=17):
     parser = argparse.ArgumentParser()
 
@@ -620,7 +655,6 @@ def get_args(px_thres=None, whr_thres=None, seed=17):
 
     parser.add_argument("--data_list_save_dir", type=str, help="to save selected trn val images and labels",
                         default='/media/lab/Yang/data/xView_YOLO/labels/{}/{}_cls/data_list/')
-
     parser.add_argument("--data_save_dir", type=str, help="to save data files",
                         default='/media/lab/Yang/code/yolov3/data_xview/{}_cls/')
     parser.add_argument("--cat_sample_dir", type=str, help="to save figures",
@@ -660,41 +694,6 @@ def get_args(px_thres=None, whr_thres=None, seed=17):
         os.makedirs(args.cat_sample_dir)
 
     return args
-
-
-def get_rotated_point(x,y,angle):
-    '''
-    https://blog.csdn.net/weixin_44135282/article/details/89003793
-    '''
-    # (h, w) = image.shape[:2]
-    # # 将图像中心设为旋转中心
-    w, h = 1, 1
-    (cX, cY) = (0.5, 0.5)
-
-    #假设图像的宽度x高度为col*row, 图像中某个像素P(x1, y1)，绕某个像素点Q(x2, y2)
-    #旋转θ角度后, 则该像素点的新坐标位置为(x, y)，其计算公式为：
-
-    x = x
-    y = h - y
-    cX = cX
-    cY = h - cY
-    new_x = (x - cX) * math.cos(math.pi / 180.0 * angle) - (y - cY) * math.sin(math.pi / 180.0 * angle) + cX
-    new_y = (x - cX) * math.sin(math.pi / 180.0 * angle) + (y - cY) * math.cos(math.pi / 180.0 * angle) + cY
-    new_x = new_x
-    new_y = h - new_y
-    # return round(new_x), round(new_y) #四舍五入取整
-    return new_x, new_y
-
-def get_flipped_point(x, y, flip='tb'):
-    w, h = 1, 1
-    if flip == 'tb':
-        new_y = h - y
-        new_x = x
-    elif flip == 'lr':
-        new_x = w - x
-        new_y = y
-    return new_x, new_y
-
 
 if __name__ == '__main__':
     whr_thres = 3
