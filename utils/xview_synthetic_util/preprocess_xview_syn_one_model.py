@@ -605,6 +605,7 @@ def create_upsample_test_dataset_of_m_rc(model_id, rare_id, type='hard', seed=17
     data_txt.write('names=./data_xview/{}_cls/xview.names\n'.format(args.class_num))
     data_txt.close()
 
+
 def get_rotated_point(x,y,angle):
     '''
     https://blog.csdn.net/weixin_44135282/article/details/89003793
