@@ -1,6 +1,7 @@
 import glob
 import numpy as np
 import argparse
+import math
 import os
 import sys
 sys.path.append('/media/lab/Yang/code/yolov3/')
@@ -604,6 +605,40 @@ def create_upsample_test_dataset_of_m_rc(model_id, rare_id, type='hard', seed=17
     data_txt.write('names=./data_xview/{}_cls/xview.names\n'.format(args.class_num))
     data_txt.close()
 
+def get_rotated_point(x,y,angle):
+    '''
+    https://blog.csdn.net/weixin_44135282/article/details/89003793
+    '''
+    # (h, w) = image.shape[:2]
+    # # 将图像中心设为旋转中心
+    w, h = 1, 1
+    (cX, cY) = (0.5, 0.5)
+
+    #假设图像的宽度x高度为col*row, 图像中某个像素P(x1, y1)，绕某个像素点Q(x2, y2)
+    #旋转θ角度后, 则该像素点的新坐标位置为(x, y)，其计算公式为：
+
+    x = x
+    y = h - y
+    cX = cX
+    cY = h - cY
+    new_x = (x - cX) * math.cos(math.pi / 180.0 * angle) - (y - cY) * math.sin(math.pi / 180.0 * angle) + cX
+    new_y = (x - cX) * math.sin(math.pi / 180.0 * angle) + (y - cY) * math.cos(math.pi / 180.0 * angle) + cY
+    new_x = new_x
+    new_y = h - new_y
+    # return round(new_x), round(new_y) #四舍五入取整
+    return new_x, new_y
+
+def get_flipped_point(x, y, flip='tb'):
+    w, h = 1, 1
+    if flip == 'tb':
+        new_y = h - y
+        new_x = x
+    elif flip == 'lr':
+        new_x = w - x
+        new_y = y
+    return new_x, new_y
+
+
 
 def get_args(px_thres=None, whr_thres=None, seed=17):
     parser = argparse.ArgumentParser()
@@ -857,3 +892,65 @@ if __name__ == '__main__':
         name = os.path.basename(f)
         lbl_file = os.path.join(lbl_dir, name.replace('.png', '.txt'))
         gbc.plot_img_with_bbx(f, lbl_file, save_dir)
+    
+    '''
+    flip and rotate images 
+    '''
+    # import PIL
+    # from PIL import Image
+    # img = Image.open('/media/lab/Yang/data/xView_YOLO/images/608_1cls_of_2315_359/2315_359.jpg')
+    # out_lr_flip = img.transpose(PIL.Image.FLIP_LEFT_RIGHT)
+    # out_lr_flip.save('/media/lab/Yang/data/xView_YOLO/images/608_1cls_of_2315_359/2315_359_fl.jpg')
+    # out_tb_flip = img.transpose(PIL.Image.FLIP_TOP_BOTTOM)
+    # out_tb_flip.save('/media/lab/Yang/data/xView_YOLO/images/608_1cls_of_2315_359/2315_359_tb.jpg')
+    # out_rt_90 = img.transpose(PIL.Image.ROTATE_90)
+    # out_rt_90.save('/media/lab/Yang/data/xView_YOLO/images/608_1cls_of_2315_359/2315_359_rt90.jpg')
+    # out_rt_180 = img.transpose(PIL.Image.ROTATE_180)
+    # out_rt_180.save('/media/lab/Yang/data/xView_YOLO/images/608_1cls_of_2315_359/2315_359_rt180.jpg')
+    # out_rt_270 = img.transpose(PIL.Image.ROTATE_270)
+    # out_rt_270.save('/media/lab/Yang/data/xView_YOLO/images/608_1cls_of_2315_359/2315_359_rt270.jpg')
+
+    '''
+    flip and rotate coordinates of bbox 
+    '''
+    # from utils.object_score_util import get_bbox_coords_from_annos_with_object_score as gbc
+    # lbl_dir = '/media/lab/Yang/data/xView_YOLO/labels/608/1_cls_xcycwh_px23whr3_val_m4_rc1_2315_259/'
+    # img_dir = '/media/lab/Yang/data/xView_YOLO/images/608_1cls_of_2315_359/'
+    # save_dir = '/media/lab/Yang/data/xView_YOLO/cat_samples/608/1_cls/image_with_bbox/2315_359_aug/'
+    #
+    # # angle = 270 # 180 # 90
+    # # lbl_file = os.path.join(lbl_dir, '2315_359_rt{}.txt'.format(angle))
+    # flip = 'tb' # lr
+    # lbl_file = os.path.join(lbl_dir, '2315_359_{}.txt'.format(flip))
+    # df_lf = pd.read_csv(lbl_file, header=None, sep=' ')
+    # for i in range(df_lf.shape[0]):
+    #     # df_lf.loc[i, 1], df_lf.loc[i, 2] = get_rotated_point(df_lf.loc[i, 1], df_lf.loc[i, 2], angle)
+    #     df_lf.loc[i, 1], df_lf.loc[i, 2] = get_flipped_point(df_lf.loc[i, 1], df_lf.loc[i, 2], flip)
+    # df_lf.to_csv(lbl_file, header=False, index=False, sep=' ')
+    # name = os.path.basename(lbl_file)
+    # print('name', name)
+    # img_name = name.replace('.txt', '.jpg')
+    # img_file = os.path.join(img_dir, img_name)
+    # gbc.plot_img_with_bbx(img_file, lbl_file, save_path=save_dir)
+
+    '''
+    add augmented images and labels into val file
+    create corresponding *.data
+    '''
+    eh_type = 'hard'
+    # eh_type = 'easy'
+    shutil.copy(os.path.join(args.data_save_dir, 'xviewval_img_px23whr3_seed17_m4_rc1_{}.txt'.format(eh_type)),
+                os.path.join(args.data_save_dir, 'xviewval_img_px23whr3_seed17_m4_rc1_{}_aug.txt'.format(eh_type)))
+    val_img_file = open(os.path.join(args.data_save_dir, 'xviewtest_img_px23whr3_seed17_m4_rc1_{}_aug.txt'.format(eh_type)), 'a')
+    val_lbl_file = open(os.path.join(args.data_save_dir, 'xviewtest_lbl_px23whr3_seed17_m4_rc1_{}_aug.txt'.format(eh_type)), 'a')
+
+    img_dir = args.images_save_dir[:-1] + '_of_2315_359/'
+    lbl_dir = args.txt_save_dir[:-1] + '_xcycwh_px23whr3_val_m4_rc1_2315_259/'
+    img_files = glob.glob(os.path.join(img_dir, '*.png'))
+    for f in img_files:
+        name = os.path.basename(f)
+        val_img_file.write('%s\n' % f)
+        val_lbl_file.write('%s\n' % os.path.join(lbl_dir, name.replace('.png', '.txt')))
+
+    psx.create_xview_base_data_for_onemodel_easy_hard(model_id=4, rc_id=1, eh_type=eh_type, base_cmt='px23whr3_seed17')
+

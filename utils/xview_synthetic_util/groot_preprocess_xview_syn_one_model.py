@@ -1,14 +1,15 @@
 import glob
 import numpy as np
 import argparse
+import math
 import os
 import sys
 sys.path.append('/data/users/yang/code/yxu-yolov3-xview/')
 import utils.wv_util as wv
 from utils.utils_xview import coord_iou, compute_iou
 from utils.xview_synthetic_util import preprocess_xview_syn_data_distribution as pps
-from utils.xview_synthetic_util import process_syn_xview_background_wv_split as psx
 from utils.object_score_util import get_bbox_coords_from_annos_with_object_score as gbc
+from utils.xview_synthetic_util import groot_process_syn_xview_background_wv_split as psx
 import pandas as pd
 from ast import literal_eval
 import json
@@ -387,6 +388,33 @@ def create_upsample_test_dataset_of_m_rc(model_id, rare_id, type='hard', seed=17
     data_txt.write('names=./data_xview/{}_cls/xview.names\n'.format(args.class_num))
     data_txt.close()
 
+def get_rotated_point(x,y,angle):
+    '''
+    https://blog.csdn.net/weixin_44135282/article/details/89003793
+    '''
+    w, h = 1, 1
+    (cX, cY) = (0.5, 0.5)
+
+    x = x
+    y = h - y
+    cX = cX
+    cY = h - cY
+    new_x = (x - cX) * math.cos(math.pi / 180.0 * angle) - (y - cY) * math.sin(math.pi / 180.0 * angle) + cX
+    new_y = (x - cX) * math.sin(math.pi / 180.0 * angle) + (y - cY) * math.cos(math.pi / 180.0 * angle) + cY
+    new_x = new_x
+    new_y = h - new_y
+    return new_x, new_y
+
+def get_flipped_point(x, y, flip='tb'):
+    w, h = 1, 1
+    if flip == 'tb':
+        new_y = h - y
+        new_x = x
+    elif flip == 'lr':
+        new_x = w - x
+        new_y = y
+    return new_x, new_y
+
 
 def get_args(px_thres=None, whr_thres=None, seed=17):
     parser = argparse.ArgumentParser()
@@ -509,8 +537,8 @@ if __name__ == '__main__':
     get all validation txt but only specified miss model_id labeled
     all others are empty except the miss ones
     '''
- #   model_id = 4
- #   get_annos_miss_files_empty_others_by_model_id(model_id)
+#    model_id = 4
+#    get_annos_miss_files_empty_others_by_model_id(model_id)
 
     '''
     get all validation txt but only specified miss model_id labeled
@@ -529,6 +557,102 @@ if __name__ == '__main__':
 #    model_id = 4
 #    create_test_dataset_of_model_id_labeled(model_id)
 
+    '''
+    resize validation images and labels
+    crop
+    '''
+#    scale=2
+#    px_thres = 30
+#    pxwhrs='px23whr3_seed17'
+#    model_id=4
+#    rare_id=1
+#    type='hard'
+##    type='easy'
+#    val_resize_crop_by_easy_hard(scale, pxwhrs, model_id, rare_id, type, px_thres)
+#    create_upsample_test_dataset_of_m_rc(model_id, rare_id, type, seed, pxwhrs)
+    '''
+    check annotation
+     plot images with bbox
+    '''
+#    save_dir = os.path.join(args.cat_sample_dir, 'image_with_bbox/2315_{}_upscale/'.format(type))
+#    if not os.path.exists(save_dir):
+#        os.makedirs(save_dir)
+#    lbl_dir = args.annos_save_dir[:-1] + '_val_m4_rc1_{}_seed17_upscale/'.format(type)
+#    img_dir = args.images_save_dir[:-1] + '_{}_upscale/'.format(type)
+#    img_list = glob.glob(os.path.join(img_dir, '2315_359*.png'))
+#    for f in img_list:
+#        print('f ', f)
+#        name = os.path.basename(f)
+#        lbl_file = os.path.join(lbl_dir, name.replace('.png', '.txt'))
+#        gbc.plot_img_with_bbx(f, lbl_file, save_dir)
+
+
+    '''
+    flip and rotate images 
+    '''
+#    import PIL
+#    from PIL import Image
+#    img = Image.open('/data/users/yang/data/xView_YOLO/images/608_1cls_of_2315_359/2315_359.jpg')
+#    out_lr_flip = img.transpose(PIL.Image.FLIP_LEFT_RIGHT)
+#    out_lr_flip.save('/data/users/yang/data/xView_YOLO/images/608_1cls_of_2315_359/2315_359_fl.jpg')
+#    out_tb_flip = img.transpose(PIL.Image.FLIP_TOP_BOTTOM)
+#    out_tb_flip.save('/data/users/yang/data/xView_YOLO/images/608_1cls_of_2315_359/2315_359_tb.jpg')
+#    out_rt_90 = img.transpose(PIL.Image.ROTATE_90)
+#    out_rt_90.save('/data/users/yang/data/xView_YOLO/images/608_1cls_of_2315_359/2315_359_rt90.jpg')
+#    out_rt_180 = img.transpose(PIL.Image.ROTATE_180)
+#    out_rt_180.save('/data/users/yang/data/xView_YOLO/images/608_1cls_of_2315_359/2315_359_rt180.jpg')
+#    out_rt_270 = img.transpose(PIL.Image.ROTATE_270)
+#    out_rt_270.save('/data/users/yang/data/xView_YOLO/images/608_1cls_of_2315_359/2315_359_rt270.jpg')
+
+    '''
+    flip and rotate coordinates of bbox 
+    '''
+#    from utils.object_score_util import get_bbox_coords_from_annos_with_object_score as gbc
+#    lbl_dir = '/data/users/yang/data/xView_YOLO/labels/608/1_cls_xcycwh_px23whr3_val_m4_rc1_2315_259/'
+#    img_dir = '/data/users/yang/data/xView_YOLO/images/608_1cls_of_2315_359/'
+#    save_dir = '/data/users/yang/data/xView_YOLO/cat_samples/608/1_cls/image_with_bbox/2315_359_aug/'
+#    #
+##    angle = 90 #180#270# 180 90
+##    lbl_file = os.path.join(lbl_dir, '2315_359_rt{}.txt'.format(angle))
+##    flip = 'tb'# lr
+#    flip = 'lr'
+#    lbl_file = os.path.join(lbl_dir, '2315_359_{}.txt'.format(flip))
+#    df_lf = pd.read_csv(lbl_file, header=None, sep=' ')
+#    for i in range(df_lf.shape[0]):
+##        df_lf.loc[i, 1], df_lf.loc[i, 2] = get_rotated_point(df_lf.loc[i, 1], df_lf.loc[i, 2], angle)
+#        df_lf.loc[i, 1], df_lf.loc[i, 2] = get_flipped_point(df_lf.loc[i, 1], df_lf.loc[i, 2], flip)
+#    df_lf.to_csv(lbl_file, header=False, index=False, sep=' ')
+#    name = os.path.basename(lbl_file)
+#    print('name', name)
+#    img_name = name.replace('.txt', '.jpg')
+#    img_file = os.path.join(img_dir, img_name)
+#    gbc.plot_img_with_bbx(img_file, lbl_file, save_path=save_dir)
+
+    '''
+    add augmented images and labels into val file
+    create corresponding *.data
+    '''
+    eh_type = 'hard'
+#    eh_type = 'easy'
+    shutil.copy(os.path.join(args.data_save_dir, 'xviewtest_img_px23whr3_seed17_m4_rc1_{}.txt'.format(eh_type)),
+                os.path.join(args.data_save_dir, 'xviewtest_img_px23whr3_seed17_m4_rc1_{}_aug.txt'.format(eh_type)))
+    shutil.copy(os.path.join(args.data_save_dir, 'xviewtest_lbl_px23whr3_seed17_m4_rc1_{}.txt'.format(eh_type)),
+                os.path.join(args.data_save_dir, 'xviewtest_lbl_px23whr3_seed17_m4_rc1_{}_aug.txt'.format(eh_type)))
+    val_img_file = open(os.path.join(args.data_save_dir, 'xviewtest_img_px23whr3_seed17_m4_rc1_{}_aug.txt'.format(eh_type)), 'a')
+    val_lbl_file = open(os.path.join(args.data_save_dir, 'xviewtest_lbl_px23whr3_seed17_m4_rc1_{}_aug.txt'.format(eh_type)), 'a')
+
+    img_dir = args.images_save_dir[:-1] + '_of_2315_359/'
+    lbl_dir = args.txt_save_dir[:-1] + '_xcycwh_px23whr3_val_m4_rc1_2315_259/'
+    print('img_dir', img_dir)
+    img_files = glob.glob(os.path.join(img_dir, '2315_359_*.jpg'))
+    for f in img_files:
+        name = os.path.basename(f)
+        val_img_file.write('%s\n' % f)
+        val_lbl_file.write('%s\n' % os.path.join(lbl_dir, name.replace('.jpg', '.txt')))
+    val_img_file.close()
+    val_lbl_file.close()
+
+    psx.create_xview_base_data_for_onemodel_easy_hard(model_id=4, rc_id=1, eh_type=eh_type, base_cmt='px23whr3_seed17')
 
     '''
     resize validation images and labels
@@ -558,3 +682,4 @@ if __name__ == '__main__':
         name = os.path.basename(f)
         lbl_file = os.path.join(lbl_dir, name.replace('.png', '.txt'))
         gbc.plot_img_with_bbx(f, lbl_file, save_dir)
+

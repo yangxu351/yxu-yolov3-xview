@@ -354,8 +354,8 @@ def train(opt):
                        model) is nn.parallel.DistributedDataParallel else model.state_dict()}
 
         # Save last checkpoint
-        last_before = last.replace('.pt', '_before.pt')
-        torch.save(chkpt, last_before)
+        # last_before = last.replace('.pt', '_before.pt')
+        # torch.save(chkpt, last_before)
         
         # Process epoch results
         final_epoch = epoch + 1 == epochs
@@ -429,7 +429,7 @@ def train(opt):
             # Save backup every 10 epochs (optional)
             #fixme
             # if (epoch > 0 and epoch % 10 == 0):
-            if (epoch > 0 and epoch % 50 == 0) or (epoch > epochs*0.8 and epoch%40==0):
+            if (epoch > 0 and epoch % 50 == 0):
                 torch.save(chkpt, opt.weights_dir + 'backup%g.pt' % epoch)
 
             # Delete checkpoint
@@ -609,6 +609,7 @@ if __name__ == '__main__':
     opt = get_opt()
     Configure_file = opt.cfg_dict
     cfg_dict = json.load(open(Configure_file))
+#    cfg_dict = parse_data_cfg(Configure_file)
     opt.device = cfg_dict['device']
     opt.seed = cfg_dict['seed']
     opt.epochs = cfg_dict['epochs']
@@ -635,7 +636,7 @@ if __name__ == '__main__':
         hyp['obj_pw'] = 1.
     for cx, cmt in enumerate(comments):
         # sr = syn_ratios[cx]
-#        opt.resume = True
+        # opt.resume = True
         
         cinx = cmt.find('model') # first letter index
         endstr = cmt[cinx:]
@@ -668,6 +669,7 @@ if __name__ == '__main__':
             opt.data = 'data_xview/{}_{}_cls/{}_seed{}/{}_seed{}_xview_val.data'.format(cmt, opt.class_num, cmt, opt.seed, cmt, opt.seed)
 
         time_marker = time.strftime('%Y-%m-%d_%H.%M', time.localtime())
+#        time_marker = '2020-06-30_10.03'
         opt.weights_dir = 'weights/{}_cls/{}_seed{}/{}/'.format(opt.class_num, cmt, opt.seed, '{}_{}_seed{}'.format(time_marker, hyp_cmt_name, opt.seed))
         opt.writer_dir = 'writer_output/{}_cls/{}_seed{}/{}/'.format(opt.class_num, cmt, opt.seed, '{}_{}_seed{}'.format(time_marker, hyp_cmt_name, opt.seed))
         opt.result_dir = 'result_output/{}_cls/{}_seed{}/{}/'.format(opt.class_num, cmt, opt.seed, '{}_{}_seed{}'.format(time_marker, hyp_cmt_name, opt.seed))
