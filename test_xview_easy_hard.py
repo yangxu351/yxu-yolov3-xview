@@ -638,6 +638,7 @@ if __name__ == '__main__':
     px_thres = 23
     whr_thres = 3 # 4
     sd = 17
+    eh_types = ['hard', 'easy']
     for typ in eh_types:
         for cmt in comments:
             base_cmt = base_cmt.format(sd)
@@ -662,7 +663,6 @@ if __name__ == '__main__':
             opt.conf_thres = 0.01
             tif_name = 'xview'
             ############# 2 images test set
-            opt.type = typ
 #            opt.type = 'easy'
 #            opt.type = 'hard'
             opt.type = typ
