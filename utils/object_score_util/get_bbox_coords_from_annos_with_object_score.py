@@ -29,13 +29,14 @@ def get_object_bbox_after_group(label_path, save_path, class_label=0, min_region
 
     lbl_files = [os.path.join(label_path, f) for f in lbl_files if os.path.isfile(os.path.join(label_path, f))]
     lbl_names = [os.path.basename(f) for f in lbl_files]
-
+    
     osc = eval_utils.ObjectScorer(min_region=min_region, min_th=0.5, link_r=link_r, eps=2) #  link_r=10
     for i, f in enumerate(lbl_files):
         lbl = 1 - misc_utils.load_file(f) / 255 # h, w, c
         lbl_groups = osc.get_object_groups(lbl)
         lbl_group_map = eval_utils.display_group(lbl_groups, lbl.shape[:2], need_return=True)
         group_ids = np.sort(np.unique(lbl_group_map))
+
         f_txt = open(os.path.join(save_path, lbl_names[i].replace(lbl_names[i][-3:], TEX_FORMAT)), 'w')
         for id in group_ids[1:]: # exclude id==0
             min_w = np.min(np.where(lbl_group_map == id)[1])
@@ -62,10 +63,10 @@ def get_object_bbox_after_group(label_path, save_path, class_label=0, min_region
             h = h / lbl.shape[0]
             xc = min_w + w/2.
             yc = min_h + h/2.
-
-
+            
             f_txt.write("%s %s %s %s %s\n" % (class_label, xc, yc, w, h))
         f_txt.close()
+
 
 
 def plot_img_with_bbx(img_file, lbl_file, save_path, label_index=False, Model_id=False):

@@ -3,11 +3,12 @@ import numpy as np
 import argparse
 import os
 import sys
-sys.path.append('/data/users/yang/code/yxu-yolov3-xview')
+sys.path.append('/data/users/yang/code/yxu-yolov3-xview/')
 import utils.wv_util as wv
 from utils.utils_xview import coord_iou, compute_iou
 from utils.xview_synthetic_util import preprocess_xview_syn_data_distribution as pps
 from utils.xview_synthetic_util import process_syn_xview_background_wv_split as psx
+from utils.object_score_util import get_bbox_coords_from_annos_with_object_score as gbc
 import pandas as pd
 from ast import literal_eval
 import json
@@ -20,6 +21,8 @@ import shutil
 import cv2
 import time
 
+def is_non_zero_file(fpath):
+    return os.path.isfile(fpath) and os.path.getsize(fpath) > 0
 
 def get_annos_of_model_id(model_id=0):
     src_model_dir = args.annos_save_dir[:-1] + '_all_model/'
@@ -232,6 +235,159 @@ def get_image_list_contain_model_id(model_id):
     return image_list
 
 
+def convert_norm(size, box):
+    '''
+    https://blog.csdn.net/xuanlang39/article/details/88642010
+    :param size:  w h
+    :param box: y1 x1 y2 x2
+    :return: xc yc w h  (relative values)
+    '''
+    dh = 1. / (size[1])  # h--1--y
+    dw = 1. / (size[0])  # w--0--x
+
+    x = (box[0] + box[2]) / 2.0
+    y = (box[1] + box[3]) / 2.0  # (box[1] + box[3]) / 2.0 - 1
+    w = box[2] - box[0]
+    h = box[3] - box[1]
+
+    x = x * dw
+    w = w * dw
+    y = y * dh
+    h = h * dh
+    return [x, y, w, h]
+
+
+def val_resize_crop_by_easy_hard(scale=2, pxwhrs='px23whr3_seed17', model_id=4, rare_id=1, type='hard', px_thres=30):
+    base_dir = args.data_save_dir
+    img_path = os.path.join(base_dir, 'xviewtest_img_{}_m{}_rc{}_{}.txt'.format(pxwhrs, model_id, rare_id, type))
+    lbl_path = os.path.join(base_dir, 'xviewtest_lbl_{}_m{}_rc{}_{}.txt'.format(pxwhrs, model_id, rare_id, type))
+    df_img_files = pd.read_csv(img_path, header=None)
+    df_lbl_files = pd.read_csv(lbl_path, header=None)
+
+    save_img_dir = os.path.dirname(df_img_files.loc[0, 0]) + '_{}_upscale'.format(type)
+    if not os.path.exists(save_img_dir):
+        os.mkdir(save_img_dir)
+    else:
+        shutil.rmtree(save_img_dir)
+        os.mkdir(save_img_dir)
+    save_lbl_dir = os.path.dirname(df_lbl_files.loc[0, 0]) + '_upscale'
+    if not os.path.exists(save_lbl_dir):
+        os.mkdir(save_lbl_dir)
+    else:
+        shutil.rmtree(save_lbl_dir)
+        os.mkdir(save_lbl_dir)
+
+    for ix in range(df_img_files.shape[0]):
+        img_file = df_img_files.loc[ix, 0]
+
+        # print('img_file ', img_file)
+        img = cv2.imread(img_file)
+        h, w = img.shape[0], img.shape[1]
+        img2 = cv2.resize(img, (h*scale, w*scale), interpolation=cv2.INTER_LINEAR)
+        lbl_file = df_lbl_files.loc[ix, 0]
+
+        name = os.path.basename(lbl_file)
+
+        up_h = h*scale
+        up_w = w*scale
+        for i in range(scale):
+            for j in range(scale):
+                img_s = img2[i*h: (i+1)*h, j*w: (j+1)*w]
+                cv2.imwrite(os.path.join(save_img_dir, name.split('.')[0] + '_i{}j{}.png'.format(i, j)), img_s)
+                if not is_non_zero_file(lbl_file):
+                    f_txt = open(os.path.join(save_lbl_dir, name.split('.')[0] + '_i{}j{}.txt'.format(i, j)), 'w')
+                    f_txt.close()
+        if not is_non_zero_file(lbl_file):
+            continue
+        if name == '2315_359.txt':
+            print(lbl_file)
+        lbl = pd.read_csv(lbl_file, header=None, sep=' ').to_numpy() #xc yc w h
+        b0_list = []
+        b1_list = []
+        b2_list = []
+        b3_list = []
+        for ti in range(lbl.shape[0]):
+            class_id = lbl[ti, 0]
+            model_id = lbl[ti, -1]
+
+            bbox = lbl[ti, 1:-1] #cid, xc, yc, w, h, mid
+            # print('bbox', bbox)
+            bbox[0] = bbox[0] * up_w
+            bbox[1] = bbox[1] * up_h
+            bbox[2] = bbox[2] * up_w
+            bbox[3] = bbox[3] * up_h
+            bbox[0] = bbox[0] - bbox[2]/2
+            bbox[1] = bbox[1] - bbox[3]/2
+            bbox[2] = bbox[0] + bbox[2]
+            bbox[3] = bbox[1] + bbox[3]
+            tl_w = 0
+            tl_h = 0
+            c_w = up_w/2
+            c_h = up_h/2
+            br_w = up_w
+            br_h = up_h
+            b0 = np.clip(bbox, [tl_w, tl_h, tl_w, tl_h], [c_w-1, c_h-1, c_w-1, c_h-1])
+            b1 = np.clip(bbox, [c_w, tl_h, c_w, tl_h], [br_w-1, c_h-1, br_w-1, c_h-1])
+            b2 = np.clip(bbox, [tl_w, c_h, tl_w, c_h], [c_w-1, br_h-1, c_w-1, br_h-1])
+            b3 = np.clip(bbox, [c_w, c_h, c_w, c_h], [br_w-1, br_h-1, br_w-1, br_h-1])
+            if b0[2]-b0[0] > px_thres and b0[3]-b0[1] > px_thres:
+                b0_list.append([class_id] + convert_norm((w, h), b0) + [model_id])
+            if b1[2]-b1[0] > px_thres and b1[3]-b1[1] > px_thres:
+                b1[0] = b1[0] - w
+                b1[2] = b1[2] - w
+                b1_list.append([class_id] + convert_norm((w, h), b1) + [model_id])
+            if b2[2]-b2[0] > px_thres and b2[3]-b2[1] > px_thres:
+                b2[1] = b2[1] - h
+                b2[3] = b2[3] - h
+                b2_list.append([class_id] + convert_norm((w, h), b2) + [model_id])
+            if b3[2]-b3[0] > px_thres and b3[3]-b3[1] > px_thres:
+                b3 = [bx - w for bx in b3]
+                b3_list.append([class_id] + convert_norm((w, h), b3) + [model_id]) #cid, xc, yc, w, h, mid
+        f_txt = open(os.path.join(save_lbl_dir, name.split('.')[0] + '_i0j0.txt'), 'w')
+        for i0 in b0_list:
+            f_txt.write( "%s %s %s %s %s %s\n" % (np.int(i0[0]), i0[1], i0[2], i0[3], i0[4], np.int(i0[5])))
+        f_txt.close()
+        f_txt = open(os.path.join(save_lbl_dir, name.split('.')[0] + '_i0j1.txt'), 'w')
+        for i1 in b1_list:
+            # print('i1', i1)
+            f_txt.write( "%s %s %s %s %s %s\n" % (np.int(i1[0]), i1[1], i1[2], i1[3], i1[4], np.int(i1[5])))
+        f_txt.close()
+        f_txt = open(os.path.join(save_lbl_dir, name.split('.')[0] + '_i1j0.txt'), 'w')
+        for i2 in b2_list:
+            f_txt.write( "%s %s %s %s %s %s\n" % (np.int(i2[0]), i2[1], i2[2], i2[3], i2[4], np.int(i2[5])))
+        f_txt.close()
+        f_txt = open(os.path.join(save_lbl_dir, name.split('.')[0] + '_i1j1.txt'), 'w')
+        for i3 in b3_list: #cid, xc, yc, w, h, mid
+            f_txt.write( "%s %s %s %s %s %s\n" % (np.int(i3[0]), i3[1], i3[2], i3[3], i3[4], np.int(i3[5])))
+        f_txt.close()
+
+
+
+def create_upsample_test_dataset_of_m_rc(model_id, rare_id, type='hard', seed=17, pxwhrs='px23whr3_seed17'):
+    val_dir = args.annos_save_dir[:-1] + '_val_m{}_rc{}_{}_seed{}_upscale'.format(model_id, rare_id, type, seed)
+    print('val_dir', val_dir)
+    val_lbl_files = glob.glob(os.path.join(val_dir, '*.txt'))
+
+    base_dir = args.data_save_dir
+    test_lbl_txt = open(os.path.join(base_dir, 'xviewtest_lbl_{}_upscale_m{}_rc{}_{}.txt'.format(pxwhrs, model_id, rare_id, type)), 'w')
+    test_img_txt = open(os.path.join(base_dir, 'xviewtest_img_{}_upscale_m{}_rc{}_{}.txt'.format(pxwhrs, model_id, rare_id, type)), 'w')
+
+    for lf in val_lbl_files:
+        lbl_name = os.path.basename(lf)
+        img_name = lbl_name.replace('.txt', '.png')
+        test_lbl_txt.write('%s\n' % lf)
+        test_img_txt.write('%s\n' % os.path.join(args.images_save_dir[:-1] + '_{}_upscale'.format(type), img_name))
+    test_img_txt.close()
+    test_lbl_txt.close()
+
+    data_txt = open(os.path.join(base_dir, 'xviewtest_{}_upscale_m{}_rc{}_{}.data'.format(pxwhrs, model_id, rare_id, type)), 'w')
+    data_txt.write('classes=%s\n' % str(args.class_num))
+    data_txt.write('test=./data_xview/{}_cls/{}/xviewtest_img_{}_upscale_m{}_rc{}_{}.txt\n'.format(args.class_num, pxwhrs, pxwhrs, model_id, rare_id, type))
+    data_txt.write('test_label=./data_xview/{}_cls/{}/xviewtest_lbl_{}_upscale_m{}_rc{}_{}.txt\n'.format(args.class_num, pxwhrs, pxwhrs, model_id, rare_id, type))
+    data_txt.write('names=./data_xview/{}_cls/xview.names\n'.format(args.class_num))
+    data_txt.close()
+
+
 def get_args(px_thres=None, whr_thres=None, seed=17):
     parser = argparse.ArgumentParser()
 
@@ -345,40 +501,60 @@ if __name__ == '__main__':
     others are empty
     '''
     # # model_id = 0
-    model_id = 4
+#    model_id = 4
     # model_id = 1
-    get_all_annos_only_model_id_labeled(model_id)
+#    get_all_annos_only_model_id_labeled(model_id)
 
     '''
     get all validation txt but only specified miss model_id labeled
     all others are empty except the miss ones
     '''
-    model_id = 4
-    get_annos_miss_files_empty_others_by_model_id(model_id)
+ #   model_id = 4
+ #   get_annos_miss_files_empty_others_by_model_id(model_id)
 
     '''
     get all validation txt but only specified miss model_id labeled
     base on val miss list
     others are empty
     '''
-    model_id = 4
+#    model_id = 4
     # model_id = 1
-    create_test_dataset_of_model_id_labeled_miss(model_id)
+#    create_test_dataset_of_model_id_labeled_miss(model_id)
 
     '''
     create val dataset of all annos but only model_id labeled
     others are empty
     '''
     # model_id = 1
-    model_id = 4
-    create_test_dataset_of_model_id_labeled(model_id)
+#    model_id = 4
+#    create_test_dataset_of_model_id_labeled(model_id)
 
 
-
-
-
-
-
-
-
-
+    '''
+    resize validation images and labels
+    crop
+    '''
+    scale=2
+    px_thres = 30
+    pxwhrs='px23whr3_seed17'
+    model_id=4
+    rare_id=1
+    type='hard'
+#    type='easy'
+    val_resize_crop_by_easy_hard(scale, pxwhrs, model_id, rare_id, type, px_thres)
+    create_upsample_test_dataset_of_m_rc(model_id, rare_id, type, seed, pxwhrs)
+    '''
+    check annotation
+     plot images with bbox
+    '''
+    save_dir = os.path.join(args.cat_sample_dir, 'image_with_bbox/2315_{}_upscale/'.format(type))
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
+    lbl_dir = args.annos_save_dir[:-1] + '_val_m4_rc1_{}_seed17_upscale/'.format(type)
+    img_dir = args.images_save_dir[:-1] + '_{}_upscale/'.format(type)
+    img_list = glob.glob(os.path.join(img_dir, '2315_359*.png'))
+    for f in img_list:
+        print('f ', f)
+        name = os.path.basename(f)
+        lbl_file = os.path.join(lbl_dir, name.replace('.png', '.txt'))
+        gbc.plot_img_with_bbx(f, lbl_file, save_dir)

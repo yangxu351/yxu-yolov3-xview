@@ -154,11 +154,11 @@ def check_prd_gt_iou_xview_syn(data_file, miss_model_id, rare_class, cmt, prefix
 #    print('json_name', json_name)
     print(os.path.join(result_path, json_name))
     res_json_files = glob.glob(os.path.join(result_path, json_name))
-    print('res_json_files ', res_json_files)
+    print('res_json_files ', len(res_json_files))
     if not len(res_json_files):
         return
     res_json_files.sort()
-    res_json_file = res_json_files[-1]
+    res_json_file = res_json_files[0]
     res_json = json.load(open(res_json_file))
     
     result_iou_check_dir = os.path.join(syn_args.cat_sample_dir, 'result_iou_check', 'miss_model_{}'.format(miss_model_id),  cmt, res_folder)
@@ -271,8 +271,14 @@ if __name__ == "__main__":
 #    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_angle_fwc_scatter_gauss_dense_model4_v15_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_angle_fwc_scatter_gauss_dense_model4_v15_mixed']
 #    comments = ['syn_xview_bkg_px30whr3_xbw_xcolor_xbkg_unif_mig21_shdw_angle_fwc_scatter_gauss_dense_model4_v15_color', 'syn_xview_bkg_px30whr3_xbw_xcolor_xbkg_unif_mig21_shdw_angle_fwc_scatter_gauss_dense_model4_v15_mixed']
 #    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_dense_model4_v17_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_dense_model4_v17_mixed']
-    miss_model_id = 4
-    rare_class = 1
+#    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_uniform_50_model4_v19_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_uniform_50_model4_v19_mixed']
+#    comments = ['syn_xview_bkg_px50whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_uniform_50_model4_v19_color', 'syn_xview_bkg_px50whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_uniform_50_model4_v19_mixed']
+#    comments = ['syn_xview_bkg_px50whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_120_model4_v21_color', 'syn_xview_bkg_px50whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_120_model4_v21_mixed']
+#    comments = ['syn_xview_bkg_px30whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_120_model4_v21_upscale_color', 'syn_xview_bkg_px30whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_120_model4_v21_upscale_mixed']
+#    comments = ['syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_model4_v23_color', 'syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_model4_v23_mixed']
+#    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias20_model4_v3_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_rnd_model4_v7_color']
+#    miss_model_id = 4
+#    rare_class = 1
 #    comments = ['syn_xview_bkg_px23whr3_xbsw_xcolor_xbkg_unif_rndp_model1_v6_color', 'syn_xview_bkg_px23whr3_xbsw_xcolor_xbkg_unif_rndp_model1_v6_mixed']
 #    comments = ['syn_xview_bkg_px23whr3_xbsw_rndcolor_xbkg_unif_rndp_model1_v7_color', 'syn_xview_bkg_px23whr3_xbsw_rndcolor_xbkg_unif_rndp_model1_v7_mixed']
 #    comments = ['syn_xview_bkg_px23whr3_xbsw_xwing_color_xbkg_unif_rndp_model1_v8_color', 'syn_xview_bkg_px23whr3_xbsw_xwing_color_xbkg_unif_rndp_model1_v8_mixed']
@@ -280,8 +286,12 @@ if __name__ == "__main__":
 #    miss_model_id = 1
 #    rare_class = 2
 #    comments = ['syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_scatter_uniform_model5_v1_color']
-#    miss_model_id = 5
-#    rare_class = 3
+    color_pro = 4 
+    comments = ['syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_scatter_gauss_40_color_bias{}_model5_v{}_color'.format(color_pro*25.5, color_pro+1)]
+
+
+    miss_model_id = 5
+    rare_class = 3
 ##    res_folder = 'test_on_xview_with_model_{}*_seed{}_miss'
 ##    res_folder = 'test_on_xview_with_model_{}_seed*_hard'
 ##    res_folder = 'test_on_xview_{}_m{}_rc{}_easy'
@@ -290,17 +300,24 @@ if __name__ == "__main__":
 #    # hyp_cmt = 'hgiou1_1gpu_val_labeled'
 #    # hyp_cmt = 'hgiou1_1gpu_val_xview'
     hyp_cmt = 'hgiou1_1gpu_val_syn'
-##    hyp_cmt = 'hgiou1_1gpu_noaug_val_syn'
-#    # hyp_cmt = 'hgiou1_1gpu_val_labeled_miss'
     prefix = 'results_syn'
+#    hyp_cmt = 'hyp_tuned_val_syn'
+#    prefix = 'results_syn_tuned'
+#    hyp_cmt = 'hgiou1_1gpu_trans_val_syn'
+#    prefix = 'results_syn_trans'
+#    hyp_cmt = 'hgiou1_1gpu_noaug_val_syn'
+#    prefix = 'results_syn_noaug'
+#    hyp_cmt = 'hgiou1_half_affine_val_syn'
+#    prefix = 'results_syn_half_affine'
     base_pxwhrs = 'px23whr3_seed17'
 #    data_file = 'xviewtest_{}_with_model_m{}_miss.data'.format(base_pxwhrs, miss_model_id)
     data_file = 'xviewtest_{}_m{}_rc{}_{}.data'
-#    data_file = 'xviewtest_{}_m{}_rc{}_easy.data'.format(base_pxwhrs, miss_model_id, rare_class)
-#    data_file = 'xviewtest_{}_m{}_rc{}_2315.data'.format(base_pxwhrs, miss_model_id, rare_class)
-
-#    res_folder = 'test_on_xview_{}_m{}_rc{}_easy'.format(hyp_cmt, miss_model_id, rare_class)
     res_folder = 'test_on_xview_{}_m{}_rc{}_{}'
+    
+#    data_file = 'xviewtest_{}_upscale_m{}_rc{}_{}.data'
+#    res_folder = 'test_on_xview_{}_upscale_m{}_rc{}_{}'
+
+#    data_file = 'xviewtest_{}_m{}_rc{}_2315.data'.format(base_pxwhrs, miss_model_id, rare_class)
 #    res_folder = 'test_on_xview_with_model_{}_2315_hard'.format(hyp_cmt)
     for eh in ['hard', 'easy']:
         d_file = data_file.format(base_pxwhrs, miss_model_id, rare_class, eh)

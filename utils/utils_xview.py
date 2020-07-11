@@ -763,7 +763,83 @@ class FocalLoss(nn.Module):
         else:  # 'none'
             return loss
 
-
+#def smooth_BCE(eps=0.1):  # https://github.com/ultralytics/yolov3/issues/238#issuecomment-598028441
+#    # return positive, negative label smoothing BCE targets
+#    return 1.0 - 0.5 * eps, 0.5 * eps
+#
+#def compute_loss(p, targets, model):  # predictions, targets, model
+#    ft = torch.cuda.FloatTensor if p[0].is_cuda else torch.Tensor
+#    lcls, lbox, lobj = ft([0]), ft([0]), ft([0])
+#    tcls, tbox, indices, anchor_vec = build_targets(p, targets, model)
+#    h = model.hyp  # hyperparameters
+#    red = 'mean'  # Loss reduction (sum or mean)
+#
+#    # Define criteria
+#    BCEcls = nn.BCEWithLogitsLoss(pos_weight=ft([h['cls_pw']]), reduction=red)
+#    BCEobj = nn.BCEWithLogitsLoss(pos_weight=ft([h['obj_pw']]), reduction=red)
+#
+#    # class label smoothing https://arxiv.org/pdf/1902.04103.pdf eqn 3
+#    cp, cn = smooth_BCE(eps=0.0)
+#
+#    # focal loss
+#    g = h['fl_gamma']  # focal loss gamma
+#    if g > 0:
+#        BCEcls, BCEobj = FocalLoss(BCEcls, g), FocalLoss(BCEobj, g)
+#
+#    # Compute losses
+#    np, ng = 0, 0  # number grid points, targets
+#    for i, pi in enumerate(p):  # layer index, layer predictions
+#        b, a, gj, gi = indices[i]  # image, anchor, gridy, gridx
+#        tobj = torch.zeros_like(pi[..., 0])  # target obj
+#        np += tobj.numel()
+#
+#        # Compute losses
+#        nb = len(b)
+#        if nb:  # number of targets
+#            ng += nb
+#            ps = pi[b, a, gj, gi]  # prediction subset corresponding to targets
+#            # ps[:, 2:4] = torch.sigmoid(ps[:, 2:4])  # wh power loss (uncomment)
+#
+#            # GIoU
+#            pxy = torch.sigmoid(ps[:, 0:2])  # pxy = pxy * s - (s - 1) / 2,  s = 1.5  (scale_xy)
+#            pwh = torch.exp(ps[:, 2:4]).clamp(max=1E3) * anchor_vec[i]
+#            pbox = torch.cat((pxy, pwh), 1)  # predicted box
+#            giou = bbox_iou(pbox.t(), tbox[i], x1y1x2y2=False, GIoU=True)  # giou computation
+#            lbox += (1.0 - giou).sum() if red == 'sum' else (1.0 - giou).mean()  # giou loss
+#            tobj[b, a, gj, gi] = (1.0 - model.gr) + model.gr * giou.detach().clamp(0).type(tobj.dtype)  # giou ratio
+#
+#            if model.nc > 1:  # cls loss (only if multiple classes)
+#                t = torch.full_like(ps[:, 5:], cn)  # targets
+#                t[range(nb), tcls[i]] = cp
+#                lcls += BCEcls(ps[:, 5:], t)  # BCE
+#                # lcls += CE(ps[:, 5:], tcls[i])  # CE
+#
+#            # Append targets to text file
+#            # with open('targets.txt', 'a') as file:
+#            #     [file.write('%11.5g ' * 4 % tuple(x) + '\n') for x in torch.cat((txy[i], twh[i]), 1)]
+#
+#        lobj += BCEobj(pi[..., 4], tobj)  # obj loss
+#
+#    lbox *= h['giou']
+#    lobj *= h['obj']
+#    lcls *= h['cls']
+#    if red == 'sum':
+#        bs = tobj.shape[0]  # batch size
+#        #fixme--yang.xu
+#        # https://github.com/ultralytics/yolov3/issues/804
+#        # 608/32x608/32=19x19 grid by 3 anchors for the first layer,
+#        # 38x38 grid with 3 anchors for second,
+#        # 76x76 grid with 3 anchors for third
+#        # 6300 ????  7581*3=22743
+#        # lobj *= 3 / (6300 * bs) * 2  # 3 / np * 2
+#        lobj *= 3 / (6300 * bs) * 2
+#        if ng:
+#            lcls *= 3 / ng / model.nc
+#            lbox *= 3 / ng
+#
+#    loss = lbox + lobj + lcls
+#    return loss, torch.cat((lbox, lobj, lcls, loss)).detach()
+    
 def compute_loss(p, targets, model):  # predictions, targets, model
     ft = torch.cuda.FloatTensor if p[0].is_cuda else torch.Tensor
     lcls, lbox, lobj = ft([0]), ft([0]), ft([0])
@@ -936,7 +1012,63 @@ def build_targets(model, targets):
                                            model.nc, model.nc - 1, c.max())
 
     return tcls, tbox, indices, av
-
+    
+    
+#def build_targets(p, targets, model):
+#    # targets = [image, class, x, y, w, h]
+#
+#    nt = targets.shape[0]
+#    tcls, tbox, indices, av = [], [], [], []
+#    reject, use_all_anchors = True, True
+#    gain = torch.ones(6, device=targets.device)  # normalized to gridspace gain
+#
+#    # m = list(model.modules())[-1]
+#    # for i in range(m.nl):
+#    #    anchors = m.anchors[i]
+#    multi_gpu = type(model) in (nn.parallel.DataParallel, nn.parallel.DistributedDataParallel)
+#    for i, j in enumerate(model.yolo_layers):
+#        # get number of grid points and anchor vec for this yolo layer
+#        anchors = model.module.module_list[j].anchor_vec if multi_gpu else model.module_list[j].anchor_vec
+#
+#        # iou of targets-anchors
+#        gain[2:] = torch.tensor(p[i].shape)[[3, 2, 3, 2]]  # xyxy gain
+#        t, a = targets * gain, []
+#        gwh = t[:, 4:6]
+#        if nt:
+#            iou = wh_iou(anchors, gwh)  # iou(3,n) = wh_iou(anchors(3,2), gwh(n,2))
+#
+#            if use_all_anchors:
+#                na = anchors.shape[0]  # number of anchors
+#                a = torch.arange(na).view(-1, 1).repeat(1, nt).view(-1)
+#                t = t.repeat(na, 1)
+#            else:  # use best anchor only
+#                iou, a = iou.max(0)  # best iou and anchor
+#
+#            # reject anchors below iou_thres (OPTIONAL, increases P, lowers R)
+#            if reject:
+#                j = iou.view(-1) > model.hyp['iou_t']  # iou threshold hyperparameter
+#                t, a = t[j], a[j]
+#
+#        # Indices
+#        b, c = t[:, :2].long().t()  # target image, class
+#        gxy = t[:, 2:4]  # grid x, y
+#        gwh = t[:, 4:6]  # grid w, h
+#        gi, gj = gxy.long().t()  # grid x, y indices
+#        indices.append((b, a, gj, gi))
+#
+#        # Box
+#        gxy -= gxy.floor()  # xy
+#        tbox.append(torch.cat((gxy, gwh), 1))  # xywh (grids)
+#        av.append(anchors[a])  # anchor vec
+#
+#        # Class
+#        tcls.append(c)
+#        if c.shape[0]:  # if any targets
+#            assert c.max() < model.nc, 'Model accepts %g classes labeled from 0-%g, however you labelled a class %g. ' \
+#                                       'See https://github.com/ultralytics/yolov3/wiki/Train-Custom-Data' % (
+#                                           model.nc, model.nc - 1, c.max())
+#
+#    return tcls, tbox, indices, av
 
 def non_max_suppression(prediction, conf_thres=0.5, iou_thres=0.5, multi_cls=True, method='vision_batch', classes=None):
     """
@@ -1248,7 +1380,7 @@ def kmean_anchors(path='../coco/train2017.txt', n=9, img_size=(320, 640)):
     return k
 
 
-def print_mutation(hyp, results, bucket=''):
+def print_mutation(hyp, results, bucket='', evolve_file='evolve.txt'):
     # Print mutation results to evolve.txt (for use with train.py --evolve)
     a = '%10s' * len(hyp) % tuple(hyp.keys())  # hyperparam keys
     b = '%10.3g' * len(hyp) % tuple(hyp.values())  # hyperparam values
@@ -1256,15 +1388,15 @@ def print_mutation(hyp, results, bucket=''):
     print('\n%s\n%s\nEvolved fitness: %s\n' % (a, b, c))
 
     if bucket:
-        os.system('rm evolve.txt && gsutil cp gs://%s/evolve.txt .' % bucket)  # download evolve.txt
+        os.system('rm %s && gsutil cp gs://%s/%s .' % (evolve_file, bucket, evolve_file))  # download evolve.txt
 
-    with open('evolve.txt', 'a') as f:  # append result
+    with open(evolve_file, 'a') as f:  # append result
         f.write(c + b + '\n')
-    x = np.unique(np.loadtxt('evolve.txt', ndmin=2), axis=0)  # load unique rows
-    np.savetxt('evolve.txt', x[np.argsort(-fitness(x))], '%10.3g')  # save sort by fitness
+    x = np.unique(np.loadtxt(evolve_file, ndmin=2), axis=0)  # load unique rows
+    np.savetxt(evolve_file, x[np.argsort(-fitness(x))], '%10.3g')  # save sort by fitness
 
     if bucket:
-        os.system('gsutil cp evolve.txt gs://%s' % bucket)  # upload evolve.txt
+        os.system('gsutil cp %s gs://%s' % (evolve_file,bucket))  # upload evolve.txt
 
 
 def apply_classifier(x, model, img, im0):
@@ -1302,14 +1434,14 @@ def apply_classifier(x, model, img, im0):
     return x
 
 #fixme --yang.xu
-# def fitness(x):
-#     # Returns fitness (for use with results.txt or evolve.txt)
-#     return x[:, 2] * 0.3 + x[:, 3] * 0.7  # weighted combination of x=[p, r, mAP@0.5, F1 or mAP@0.5:0.95]
-
 def fitness(x):
     # Returns fitness (for use with results.txt or evolve.txt)
-    w = [0.0, 0.01, 0.99, 0.00]  # weights for [P, R, mAP, F1]@0.5 or [P, R, mAP@0.5, mAP@0.5:0.95]
-    return (x[:, :4] * w).sum(1)
+    return x[:, 2] * 0.5 + x[:, 3] * 0.5  # 03, 0.7 weighted combination of x=[p, r, mAP@0.5, F1 or mAP@0.5:0.95]
+
+#def fitness(x):
+#    # Returns fitness (for use with results.txt or evolve.txt)
+#    w = [0.0, 0.01, 0.99, 0.00]  # weights for [P, R, mAP, F1]@0.5 or [P, R, mAP@0.5, mAP@0.5:0.95]
+#    return (x[:, :4] * w).sum(1)
 
 # Plotting functions ---------------------------------------------------------------------------------------------------
 def plot_one_box(x, img, color=None, label=None, line_thickness=None):
@@ -1374,6 +1506,7 @@ def plot_images(imgs, targets, paths=None, fname='images.jpg'):
     fig.tight_layout()
     fig.savefig(fname, dpi=200)
     plt.close()
+
 
 def plot_grids(trn_output, batch_i, paths=None, save_dir=''):
     # grids = trn_output.cpu().numpy()
