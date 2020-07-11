@@ -110,6 +110,40 @@ def get_image_list_contain_model_id(model_id):
             image_list.append(name.replace('.txt', '.jpg'))
     return image_list
 
+
+def get_rotated_point(x,y,angle):
+    '''
+    https://blog.csdn.net/weixin_44135282/article/details/89003793
+    '''
+    # (h, w) = image.shape[:2]
+    # # 将图像中心设为旋转中心
+    w, h = 1, 1
+    (cX, cY) = (0.5, 0.5)
+
+    #假设图像的宽度x高度为col*row, 图像中某个像素P(x1, y1)，绕某个像素点Q(x2, y2)
+    #旋转θ角度后, 则该像素点的新坐标位置为(x, y)，其计算公式为：
+
+    x = x
+    y = h - y
+    cX = cX
+    cY = h - cY
+    new_x = (x - cX) * math.cos(math.pi / 180.0 * angle) - (y - cY) * math.sin(math.pi / 180.0 * angle) + cX
+    new_y = (x - cX) * math.sin(math.pi / 180.0 * angle) + (y - cY) * math.cos(math.pi / 180.0 * angle) + cY
+    new_x = new_x
+    new_y = h - new_y
+    # return round(new_x), round(new_y) #四舍五入取整
+    return new_x, new_y
+
+def get_flipped_point(x, y, flip='tb'):
+    w, h = 1, 1
+    if flip == 'tb':
+        new_y = h - y
+        new_x = x
+    elif flip == 'lr':
+        new_x = w - x
+        new_y = y
+    return new_x, new_y
+
 def get_args(px_thres=None, whr_thres=None, seed=17):
     parser = argparse.ArgumentParser()
 
@@ -163,41 +197,6 @@ def get_args(px_thres=None, whr_thres=None, seed=17):
         os.makedirs(args.cat_sample_dir)
 
     return args
-
-
-def get_rotated_point(x,y,angle):
-    '''
-    https://blog.csdn.net/weixin_44135282/article/details/89003793
-    '''
-    # (h, w) = image.shape[:2]
-    # # 将图像中心设为旋转中心
-    w, h = 1, 1
-    (cX, cY) = (0.5, 0.5)
-
-    #假设图像的宽度x高度为col*row, 图像中某个像素P(x1, y1)，绕某个像素点Q(x2, y2)
-    #旋转θ角度后, 则该像素点的新坐标位置为(x, y)，其计算公式为：
-
-    x = x
-    y = h - y
-    cX = cX
-    cY = h - cY
-    new_x = (x - cX) * math.cos(math.pi / 180.0 * angle) - (y - cY) * math.sin(math.pi / 180.0 * angle) + cX
-    new_y = (x - cX) * math.sin(math.pi / 180.0 * angle) + (y - cY) * math.cos(math.pi / 180.0 * angle) + cY
-    new_x = new_x
-    new_y = h - new_y
-    # return round(new_x), round(new_y) #四舍五入取整
-    return new_x, new_y
-
-def get_flipped_point(x, y, flip='tb'):
-    w, h = 1, 1
-    if flip == 'tb':
-        new_y = h - y
-        new_x = x
-    elif flip == 'lr':
-        new_x = w - x
-        new_y = y
-    return new_x, new_y
-
 
 if __name__ == '__main__':
     whr_thres = 3
@@ -292,9 +291,26 @@ if __name__ == '__main__':
     # img_file = os.path.join(img_dir, img_name)
     # gbc.plot_img_with_bbx(img_file, lbl_file, save_path=save_dir)
 
+    '''
+    add augmented images and labels into val file
+    create corresponding *.data
+    '''
+    eh_type = 'hard'
+    # eh_type = 'easy'
+    shutil.copy(os.path.join(args.data_save_dir, 'xviewval_img_px23whr3_seed17_m4_rc1_{}.txt'.format(eh_type)),
+                os.path.join(args.data_save_dir, 'xviewval_img_px23whr3_seed17_m4_rc1_{}_aug.txt'.format(eh_type)))
+    val_img_file = open(os.path.join(args.data_save_dir, 'xviewtest_img_px23whr3_seed17_m4_rc1_{}_aug.txt'.format(eh_type)), 'a')
+    val_lbl_file = open(os.path.join(args.data_save_dir, 'xviewtest_lbl_px23whr3_seed17_m4_rc1_{}_aug.txt'.format(eh_type)), 'a')
 
+    img_dir = args.images_save_dir[:-1] + '_of_2315_359/'
+    lbl_dir = args.txt_save_dir[:-1] + '_xcycwh_px23whr3_val_m4_rc1_2315_259/'
+    img_files = glob.glob(os.path.join(img_dir, '*.png'))
+    for f in img_files:
+        name = os.path.basename(f)
+        val_img_file.write('%s\n' % f)
+        val_lbl_file.write('%s\n' % os.path.join(lbl_dir, name.replace('.png', '.txt')))
 
-
+    psx.create_xview_base_data_for_onemodel_easy_hard(model_id=4, rc_id=1, eh_type=eh_type, base_cmt='px23whr3_seed17')
 
 
 
