@@ -111,14 +111,10 @@ def resize_crop_windturbine(px_thres = 10):
                 if b0[2]-b0[0] > px_thres and b0[3]-b0[1] > px_thres:
                     b0_list.append(convert_norm((w, h), b0))
                 if b1[2]-b1[0] > px_thres and b1[3]-b1[1] > px_thres:
-                    # b1[[0, 2]] = b1[[0, 2]] - (br_w-w)
                     b1_list.append(convert_norm((w, h), b1))
                 if b2[2]-b2[0] > px_thres and b2[3]-b2[1] > px_thres:
-                    # b2[[1, 3]]= b2[[1, 3]] - (br_h-h)
                     b2_list.append(convert_norm((w, h), b2))
                 if b3[2]-b3[0] > px_thres and b3[3]-b3[1] > px_thres:
-                    # b3[[0, 2]] = b3[[0, 2]] - c_w
-                    # b3[[1, 3]] = b3[[1, 3]] - c_h
                     b3_list.append(convert_norm((w, h), b3)) #cid, xc, yc, w, h, mid
             if len(b0_list):
                 f_txt = open(os.path.join(save_lbl_dir, name.split('.')[0] + '_i0j0.txt'), 'w')
