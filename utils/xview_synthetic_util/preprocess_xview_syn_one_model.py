@@ -605,8 +605,6 @@ def create_upsample_test_dataset_of_m_rc(model_id, rare_id, type='hard', seed=17
     data_txt.write('names=./data_xview/{}_cls/xview.names\n'.format(args.class_num))
     data_txt.close()
 
-
-
 def get_rotated_point(x,y,angle):
     '''
     https://blog.csdn.net/weixin_44135282/article/details/89003793
@@ -934,5 +932,31 @@ if __name__ == '__main__':
     # img_name = name.replace('.txt', '.jpg')
     # img_file = os.path.join(img_dir, img_name)
     # gbc.plot_img_with_bbx(img_file, lbl_file, save_path=save_dir)
+
+    '''
+    add augmented images and labels into val file
+    create corresponding *.data
+    '''
+    eh_type = 'hard'
+    # eh_type = 'easy'
+    shutil.copy(os.path.join(args.data_save_dir, 'xviewval_img_px23whr3_seed17_m4_rc1_{}.txt'.format(eh_type)),
+                os.path.join(args.data_save_dir, 'xviewval_img_px23whr3_seed17_m4_rc1_{}_aug.txt'.format(eh_type)))
+    val_img_file = open(os.path.join(args.data_save_dir, 'xviewtest_img_px23whr3_seed17_m4_rc1_{}_aug.txt'.format(eh_type)), 'a')
+    val_lbl_file = open(os.path.join(args.data_save_dir, 'xviewtest_lbl_px23whr3_seed17_m4_rc1_{}_aug.txt'.format(eh_type)), 'a')
+
+    img_dir = args.images_save_dir[:-1] + '_of_2315_359/'
+    lbl_dir = args.txt_save_dir[:-1] + '_xcycwh_px23whr3_val_m4_rc1_2315_259/'
+    img_files = glob.glob(os.path.join(img_dir, '*.png'))
+    for f in img_files:
+        name = os.path.basename(f)
+        val_img_file.write('%s\n' % f)
+        val_lbl_file.write('%s\n' % os.path.join(lbl_dir, name.replace('.png', '.txt')))
+
+    psx.create_xview_base_data_for_onemodel_easy_hard(model_id=4, rc_id=1, eh_type=eh_type, base_cmt='px23whr3_seed17')
+
+
+
+
+
 
 
