@@ -1,13 +1,5 @@
 import glob
 import numpy as np
-import argparse
-import os
-import sys
-sys.path.append('/media/lab/Yang/code/yolov3/')
-import utils.wv_util as wv
-from utils.utils_xview import coord_iou, compute_iou
-from utils.xview_synthetic_util import preprocess_xview_syn_data_distribution as pps
-from utils.object_score_util import get_bbox_coords_from_annos_with_object_score as gbc
 import math
 import argparse
 import os
@@ -16,6 +8,7 @@ import utils.wv_util as wv
 from utils.utils_xview import coord_iou, compute_iou
 from utils.xview_synthetic_util import preprocess_xview_syn_data_distribution as pps
 from utils.xview_synthetic_util import process_syn_xview_background_wv_split as psx
+from utils.object_score_util import get_bbox_coords_from_annos_with_object_score as gbc
 import pandas as pd
 from ast import literal_eval
 import json
@@ -27,8 +20,11 @@ import cv2
 import seaborn as sn
 import time
 
+
 def is_non_zero_file(fpath):
     return os.path.isfile(fpath) and os.path.getsize(fpath) > 0
+
+def get_annos_of_model_id(model_id=0):
     src_model_dir = args.annos_save_dir[:-1] + '_all_model/'
     des_model_modelid_dir = args.annos_save_dir[:-1] + '_m{}_only_one_with_modelid/'.format(model_id)
     if not os.path.exists(des_model_modelid_dir):
@@ -75,7 +71,6 @@ def create_test_dataset_by_model_id(model_id):
     test_lbl_files.close()
 
 
-<<<<<<< HEAD
 def get_val_annos_only_model_id_labeled(model_id=0):
     src_model_dir = args.annos_save_dir[:-1] + '_all_model/'
     des_model_modelid_dir = args.annos_save_dir[:-1] + '_m{}_labeled_with_modelid/'.format(model_id)
@@ -198,10 +193,6 @@ def create_test_dataset_of_model_id_labeled_miss(model_id, base_pxwhrs='px23whr3
     data_txt.close()
 
 
-def get_trn_val_txt_contain_all_models(type='all', copy_img=False):
-    src_model_dir = args.annos_save_dir[:-1] + '_all_model/'
-    des_model_dir = args.annos_save_dir[:-1] + '_{}_model/'.format(type)
-
 def get_txt_contain_model_id(model_id=5, copy_img=False):
     src_model_dir = args.annos_save_dir[:-1] + '_all_model/'
     des_model_dir = args.annos_save_dir[:-1] + '_m{}_all_model/'.format(model_id)
@@ -250,11 +241,6 @@ def get_txt_contain_model_id(model_id=5, copy_img=False, type='all'):
     else:
         lbl_model_txts = glob.glob(os.path.join(src_model_dir, '*.txt'))
     img_names = []
-        des_img_dir = os.path.join(args.cat_sample_dir, 'image_with_bbox_indices/px23whr3_seed17_images_with_bbox_with_indices_m{}/'.format(model_id))
-        if not os.path.exists(des_img_dir):
-            os.mkdir(des_img_dir)
-
-    lbl_model_txts = glob.glob(os.path.join(src_model_dir, '*.txt'))
     for lt in lbl_model_txts:
         if not pps.is_non_zero_file(lt):
             continue
@@ -301,8 +287,6 @@ def label_m_val_model_with_other_label(rare_class, model_id=1, other_label=0):
             else:
                 df_hard_txt.loc[t, 5] = rare_class
         df_hard_txt.to_csv(os.path.join(des_hard_dir, lbl_name), sep=' ', header=False, index=False)
-                shutil.copy(os.path.join(src_img_dir, img_name),
-                            os.path.join(des_img_dir, img_name))
 
 
 def get_image_list_contain_model_id(model_id):
@@ -622,7 +606,6 @@ def create_upsample_test_dataset_of_m_rc(model_id, rare_id, type='hard', seed=17
     data_txt.write('names=./data_xview/{}_cls/xview.names\n'.format(args.class_num))
     data_txt.close()
 
-
 def get_args(px_thres=None, whr_thres=None, seed=17):
     parser = argparse.ArgumentParser()
 
@@ -640,7 +623,6 @@ def get_args(px_thres=None, whr_thres=None, seed=17):
 
     parser.add_argument("--data_save_dir", type=str, help="to save data files",
                         default='/media/lab/Yang/code/yolov3/data_xview/{}_cls/')
-
     parser.add_argument("--cat_sample_dir", type=str, help="to save figures",
                         default='/media/lab/Yang/data/xView_YOLO/cat_samples/')
     parser.add_argument("--annos_save_dir", type=str, help="to save txt annotation files",
@@ -741,8 +723,6 @@ if __name__ == '__main__':
     create test dataset contain only one model
     '''
     # model_id = 1
-    # # model_id = 4
-    # create_test_dataset_by_only_model_id(model_id)
     # model_id = 4
     # create_test_dataset_by_model_id(model_id)
 
@@ -755,7 +735,6 @@ if __name__ == '__main__':
     # psx.create_xview_base_data_for_onemodel_only(model_id, base_cmt)
 
     '''
-<<<<<<< HEAD
     get lbl txt and images  of val or train
     '''
     # get_trn_val_txt_contain_all_models(type='val', copy_img=True)
@@ -916,6 +895,7 @@ if __name__ == '__main__':
         name = os.path.basename(f)
         lbl_file = os.path.join(lbl_dir, name.replace('.png', '.txt'))
         gbc.plot_img_with_bbx(f, lbl_file, save_dir)
+
     '''
     flip and rotate images 
     '''
@@ -955,8 +935,5 @@ if __name__ == '__main__':
     # img_name = name.replace('.txt', '.jpg')
     # img_file = os.path.join(img_dir, img_name)
     # gbc.plot_img_with_bbx(img_file, lbl_file, save_path=save_dir)
-
-
-
 
 
