@@ -61,17 +61,56 @@ def merge_clean_origin_syn_image_files(seedians, dt):
             shutil.copy(lbl, des_lbl_path)
 
 
-def group_object_annotation_and_draw_bbox(dt, px_thresh=20, whr_thres=4):
+def resize_crop(cmt, display_types, scale=2):
+    for dt in display_types:
+        sys_args = get_args(cmt)
+        step = sys_args.resolution * sys_args.tile_size
+        save_img_dir = os.path.join(sys_args.syn_data_dir.format(dt), 'upscale_{}_all_images_step{}'.format(dt, step))
+        if not os.path.exists(save_img_dir):
+            os.mkdir(save_img_dir)
+        save_lbl_dir = os.path.join(sys_args.syn_data_dir.format(dt), 'upscale_{}_all_annos_step{}'.format(dt, step))
+        if not os.path.exists(save_lbl_dir):
+            os.mkdir(save_lbl_dir)
+        img_path = os.path.join(sys_args.syn_data_dir.format(dt), '{}_all_images_step{}'.format(dt, step))
+        lbl_path = os.path.join(sys_args.syn_data_dir.format(dt), '{}_all_annos_step{}'.format(dt, step))
+        img_list = np.sort(glob.glob(os.path.join(img_path, '*.png')))
+        for f in img_list:
+            img = cv2.imread(f)
+            h, w, _ = img.shape
+            img2 = cv2.resize(img, (h*scale, w*scale), interpolation=cv2.INTER_LINEAR)
+            name = os.path.basename(f)
+            lbl = cv2.imread(os.path.join(lbl_path, name))
+            lbl2 = cv2.resize(lbl, (h*scale, w*scale), interpolation=cv2.INTER_LINEAR)
+            for i in range(scale):
+                for j in range(scale):
+                    img_s = img2[i*w: (i+1)*w, j*w: (j+1)*w]
+                    cv2.imwrite(os.path.join(save_img_dir, name.split('.')[0] + '_i{}j{}.png'.format(i, j)), img_s)
+                    lbl_s = lbl2[i*w: (i+1)*w, j*w: (j+1)*w]
+                    cv2.imwrite(os.path.join(save_lbl_dir, name.split('.')[0] + '_i{}j{}.png'.format(i, j)), lbl_s)
+
+
+
+def group_object_annotation_and_draw_bbox(dt, px_thresh=20, whr_thres=4, upscale=False):
     '''
     group annotation files, generate bbox for each object,
 
     and draw bbox for each ground truth files
     '''
     step = syn_args.tile_size * syn_args.resolution
-    folder_name = '{}_all_annos_step{}'.format(dt, step)
-    lbl_path = os.path.join(syn_args.syn_data_dir.format(dt), folder_name)
-    txt_folder_name = 'minr{}_linkr{}_px{}whr{}_{}_all_annos_txt_step{}'.format(syn_args.min_region, syn_args.link_r, px_thresh, whr_thres,
+    if upscale:
+        folder_name = 'upscale_{}_all_annos_step{}'.format(dt, step)
+        txt_folder_name = 'minr{}_linkr{}_px{}whr{}_upscale_{}_all_annos_txt_step{}'.format(syn_args.min_region, syn_args.link_r, px_thresh, whr_thres,
                                                                       dt, step)
+        bbox_folder_name = 'minr{}_linkr{}_px{}whr{}_upscale_{}_all_annos_with_bbox_step{}'.format(syn_args.min_region, syn_args.link_r,
+                                                                                       px_thresh, whr_thres, dt, step)
+    else:
+        folder_name = '{}_all_annos_step{}'.format(dt, step)
+        txt_folder_name = 'minr{}_linkr{}_px{}whr{}_{}_all_annos_txt_step{}'.format(syn_args.min_region, syn_args.link_r, px_thresh, whr_thres,
+                                                                      dt, step)
+        bbox_folder_name = 'minr{}_linkr{}_px{}whr{}_{}_all_annos_with_bbox_step{}'.format(syn_args.min_region, syn_args.link_r,
+                                                                                       px_thresh, whr_thres, dt, step)
+    lbl_path = os.path.join(syn_args.syn_data_dir.format(dt), folder_name)
+    
     save_txt_path = os.path.join(syn_args.syn_annos_dir, txt_folder_name)
     if not os.path.exists(save_txt_path):
         os.makedirs(save_txt_path)
@@ -79,11 +118,9 @@ def group_object_annotation_and_draw_bbox(dt, px_thresh=20, whr_thres=4):
         shutil.rmtree(save_txt_path)
         os.makedirs(save_txt_path)
 
-    gbc.get_object_bbox_after_group(lbl_path, save_txt_path, class_label=0, min_region=syn_args.min_region,
-                                    link_r=syn_args.link_r, px_thresh=px_thresh, whr_thres=whr_thres)
-    gt_files = np.sort(glob.glob(os.path.join(lbl_path, '*{}'.format(IMG_FORMAT))))
-    bbox_folder_name = 'minr{}_linkr{}_px{}whr{}_{}_all_annos_with_bbox_step{}'.format(syn_args.min_region, syn_args.link_r,
-                                                                                       px_thresh, whr_thres, dt, step)
+    gbc.get_object_bbox_after_group(lbl_path, save_txt_path, class_label=0, min_region=syn_args.min_region, link_r=syn_args.link_r, px_thresh=px_thresh, whr_thres=whr_thres)
+    gt_files = np.sort(glob.glob(os.path.join(lbl_path, '*.png')))
+    
     save_bbx_path = os.path.join(syn_args.syn_txt_dir, bbox_folder_name)
     if not os.path.exists(save_bbx_path):
         os.makedirs(save_bbx_path)
@@ -92,7 +129,7 @@ def group_object_annotation_and_draw_bbox(dt, px_thresh=20, whr_thres=4):
         os.makedirs(save_bbx_path)
     for g in gt_files:
         gt_name = g.split('/')[-1]
-        txt_name = gt_name.replace(IMG_FORMAT, TXT_FORMAT)
+        txt_name = gt_name.replace('.png', '.txt')
         txt_file = os.path.join(save_txt_path, txt_name)
         gbc.plot_img_with_bbx(g, txt_file, save_bbx_path)
 
@@ -101,7 +138,7 @@ def draw_bbx_on_rgb_images(dt, px_thresh=20, whr_thres=4):
     step = syn_args.tile_size * syn_args.resolution
     img_folder_name = '{}_all_images_step{}'.format(dt, step)
     img_path = os.path.join(syn_args.syn_data_dir.format(dt), img_folder_name)
-    img_files = np.sort(glob.glob(os.path.join(img_path, '*{}'.format(IMG_FORMAT))))
+    img_files = np.sort(glob.glob(os.path.join(img_path, '*.png')))
     img_names = [os.path.basename(f) for f in img_files]
 
     txt_folder_name = 'minr{}_linkr{}_px{}whr{}_{}_all_annos_txt_step{}'.format(syn_args.min_region, syn_args.link_r, px_thresh, whr_thres,
@@ -265,6 +302,17 @@ if __name__ == '__main__':
     # plot_rgb_histogram(syn_patch_dir, syn=True)
 
     '''
+    resize images and labels 
+    2x upsample
+    crop 
+    '''
+    # cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_50_model4_v20'
+#        cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_120_model4_v21'
+#    cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_uniform_50_model4_v19'
+#        display_types = ['color', 'mixed']
+#        resize_crop(cmt, display_types)
+
+    '''
     generate txt and bbox for syn_xveiw_background data
     bbox annotation meet certain conditions: px_thres, whr_thres
     '''
@@ -294,25 +342,37 @@ if __name__ == '__main__':
     # cmt = 'xbw_xcolor_xbkg_gauss_model4_v3'
     # cmt = 'xbw_xcolor_xbkg_gauss_model4_v4'
     # cmt = 'xbw_xcolor_xbkg_unif_mig21_model4_v7'
-#    cmt = 'xbw_xcolor_xbkg_unif_mig21_rndp_model4_v7'
-    # cmt = 'xbw_rndcolor_xbkg_unif_mig21_model4_v8'
-#    cmt = 'xbw_rndcolor_xbkg_unif_mig21_rndp_model4_v9'
-#    cmt = 'xbw_xcolor_xbkg_unif_mig21_rndp_shdw_model4_v10'
-#    cmt = 'xbw_rndcolor_xbkg_unif_mig21_rndp_shdw_model4_v11'
-#    cmt = 'xbw_xcolor_xbkg_unif_mig21_rndp_shdw_dense_model4_v12'
-#    cmt = 'xbw_xcolor_xbkg_unif_mig21_rndp_shdw_dense_angle_model4_v13'
-#    cmt = 'xbw_xcolor_xbkg_unif_mig21_rndp_shdw_dense_angle_fwc_model4_v14'
-#    cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_angle_fwc_scatter_gauss_dense_model4_v15'
-#    cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_angle_fwc_scatter_gauss_dense_model4_v16'
-#    cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_dense_model4_v17'
-#    cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_dense_model4_v17'
-#    cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_dense_solar_model4_v18'
-#    cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_uniform_50_model4_v19'
-#    cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_50_model4_v20'
-    cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_120_model4_v21'
-#    px_thres=15 #20 #30
-    px_thres = 50
+    #    cmt = 'xbw_xcolor_xbkg_unif_mig21_rndp_model4_v7'
+        # cmt = 'xbw_rndcolor_xbkg_unif_mig21_model4_v8'
+    #    cmt = 'xbw_rndcolor_xbkg_unif_mig21_rndp_model4_v9'
+    #    cmt = 'xbw_xcolor_xbkg_unif_mig21_rndp_shdw_model4_v10'
+    #    cmt = 'xbw_rndcolor_xbkg_unif_mig21_rndp_shdw_model4_v11'
+    #    cmt = 'xbw_xcolor_xbkg_unif_mig21_rndp_shdw_dense_model4_v12'
+    #    cmt = 'xbw_xcolor_xbkg_unif_mig21_rndp_shdw_dense_angle_model4_v13'
+    #    cmt = 'xbw_xcolor_xbkg_unif_mig21_rndp_shdw_dense_angle_fwc_model4_v14'
+    #    cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_angle_fwc_scatter_gauss_dense_model4_v15'
+    #    cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_angle_fwc_scatter_gauss_dense_model4_v16'
+    #    cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_dense_model4_v17'
+    #    cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_dense_model4_v17'
+    #    cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_dense_solar_model4_v18'
+    #    cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_uniform_50_model4_v19'
+    #    cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_50_model4_v20'
+#    cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_120_model4_v21'
+#    cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_uniform_50_rdegree_model4_v22'
+#    cmt = 'xbw_rndcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_model4_v23'
+#    cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_bias0_model4_v1'
+#    cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_100_bias0_model4_v2'
+#    cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias20_model4_v3'
+#    cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias40_model4_v4'
+#    cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias50_model4_v9'
+#    cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias60_model4_v8'
+#    cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias70_model4_v5'
+#    cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias110_model4_v6'
+#    cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_rnd_model4_v7'
+
+#    px_thres=15
 #    px_thres = 30
+#        px_thres = 50
     # cmt = 'sbw_xcolor_model0'
     # cmt = 'xbw_xrxc_spr_sml_models_gauss'
     # cmt = 'xbw_xrxc_spr_sml_models_gauss'
@@ -321,21 +381,43 @@ if __name__ == '__main__':
     # cmt = 'xbw_xcolor_xbkg_gauss_model1_v2'
     # cmt = 'sbw_xcolor_xbkg_unif_model1_v3'
     # cmt = 'xbsw_xcolor_xbkg_gauss_model1_v4'
-#    cmt = 'xbsw_xcolor_xbkg_unif_rndp_model1_v6'
-#    cmt = 'xbsw_rndcolor_xbkg_unif_rndp_model1_v7'
-#    cmt = 'xbsw_xwing_color_xbkg_unif_rndp_model1_v8'
-#    cmt = 'xbsw_xwing_color_xbkg_unif_rndp_shdw_model1_v9'
-#    px_thres=23
+    #    cmt = 'xbsw_xcolor_xbkg_unif_rndp_model1_v6'
+    #    cmt = 'xbsw_rndcolor_xbkg_unif_rndp_model1_v7'
+    #    cmt = 'xbsw_xwing_color_xbkg_unif_rndp_model1_v8'
+    #    cmt = 'xbsw_xwing_color_xbkg_unif_rndp_shdw_model1_v9'
+    #    px_thres=23
 
-#    cmt = 'xbw_xcolor_xbkg_unif_shdw_scatter_uniform_model5_v1'
-#    cmt = 'xbw_xcolor_xbkg_unif_shdw_rndp_model5_v2'
-#    px_thres = 23
+    #    cmt = 'xbw_xcolor_xbkg_unif_shdw_scatter_uniform_model5_v1'
+    #    cmt = 'xbw_xcolor_xbkg_unif_shdw_rndp_model5_v2'
+#    cmt = 'xbw_xcolor_xbkg_unif_shdw_scatter_gauss_40_bias0_model5_v1'
 
-    whr_thres=3
-    display_types = ['color', 'mixed']# 'color',
-    syn_args = get_args(cmt)
-    for dt in display_types:
+#    for color_pro in range(11):
+# #       if color_pro == 0:
+# #           cmt = 'xbw_xcolor_xbkg_unif_shdw_scatter_gauss_40_bias0_model5_v1'
+# #       else:
+# #           cmt = 'xbw_xcolor_xbkg_unif_shdw_scatter_gauss_40_color_bias{}_model5_v{}'.format(color_pro*25.5, color_pro+1)
+#        if color_pro == 0:
+#            cmt = 'xbsw_xwing_scatter_gauss_30_bias0_model1_v1'
+#        else:
+#            cmt = 'xbsw_xwing_scatter_gauss_30_color_bias{}_model1_v{}'.format(color_pro*25.5, color_pro+1)
+
+    for angle_pro in range(1, 11):
+        cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias{}_model4_v{}'.format(angle_pro*36, angle_pro+9)
+            
+        px_thres = 15
+#        px_thres = 23
+        whr_thres = 3
+        dt = 'color'
+        syn_args = get_args(cmt)
         group_object_annotation_and_draw_bbox(dt, px_thres, whr_thres)
+
+#    px_thres = 23
+#    whr_thres=3
+#    display_types = ['color']#, 'mixed']# 'color',
+#    syn_args = get_args(cmt)
+#    for dt in display_types:
+#        group_object_annotation_and_draw_bbox(dt, px_thres, whr_thres)
+##        group_object_annotation_and_draw_bbox(dt, px_thres, whr_thres, upscale=True)
 
     '''
     draw bbox on rgb images for syn_xveiw_background data
@@ -368,24 +450,35 @@ if __name__ == '__main__':
     # cmt = 'xbw_xcolor_xbkg_gauss_model4_v3'
     # cmt = 'xbw_xcolor_xbkg_gauss_model4_v4'
     # cmt = 'xbw_xcolor_xbkg_unif_mig21_model4_v7'
-#    cmt = 'xbw_xcolor_xbkg_unif_mig21_rndp_model4_v7'
-#    cmt = 'xbw_rndcolor_xbkg_unif_mig21_model4_v8'
-#    cmt = 'xbw_rndcolor_xbkg_unif_mig21_rndp_model4_v9'
-#    cmt = 'xbw_xcolor_xbkg_unif_mig21_rndp_shdw_model4_v10'
-#    cmt = 'xbw_rndcolor_xbkg_unif_mig21_rndp_shdw_model4_v11'
-#    cmt = 'xbw_xcolor_xbkg_unif_mig21_rndp_shdw_dense_model4_v12'
-#    cmt = 'xbw_xcolor_xbkg_unif_mig21_rndp_shdw_dense_angle_model4_v13'
-#    cmt = 'xbw_xcolor_xbkg_unif_mig21_rndp_shdw_dense_angle_fwc_model4_v14'
-#    cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_angle_fwc_scatter_gauss_dense_model4_v15'
-#    cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_angle_fwc_scatter_gauss_dense_model4_v16'
-#    cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_dense_model4_v17'
-#    cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_dense_solar_model4_v18'
-#    cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_uniform_50_model4_v19'
+    #    cmt = 'xbw_xcolor_xbkg_unif_mig21_rndp_model4_v7'
+    #    cmt = 'xbw_rndcolor_xbkg_unif_mig21_model4_v8'
+    #    cmt = 'xbw_rndcolor_xbkg_unif_mig21_rndp_model4_v9'
+    #    cmt = 'xbw_xcolor_xbkg_unif_mig21_rndp_shdw_model4_v10'
+    #    cmt = 'xbw_rndcolor_xbkg_unif_mig21_rndp_shdw_model4_v11'
+    #    cmt = 'xbw_xcolor_xbkg_unif_mig21_rndp_shdw_dense_model4_v12'
+    #    cmt = 'xbw_xcolor_xbkg_unif_mig21_rndp_shdw_dense_angle_model4_v13'
+    #    cmt = 'xbw_xcolor_xbkg_unif_mig21_rndp_shdw_dense_angle_fwc_model4_v14'
+    #    cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_angle_fwc_scatter_gauss_dense_model4_v15'
+    #    cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_angle_fwc_scatter_gauss_dense_model4_v16'
+    #    cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_dense_model4_v17'
+    #    cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_dense_solar_model4_v18'
+#        cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_uniform_50_model4_v19'
 #    cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_50_model4_v20'
-    cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_120_model4_v21'
+#    cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_120_model4_v21'
+#    cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_uniform_50_rdegree_model4_v22'
+#    cmt = 'xbw_rndcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_model4_v23'
+#    cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_bias0_model4_v1'
+#    cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_100_bias0_model4_v2'
+#    cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias20_model4_v3'
+#    cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias40_model4_v4'
+#    cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias50_model4_v9'
+#    cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias60_model4_v8'
+#    cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias70_model4_v5'
+#    cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias110_model4_v6'
+#    cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_rnd_model4_v7'
 #    px_thres = 15
-    px_thres = 50
-#    px_thres=30
+#    px_thres = 30
+#    px_thres=50
     # cmt = 'sbw_xcolor_model0'
     # cmt = 'sbw_xcolor_model1'
     # cmt = 'xbw_xrxc_spr_sml_models_gauss'
@@ -400,14 +493,40 @@ if __name__ == '__main__':
 #    px_thres=23 #20 #30
 #    cmt = 'xbw_xcolor_xbkg_unif_shdw_scatter_uniform_model5_v1'
 #    cmt = 'xbw_xcolor_xbkg_unif_shdw_rndp_model5_v2'
+#    cmt = 'xbw_xcolor_xbkg_unif_shdw_scatter_gauss_40_bias0_model5_v1'
+    
+#    for color_pro in range(11):
+##        if color_pro == 0:
+##            cmt = 'xbw_xcolor_xbkg_unif_shdw_scatter_gauss_40_bias0_model5_v1'
+##        else:
+##            cmt = 'xbw_xcolor_xbkg_unif_shdw_scatter_gauss_40_color_bias{}_model5_v{}'.format(color_pro*25.5, color_pro+1)
+#        if color_pro == 0:
+#            cmt = 'xbsw_xwing_scatter_gauss_30_bias0_model1_v1'
+#        else:
+#            cmt = 'xbsw_xwing_scatter_gauss_30_color_bias{}_model1_v{}'.format(color_pro*25.5, color_pro+1)
+#        px_thres = 23
+#        whr_thres = 3
+#        dt = 'color'
+#        syn_args = get_args(cmt)
+#        draw_bbx_on_rgb_images(dt, px_thres, whr_thres)
+
+    for angle_pro in range(1, 2):
+        cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias{}_model4_v{}'.format(angle_pro*36, angle_pro+9)
+ 
+        px_thres = 15
+#        px_thres = 23
+        whr_thres = 3
+        dt = 'color'
+        syn_args = get_args(cmt)
+        draw_bbx_on_rgb_images(dt, px_thres, whr_thres)
+
 
 #    px_thres = 23
-
-    whr_thres=3
-    display_types = ['color', 'mixed']
-    syn_args = get_args(cmt)
-    for dt in display_types:
-        draw_bbx_on_rgb_images(dt, px_thres, whr_thres)
+#    whr_thres=3
+#    display_types = ['color']# , 'mixed']
+#    syn_args = get_args(cmt)
+#    for dt in display_types:
+#        draw_bbx_on_rgb_images(dt, px_thres, whr_thres)
 
 
 
