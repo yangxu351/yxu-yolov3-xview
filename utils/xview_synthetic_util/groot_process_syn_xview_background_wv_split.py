@@ -362,7 +362,7 @@ def create_xview_base_data_for_onemodel_only(model_id, base_cmt='px23whr3_seed17
 def create_xview_base_data_for_onemodel_easy_hard(model_id, rc_id, eh_type='hard', base_cmt='px23whr3_seed17'):
     syn_args = get_syn_args()
     data_dir = os.path.join(syn_args.data_xview_dir.format(syn_args.class_num), base_cmt)
-    data_withmodel_txt = open(os.path.join(data_dir, 'xviewtest_{}_with_model_m{}_rc{}_{}_aug.data'.format(base_cmt, model_id, rc_id, eh_type)), 'w')
+    data_withmodel_txt = open(os.path.join(data_dir, 'xviewtest_{}_m{}_rc{}_{}_aug.data'.format(base_cmt, model_id, rc_id, eh_type)), 'w')
     data_withmodel_txt.write('classes=%s\n' % str(syn_args.class_num))
     data_withmodel_txt.write('test=./data_xview/{}_cls/{}/xviewtest_img_{}_m{}_rc{}_{}_aug.txt\n'.format(syn_args.class_num, base_cmt, base_cmt, model_id, rc_id, eh_type))
     data_withmodel_txt.write('test_label=./data_xview/{}_cls/{}/xviewtest_lbl_{}_m{}_rc{}_{}_aug.txt\n'.format(syn_args.class_num, base_cmt, base_cmt, model_id, rc_id, eh_type))

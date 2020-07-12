@@ -276,22 +276,29 @@ if __name__ == "__main__":
 #    comments = ['syn_xview_bkg_px50whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_120_model4_v21_color', 'syn_xview_bkg_px50whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_120_model4_v21_mixed']
 #    comments = ['syn_xview_bkg_px30whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_120_model4_v21_upscale_color', 'syn_xview_bkg_px30whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_120_model4_v21_upscale_mixed']
 #    comments = ['syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_model4_v23_color', 'syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_model4_v23_mixed']
+
+    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_bias0_model4_v1_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias_all_model4_v20_color']
 #    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias20_model4_v3_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_rnd_model4_v7_color']
-#    miss_model_id = 4
-#    rare_class = 1
+    miss_model_id = 4
+    rare_class = 1
 #    comments = ['syn_xview_bkg_px23whr3_xbsw_xcolor_xbkg_unif_rndp_model1_v6_color', 'syn_xview_bkg_px23whr3_xbsw_xcolor_xbkg_unif_rndp_model1_v6_mixed']
 #    comments = ['syn_xview_bkg_px23whr3_xbsw_rndcolor_xbkg_unif_rndp_model1_v7_color', 'syn_xview_bkg_px23whr3_xbsw_rndcolor_xbkg_unif_rndp_model1_v7_mixed']
 #    comments = ['syn_xview_bkg_px23whr3_xbsw_xwing_color_xbkg_unif_rndp_model1_v8_color', 'syn_xview_bkg_px23whr3_xbsw_xwing_color_xbkg_unif_rndp_model1_v8_mixed']
 #    comments = ['syn_xview_bkg_px23whr3_xbsw_xwing_color_xbkg_unif_rndp_shdw_model1_v9_color', 'syn_xview_bkg_px23whr3_xbsw_xwing_color_xbkg_unif_rndp_shdw_model1_v9_mixed']
+
+#    comments = ['syn_xview_bkg_px23whr3_xbsw_xwing_scatter_gauss_30_bias0_model1_v1_color']
+#    color_pro =10 
+#    comments = ['syn_xview_bkg_px23whr3_xbsw_xwing_scatter_gauss_30_color_bias{}_model1_v{}_color'.format(color_pro*25.5, color_pro+1)]
 #    miss_model_id = 1
 #    rare_class = 2
+
 #    comments = ['syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_scatter_uniform_model5_v1_color']
-    color_pro = 4 
-    comments = ['syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_scatter_gauss_40_color_bias{}_model5_v{}_color'.format(color_pro*25.5, color_pro+1)]
+#    comments = ['syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_scatter_gauss_40_bias0_model5_v1_color']
+#    color_pro = 10 
+#    comments = ['syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_scatter_gauss_40_color_bias{}_model5_v{}_color'.format(color_pro*25.5, color_pro+1)]
+#    miss_model_id = 5
+#    rare_class = 3
 
-
-    miss_model_id = 5
-    rare_class = 3
 ##    res_folder = 'test_on_xview_with_model_{}*_seed{}_miss'
 ##    res_folder = 'test_on_xview_with_model_{}_seed*_hard'
 ##    res_folder = 'test_on_xview_{}_m{}_rc{}_easy'
@@ -311,8 +318,11 @@ if __name__ == "__main__":
 #    prefix = 'results_syn_half_affine'
     base_pxwhrs = 'px23whr3_seed17'
 #    data_file = 'xviewtest_{}_with_model_m{}_miss.data'.format(base_pxwhrs, miss_model_id)
-    data_file = 'xviewtest_{}_m{}_rc{}_{}.data'
-    res_folder = 'test_on_xview_{}_m{}_rc{}_{}'
+#    data_file = 'xviewtest_{}_m{}_rc{}_{}.data'
+#    res_folder = 'test_on_xview_{}_m{}_rc{}_{}'
+
+    data_file = 'xviewtest_{}_m{}_rc{}_{}_aug.data'
+    res_folder = 'test_on_xview_{}_m{}_rc{}_{}_aug'
     
 #    data_file = 'xviewtest_{}_upscale_m{}_rc{}_{}.data'
 #    res_folder = 'test_on_xview_{}_upscale_m{}_rc{}_{}'

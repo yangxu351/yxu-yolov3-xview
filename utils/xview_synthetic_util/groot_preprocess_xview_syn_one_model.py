@@ -586,6 +586,36 @@ if __name__ == '__main__':
 #        lbl_file = os.path.join(lbl_dir, name.replace('.png', '.txt'))
 #        gbc.plot_img_with_bbx(f, lbl_file, save_dir)
 
+    '''
+    resize validation images and labels
+    crop
+    '''
+#    scale=2
+#    px_thres = 30
+#    pxwhrs='px23whr3_seed17'
+#    model_id=4
+#    rare_id=1
+#    type='hard'
+##    type='easy'
+#    val_resize_crop_by_easy_hard(scale, pxwhrs, model_id, rare_id, type, px_thres)
+#    create_upsample_test_dataset_of_m_rc(model_id, rare_id, type, seed, pxwhrs)
+
+    '''
+    check annotation
+     plot images with bbox
+    '''
+#    save_dir = os.path.join(args.cat_sample_dir, 'image_with_bbox/2315_{}_upscale/'.format(type))
+#    if not os.path.exists(save_dir):
+#        os.makedirs(save_dir)
+#    lbl_dir = args.annos_save_dir[:-1] + '_val_m4_rc1_{}_seed17_upscale/'.format(type)
+#    img_dir = args.images_save_dir[:-1] + '_{}_upscale/'.format(type)
+#    img_list = glob.glob(os.path.join(img_dir, '2315_359*.png'))
+#    for f in img_list:
+#        print('f ', f)
+#        name = os.path.basename(f)
+#        lbl_file = os.path.join(lbl_dir, name.replace('.png', '.txt'))
+#        gbc.plot_img_with_bbx(f, lbl_file, save_dir)
+
 
     '''
     flip and rotate images 
@@ -607,79 +637,56 @@ if __name__ == '__main__':
     '''
     flip and rotate coordinates of bbox 
     '''
-#    from utils.object_score_util import get_bbox_coords_from_annos_with_object_score as gbc
-#    lbl_dir = '/data/users/yang/data/xView_YOLO/labels/608/1_cls_xcycwh_px23whr3_val_m4_rc1_2315_259/'
-#    img_dir = '/data/users/yang/data/xView_YOLO/images/608_1cls_of_2315_359/'
-#    save_dir = '/data/users/yang/data/xView_YOLO/cat_samples/608/1_cls/image_with_bbox/2315_359_aug/'
-#    #
-##    angle = 90 #180#270# 180 90
-##    lbl_file = os.path.join(lbl_dir, '2315_359_rt{}.txt'.format(angle))
-##    flip = 'tb'# lr
+    from utils.object_score_util import get_bbox_coords_from_annos_with_object_score as gbc
+    lbl_dir = '/data/users/yang/data/xView_YOLO/labels/608/1_cls_xcycwh_px23whr3_val_m4_rc1_2315_259/'
+    img_dir = '/data/users/yang/data/xView_YOLO/images/608_1cls_of_2315_359/'
+    save_dir = '/data/users/yang/data/xView_YOLO/cat_samples/608/1_cls/image_with_bbox/2315_359_aug/'
+    if not os.path.exists(save_dir):
+        os.mkdir(save_dir)
+    #
+#    angle = 90 #180#270# 180 90
+#    angle = 180
+#    angle = 270
+#    lbl_file = os.path.join(lbl_dir, '2315_359_rt{}.txt'.format(angle))
+    flip = 'tb'# lr
 #    flip = 'lr'
-#    lbl_file = os.path.join(lbl_dir, '2315_359_{}.txt'.format(flip))
-#    df_lf = pd.read_csv(lbl_file, header=None, sep=' ')
-#    for i in range(df_lf.shape[0]):
-##        df_lf.loc[i, 1], df_lf.loc[i, 2] = get_rotated_point(df_lf.loc[i, 1], df_lf.loc[i, 2], angle)
-#        df_lf.loc[i, 1], df_lf.loc[i, 2] = get_flipped_point(df_lf.loc[i, 1], df_lf.loc[i, 2], flip)
-#    df_lf.to_csv(lbl_file, header=False, index=False, sep=' ')
-#    name = os.path.basename(lbl_file)
-#    print('name', name)
-#    img_name = name.replace('.txt', '.jpg')
-#    img_file = os.path.join(img_dir, img_name)
-#    gbc.plot_img_with_bbx(img_file, lbl_file, save_path=save_dir)
+    lbl_file = os.path.join(lbl_dir, '2315_359_{}.txt'.format(flip))
+    shutil.copy(os.path.join(lbl_dir, '2315_359.txt'), lbl_file)
+    df_lf = pd.read_csv(lbl_file, header=None, sep=' ')
+    for i in range(df_lf.shape[0]):
+#        df_lf.loc[i, 1], df_lf.loc[i, 2] = get_rotated_point(df_lf.loc[i, 1], df_lf.loc[i, 2], angle)
+        df_lf.loc[i, 1], df_lf.loc[i, 2] = get_flipped_point(df_lf.loc[i, 1], df_lf.loc[i, 2], flip)
+    df_lf.to_csv(lbl_file, header=False, index=False, sep=' ')
+    name = os.path.basename(lbl_file)
+    print('name', name)
+    img_name = name.replace('.txt', '.jpg')
+    img_file = os.path.join(img_dir, img_name)
+    gbc.plot_img_with_bbx(img_file, lbl_file, save_path=save_dir)
 
     '''
     add augmented images and labels into val file
     create corresponding *.data
     '''
-    eh_type = 'hard'
-#    eh_type = 'easy'
-    shutil.copy(os.path.join(args.data_save_dir, 'xviewtest_img_px23whr3_seed17_m4_rc1_{}.txt'.format(eh_type)),
-                os.path.join(args.data_save_dir, 'xviewtest_img_px23whr3_seed17_m4_rc1_{}_aug.txt'.format(eh_type)))
-    shutil.copy(os.path.join(args.data_save_dir, 'xviewtest_lbl_px23whr3_seed17_m4_rc1_{}.txt'.format(eh_type)),
-                os.path.join(args.data_save_dir, 'xviewtest_lbl_px23whr3_seed17_m4_rc1_{}_aug.txt'.format(eh_type)))
-    val_img_file = open(os.path.join(args.data_save_dir, 'xviewtest_img_px23whr3_seed17_m4_rc1_{}_aug.txt'.format(eh_type)), 'a')
-    val_lbl_file = open(os.path.join(args.data_save_dir, 'xviewtest_lbl_px23whr3_seed17_m4_rc1_{}_aug.txt'.format(eh_type)), 'a')
+#    eh_type = 'hard'
+##    eh_type = 'easy'
+#    shutil.copy(os.path.join(args.data_save_dir, 'xviewtest_img_px23whr3_seed17_m4_rc1_{}.txt'.format(eh_type)),
+#                os.path.join(args.data_save_dir, 'xviewtest_img_px23whr3_seed17_m4_rc1_{}_aug.txt'.format(eh_type)))
+#    shutil.copy(os.path.join(args.data_save_dir, 'xviewtest_lbl_px23whr3_seed17_m4_rc1_{}.txt'.format(eh_type)),
+#                os.path.join(args.data_save_dir, 'xviewtest_lbl_px23whr3_seed17_m4_rc1_{}_aug.txt'.format(eh_type)))
+#    val_img_file = open(os.path.join(args.data_save_dir, 'xviewtest_img_px23whr3_seed17_m4_rc1_{}_aug.txt'.format(eh_type)), 'a')
+#    val_lbl_file = open(os.path.join(args.data_save_dir, 'xviewtest_lbl_px23whr3_seed17_m4_rc1_{}_aug.txt'.format(eh_type)), 'a')
+#
+#    img_dir = args.images_save_dir[:-1] + '_of_2315_359/'
+#    lbl_dir = args.txt_save_dir[:-1] + '_xcycwh_px23whr3_val_m4_rc1_2315_259/'
+#    print('img_dir', img_dir)
+#    img_files = glob.glob(os.path.join(img_dir, '2315_359_*.jpg'))
+#    for f in img_files:
+#        name = os.path.basename(f)
+#        val_img_file.write('%s\n' % f)
+#        val_lbl_file.write('%s\n' % os.path.join(lbl_dir, name.replace('.jpg', '.txt')))
+#    val_img_file.close()
+#    val_lbl_file.close()
+#
+#    psx.create_xview_base_data_for_onemodel_easy_hard(model_id=4, rc_id=1, eh_type=eh_type, base_cmt='px23whr3_seed17')
 
-    img_dir = args.images_save_dir[:-1] + '_of_2315_359/'
-    lbl_dir = args.txt_save_dir[:-1] + '_xcycwh_px23whr3_val_m4_rc1_2315_259/'
-    print('img_dir', img_dir)
-    img_files = glob.glob(os.path.join(img_dir, '2315_359_*.jpg'))
-    for f in img_files:
-        name = os.path.basename(f)
-        val_img_file.write('%s\n' % f)
-        val_lbl_file.write('%s\n' % os.path.join(lbl_dir, name.replace('.jpg', '.txt')))
-    val_img_file.close()
-    val_lbl_file.close()
-
-    psx.create_xview_base_data_for_onemodel_easy_hard(model_id=4, rc_id=1, eh_type=eh_type, base_cmt='px23whr3_seed17')
-
-    '''
-    resize validation images and labels
-    crop
-    '''
-    scale=2
-    px_thres = 30
-    pxwhrs='px23whr3_seed17'
-    model_id=4
-    rare_id=1
-    type='hard'
-#    type='easy'
-    val_resize_crop_by_easy_hard(scale, pxwhrs, model_id, rare_id, type, px_thres)
-    create_upsample_test_dataset_of_m_rc(model_id, rare_id, type, seed, pxwhrs)
-    '''
-    check annotation
-     plot images with bbox
-    '''
-    save_dir = os.path.join(args.cat_sample_dir, 'image_with_bbox/2315_{}_upscale/'.format(type))
-    if not os.path.exists(save_dir):
-        os.makedirs(save_dir)
-    lbl_dir = args.annos_save_dir[:-1] + '_val_m4_rc1_{}_seed17_upscale/'.format(type)
-    img_dir = args.images_save_dir[:-1] + '_{}_upscale/'.format(type)
-    img_list = glob.glob(os.path.join(img_dir, '2315_359*.png'))
-    for f in img_list:
-        print('f ', f)
-        name = os.path.basename(f)
-        lbl_file = os.path.join(lbl_dir, name.replace('.png', '.txt'))
-        gbc.plot_img_with_bbx(f, lbl_file, save_dir)
-
+    
