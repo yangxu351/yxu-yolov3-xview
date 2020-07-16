@@ -191,6 +191,29 @@ def create_syn_data(comment='wnd', pxs='px10_seed17'):
     data_txt.close()
 
 
+def sep_tif_bands():
+    import rasterio
+    from rasterio.plot import show
+    img_dir = '/media/lab/Yang/data/uspp_naip/'
+    save_dir = '/media/lab/Yang/data/uspp_naip_rgb/'
+    if not os.path.exists(save_dir):
+        os.mkdir(save_dir)
+    file_list = glob.glob(os.path.join(img_dir, '*.tif'))
+    for f in file_list[:1]:
+        #to display RGB
+        dataset = rasterio.open(f)
+        # show(dataset.read([1,2,3]))
+        name = os.path.basename(f)
+        new_dataset = rasterio.open(os.path.join(save_dir, name), 'w', driver='GTiff',
+                                    height=dataset.height, width=dataset.width, count=3,
+                                    dtype=dataset.dtypes[0], transform=dataset.affine
+                                    )
+        new_dataset.write(dataset.read([1,2,3]))
+        new_dataset.close()
+        #to display just the red band:
+        # show(dataset.read(1))
+
+
 def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--syn_data_dir", type=str,
@@ -262,15 +285,19 @@ if __name__ == "__main__":
     '''
     split train val
     '''
-    split_syn_wnd_trn_val(comment='wnd', seed=17, pxs='px10_seed17')
-
+    # split_syn_wnd_trn_val(comment='wnd', seed=17, pxs='px10_seed17')
+    #
     '''
     create *.data
     '''
-    comment = 'wnd'
-    create_syn_data(comment, seed=17)
+    # comment = 'wnd'
+    # create_syn_data(comment, seed=17)
 
 
+    '''
+    process bkg tifs
+    '''
+    sep_tif_bands()
 
 
 
