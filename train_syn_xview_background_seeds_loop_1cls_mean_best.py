@@ -214,7 +214,7 @@ def train(opt):
                                 hyp=hyp,
                                 rect=True,
                                 cache_labels=True,
-                                cache_images=opt.cache_images, with_modelid=False if opt.model_id < 0 else True),
+                                cache_images=opt.cache_images, with_modelid=False),
             batch_size=batch_size * 2,
             num_workers=nw,
             pin_memory=True,
@@ -402,7 +402,7 @@ def train(opt):
             # Save backup every 10 epochs (optional)
             #fixme
             # if (epoch > 0 and epoch % 10 == 0):
-            if (epoch > 0 and epoch % 50 == 0) or (epoch > epochs*0.8 and epoch%40==0):
+            if (epoch > 0 and epoch % 100 == 0) :
                 torch.save(chkpt, opt.weights_dir + 'backup%g.pt' % epoch)
 
             # Delete checkpoint
@@ -577,7 +577,12 @@ if __name__ == '__main__':
     # hyp_cmt = 'hgiou1_mean_best'
     # hyp_cmt = 'hgiou1_2gpus'
     # hyp_cmt = 'hgiou1_1gpu_nohsv'
-
+# "syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_scatter_gauss_40_bias0_model5_v1_color",
+#     "syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_scatter_gauss_40_color_bias25.5_model5_v2_color",
+#     "syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_scatter_gauss_40_color_bias51.0_model5_v3_color",
+#     "syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_scatter_gauss_40_color_bias76.5_model5_v4_color",
+#     "syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_scatter_gauss_40_color_bias102.0_model5_v5_color",
+#     "syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_scatter_gauss_40_color_bias127.5_model5_v6_color", -----need resume
     opt = get_opt()
     Configure_file = opt.cfg_dict
     cfg_dict = json.load(open(Configure_file))

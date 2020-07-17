@@ -881,7 +881,7 @@ def plot_val_image_with_gt_bbx_by_image_name_from_patches(image_name=None, typst
         df_val_gt = pd.read_csv(args.data_save_dir + 'xview{}_lbl{}.txt'.format(typstr, comments), header=None)
     val_img_list = df_val_img[0].tolist()
     # img_size = 608
-
+    print('val_img_list', len(val_img_list))
     val_img_names = [os.path.basename(f) for f in val_img_list]
     for ix, image_name in enumerate(val_img_names):
         if not pps.is_non_zero_file(df_val_gt.iloc[ix, 0]):
@@ -1127,45 +1127,6 @@ def remove_duplicate_gt_bbx(cat_id, syn = False):
                                     fontScale=0.5, thickness=1, lineType=cv2.LINE_AA, color=[0, 255, 255])
                     cv2.imwrite(save_dir + 'cat_{}_'.format(cat_id) + dn.replace('.json', '.jpg'), img)
 
-
-# def discard_bad_deviation_bbx_of_images():
-#     false_bx_files = pd.read_csv('/media/lab/Yang/data/xView/airplane_to_be_reomved_false_bbox.txt', header=None)
-#     deviation_files = pd.read_csv('/media/lab/Yang/data/xView/airplane_to_be_adjust_jpg_bbox.txt', header=None)
-#     missed_files = pd.read_csv('/media/lab/Yang/data/xView/airplane_to_add_missed_bbox.txt', header=None)
-#     src_img_bbx_path = args.cat_sample_dir + 'image_with_bbox/'
-#     des_img_bbx_path = args.cat_sample_dir + 'image_with_bbox/discarded/'
-#     if not os.path.exists(des_img_bbx_path):
-#         os.mkdir(des_img_bbx_path)
-#
-#     des_dir = args.images_save_dir[:-1] + '_discarded/'
-#     if not os.path.exists(des_dir):
-#         os.mkdir(des_dir)
-#     images_reduced_save_dir = args.images_save_dir[:-1] + '_reduced/'
-#     if not os.path.join(images_reduced_save_dir):
-#         os.mkdir(images_reduced_save_dir)
-#     shutil.copy(args.images_save_dir, images_reduced_save_dir)
-#
-#     for f in false_bx_files.loc[:, 0]:
-#         img_file = os.path.join(images_reduced_save_dir, f)
-#         if os.path.exists(img_file):
-#             shutil.move(img_file, os.path.join(des_dir, f))
-#         img_bbx_file = os.path.join(src_img_bbx_path, f)
-#         if os.path.exists(img_bbx_file):
-#             shutil.move(img_bbx_file, os.path.join(des_img_bbx_path, f))
-#
-#     for f in deviation_files.loc[:, 0]:
-#         img_file = os.path.join(images_reduced_save_dir, f)
-#         if os.path.exists(img_file):
-#             shutil.move(img_file, os.path.join(des_dir, f))
-#         img_bbx_file = os.path.join(src_img_bbx_path, f)
-#         if os.path.exists(img_bbx_file):
-#             shutil.move(img_bbx_file, os.path.join(des_img_bbx_path, f))
-#
-#     for f in missed_files.loc[:, 0]:
-#         # only move the missed_bbox_image to the discard folder
-#         img_bbx_file = os.path.join(src_img_bbx_path, f)
-#         if os.path.exists(img_bbx_file):
-#             shutil.move(img_bbx_file, os.path.join(des_img_bbx_path, f))
 
 def cats_split_crop_bbx_from_patches(typestr='val', whr_thres=3, N=200):
     img_files = pd.read_csv(os.path.join(args.data_save_dir, 'xview{}_img.txt'.format(typestr)), header=None)
@@ -2400,6 +2361,7 @@ if __name__ == "__main__":
     # if not os.path.exists(save_path):
     #     os.mkdir(save_path)
     # img_list = np.sort(glob.glob(os.path.join(args.images_save_dir, '*.jpg')))
+    # print('img_list len', len(img_list))
     # for img in img_list:
     #     lbl_name = os.path.basename(img).replace('.jpg', '.txt')
     #     lbl_file = os.path.join(args.annos_save_dir, lbl_name)
@@ -2564,13 +2526,13 @@ if __name__ == "__main__":
     # typestr = 'train'
     # plot_val_image_with_gt_bbx_by_image_name_from_patches(image_name, typestr)
 
-    # typestr = 'val'
-    # # typestr = 'train'
-    # comments = '_px23whr3_seed17'
-    # px_thres = 23
-    # whr_thres = 3
-    # args = get_args(px_thres, whr_thres)
-    # plot_val_image_with_gt_bbx_by_image_name_from_patches(None, typestr, comments)
+    typestr = 'val'
+    typestr = 'train'
+    comments = '_px23whr3_seed17'
+    px_thres = 23
+    whr_thres = 3
+    args = get_args(px_thres, whr_thres)
+    plot_val_image_with_gt_bbx_by_image_name_from_patches(None, typestr, comments)
 
     '''
     copy_lbl_to_lbl_model

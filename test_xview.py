@@ -91,10 +91,10 @@ def test(cfg,
     data = parse_data_cfg(data)
     nc = int(data['classes'])  # number of classes
     # fixme
-    # path = data['valid']  # path to test images
-    # lbl_path = data['valid_label']
-    path = data['test']  # path to test images
-    lbl_path = data['test_label']
+    path = data['valid']  # path to test images
+    lbl_path = data['valid_label']
+    # path = data['test']  # path to test images
+    # lbl_path = data['test_label']
     # path = data['valid_rare']  # path to test images
     # lbl_path = data['valid_rare_label']
     names = load_classes(data['names'])  # class names
@@ -150,11 +150,11 @@ def test(cfg,
             output = non_max_suppression(inf_out, conf_thres=conf_thres, iou_thres=nms_iou_thres)
             # print('output', output)
         # Statistics per image
-        print('opt.model_id', opt.model_id)
+        # print('opt.model_id', opt.model_id)
         for si, pred in enumerate(output):
             # print('si', si, targets[si])
             labels = targets[targets[:, 0] == si, 1:]
-            print('labels', labels.shape)
+            # print('labels', labels.shape)
             # print('labels', labels)
             #fixme --yang.xu
             # if opt.model_id is not None:
@@ -173,7 +173,7 @@ def test(cfg,
             tcls = labels[:, 0].tolist() if nl else []  # target class
             #fixme --yang.xu
             # tcls = labels[:, 0].tolist() if nl else []  # target class
-            print('tcls', tcls)
+            # print('tcls', tcls)
 
             seen += 1
 
@@ -233,7 +233,7 @@ def test(cfg,
                 for cls in torch.unique(tcls_tensor):
                     ti = (cls == tcls_tensor).nonzero().view(-1)  # prediction indices
                     pi = (cls == pred[:, 5]).nonzero().view(-1)  # target indices
-                    print('ti', ti, 'pi ', pi)
+                    # print('ti', ti, 'pi ', pi)
 
                     # Search for detections
                     if len(pi):

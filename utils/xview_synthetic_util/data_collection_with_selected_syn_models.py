@@ -297,7 +297,7 @@ def change_end_model_id(px_thres=23, whr_thres=3, end_mid=6):
         df_txt.to_csv(f, sep=' ', header=False, index=False)
 
 
-def backup_val_rgb_bbx_indices_lbl(cmt='', typestr='', px_thres=None, whr_thres=None):
+def backup_val_rgb_bbx_indices_lbl(cmt='', typestr='val', px_thres=None, whr_thres=None):
     bbox_folder_name = '{}_images_with_bbox_with_indices'.format(cmt)
     src_bbx_path = os.path.join(args.cat_sample_dir,'image_with_bbox_indices', bbox_folder_name)
 
@@ -308,12 +308,14 @@ def backup_val_rgb_bbx_indices_lbl(cmt='', typestr='', px_thres=None, whr_thres=
         os.makedirs(dst_bbx_path)
 
     val_lbl_file = os.path.join(args.data_save_dir, cmt, 'xview{}_lbl_{}.txt'.format(typestr, cmt))
+    print('val_lbl_file', val_lbl_file)
     save_lbl_path = os.path.join(args.txt_save_dir, 'lbl_with_model_id', '{}_{}_model'.format(cmt, typestr))
     print(os.path.exists(save_lbl_path), save_lbl_path)
     if not os.path.exists(save_lbl_path):
         os.makedirs(save_lbl_path)
 
     val_lbl = pd.read_csv(val_lbl_file, header=None)
+    print('val_lbl', val_lbl.shape[0])
     for vl in val_lbl.loc[:, 0]:
         shutil.copyfile(vl, os.path.join(save_lbl_path, os.path.basename(vl)))
         if pps.is_non_zero_file(vl):
@@ -353,8 +355,9 @@ if __name__ == '__main__':
     # seed = 17
     # args = pwv.get_args(px_thres, whr_thres)
     # cmt = 'px{}whr{}_seed{}'.format(px_thres, whr_thres, seed)
-    # # typestr = 'val'
-    # typestr = 'train'
+    # typestr = 'val'
+    # # typestr = 'train'
+    # pps.draw_bbx_on_rgb_images_with_indices(syn=False, pxwhrs=cmt, px_thres=px_thres, whr_thres=whr_thres)
     # backup_val_rgb_bbx_indices_lbl(cmt, typestr, px_thres, whr_thres)
 
     '''
@@ -366,8 +369,8 @@ if __name__ == '__main__':
     # seed = 17
     # args = pwv.get_args(px_thres, whr_thres)
     # cmt = 'px{}whr{}_seed{}'.format(px_thres, whr_thres, seed)
-    # # typestr = 'val'
-    # typestr = 'train'
+    # typestr = 'val'
+    # # typestr = 'train'
     # bakcup_all_bbox_with_model_id(cmt, typestr, px_thres, whr_thres)
 
     '''

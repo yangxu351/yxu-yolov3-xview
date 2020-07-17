@@ -624,7 +624,8 @@ if __name__ == '__main__':
             suffix = ''
 
         opt.name = prefix + suffix
-
+        #fixme
+        opt.resume = True
 
         opt.base_dir = opt.base_dir.format(opt.class_num, pxwhrsd.format(opt.seed))
         time_marker = time.strftime('%Y-%m-%d_%H.%M', time.localtime())
@@ -645,7 +646,9 @@ if __name__ == '__main__':
             hyp_cmt_name = hyp_cmt + '_val_xview'
             opt.data = 'data_xview/{}_{}_cls/{}_seed{}/{}_seed{}_xview_val.data'.format(cmt, opt.class_num, cmt, opt.seed, cmt, opt.seed)
 
-        time_marker = time.strftime('%Y-%m-%d_%H.%M', time.localtime())
+        # time_marker = time.strftime('%Y-%m-%d_%H.%M', time.localtime())
+        # time_marker = '2020-07-16_01.48'
+        time_marker = '2020-07-15_21.33'
         opt.weights_dir = 'weights/{}_cls/{}_seed{}/{}/'.format(opt.class_num, cmt, opt.seed, '{}_{}_seed{}'.format(time_marker, hyp_cmt_name, opt.seed))
         opt.writer_dir = 'writer_output/{}_cls/{}_seed{}/{}/'.format(opt.class_num, cmt, opt.seed, '{}_{}_seed{}'.format(time_marker, hyp_cmt_name, opt.seed))
         opt.result_dir = 'result_output/{}_cls/{}_seed{}/{}/'.format(opt.class_num, cmt, opt.seed, '{}_{}_seed{}'.format(time_marker, hyp_cmt_name, opt.seed))

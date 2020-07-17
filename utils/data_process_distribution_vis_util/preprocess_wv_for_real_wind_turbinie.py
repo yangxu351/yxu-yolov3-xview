@@ -191,15 +191,14 @@ def create_syn_data(comment='wnd', pxs='px10_seed17'):
     data_txt.close()
 
 
-def sep_tif_bands():
+def sep_tif_bands(img_dir, save_dir):
     import rasterio
     from rasterio.plot import show
-    img_dir = '/media/lab/Yang/data/uspp_naip/'
-    save_dir = '/media/lab/Yang/data/uspp_naip_rgb/'
+
     if not os.path.exists(save_dir):
         os.mkdir(save_dir)
     file_list = glob.glob(os.path.join(img_dir, '*.tif'))
-    for f in file_list[:1]:
+    for f in file_list:
         #to display RGB
         dataset = rasterio.open(f)
         # show(dataset.read([1,2,3]))
@@ -244,10 +243,10 @@ def get_args():
 
 
     args = parser.parse_args()
-    if not os.path.exists(args.syn_annos_dir):
-        os.makedirs(args.syn_annos_dir)
-    if not os.path.exists(args.syn_txt_dir):
-        os.makedirs(args.syn_txt_dir)
+    # if not os.path.exists(args.syn_annos_dir):
+    #     os.makedirs(args.syn_annos_dir)
+    # if not os.path.exists(args.syn_txt_dir):
+    #     os.makedirs(args.syn_txt_dir)
 
     return args
 
@@ -258,10 +257,17 @@ if __name__ == "__main__":
     syn_args = get_args()
 
     '''
-    crop windturbin images
+    process bkg tifs
+    '''
+    # img_dir = '/media/lab/Yang/data/uspp_naip/'
+    # save_dir = '/media/lab/Yang/data/uspp_naip_rgb/'
+    # sep_tif_bands(img_dir, save_dir)
+
+    '''
+    crop windturbine images
     recreate corresponging labels
     '''
-    resize_crop_windturbine(px_thres=10)
+    # resize_crop_windturbine(px_thres=10)
 
     '''
     check new lables
@@ -294,10 +300,7 @@ if __name__ == "__main__":
     # create_syn_data(comment, seed=17)
 
 
-    '''
-    process bkg tifs
-    '''
-    sep_tif_bands()
+
 
 
 

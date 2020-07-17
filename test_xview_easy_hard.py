@@ -545,7 +545,43 @@ if __name__ == '__main__':
     # comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v3_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v3_mixed']
     # comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v4_color']
     # comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v4_mixed']
-    comments = ['syn_xview_bkg_px15whr3_sbw_xcolor_model4_v2_mixed']
+    # comments = ['syn_xview_bkg_px15whr3_sbw_xcolor_model4_v2_mixed']
+#    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_model4_v7_color','syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_model4_v7_mixed']
+#    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_rndp_model4_v7_color','syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_rndp_model4_v7_mixed']
+#    comments = ['syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_unif_mig21_model4_v8_color','syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_unif_mig21_model4_v8_mixed']
+#    comments = ['syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_unif_mig21_rndp_model4_v9_color','syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_unif_mig21_rndp_model4_v9_mixed']
+#    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_rndp_shdw_model4_v10_color','syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_rndp_shdw_model4_v10_mixed']
+#    comments = ['syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_unif_mig21_rndp_shdw_model4_v11_color','syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_unif_mig21_rndp_shdw_model4_v11_mixed']
+#    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_rndp_shdw_dense_model4_v12_color','syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_rndp_shdw_dense_model4_v12_mixed']
+#    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_rndp_shdw_dense_angle_model4_v13_color','syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_rndp_shdw_dense_angle_model4_v13_mixed']
+#    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_rndp_shdw_dense_angle_fwc_model4_v14_color','syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_rndp_shdw_dense_angle_fwc_model4_v14_mixed']
+#    comments = ['syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_mig21_rndp_shdw_dense_angle_fwc_model4_v14_color','syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_mig21_rndp_shdw_dense_angle_fwc_model4_v14_mixed']
+#    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_angle_fwc_scatter_gauss_dense_model4_v15_color','syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_angle_fwc_scatter_gauss_dense_model4_v15_mixed']
+#    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_angle_fwc_scatter_gauss_dense_model4_v16_color','syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_angle_fwc_scatter_gauss_dense_model4_v16_mixed']
+#    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_dense_model4_v17_color','syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_dense_model4_v17_mixed']
+#    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_dense_solar_model4_v18_color','syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_dense_solar_model4_v18_mixed']
+#    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_uniform_50_model4_v19_color','syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_uniform_50_model4_v19_mixed']
+#    comments = ['syn_xview_bkg_px50whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_uniform_50_model4_v19_color','syn_xview_bkg_px50whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_uniform_50_model4_v19_mixed']
+#    comments = ['syn_xview_bkg_px50whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_120_model4_v21_color','syn_xview_bkg_px50whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_120_model4_v21_mixed']
+#    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_120_model4_v21_color','syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_120_model4_v21_mixed']
+#    comments = ['syn_xview_bkg_px30whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_120_model4_v21_upscale_color','syn_xview_bkg_px30whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_120_model4_v21_upscale_mixed']
+#    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_uniform_50_rdegree_model4_v22_color','syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_uniform_50_rdegree_model4_v22_mixed']
+#    comments = ['syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_model4_v23_color','syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_model4_v23_mixed']
+#    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_bias0_model4_v1_color','syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_bias0_model4_v1_mixed']
+#    comments = ['syn_xview_bkg_px30whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_bias0_model4_v1_color','syn_xview_bkg_px30whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_bias0_model4_v1_mixed'
+    comments = ['syn_xview_bkg_px30whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_bias0_model4_v1_color']
+#    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_100_bias0_model4_v2_color']
+#    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias20_model4_v3_color']
+#    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias40_model4_v4_color']
+#    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias50_model4_v5_color']
+#    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias60_model4_v6_color']
+#    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias70_model4_v7_color']
+#    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias110_model4_v8_color']
+#    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_rnd_model4_v9_color']
+
+#    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_bias0_model4_v1_color']
+
+#    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias_all_model4_v20_color']
     model_id = 4
     # comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v4_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v4_mixed']
     # comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_model4_v6_color']
@@ -555,8 +591,15 @@ if __name__ == '__main__':
     # comments = ['syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_gauss_model1_v2_color', 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_gauss_model1_v2_mixed']
     # comments = ['syn_xview_bkg_px23whr3_sbw_xcolor_xbkg_unif_model1_v3_color', 'syn_xview_bkg_px23whr3_sbw_xcolor_xbkg_unif_model1_v3_mixed']
     # comments = ['syn_xview_bkg_px23whr3_xbsw_xcolor_xbkg_gauss_model1_v4_color', 'syn_xview_bkg_px23whr3_xbsw_xcolor_xbkg_gauss_model1_v4_mixed']
+#    comments = ['syn_xview_bkg_px23whr3_xbsw_xcolor_xbkg_unif_rndp_model1_v6_color', 'syn_xview_bkg_px23whr3_xbsw_xcolor_xbkg_unif_rndp_model1_v6_mixed']
+#    comments = ['syn_xview_bkg_px23whr3_xbsw_xwing_color_xbkg_unif_rndp_model1_v8_color', 'syn_xview_bkg_px23whr3_xbsw_xwing_color_xbkg_unif_rndp_model1_v8_mixed']
+#    comments = ['syn_xview_bkg_px23whr3_xbsw_xwing_color_xbkg_unif_rndp_shdw_model1_v9_color', 'syn_xview_bkg_px23whr3_xbsw_xwing_color_xbkg_unif_rndp_shdw_model1_v9_mixed']
+#    model_id = 1
+#    comments = ['syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_scatter_uniform_model5_v1_color','syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_scatter_uniform_model5_v1_mixed']
+#    comments = ['syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_rndp_model5_v2_color','syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_rndp_model5_v2_mixed']
+#    model_id = 5
     base_cmt = 'px23whr3_seed{}'
-    hyp_cmt = 'hgiou1_1gpu'
+    # hyp_cmt = 'hgiou1_1gpu'
 
     # hyp_cmt = 'hgiou1_1gpu_obj29.5'
     # hyp_cmt = 'hgiou1_1gpu_xval'
@@ -564,20 +607,43 @@ if __name__ == '__main__':
     # hyp_cmt = 'hgiou1_obj3.5_val_labeled'
     # hyp_cmt = 'hgiou1_1gpu_val_labeled_miss'
     # hyp_cmt = 'hgiou1_1gpu_val_labeled'
-    # hyp_cmt = 'hgiou1_1gpu_val_syn'
+#    hyp_cmt = 'hgiou1_1gpu_trans_val_syn'
+#    prefix = 'syn_trans'
+
+    hyp_cmt = 'hgiou1_1gpu_val_syn'
+    prefix = 'syn'
+#    prefix = 'syn_px30'
+
+#    hyp_cmt = 'hgiou1_1gpu_anchor_val_syn'
+#    prefix = 'syn_anchor'
+
+#    hyp_cmt = 'hyp_tuned_val_syn'
+#    prefix = 'syn_tuned'
+
+#    hyp_cmt = 'hgiou1_1gpu_noaffine_val_syn'
+#    prefix = 'syn_noaffine'
+
+#    hyp_cmt = 'hgiou1_half_affine_val_syn'
+#    prefix = 'syn_half_affine'
+
+#    hyp_cmt = 'hgiou1_1gpu_noaug_val_syn'
+#    prefix = 'syn_noaug'
+
+#    hyp_cmt = 'hgiou1_obj39.5_val_syn'
+#    prefix = 'syn_obj39.5'
     # hyp_cmt = 'hgiou1_1gpu_val_xview'
     # hyp_cmt = 'hgiou1_obj15.5_val_xview'
     # hyp_cmt = 'hgiou0.7_1gpu'
 
-    prefix = 'syn'
     px_thres = 23
     whr_thres = 3 # 4
-    seeds = [17]
-    for sd in seeds:
+    sd = 17
+    eh_types = ['hard', 'easy']
+    for typ in eh_types:
         for cmt in comments:
             base_cmt = base_cmt.format(sd)
             opt = get_opt(comments=cmt)
-            opt.device = '1'
+            opt.device = '0'
 
             cinx = cmt.find('model') # first letter index
             endstr = cmt[cinx:]
@@ -585,45 +651,48 @@ if __name__ == '__main__':
             fstr = endstr[rcinx:] # '_' is included
             sstr = endstr[:rcinx]
             suffix = fstr + '_' + sstr
+            if cinx < 0:
+                suffix = ''
             opt.name = prefix + suffix
 
             ''' for specified model id '''
-            opt.batch_size = 2
+            opt.batch_size = 8
             sidx = cmt.split('model')[-1][0]
             opt.model_id = int(sidx)
+            print('opt.model_id', opt.model_id)
             opt.conf_thres = 0.01
+            tif_name = 'xview'
             ############# 2 images test set
-            # opt.type = 'easy'
-            # opt.rare_class = 1
-            # opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_with_model_{}_seed{}_miss'.format(hyp_cmt, sd))
-            # opt.data = 'data_xview/{}_cls/{}/xviewtest_{}_with_model_m{}_miss.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id)
-            ############# all m* labeled validation images make up the test set
-            # opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_with_model_{}_seed{}_only'.format(hyp_cmt, sd))
-            # opt.data = 'data_xview/{}_cls/{}/xviewtest_{}_with_model_m{}_only.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id)
-            ############# all m* labeled validation images make up the test set
-            # opt.batch_size = 8
-            # opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_with_model_{}_labeled_seed{}'.format(hyp_cmt, sd))
-            # opt.data = 'data_xview/{}_cls/{}/xviewtest_{}_with_model_m{}_labeled.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id)
-            ############# all m* labeled validation images with target and neutral labels
-            # opt.batch_size = 8
-            # opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_with_model_{}_tgt_neu_seed{}'.format(hyp_cmt, sd))
-            # opt.data = 'data_xview/{}_cls/{}/xviewtest_{}_with_model_m{}_tgt_neu.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id)
-            ############# all m* labeled validation images with target and neutral labels
-            # opt.batch_size = 8
-            # opt.rare_class = 1
-            # # opt.type = 'easy'
-            # opt.type = 'hard'
-            # opt.conf_thres = 0.01
-            # opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_with_model_{}_seed{}_{}'.format(hyp_cmt, sd, opt.type))
-            # opt.data = 'data_xview/{}_cls/{}/xviewtest_{}_m{}_rc{}_{}.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id, opt.rare_class, opt.type)
-
-            ############# all m* labeled validation images make up the test set
-            opt.batch_size = 8
+#            opt.type = 'easy'
+#            opt.type = 'hard'
+            opt.type = typ
             opt.rare_class = 1
-            opt.type = 'easy'
-            # opt.type = 'hard'
-            opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_with_model_{}_m{}_rc{}_2315'.format(hyp_cmt, sd, opt.model_id, opt.rare_class))
-            opt.data = 'data_xview/{}_cls/{}/xviewtest_{}_m{}_rc{}_2315.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id, opt.rare_class)
+#            opt.rare_class = 2
+#            opt.rare_class = 3
+#            opt.name += '_{}'.format(opt.type)
+#            opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_{}_upscale_m{}_rc{}_{}'.format(hyp_cmt, opt.model_id, opt.rare_class, opt.type))
+#            opt.data = 'data_xview/{}_cls/{}/xviewtest_{}_upscale_m{}_rc{}_{}.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id, opt.rare_class, opt.type)
+
+            opt.name += '_{}'.format(opt.type)
+            opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_{}_m{}_rc{}_{}'.format(hyp_cmt, opt.model_id, opt.rare_class, opt.type))
+            opt.data = 'data_xview/{}_cls/{}/xviewtest_{}_m{}_rc{}_{}.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id, opt.rare_class, opt.type)
+
+            # opt.name += '_{}_aug'.format(opt.type)
+            # opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_{}_m{}_rc{}_{}_aug'.format(hyp_cmt, opt.model_id, opt.rare_class, opt.type))
+            # opt.data = 'data_xview/{}_cls/{}/xviewtest_{}_m{}_rc{}_{}_aug.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id, opt.rare_class, opt.type)
+
+
+#            opt.grids_dir = opt.grids_dir.format(opt.class_num, cmt, sd)
+#            if not os.path.exists(opt.grids_dir):
+#                os.makedirs(opt.grids_dir)
+            ############ all 2315 patches 171
+#            tif_name = '2315'
+#            opt.batch_size = 8
+#            opt.rare_class = 1
+#            opt.type = 'hard'
+#            opt.name += '_{}_{}'.format(tif_name, opt.type)
+#            opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_with_model_{}_{}_{}'.format(hyp_cmt, tif_name, opt.type))
+#            opt.data = 'data_xview/{}_cls/{}/xviewtest_{}_m{}_rc{}_{}.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id, opt.rare_class, tif_name)
 
             ''' for whole validation dataset '''
             # opt.conf_thres = 0.1
@@ -632,11 +701,12 @@ if __name__ == '__main__':
 
             if not os.path.exists(opt.result_dir):
                 os.makedirs(opt.result_dir)
-            print(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd), '*_{}_seed{}'.format(hyp_cmt, sd), 'best_seed{}.pt'.format(sd)))
-            print(glob.glob(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd), '*_{}_seed{}'.format(hyp_cmt, sd), 'best_seed{}.pt'.format(sd))))
+#            print(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd), '*_{}_seed{}'.format(hyp_cmt, sd), 'best_seed{}.pt'.format(sd)))
+#            print(glob.glob(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd), '*_{}_seed{}'.format(hyp_cmt, sd), 'best_seed{}.pt'.format(sd))))
             all_weights = glob.glob(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd), '*_{}_seed{}'.format(hyp_cmt, sd), 'best_*seed{}.pt'.format(sd)))
             all_weights.sort()
             opt.weights = all_weights[-1]
+
 
             print(opt.weights)
             print(opt.data)
@@ -648,6 +718,7 @@ if __name__ == '__main__':
                  opt.conf_thres,
                  opt.nms_iou_thres,
                  opt.save_json, opt=opt)
+
 
     '''
     test for xview_syn_xview_bkg_* with model
