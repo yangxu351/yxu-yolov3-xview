@@ -83,7 +83,8 @@ def train(opt):
         from torch.utils.tensorboard import SummaryWriter
         tb_writer = SummaryWriter(log_dir=opt.writer_dir)
     except:
-        pass
+        print('SummaryWriter error')
+        return
 
     # Initialize
     init_seeds()
