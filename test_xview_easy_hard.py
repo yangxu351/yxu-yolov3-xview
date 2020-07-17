@@ -586,6 +586,20 @@ if __name__ == '__main__':
 #    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_bias0_model4_v1_color']
 
 #    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias_all_model4_v20_color']    
+#    comments = ['syn_xview_bkg_px30whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_bias0_model4_v1_color','syn_xview_bkg_px30whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_bias0_model4_v1_mixed'
+    comments = ['syn_xview_bkg_px30whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_bias0_model4_v1_color']
+#    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_100_bias0_model4_v2_color']
+#    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias20_model4_v3_color']
+#    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias40_model4_v4_color']
+#    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias50_model4_v5_color']
+#    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias60_model4_v6_color']
+#    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias70_model4_v7_color']
+#    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias110_model4_v8_color']
+#    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_rnd_model4_v9_color']
+
+#    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_bias0_model4_v1_color']
+
+#    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias_all_model4_v20_color']
     model_id = 4
     # comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v4_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v4_mixed']
     # comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_model4_v6_color']
@@ -617,7 +631,7 @@ if __name__ == '__main__':
     hyp_cmt = 'hgiou1_1gpu_val_syn'
     prefix = 'syn'
 #    prefix = 'syn_px30'
-    
+
 #    hyp_cmt = 'hgiou1_1gpu_anchor_val_syn'
 #    prefix = 'syn_anchor'
 
@@ -632,7 +646,7 @@ if __name__ == '__main__':
 
 #    hyp_cmt = 'hgiou1_1gpu_noaug_val_syn'
 #    prefix = 'syn_noaug'
-    
+
 #    hyp_cmt = 'hgiou1_obj39.5_val_syn'
 #    prefix = 'syn_obj39.5'
     # hyp_cmt = 'hgiou1_1gpu_val_xview'
@@ -681,9 +695,17 @@ if __name__ == '__main__':
 #            opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_{}_m{}_rc{}_{}'.format(hyp_cmt, opt.model_id, opt.rare_class, opt.type))
 #            opt.data = 'data_xview/{}_cls/{}/xviewtest_{}_m{}_rc{}_{}.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id, opt.rare_class, opt.type)
 
-            opt.name += '_{}_aug'.format(opt.type)
-            opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_{}_m{}_rc{}_{}_aug'.format(hyp_cmt, opt.model_id, opt.rare_class, opt.type))
-            opt.data = 'data_xview/{}_cls/{}/xviewtest_{}_m{}_rc{}_{}_aug.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id, opt.rare_class, opt.type)
+#            opt.name += '_{}_aug'.format(opt.type)
+#            opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_{}_m{}_rc{}_{}_aug'.format(hyp_cmt, opt.model_id, opt.rare_class, opt.type))
+#            opt.data = 'data_xview/{}_cls/{}/xviewtest_{}_m{}_rc{}_{}_aug.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id, opt.rare_class, opt.type)
+
+            opt.name += '_{}'.format(opt.type)
+            opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_{}_m{}_rc{}_{}'.format(hyp_cmt, opt.model_id, opt.rare_class, opt.type))
+            opt.data = 'data_xview/{}_cls/{}/xviewtest_{}_m{}_rc{}_{}.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id, opt.rare_class, opt.type)
+
+            # opt.name += '_{}_aug'.format(opt.type)
+            # opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_{}_m{}_rc{}_{}_aug'.format(hyp_cmt, opt.model_id, opt.rare_class, opt.type))
+            # opt.data = 'data_xview/{}_cls/{}/xviewtest_{}_m{}_rc{}_{}_aug.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id, opt.rare_class, opt.type)
 
 
 #            opt.grids_dir = opt.grids_dir.format(opt.class_num, cmt, sd)
@@ -712,6 +734,7 @@ if __name__ == '__main__':
             opt.weights = all_weights[-1]
         
 
+
             print(opt.weights)
             print(opt.data)
             test(opt.cfg,
@@ -722,6 +745,7 @@ if __name__ == '__main__':
                  opt.conf_thres,
                  opt.nms_iou_thres,
                  opt.save_json, opt=opt)
+
 
     '''
     test for xview_syn_xview_bkg_* with model

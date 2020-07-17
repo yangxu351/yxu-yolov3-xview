@@ -370,14 +370,14 @@ def draw_bbx_on_rgb_images(pxwhr='px6whr4_ng0'):
         gbc.plot_img_with_bbx(f, txt_file, save_bbx_path, label_index=False)
 
 
-def draw_bbx_on_rgb_images_with_indices(syn=True, dt='syn_texture', pxwhr='px6whr4_ng0', px_thres=None, whr_thres=None):
+def draw_bbx_on_rgb_images_with_indices(syn=True, dt='syn_texture', pxwhrs='px6whr4_ng0', px_thres=None, whr_thres=None):
     if syn:
         step = syn_args.tile_size * syn_args.resolution
         img_folder_name = '{}_all_images_step{}'.format(dt, step)
         img_path = os.path.join(syn_args.syn_plane_img_anno_dir.replace('/' + syn_args.syn_display_type, '/' + dt), img_folder_name)
         files = np.sort(glob.glob(os.path.join(img_path, '*{}'.format(IMG_FORMAT))))
         file_names = [os.path.basename(f).replace(IMG_FORMAT, TXT_FORMAT) for f in files]
-
+        pxwhr = pxwhrs
         txt_folder_name = 'minr{}_linkr{}_{}_{}_all_annos_txt_step{}'.format(syn_args.min_region, syn_args.link_r, pxwhr,
                                                                           dt, step)
         txt_path = os.path.join(syn_args.syn_plane_txt_dir.replace('/' + syn_args.syn_display_type, '/' + dt), txt_folder_name)
@@ -396,12 +396,13 @@ def draw_bbx_on_rgb_images_with_indices(syn=True, dt='syn_texture', pxwhr='px6wh
             gbc.plot_img_with_bbx(f, txt_file, save_bbx_path, label_index=True)
     else:
         args = pwv.get_args(px_thres, whr_thres)
-        files = np.sort(glob.glob(os.path.join(args.annos_save_dir, '*{}'.format(TXT_FORMAT))))
-        file_names = [os.path.basename(f).replace(TXT_FORMAT, IMG_FORMAT0) for f in files]
+        files = np.sort(glob.glob(os.path.join(args.annos_save_dir, '*.txt')))
+        print('files len', len(files))
+        file_names = [os.path.basename(f).replace('.txt', '.jpg') for f in files]
 
-        bbox_folder_name = '{}_images_with_bbox_with_indices'.format(pxwhr)
+        bbox_folder_name = '{}_images_with_bbox_with_indices'.format(pxwhrs)
         save_bbx_path = os.path.join(args.cat_sample_dir, 'image_with_bbox_indices', bbox_folder_name)
-
+        print('save_bbx_path', save_bbx_path)
         if not os.path.exists(save_bbx_path):
             os.makedirs(save_bbx_path)
         else:
@@ -409,7 +410,7 @@ def draw_bbx_on_rgb_images_with_indices(syn=True, dt='syn_texture', pxwhr='px6wh
             os.makedirs(save_bbx_path)
 
         for ix, f in enumerate(files):
-            img_file = os.path.join(args.images_save_dir, file_names[ix].replace(TXT_FORMAT, IMG_FORMAT0))
+            img_file = os.path.join(args.images_save_dir, file_names[ix])
             gbc.plot_img_with_bbx(img_file, f, save_bbx_path, label_index=True)
 
 def draw_bbx_on_rgb_images_with_model_id(syn=True, dt='syn_texture', pxwhr='px23whr3', px_thres=None, whr_thres=None):

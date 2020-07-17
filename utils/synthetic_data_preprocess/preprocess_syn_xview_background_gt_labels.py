@@ -248,6 +248,8 @@ def get_args(cmt=''):
     #                     default='/media/lab/Yang/data/synthetic_data/{}/')
     # parser.add_argument("--syn_annos_dir", type=str, default='/media/lab/Yang/data/synthetic_data/{}_txt_xcycwh/',
     #                     help="syn label.txt")
+    # parser.add_argument("--syn_box_dir", type=str, default='/media/lab/Yang/data/synthetic_data/{}_gt_bbox/',
+    #                     help="syn related txt files")
     # parser.add_argument("--syn_txt_dir", type=str, default='/media/lab/Yang/data/synthetic_data/{}_gt_bbox/',
     #                     help="syn related txt files")
 
@@ -298,52 +300,45 @@ if __name__ == '__main__':
     generate txt and bbox for syn_background data
     bbox annotation meet certain conditions: px_thres, whr_thres
     '''
-    # px_thres = 23
-    # whr_thres = 3
-    px_thres= 15 # 23
-    whr_thres= 6 # 3
-    display_types = ['color'] # 'mixed'
-    cmt = 'syn_xview_bkg_shdw_scatter_uniform_60_wnd_v1'
-    syn_args = get_args(cmt)
-    for dt in display_types:
-        group_object_annotation_and_draw_bbox(dt, px_thres, whr_thres)
+    # px_thres= 15 # 23
+    # whr_thres= 6 # 3
+    # display_types = ['color'] # 'mixed'
+    # cmt = 'syn_uspp_bkg_shdw_scatter_uniform_60_wnd_v1'
+    # syn_args = get_args(cmt)
+    # for dt in display_types:
+    #     group_object_annotation_and_draw_bbox(dt, px_thres, whr_thres)
 
     '''
     draw bbox on rgb images for syn_background data
     '''
-    # px_thres = 23
-    # whr_thres = 3
-    px_thres= 15 # 5 # 23 #20 #30
-    whr_thres= 6 # 3
-    display_types = ['color'] # 'mixed'
-    cmt = 'syn_xview_bkg_shdw_scatter_uniform_60_wnd_v1'
-    syn_args = get_args(cmt)
-    for dt in display_types:
-        draw_bbx_on_rgb_images(dt, px_thres, whr_thres)
+    # px_thres= 15 # 5 # 23 #20 #30
+    # whr_thres= 6 # 3
+    # display_types = ['color'] # 'mixed'
+    # cmt = 'syn_uspp_bkg_shdw_scatter_uniform_60_wnd_v1'
+    # syn_args = get_args(cmt)
+    # for dt in display_types:
+    #     draw_bbx_on_rgb_images(dt, px_thres, whr_thres)
 
 
     '''
     split train val
     '''
-    # comments = ['syn_color'] #['syn_mixed']
-    # # pxwhr = 'px23whr3'
-    # # base_pxwhrs = 'px23whr3_seed{}'
-    # # cmt = ''
-    # pxwhr = 'px15whr6'
-    # base_pxwhrs = 'px15whr6_seed{}'
-    # cmt = 'syn_xview_bkg_shdw_scatter_uniform_60_wnd_v1'
-    # syn_args = get_args(cmt)
-    # seed = 17
-    # for cmt in comments:
-    #     base_pxwhrs = base_pxwhrs.format(seed)
-    #     split_syn_xview_background_trn_val(seed, cmt, pxwhr)
+    comments = ['syn_uspp_bkg_shdw_scatter_uniform_60_wnd_v1_color'] #['syn_mixed']
+    pxwhr = 'px15whr6'
+    base_pxwhrs = 'px15whr6_seed{}'
+    cmt = 'syn_uspp_bkg_shdw_scatter_uniform_60_wnd_v1'
+    syn_args = get_args(cmt)
+    seed = 17
+    for cmt in comments:
+        base_pxwhrs = base_pxwhrs.format(seed)
+        split_syn_xview_background_trn_val(seed, cmt, pxwhr)
 
     '''
     create *.data
     '''
-    # comments = ['syn_color'] #['syn_mixed'] ['syn_mixed']
-    # for cmt in comments:
-    #     create_syn_data(cmt, seed=17)
+    comments = ['syn_uspp_bkg_shdw_scatter_uniform_60_wnd_v1_color'] #['syn_mixed'] ['syn_mixed']
+    for cmt in comments:
+        create_syn_data(cmt, seed=17)
 
 
     #################################
@@ -353,7 +348,7 @@ if __name__ == '__main__':
     '''
     pxwhr = 'px15whr6'
     base_pxwhrs = 'px15whr6_seed{}'
-    cmt = 'syn_xview_bkg_shdw_scatter_uniform_60_wnd_v1'
+    cmt = 'syn_uspp_bkg_shdw_scatter_uniform_60_wnd_v1'
     syn_args = get_args(cmt)
     seed = 17
     comments = ['wnd_syn_real']
@@ -363,3 +358,5 @@ if __name__ == '__main__':
         base_pxwhrs = base_pxwhrs.format(seed)
         split_trn_val_for_syn_and_real(seed, cmt, pxwhr, real_img_dir, real_lbl_dir)
         create_syn_and_real_data(cmt, seed)
+
+

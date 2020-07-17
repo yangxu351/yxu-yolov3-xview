@@ -1,13 +1,14 @@
 import glob
 import numpy as np
+import math
 import argparse
 import math
 import os
-import sys
-sys.path.append('/media/lab/Yang/code/yolov3/')
+
 import utils.wv_util as wv
 from utils.utils_xview import coord_iou, compute_iou
 from utils.xview_synthetic_util import preprocess_xview_syn_data_distribution as pps
+from utils.xview_synthetic_util import process_syn_xview_background_wv_split as psx
 from utils.object_score_util import get_bbox_coords_from_annos_with_object_score as gbc
 import pandas as pd
 from ast import literal_eval
@@ -18,10 +19,12 @@ from tqdm import tqdm
 import shutil
 import cv2
 import time
+import PIL
+from PIL import Image
+
 
 def is_non_zero_file(fpath):
     return os.path.isfile(fpath) and os.path.getsize(fpath) > 0
-
 
 def get_annos_of_model_id(model_id=0):
     src_model_dir = args.annos_save_dir[:-1] + '_all_model/'
@@ -43,11 +46,11 @@ def get_annos_of_model_id(model_id=0):
             continue
         df_txt.to_csv(os.path.join(des_model_modelid_dir, name), header=False, index=False, sep=' ')
 
-        df_txt_no_model_id = df_txt.loc[:, :-1]
+        df_txt_no_model_id = df_txt.loc[:, :4]
         df_txt_no_model_id.to_csv(os.path.join(des_model_dir, name), header=False, index=False, sep=' ')
 
 
-def create_test_dataset_by_only_model_id(model_id):
+def create_test_dataset_by_model_id(model_id):
     base_dir = args.data_save_dir
     base_val_lbl_files = pd.read_csv(os.path.join(base_dir, 'xviewval_lbl_px23whr3_seed17.txt'), header=None)
     base_val_lbl_name = [os.path.basename(f) for f in base_val_lbl_files.loc[:, 0]]
@@ -192,9 +195,9 @@ def create_test_dataset_of_model_id_labeled_miss(model_id, base_pxwhrs='px23whr3
     data_txt.close()
 
 
-def get_trn_val_txt_contain_all_models(type='all', copy_img=False):
+def get_txt_contain_model_id(model_id=5, copy_img=False):
     src_model_dir = args.annos_save_dir[:-1] + '_all_model/'
-    des_model_dir = args.annos_save_dir[:-1] + '_{}_model/'.format(type)
+    des_model_dir = args.annos_save_dir[:-1] + '_m{}_all_model/'.format(model_id)
     if not os.path.exists(des_model_dir):
         os.mkdir(des_model_dir)
     if copy_img:
@@ -227,6 +230,7 @@ def get_txt_contain_model_id(model_id=5, copy_img=False, type='all'):
     if not os.path.exists(des_model_dir):
         os.mkdir(des_model_dir)
     if copy_img:
+        '''images with bbox indices got from draw_bbx_on_rgb_images_with_indices in preprocess_xview_syn_data_distribution.py '''
         src_img_dir = os.path.join(args.cat_sample_dir, 'image_with_bbox_indices/px23whr3_seed17_images_with_bbox_with_indices/')
         des_img_dir = os.path.join(args.cat_sample_dir, 'image_with_bbox_indices/px23whr3_seed17_images_with_bbox_with_indices_m{}_{}/'.format(model_id, type))
         if not os.path.exists(des_img_dir):
@@ -318,7 +322,6 @@ def create_model_rareclass_hard_easy_set_backup(val_m_rc_path, model_id, rare_id
                                       '_val_lbl_m{}_rc{}_hard'.format(model_id, rare_id))
     if not os.path.exists(val_labeled_m_rc_hard):
         os.mkdir(val_labeled_m_rc_hard)
-
 
     print('val_m_rc_path', val_m_rc_path)
     easy_m_rc_path = val_m_rc_path + '_easy'
@@ -468,68 +471,6 @@ def val_resize_crop_by_easy_hard(scale=2, pxwhrs='px23whr3_seed17', model_id=4, 
 
             bbox = lbl[ti, 1:-1] #cid, xc, yc, w, h, mid
             # print('bbox', bbox)
-        #     bbox[0] = bbox[0] * up_w
-        #     bbox[1] = bbox[1] * up_h
-        #     bbox[2] = bbox[2] * up_w
-        #     bbox[3] = bbox[3] * up_h
-        #     bbox[0] = bbox[0] - bbox[2]/2
-        #     bbox[1] = bbox[1] - bbox[3]/2
-        #     bbox[2] = bbox[0] + bbox[2]
-        #     bbox[3] = bbox[1] + bbox[3]
-        #     tl_w = 0
-        #     tl_h = 0
-        #     c_w = up_w/2
-        #     c_h = up_h/2
-        #     br_w = up_w
-        #     br_h = up_h
-        #     b0 = np.clip(bbox, [tl_w, tl_h, tl_w, tl_h], [c_w-1, c_h-1, c_w-1, c_h-1])
-        #     b1 = np.clip(bbox, [c_w, tl_h, c_w, tl_h], [br_w-1, c_h-1, br_w-1, c_h-1])
-        #     b2 = np.clip(bbox, [tl_w, c_h, tl_w, c_h], [c_w-1, br_h-1, c_w-1, br_h-1])
-        #     b3 = np.clip(bbox, [c_w, c_h, c_w, c_h], [br_w-1, br_h-1, br_w-1, br_h-1])
-        #     if b0[2]-b0[0] > px_thres and b0[3]-b0[1] > px_thres:
-        #         b0_list.append([class_id] + convert_norm((w, h), b0) + [model_id])
-        #     if b1[2]-b1[0] > px_thres and b1[3]-b1[1] > px_thres:
-        #         b1[0] = b1[0] - w
-        #         b1[2] = b1[2] - w
-        #         b1_list.append([class_id] + convert_norm((w, h), b1) + [model_id])
-        #     if b2[2]-b2[0] > px_thres and b2[3]-b2[1] > px_thres:
-        #         b2[1] = b2[1] - h
-        #         b2[3] = b2[3] - h
-        #         b2_list.append([class_id] + convert_norm((w, h), b2) + [model_id])
-        #     if b3[2]-b3[0] > px_thres and b3[3]-b3[1] > px_thres:
-        #         b3 = [bx - w for bx in b3]
-        #         b3_list.append([class_id] + convert_norm((w, h), b3) + [model_id])  # cid xc, yc, w, h mid
-        # if len(b0_list):
-        #     f_txt = open(os.path.join(save_lbl_dir, name.split('.')[0] + '_i0j0.txt'), 'w')
-        #     for i0 in b0_list: # xc, yc, w, h
-        #         f_txt.write( "%s %s %s %s %s %s\n" % (np.int(i0[0]), i0[2], i0[1], i0[4], i0[3], np.int(i0[5])))
-        #     f_txt.close()
-        # if len(b1_list):
-        #     f_txt = open(os.path.join(save_lbl_dir, name.split('.')[0] + '_i0j1.txt'), 'w')
-        #     for i1 in b1_list:
-        #         # print('i1', i1)
-        #         f_txt.write( "%s %s %s %s %s %s\n" % (np.int(i1[0]), i1[2], i1[1], i1[4], i1[3], np.int(i1[5])))
-        #     f_txt.close()
-        # if len(b2_list):
-        #     f_txt = open(os.path.join(save_lbl_dir, name.split('.')[0] + '_i1j0.txt'), 'w')
-        #     for i2 in b2_list:
-        #         f_txt.write( "%s %s %s %s %s %s\n" % (np.int(i2[0]), i2[2], i2[1], i2[4], i2[3], np.int(i2[5])))
-        #     f_txt.close()
-        # if len(b3_list):
-        #     f_txt = open(os.path.join(save_lbl_dir, name.split('.')[0] + '_i1j1.txt'), 'w')
-        #     for i3 in b3_list:
-        #         f_txt.write( "%s %s %s %s %s %s\n" % (np.int(i3[0]), i3[2], i3[1], i3[4], i3[3], np.int(i3[5])))
-        #     f_txt.close()
-
-            #cid, xc, yc, w, h, mid
-            # bbox[0] = bbox[0] * up_h
-            # bbox[1] = bbox[1] * up_w
-            # bbox[2] = bbox[2] * up_h
-            # bbox[3] = bbox[3] * up_w
-            # bbox[0] = bbox[0] - bbox[2]/2
-            # bbox[1] = bbox[1] - bbox[3]/2
-            # bbox[2] = bbox[0] + bbox[2]
-            # bbox[3] = bbox[1] + bbox[3]
             bbox[0] = bbox[0] * up_w
             bbox[1] = bbox[1] * up_h
             bbox[2] = bbox[2] * up_w
@@ -605,17 +546,30 @@ def create_upsample_test_dataset_of_m_rc(model_id, rare_id, type='hard', seed=17
     data_txt.write('names=./data_xview/{}_cls/xview.names\n'.format(args.class_num))
     data_txt.close()
 
+def flip_rotate_images(img_name):
+
+    # img_name = '2315_359'
+    img = Image.open(args.images_save_dir[:-1] + '_of_{}/{}.jpg'.format(img_name, img_name))
+    out_lr_flip = img.transpose(PIL.Image.FLIP_LEFT_RIGHT)
+    out_lr_flip.save(args.images_save_dir[:-1] + '_of_{}/{}_lr.jpg'.format(img_name, img_name))
+    out_tb_flip = img.transpose(PIL.Image.FLIP_TOP_BOTTOM)
+    out_tb_flip.save(args.images_save_dir[:-1] + '_of_{}/{}_tb.jpg'.format(img_name, img_name))
+    out_rt_90 = img.transpose(PIL.Image.ROTATE_90)
+    out_rt_90.save(args.images_save_dir[:-1] + '_of_{}/{}_rt90.jpg'.format(img_name, img_name))
+    out_rt_180 = img.transpose(PIL.Image.ROTATE_180)
+    out_rt_180.save(args.images_save_dir[:-1] + '_of_{}/{}_rt180.jpg'.format(img_name, img_name))
+    out_rt_270 = img.transpose(PIL.Image.ROTATE_270)
+    out_rt_270.save(args.images_save_dir[:-1] + '_of_{}/{}_rt270.jpg'.format(img_name, img_name))
+
+
+
 def get_rotated_point(x,y,angle):
     '''
     https://blog.csdn.net/weixin_44135282/article/details/89003793
     '''
     # (h, w) = image.shape[:2]
-    # # 将图像中心设为旋转中心
     w, h = 1, 1
     (cX, cY) = (0.5, 0.5)
-
-    #假设图像的宽度x高度为col*row, 图像中某个像素P(x1, y1)，绕某个像素点Q(x2, y2)
-    #旋转θ角度后, 则该像素点的新坐标位置为(x, y)，其计算公式为：
 
     x = x
     y = h - y
@@ -625,7 +579,6 @@ def get_rotated_point(x,y,angle):
     new_y = (x - cX) * math.sin(math.pi / 180.0 * angle) + (y - cY) * math.cos(math.pi / 180.0 * angle) + cY
     new_x = new_x
     new_y = h - new_y
-    # return round(new_x), round(new_y) #四舍五入取整
     return new_x, new_y
 
 def get_flipped_point(x, y, flip='tb'):
@@ -638,6 +591,50 @@ def get_flipped_point(x, y, flip='tb'):
         new_y = y
     return new_x, new_y
 
+
+def flip_rotate_coordinates(img_name, angle=0, flip=''):
+    lbl_dir = args.annos_save_dir[:-1] + '_val_m4_rc1_{}/'.format(img_name)
+    img_dir = args.images_save_dir[:-1] + '_of_{}/'.format(img_name)
+    save_dir = args.cat_sample_dir + 'image_with_bbox/{}_aug/'.format(img_name)
+    if not os.path.exists(save_dir):
+        os.mkdir(save_dir)
+
+    if angle:
+        lbl_file = os.path.join(lbl_dir, '{}_rt{}.txt'.format(img_name, angle))
+    elif flip:
+        lbl_file = os.path.join(lbl_dir, '{}_{}.txt'.format(img_name, flip))
+    shutil.copy(os.path.join(lbl_dir, '{}.txt'.format(img_name)), lbl_file)
+    df_lf = pd.read_csv(lbl_file, header=None, sep=' ')
+    for i in range(df_lf.shape[0]):
+        if angle:
+            df_lf.loc[i, 1], df_lf.loc[i, 2] = get_rotated_point(df_lf.loc[i, 1], df_lf.loc[i, 2], angle)
+        elif flip:
+            df_lf.loc[i, 1], df_lf.loc[i, 2] = get_flipped_point(df_lf.loc[i, 1], df_lf.loc[i, 2], flip)
+    df_lf.to_csv(lbl_file, header=False, index=False, sep=' ')
+    name = os.path.basename(lbl_file)
+    print('name', name)
+    img_name = name.replace('.txt', '.jpg')
+    img_file = os.path.join(img_dir, img_name)
+    gbc.plot_img_with_bbx(img_file, lbl_file, save_path=save_dir)
+
+
+def create_data_for_augment_img_lables(img_name, eh_type):
+    shutil.copy(os.path.join(args.data_save_dir, 'xviewtest_img_px23whr3_seed17_m4_rc1_{}.txt'.format(eh_type)),
+                os.path.join(args.data_save_dir, 'xviewtest_img_px23whr3_seed17_m4_rc1_{}_aug.txt'.format(eh_type)))
+    shutil.copy(os.path.join(args.data_save_dir, 'xviewtest_lbl_px23whr3_seed17_m4_rc1_{}.txt'.format(eh_type)),
+                os.path.join(args.data_save_dir, 'xviewtest_lbl_px23whr3_seed17_m4_rc1_{}_aug.txt'.format(eh_type)))
+    val_img_file = open(os.path.join(args.data_save_dir, 'xviewtest_img_px23whr3_seed17_m4_rc1_{}_aug.txt'.format(eh_type)), 'a')
+    val_lbl_file = open(os.path.join(args.data_save_dir, 'xviewtest_lbl_px23whr3_seed17_m4_rc1_{}_aug.txt'.format(eh_type)), 'a')
+
+    img_dir = args.images_save_dir[:-1] + '_of_{}/'.format(img_name)
+    lbl_dir = args.annos_save_dir[:-1] + '_val_m4_rc1_{}/'.format(img_name)
+    img_files = glob.glob(os.path.join(img_dir, '{}_*.jpg'.format(img_name)))
+    for f in img_files:
+        name = os.path.basename(f)
+        val_img_file.write('%s\n' % f)
+        val_lbl_file.write('%s\n' % os.path.join(lbl_dir, name.replace('.jpg', '.txt')))
+
+    psx.create_xview_base_data_for_onemodel_aug_easy_hard(model_id=4, rc_id=1, eh_type=eh_type, base_cmt='px23whr3_seed17')
 
 
 def get_args(px_thres=None, whr_thres=None, seed=17):
@@ -653,10 +650,13 @@ def get_args(px_thres=None, whr_thres=None, seed=17):
                         default='/data/users/yang/data/xView_YOLO/labels/')
 
     parser.add_argument("--data_list_save_dir", type=str, help="to save selected trn val images and labels",
-                        default='/data/users/yang/data/xView_YOLO/labels/{}/{}_cls/data_list/')
+#                        default='/data/users/yang/data/xView_YOLO/labels/{}/{}_cls/data_list/')
+#    parser.add_argument("--data_save_dir", type=str, help="to save data files",
+#                        default='/data/users/yang/code/yxu-yolov3-xview/data_xview/{}_cls/')
 
+                        default='/media/lab/Yang/data/xView_YOLO/labels/{}/{}_cls/data_list/')
     parser.add_argument("--data_save_dir", type=str, help="to save data files",
-                        default='/data/users/yang/code/yxu-yolov3-xview/data_xview/{}_cls/')
+                        default='/media/lab/Yang/code/yolov3/data_xview/{}_cls/')
 
     parser.add_argument("--cat_sample_dir", type=str, help="to save figures",
                         default='/data/users/yang/data/xView_YOLO/cat_samples/')
@@ -696,9 +696,6 @@ def get_args(px_thres=None, whr_thres=None, seed=17):
 
     return args
 
-
-
-
 if __name__ == '__main__':
     whr_thres = 3
     px_thres = 23
@@ -726,8 +723,8 @@ if __name__ == '__main__':
     create test dataset contain only one model
     '''
     # model_id = 1
-    # # model_id = 4
-    # create_test_dataset_by_only_model_id(model_id)
+    # model_id = 4
+    # create_test_dataset_by_model_id(model_id)
 
     '''
     create *.data for only one model
@@ -742,12 +739,14 @@ if __name__ == '__main__':
     '''
     # get_trn_val_txt_contain_all_models(type='val', copy_img=True)
 
+    ####################################################################################### m*_to_rc*
+
     '''
     get txt which contains model_id 
     '''
     # model_id = 4
-    # model_id = 1
-    # model_id = 5
+    # # model_id = 1
+    # # model_id = 5
     # type = 'val'
     # get_txt_contain_model_id(model_id, copy_img=True, type=type)
 
@@ -756,12 +755,19 @@ if __name__ == '__main__':
     manually select rc2 from m1_val_model 
     except rc2 all others of model1 labeled as 0
     '''
-    # model_id = 1
-    # rare_class = 2
-    # model_id = 5
-    # rare_class = 3
+    # model_id = 4
+    # rare_class = 1
+    # # model_id = 1
+    # # rare_class = 2
+    # # model_id = 5
+    # # rare_class = 3
     # other_label = 0
     # label_m_val_model_with_other_label(rare_class, model_id, other_label)
+    '''
+    get txt which contains model_id == 5
+    '''
+    # model_id = 4
+    # get_txt_contain_model_id(model_id, copy_img=True)
 
     '''
     get image_list that contain model_id
@@ -787,13 +793,13 @@ if __name__ == '__main__':
     # args = get_args(px_thres, whr_thres, seed)
     # pxwhr = 'px{}whr{}'.format(px_thres, whr_thres)
     # non_rare_id = 0
-    # # model_id = 4
-    # # rare_id = 1
+    # model_id = 4
+    # rare_id = 1
     # # val_m_rc_path = args.annos_save_dir[:-1] + '_m{}_rc{}'.format(model_id, rare_id)
     # # model_id = 1
     # # rare_id = 2
-    # model_id = 5
-    # rare_id = 3
+    # # model_id = 5
+    # # rare_id = 3
     # val_m_rc_path = args.annos_save_dir[:-1] + '_val_m{}_to_rc{}'.format(model_id, rare_id)
     # create_model_rareclass_hard_easy_set_backup(val_m_rc_path, model_id, rare_id, non_rare_id, seed, pxwhr)
 
@@ -804,22 +810,23 @@ if __name__ == '__main__':
     seed = 17                                                                                           
     seed = 199                                                                                          
     '''
-    seed = 17
-    # seed = 199
-    px_thres = 23
-    whr_thres = 3
-    args = get_args(px_thres, whr_thres, seed)
-    pxwhrs = 'px{}whr{}_seed{}'.format(px_thres, whr_thres, seed)
+    # seed = 17
+    # # seed = 199
+    # px_thres = 23
+    # whr_thres = 3
+    # args = get_args(px_thres, whr_thres, seed)
+    # pxwhrs = 'px{}whr{}_seed{}'.format(px_thres, whr_thres, seed)
     # model_id = 4
     # rare_id = 1
-#    model_id = 1
-#    rare_id = 2
-    model_id = 5
-    rare_id = 3
-    non_rare_id = 0
-    types = ['hard', 'easy']
-    for type in types:
-        create_test_dataset_of_m_rc(model_id, rare_id, type, seed, pxwhrs)
+    # # model_id = 1
+    # # rare_id = 2
+    # # model_id = 5
+    # # rare_id = 3
+    # non_rare_id = 0
+    # types = ['hard', 'easy']
+    # for type in types:
+    #     create_test_dataset_of_m_rc(model_id, rare_id, type, seed, pxwhrs)
+
 
     # import collections
     # print([item for item, count in collections.Counter(trn_names).items() if count > 1])
@@ -830,9 +837,9 @@ if __name__ == '__main__':
     get all validation txt but only model_id labeled
     others are empty
     '''
-    # # model_id = 0
+    # # # model_id = 0
     # model_id = 4
-    # model_id = 1
+    # # model_id = 1
     # get_val_annos_only_model_id_labeled(model_id)
 
 
@@ -866,15 +873,15 @@ if __name__ == '__main__':
     crop
     create new val*_upscale*.data
     '''
-    scale=2
-    px_thres = 30
-    pxwhrs='px23whr3_seed17'
-    model_id=4
-    rare_id=1
-    # type='hard'
-    type='easy'
-    val_resize_crop_by_easy_hard(scale, pxwhrs, model_id, rare_id, type, px_thres)
-    create_upsample_test_dataset_of_m_rc(model_id, rare_id, type, seed=17, pxwhrs='px23whr3_seed17')
+    # scale=2
+    # px_thres = 30
+    # pxwhrs='px23whr3_seed17'
+    # model_id=4
+    # rare_id=1
+    # # type='hard'
+    # type='easy'
+    # val_resize_crop_by_easy_hard(scale, pxwhrs, model_id, rare_id, type, px_thres)
+    # create_upsample_test_dataset_of_m_rc(model_id, rare_id, type, seed=17, pxwhrs='px23whr3_seed17')
     '''
     check annotation
      plot images with bbox
@@ -933,6 +940,48 @@ if __name__ == '__main__':
     # img_file = os.path.join(img_dir, img_name)
     # gbc.plot_img_with_bbx(img_file, lbl_file, save_path=save_dir)
 
+    # # type='hard'
+    # type='easy'
+    # save_dir = os.path.join(args.cat_sample_dir, 'image_with_bbox/2315_{}_upscale/'.format(type))
+    # if not os.path.exists(save_dir):
+    #     os.mkdir(save_dir)
+    # lbl_dir = args.annos_save_dir[:-1] + '_val_m4_rc1_{}_seed17_upscale/'.format(type)
+    # img_dir = args.images_save_dir[:-1] + '_{}_upscale/'.format(type)
+    # img_list = glob.glob(os.path.join(img_dir, '2315_*.png'))
+    # for f in img_list:
+    #     print('f ', f)
+    #     name = os.path.basename(f)
+    #     lbl_file = os.path.join(lbl_dir, name.replace('.png', '.txt'))
+    #     gbc.plot_img_with_bbx(f, lbl_file, save_dir)
+
+    '''
+    flip and rotate images 
+    left-right flip, tob-bottom flip
+    rotate90, rotate 180, rotate 270
+    '''
+    # # img_name = '2315_359'
+    # img_name = '2315_329'
+    # flip_rotate_images(img_name)
+
+    '''
+    flip and rotate coordinates of bbox 
+    left-right flip, tob-bottom flip
+    rotate90, rotate 180, rotate 270
+    ** manually create '/media/lab/Yang/data/xView_YOLO/labels/608/1_cls_xcycwh_px23whr3_val_m4_rc1_{}/'.format(img_name)
+    '''
+    # img_name = '2315_359'
+    # img_name = '2315_329'
+    #
+    # angle = 270
+    # # angle = 180
+    # # angle = 90
+    # flip_rotate_coordinates(img_name, angle=angle)
+
+    # flip = 'tb'
+    # flip = 'lr'
+    # flip_rotate_coordinates(img_name, flip=flip)
+
+
     '''
     add augmented images and labels into val file
     create corresponding *.data
@@ -953,4 +1002,14 @@ if __name__ == '__main__':
         val_lbl_file.write('%s\n' % os.path.join(lbl_dir, name.replace('.png', '.txt')))
 
     psx.create_xview_base_data_for_onemodel_easy_hard(model_id=4, rc_id=1, eh_type=eh_type, base_cmt='px23whr3_seed17')
+    # img_name = '2315_359'
+    img_name = '2315_329'
+    eh_type = 'hard'
+    # eh_type = 'easy'
+    create_data_for_augment_img_lables(img_name, eh_type)
+
+
+
+
+
 

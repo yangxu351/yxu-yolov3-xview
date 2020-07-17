@@ -431,8 +431,13 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
                     # os.system("rm '%s' '%s'" % (self.img_files[i], self.label_files[i]))  # remove
                 pbar.desc = 'Caching labels (%g found, %g missing, %g empty, %g duplicate, for %g images)' % (
                     nf, nm, ne, nd, n)
+<<<<<<< HEAD
 
                 # assert nf > 0, 'No labels found. See %s' % help_url
+=======
+            #fixme --yang.xu
+            # assert nf > 0, 'No labels found. See %s' % help_url
+>>>>>>> master
 
         # Cache images into memory for faster training (WARNING: Large datasets may exceed system RAM)
         if cache_images:  # if training

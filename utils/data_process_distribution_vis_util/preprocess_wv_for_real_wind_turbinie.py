@@ -191,6 +191,28 @@ def create_syn_data(comment='wnd', pxs='px10_seed17'):
     data_txt.close()
 
 
+def sep_tif_bands(img_dir, save_dir):
+    import rasterio
+    from rasterio.plot import show
+
+    if not os.path.exists(save_dir):
+        os.mkdir(save_dir)
+    file_list = glob.glob(os.path.join(img_dir, '*.tif'))
+    for f in file_list:
+        #to display RGB
+        dataset = rasterio.open(f)
+        # show(dataset.read([1,2,3]))
+        name = os.path.basename(f)
+        new_dataset = rasterio.open(os.path.join(save_dir, name), 'w', driver='GTiff',
+                                    height=dataset.height, width=dataset.width, count=3,
+                                    dtype=dataset.dtypes[0], transform=dataset.affine
+                                    )
+        new_dataset.write(dataset.read([1,2,3]))
+        new_dataset.close()
+        #to display just the red band:
+        # show(dataset.read(1))
+
+
 def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--syn_data_dir", type=str,
@@ -221,10 +243,10 @@ def get_args():
 
 
     args = parser.parse_args()
-    if not os.path.exists(args.syn_annos_dir):
-        os.makedirs(args.syn_annos_dir)
-    if not os.path.exists(args.syn_txt_dir):
-        os.makedirs(args.syn_txt_dir)
+    # if not os.path.exists(args.syn_annos_dir):
+    #     os.makedirs(args.syn_annos_dir)
+    # if not os.path.exists(args.syn_txt_dir):
+    #     os.makedirs(args.syn_txt_dir)
 
     return args
 
@@ -235,10 +257,17 @@ if __name__ == "__main__":
     syn_args = get_args()
 
     '''
-    crop windturbin images
+    process bkg tifs
+    '''
+    # img_dir = '/media/lab/Yang/data/uspp_naip/'
+    # save_dir = '/media/lab/Yang/data/uspp_naip_rgb/'
+    # sep_tif_bands(img_dir, save_dir)
+
+    '''
+    crop windturbine images
     recreate corresponging labels
     '''
-    resize_crop_windturbine(px_thres=10)
+    # resize_crop_windturbine(px_thres=10)
 
     '''
     check new lables
@@ -262,13 +291,14 @@ if __name__ == "__main__":
     '''
     split train val
     '''
-    split_syn_wnd_trn_val(comment='wnd', seed=17, pxs='px10_seed17')
-
+    # split_syn_wnd_trn_val(comment='wnd', seed=17, pxs='px10_seed17')
+    #
     '''
     create *.data
     '''
-    comment = 'wnd'
-    create_syn_data(comment, seed=17)
+    # comment = 'wnd'
+    # create_syn_data(comment, seed=17)
+
 
 
 

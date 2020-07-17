@@ -326,13 +326,61 @@ if __name__ == '__main__':
     # cmt = 'xbw_xcolor_xbkg_gauss_model1_v2'
     # cmt = 'sbw_xcolor_xbkg_unif_model1_v3'
     # cmt = 'xbsw_xcolor_xbkg_gauss_model1_v4'
-    # px_thres=23
 
-    # whr_thres=3
-    # display_types = ['color', 'mixed']#
-    # syn_args = get_args(cmt)
-    # for dt in display_types:
+    # for color_pro in range(11):
+    #     # if color_pro == 0:
+    #     #   cmt = 'xbw_xcolor_xbkg_unif_shdw_scatter_gauss_40_bias0_model5_v1'
+    #     # else:
+    #     #   cmt = 'xbw_xcolor_xbkg_unif_shdw_scatter_gauss_40_color_bias{}_model5_v{}'.format(color_pro*25.5, color_pro+1)
+    #     # px_thres = 23
+    #
+    #    # if color_pro == 0:
+    #    #     cmt = 'xbsw_xwing_scatter_gauss_30_bias0_model1_v1'
+    #    # else:
+    #    #     cmt = 'xbsw_xwing_scatter_gauss_30_color_bias{}_model1_v{}'.format(color_pro*25.5, color_pro+1)
+    #    #  px_thres = 23
+    #
+    #     if color_pro == 0:
+    #       cmt = 'xbw_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_rnd_color_bias0_model4_v21'
+    #     else:
+    #       cmt = 'xbw_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_rnd_color_bias{}_model4_v{}'.format(color_pro*25.5, color_pro+21)
+    #     px_thres = 15
+    #
+    # # for angle_pro in range(1, 11):
+    # #     cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias{}_model4_v{}'.format(angle_pro*36, angle_pro+9)
+    # #     px_thres = 15
+    #
+    #     whr_thres = 3
+    #     dt = 'color'
+    #     syn_args = get_args(cmt)
     #     group_object_annotation_and_draw_bbox(dt, px_thres, whr_thres)
+
+    # comments = ['xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_bias0_model4_v1',
+    #         'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_100_bias0_model4_v2',
+    #        'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias20_model4_v3',
+    #        'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias40_model4_v4',
+    #        'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias50_model4_v5',
+    #        'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias60_model4_v6',
+    #        'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias70_model4_v7',
+    #        'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias110_model4_v8',
+    #        'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_rnd_model4_v9']
+    # px_thres=15
+    # whr_thres=3
+    # # display_types = ['color', 'mixed']#
+    # display_types = ['color']
+    # for cmt in comments:
+    #     syn_args = get_args(cmt)
+    #     for dt in display_types:
+    #         group_object_annotation_and_draw_bbox(dt, px_thres, whr_thres)
+
+
+#    px_thres = 23
+#    whr_thres=3
+#    display_types = ['color']#, 'mixed']# 'color',
+#    syn_args = get_args(cmt)
+#    for dt in display_types:
+#        group_object_annotation_and_draw_bbox(dt, px_thres, whr_thres)
+##        group_object_annotation_and_draw_bbox(dt, px_thres, whr_thres, upscale=True)
 
     '''
     draw bbox on rgb images for syn_xveiw_background data
@@ -376,6 +424,17 @@ if __name__ == '__main__':
     # cmt = 'xbsw_xcolor_xbkg_gauss_model1_v4'
     # px_thres=23 #20 #30
 
+    for color_pro in range(5, 6):
+        if color_pro == 0:
+          cmt = 'xbw_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_rnd_color_bias0_model4_v1'
+        else:
+          cmt = 'xbw_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_rnd_color_bias{}_model4_v{}'.format(color_pro*25.5, color_pro+21)
+        px_thres = 15
+        whr_thres = 3
+        syn_args = get_args(cmt)
+        dt = 'color'
+        draw_bbx_on_rgb_images(dt, px_thres, whr_thres)
+
     # whr_thres=3
     # display_types = ['color', 'mixed']
     # syn_args = get_args(cmt)
@@ -384,13 +443,13 @@ if __name__ == '__main__':
 
 
 
-    img_path = '/media/lab/Yang/data/synthetic_data/syn_xview_bkg_xbw_xcolor_xbkg_unif_model4_v6_color/color_all_images_step182.4/color_airplanes_xview_background_sd12_3.png'
-    lbl_path = '/media/lab/Yang/data/synthetic_data/syn_xview_bkg_xbw_xcolor_xbkg_unif_model4_v6_color/color_all_annos_step182.4/color_airplanes_xview_background_sd12_3.png'
-    save_dir = '/media/lab/Yang/data/synthetic_data/syn_xview_bkg_xbw_xcolor_xbkg_unif_model4_v6_color/'
-
-    comments = ['xbw_xcolor_xbkg_unif_model4_v6_color']
-    display_types = ['color', 'mixed']
-    resize_crop(comments, display_types)
+    # img_path = '/media/lab/Yang/data/synthetic_data/syn_xview_bkg_xbw_xcolor_xbkg_unif_model4_v6_color/color_all_images_step182.4/color_airplanes_xview_background_sd12_3.png'
+    # lbl_path = '/media/lab/Yang/data/synthetic_data/syn_xview_bkg_xbw_xcolor_xbkg_unif_model4_v6_color/color_all_annos_step182.4/color_airplanes_xview_background_sd12_3.png'
+    # save_dir = '/media/lab/Yang/data/synthetic_data/syn_xview_bkg_xbw_xcolor_xbkg_unif_model4_v6_color/'
+    #
+    # comments = ['xbw_xcolor_xbkg_unif_model4_v6_color']
+    # display_types = ['color', 'mixed']
+    # resize_crop(comments, display_types)
 
     # lbl = Image.open(lbl_path)
     # lbl2 = lbl.resize((2*w, 2*h))
