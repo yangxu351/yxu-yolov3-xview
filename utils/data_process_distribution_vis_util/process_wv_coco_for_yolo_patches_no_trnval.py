@@ -1128,48 +1128,7 @@ def remove_duplicate_gt_bbx(cat_id, syn = False):
                     cv2.imwrite(save_dir + 'cat_{}_'.format(cat_id) + dn.replace('.json', '.jpg'), img)
 
 
-<<<<<<< HEAD
-# def discard_bad_deviation_bbx_of_images():
-#     false_bx_files = pd.read_csv('/data/users/yang/data/xView/airplane_to_be_reomved_false_bbox.txt', header=None)
-#     deviation_files = pd.read_csv('/data/users/yang/data/xView/airplane_to_be_adjust_jpg_bbox.txt', header=None)
-#     missed_files = pd.read_csv('/data/users/yang/data/xView/airplane_to_add_missed_bbox.txt', header=None)
-#     src_img_bbx_path = args.cat_sample_dir + 'image_with_bbox/'
-#     des_img_bbx_path = args.cat_sample_dir + 'image_with_bbox/discarded/'
-#     if not os.path.exists(des_img_bbx_path):
-#         os.mkdir(des_img_bbx_path)
-#
-#     des_dir = args.images_save_dir[:-1] + '_discarded/'
-#     if not os.path.exists(des_dir):
-#         os.mkdir(des_dir)
-#     images_reduced_save_dir = args.images_save_dir[:-1] + '_reduced/'
-#     if not os.path.join(images_reduced_save_dir):
-#         os.mkdir(images_reduced_save_dir)
-#     shutil.copy(args.images_save_dir, images_reduced_save_dir)
-#
-#     for f in false_bx_files.loc[:, 0]:
-#         img_file = os.path.join(images_reduced_save_dir, f)
-#         if os.path.exists(img_file):
-#             shutil.move(img_file, os.path.join(des_dir, f))
-#         img_bbx_file = os.path.join(src_img_bbx_path, f)
-#         if os.path.exists(img_bbx_file):
-#             shutil.move(img_bbx_file, os.path.join(des_img_bbx_path, f))
-#
-#     for f in deviation_files.loc[:, 0]:
-#         img_file = os.path.join(images_reduced_save_dir, f)
-#         if os.path.exists(img_file):
-#             shutil.move(img_file, os.path.join(des_dir, f))
-#         img_bbx_file = os.path.join(src_img_bbx_path, f)
-#         if os.path.exists(img_bbx_file):
-#             shutil.move(img_bbx_file, os.path.join(des_img_bbx_path, f))
-#
-#     for f in missed_files.loc[:, 0]:
-#         # only move the missed_bbox_image to the discard folder
-#         img_bbx_file = os.path.join(src_img_bbx_path, f)
-#         if os.path.exists(img_bbx_file):
-#             shutil.move(img_bbx_file, os.path.join(des_img_bbx_path, f))
 
-=======
->>>>>>> master
 def cats_split_crop_bbx_from_patches(typestr='val', whr_thres=3, N=200):
     img_files = pd.read_csv(os.path.join(args.data_save_dir, 'xview{}_img.txt'.format(typestr)), header=None)
     lbl_files = pd.read_csv(os.path.join(args.data_save_dir, 'xview{}_lbl.txt'.format(typestr)), header=None)
