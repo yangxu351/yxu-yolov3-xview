@@ -49,8 +49,8 @@ def resize_crop_windturbine(px_thres = 10):
     for i in range(len(wt_images)):
         img = cv2.imread(wt_images[i])
         name = os.path.basename(wt_images[i])
-        # if name == 'naip_324_AZ_WND.jpg':
-        #     print('name', name)
+        # if name != 'naip_915_CA_WND.jpg':
+        #     continue
         height, width = img.shape[:2]
         rnum = np.ceil(height/h).astype(np.int)
         cnum = np.ceil(width/w).astype(np.int)
@@ -87,7 +87,7 @@ def resize_crop_windturbine(px_thres = 10):
             b1_list = []
             b2_list = []
             b3_list = []
-            bboxes = lbl[:, 1:]
+            bboxes = lbl[:, 1:]# xc, yc, w, h
             bboxes[:, [0, 2]] = bboxes[:, [0, 2]] * width
             bboxes[:, [1, 3]] = bboxes[:, [1, 3]] * height
             bboxes[:, 0] = bboxes[:, 0] - bboxes[:, 2]/2
@@ -95,7 +95,7 @@ def resize_crop_windturbine(px_thres = 10):
             bboxes[:, 2] = bboxes[:, 0] + bboxes[:, 2]
             bboxes[:, 3] = bboxes[:, 1] + bboxes[:, 3]
             for ti in range(bboxes.shape[0]):
-                bbox = bboxes[ti, :] # xc, yc, w, h
+                bbox = bboxes[ti, :] # x1, y1, x2, y2
                 b0 = np.clip(bbox, [tl_w, tl_h, tl_w, tl_h], [w-1, h-1, w-1, h-1])
                 b1 = bbox.copy()
                 # print('b1', b1.shape)
@@ -108,14 +108,24 @@ def resize_crop_windturbine(px_thres = 10):
                 b3[[0, 2]] = b3[[0, 2]] - c_w
                 b3[[1, 3]] = b3[[1, 3]] - c_h
                 b3 = np.clip(b3, [tl_w, tl_h, tl_w, tl_h], [w-1, h-1, w-1, h-1])
-                if b0[2]-b0[0] > px_thres and b0[3]-b0[1] > px_thres:
+                if (b0[2] < w-1 and b0[3] < h-1) or (b0[2] == w-1 and  b0[2]-b0[0] > px_thres) or (b0[3] == h-1 and b0[3]-b0[1] > px_thres):
                     b0_list.append(convert_norm((w, h), b0))
-                if b1[2]-b1[0] > px_thres and b1[3]-b1[1] > px_thres:
+                if (b1[0] > 0 and b1[3] < h-1) or (b1[0] == 0 and  b1[2]-b1[0] > px_thres) or (b1[3] == h-1 and b1[2]-b1[1] > px_thres):
                     b1_list.append(convert_norm((w, h), b1))
-                if b2[2]-b2[0] > px_thres and b2[3]-b2[1] > px_thres:
+                if (b2[2] < w-1 and b2[1] > 0 ) or (b2[2] == w-1 and  b2[2]-b2[0] > px_thres) or (b2[1] == 0 and b2[3]-b2[1] > px_thres):
                     b2_list.append(convert_norm((w, h), b2))
-                if b3[2]-b3[0] > px_thres and b3[3]-b3[1] > px_thres:
-                    b3_list.append(convert_norm((w, h), b3)) #cid, xc, yc, w, h, mid
+                if (b3[0] > 0 and b3[1] > 0) or (b3[0] == 0 and  b3[2]-b3[0] > px_thres) or (b3[1] == 0 and b3[3]-b3[1] > px_thres):
+                    b3_list.append(convert_norm((w, h), b3))
+
+
+                # if b0[2]-b0[0] > px_thres and b0[3]-b0[1] > px_thres:
+                #     b0_list.append(convert_norm((w, h), b0))
+                # if b1[2]-b1[0] > px_thres and b1[3]-b1[1] > px_thres:
+                #     b1_list.append(convert_norm((w, h), b1))
+                # if b2[2]-b2[0] > px_thres and b2[3]-b2[1] > px_thres:
+                #     b2_list.append(convert_norm((w, h), b2))
+                # if b3[2]-b3[0] > px_thres and b3[3]-b3[1] > px_thres:
+                #     b3_list.append(convert_norm((w, h), b3)) #cid, xc, yc, w, h, mid
             if len(b0_list):
                 f_txt = open(os.path.join(save_lbl_dir, name.split('.')[0] + '_i0j0.txt'), 'w')
                 for i0 in b0_list:
@@ -218,13 +228,19 @@ def get_args():
     parser.add_argument("--syn_data_dir", type=str,
                         help="Path to folder containing raw synthetic images and annos ",
                         default='/home/jovyan/work/data/wind_turbine/')
+                         # default='/media/lab/Yang/data/wind_turbine/')
 
     parser.add_argument("--syn_img_dir", type=str,
                         help="Path to folder containing cropped synthetic images ",
                         default='/home/jovyan/work/data/wind_turbine_images/')
-    parser.add_argument("--syn_annos_dir", type=str, default='/home/jovyan/work/data/wind_turbine_labels/',
+                        # default='/media/lab/Yang/data/wind_turbine_images/')
+    parser.add_argument("--syn_annos_dir", type=str,
+                        # default='/media/lab/Yang/data/wind_turbine_labels/',
+                        default='/home/jovyan/work/data/wind_turbine_labels/',
                         help="syn label.txt")
-    parser.add_argument("--syn_box_dir", type=str, default='/home/jovyan/work/data/wind_turbine_bbox/',
+    parser.add_argument("--syn_box_dir", type=str,
+                        # default='/media/lab/Yang/data/wind_turbine_bbox/',
+                        default='/home/jovyan/work/data/wind_turbine_bbox/',
                         help="syn related txt files")
 
     parser.add_argument("--syn_txt_dir", type=str, default='/home/jovyan/work/code/yxu-yolov3-xview/data_wnd/',
@@ -273,14 +289,14 @@ if __name__ == "__main__":
     check new lables
     plot bbox on images
     '''
-    # lbl_file =  os.path.join(syn_args.syn_annos_dir, 'naip_324_AZ_WND_i1j1.txt')
-    # lbl_file = os.path.join(syn_args.syn_annos_dir, 'naip_1101_CA_WND_i0j0.txt')
+    # lbl_file =  os.path.join(syn_args.syn_annos_dir, 'naip_915_CA_WND_i0j1.txt')
+    # # lbl_file = os.path.join(syn_args.syn_annos_dir, 'naip_1101_CA_WND_i0j0.txt')
     # img_dir = syn_args.syn_img_dir
-
-    # lbl_file = os.path.join(syn_args.syn_data_dir, 'naip_1101_CA_WND.txt')
-    # # lbl_file = os.path.join(syn_args.syn_data_dir, 'naip_324_AZ_WND.txt')
-    # img_dir = syn_args.syn_data_dir
-
+    #
+    # # lbl_file = os.path.join(syn_args.syn_data_dir, 'naip_915_CA_WND.txt')
+    # # # lbl_file = os.path.join(syn_args.syn_data_dir, 'naip_324_AZ_WND.txt')
+    # # img_dir = syn_args.syn_data_dir
+    #
     # save_dir = syn_args.syn_box_dir
     # if not os.path.exists(save_dir):
     #     os.mkdir(save_dir)
