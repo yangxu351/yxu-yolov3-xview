@@ -126,33 +126,33 @@ def resize_crop_windturbine(px_thres = 10):
                 #     b2_list.append(convert_norm((w, h), b2))
                 # if b3[2]-b3[0] > px_thres and b3[3]-b3[1] > px_thres:
                 #     b3_list.append(convert_norm((w, h), b3)) #cid, xc, yc, w, h, mid
-            if len(b0_list):
-                f_txt = open(os.path.join(save_lbl_dir, name.split('.')[0] + '_i0j0.txt'), 'w')
-                for i0 in b0_list:
-                    f_txt.write( "%s %s %s %s %s\n" % (0, i0[0], i0[1], i0[2], i0[3]))
-                f_txt.close()
-            if len(b1_list):
-                f_txt = open(os.path.join(save_lbl_dir, name.split('.')[0] + '_i0j1.txt'), 'w')
-                for i1 in b1_list:
-                    # print('i1', i1)
-                    f_txt.write( "%s %s %s %s %s\n" % (0, i1[0], i1[1], i1[2], i1[3]))
-                f_txt.close()
-            if len(b2_list):
-                f_txt = open(os.path.join(save_lbl_dir, name.split('.')[0] + '_i1j0.txt'), 'w')
-                for i2 in b2_list:
-                    f_txt.write( "%s %s %s %s %s\n" % (0, i2[0], i2[1], i2[2], i2[3]))
-                f_txt.close()
-            if len(b3_list):
-                f_txt = open(os.path.join(save_lbl_dir, name.split('.')[0] + '_i1j1.txt'), 'w')
-                for i3 in b3_list: #cid, xc, yc, w, h, mid
-                    f_txt.write( "%s %s %s %s %s\n" % (0, i3[0], i3[1], i3[2], i3[3]))
-                f_txt.close()
+            # if len(b0_list):
+            f_txt = open(os.path.join(save_lbl_dir, name.split('.')[0] + '_i0j0.txt'), 'w')
+            for i0 in b0_list:
+                f_txt.write( "%s %s %s %s %s\n" % (0, i0[0], i0[1], i0[2], i0[3]))
+            f_txt.close()
+            # if len(b1_list):
+            f_txt = open(os.path.join(save_lbl_dir, name.split('.')[0] + '_i0j1.txt'), 'w')
+            for i1 in b1_list:
+                # print('i1', i1)
+                f_txt.write( "%s %s %s %s %s\n" % (0, i1[0], i1[1], i1[2], i1[3]))
+            f_txt.close()
+            # if len(b2_list):
+            f_txt = open(os.path.join(save_lbl_dir, name.split('.')[0] + '_i1j0.txt'), 'w')
+            for i2 in b2_list:
+                f_txt.write( "%s %s %s %s %s\n" % (0, i2[0], i2[1], i2[2], i2[3]))
+            f_txt.close()
+            # if len(b3_list):
+            f_txt = open(os.path.join(save_lbl_dir, name.split('.')[0] + '_i1j1.txt'), 'w')
+            for i3 in b3_list: #cid, xc, yc, w, h, mid
+                f_txt.write( "%s %s %s %s %s\n" % (0, i3[0], i3[1], i3[2], i3[3]))
+            f_txt.close()
 
 
 def split_syn_wnd_trn_val(comment='wnd', seed=17, pxs='px10_seed17'):
 
-    all_imgs = np.sort(glob.glob(os.path.join(syn_args.syn_img_dir, '*.jpg')))
-    num_files = len(all_imgs)
+    all_lbls = np.sort(glob.glob(os.path.join(syn_args.syn_annos_dir, '*.txt')))
+    num_files = len(all_lbls)
 
     np.random.seed(seed)
     all_indices = np.random.permutation(num_files)
@@ -170,13 +170,13 @@ def split_syn_wnd_trn_val(comment='wnd', seed=17, pxs='px10_seed17'):
     lbl_dir = syn_args.syn_annos_dir
 
     for i in all_indices[:num_val]:
-        val_img_txt.write('%s\n' % all_imgs[i])
-        val_lbl_txt.write('%s\n' % os.path.join(lbl_dir, os.path.basename(all_imgs[i]).replace('.jpg', '.txt')))
+        val_img_txt.write('%s\n' % all_lbls[i])
+        val_lbl_txt.write('%s\n' % os.path.join(lbl_dir, os.path.basename(all_lbls[i]).replace('.txt', '.jpg')))
     val_img_txt.close()
     val_lbl_txt.close()
     for j in all_indices[num_val:]:
-        trn_img_txt.write('%s\n' % all_imgs[j])
-        trn_lbl_txt.write('%s\n' % os.path.join(lbl_dir, os.path.basename(all_imgs[j]).replace('.jpg', '.txt')))
+        trn_img_txt.write('%s\n' % all_lbls[j])
+        trn_lbl_txt.write('%s\n' % os.path.join(lbl_dir, os.path.basename(all_lbls[j]).replace('.txt', '.jpg')))
     trn_img_txt.close()
     trn_lbl_txt.close()
 
@@ -308,7 +308,7 @@ if __name__ == "__main__":
     split train val
     '''
     # split_syn_wnd_trn_val(comment='wnd', seed=17, pxs='px10_seed17')
-    #
+
     '''
     create *.data
     '''
