@@ -4,7 +4,8 @@ import math
 import argparse
 import math
 import os
-
+import sys
+sys.path.append('/data/users/yang/code/yxu-yolov3-xview')
 import utils.wv_util as wv
 from utils.utils_xview import coord_iou, compute_iou
 from utils.xview_synthetic_util import preprocess_xview_syn_data_distribution as pps
@@ -650,13 +651,14 @@ def get_args(px_thres=None, whr_thres=None, seed=17):
                         default='/data/users/yang/data/xView_YOLO/labels/')
 
     parser.add_argument("--data_list_save_dir", type=str, help="to save selected trn val images and labels",
-#                        default='/data/users/yang/data/xView_YOLO/labels/{}/{}_cls/data_list/')
-#    parser.add_argument("--data_save_dir", type=str, help="to save data files",
-#                        default='/data/users/yang/code/yxu-yolov3-xview/data_xview/{}_cls/')
-
                         default='/media/lab/Yang/data/xView_YOLO/labels/{}/{}_cls/data_list/')
+#                        default='/data/users/yang/data/xView_YOLO/labels/{}/{}_cls/data_list/')
     parser.add_argument("--data_save_dir", type=str, help="to save data files",
-                        default='/media/lab/Yang/code/yolov3/data_xview/{}_cls/')
+                        default='/data/users/yang/code/yxu-yolov3-xview/data_xview/{}_cls/')
+
+                        
+#    parser.add_argument("--data_save_dir", type=str, help="to save data files",
+#                        default='/media/lab/Yang/code/yolov3/data_xview/{}_cls/')
 
     parser.add_argument("--cat_sample_dir", type=str, help="to save figures",
                         default='/data/users/yang/data/xView_YOLO/cat_samples/')
@@ -810,22 +812,26 @@ if __name__ == '__main__':
     seed = 17                                                                                           
     seed = 199                                                                                          
     '''
-    # seed = 17
-    # # seed = 199
-    # px_thres = 23
-    # whr_thres = 3
-    # args = get_args(px_thres, whr_thres, seed)
-    # pxwhrs = 'px{}whr{}_seed{}'.format(px_thres, whr_thres, seed)
+    seed = 17
+    # seed = 199
+    px_thres = 23
+    whr_thres = 3
+    args = get_args(px_thres, whr_thres, seed)
+    pxwhrs = 'px{}whr{}_seed{}'.format(px_thres, whr_thres, seed)
     # model_id = 4
     # rare_id = 1
-    # # model_id = 1
-    # # rare_id = 2
-    # # model_id = 5
-    # # rare_id = 3
-    # non_rare_id = 0
-    # types = ['hard', 'easy']
-    # for type in types:
-    #     create_test_dataset_of_m_rc(model_id, rare_id, type, seed, pxwhrs)
+    # model_id = 1
+    # rare_id = 2
+    # model_id = 5
+    # rare_id = 3
+#    model_id = 5
+#    rare_id = 4
+    model_id = 5
+    rare_id = 5
+    non_rare_id = 0
+    types = ['hard', 'easy']
+    for type in types:
+        create_test_dataset_of_m_rc(model_id, rare_id, type, seed, pxwhrs)
 
 
     # import collections
@@ -886,19 +892,19 @@ if __name__ == '__main__':
     check annotation
      plot images with bbox
     '''
-    # type='hard'
-    type='easy'
-    save_dir = os.path.join(args.cat_sample_dir, 'image_with_bbox/2315_{}_upscale/'.format(type))
-    if not os.path.exists(save_dir):
-        os.mkdir(save_dir)
-    lbl_dir = args.annos_save_dir[:-1] + '_val_m4_rc1_{}_seed17_upscale/'.format(type)
-    img_dir = args.images_save_dir[:-1] + '_{}_upscale/'.format(type)
-    img_list = glob.glob(os.path.join(img_dir, '2315_*.png'))
-    for f in img_list:
-        print('f ', f)
-        name = os.path.basename(f)
-        lbl_file = os.path.join(lbl_dir, name.replace('.png', '.txt'))
-        gbc.plot_img_with_bbx(f, lbl_file, save_dir)
+#    # type='hard'
+#    type='easy'
+#    save_dir = os.path.join(args.cat_sample_dir, 'image_with_bbox/2315_{}_upscale/'.format(type))
+#    if not os.path.exists(save_dir):
+#        os.mkdir(save_dir)
+#    lbl_dir = args.annos_save_dir[:-1] + '_val_m4_rc1_{}_seed17_upscale/'.format(type)
+#    img_dir = args.images_save_dir[:-1] + '_{}_upscale/'.format(type)
+#    img_list = glob.glob(os.path.join(img_dir, '2315_*.png'))
+#    for f in img_list:
+#        print('f ', f)
+#        name = os.path.basename(f)
+#        lbl_file = os.path.join(lbl_dir, name.replace('.png', '.txt'))
+#        gbc.plot_img_with_bbx(f, lbl_file, save_dir)
     
     '''
     flip and rotate images 
@@ -932,11 +938,11 @@ if __name__ == '__main__':
     add augmented images and labels into val file
     create corresponding *.data
     '''
-    # img_name = '2315_359'
-    img_name = '2315_329'
-    eh_type = 'hard'
-    # eh_type = 'easy'
-    create_data_for_augment_img_lables(img_name, eh_type)
+#    # img_name = '2315_359'
+#    img_name = '2315_329'
+#    eh_type = 'hard'
+#    # eh_type = 'easy'
+#    create_data_for_augment_img_lables(img_name, eh_type)
 
 
 

@@ -309,8 +309,11 @@ if __name__ == '__main__':
     # cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_50_model4_v20'
 #        cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_120_model4_v21'
 #    cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_uniform_50_model4_v19'
-#        display_types = ['color', 'mixed']
-#        resize_crop(cmt, display_types)
+#    cmt = 'xbw_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_rnd_color_bias0_model4_v21'
+#    cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_bias0_model4_v1'
+#    cmt = 'xbw_xcolor_xbkg_unif_shdw_scatter_gauss_50_color_bias0_model5_RC5_v1'
+#    display_types = ['color'] # , 'mixed']
+#    resize_crop(cmt, display_types, scale=2)
 
     '''
     generate txt and bbox for syn_xveiw_background data
@@ -360,15 +363,7 @@ if __name__ == '__main__':
 #    cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_120_model4_v21'
 #    cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_uniform_50_rdegree_model4_v22'
 #    cmt = 'xbw_rndcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_model4_v23'
-    cmt = ['xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_bias0_model4_v1',
-    'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_100_bias0_model4_v2',
-    'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias20_model4_v3',
-    'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias40_model4_v4',
-    'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias50_model4_v5',
-    'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias60_model4_v6',
-    'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias70_model4_v7',
-    'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias110_model4_v8',
-    'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_rnd_model4_v9']
+#    cmt = ['xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_bias0_model4_v1', 'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_100_bias0_model4_v2',    'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias20_model4_v3',    'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias40_model4_v4', 'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias50_model4_v5','xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias60_model4_v6', 'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias70_model4_v7', 'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias110_model4_v8', 'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_rnd_model4_v9']
 
 #    px_thres=15
 #    px_thres = 30
@@ -391,7 +386,7 @@ if __name__ == '__main__':
     #    cmt = 'xbw_xcolor_xbkg_unif_shdw_rndp_model5_v2'
 #    cmt = 'xbw_xcolor_xbkg_unif_shdw_scatter_gauss_40_bias0_model5_v1'
 
- #   for color_pro in range(1):
+#    for color_pro in range(1):
 # #       if color_pro == 0:
 # #           cmt = 'xbw_xcolor_xbkg_unif_shdw_scatter_gauss_40_bias0_model5_v1'
 # #       else:
@@ -404,40 +399,56 @@ if __name__ == '__main__':
 #            cmt = 'xbw_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_rnd_color_bias0_model4_v21'
 #        else:
 #            cmt = 'xbw_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_rnd_color_bias{}_model4_v{}'.format(color_pro*25.5, color_pro+21)
-        
+#        
 #    for angle_pro in range(1, 11):
 #        cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias{}_model4_v{}'.format(angle_pro*36, angle_pro+9)
-#            
-#        px_thres = 15
-##        px_thres = 23
+
+#    for color_pro in range(11):
+##        if color_pro == 0:
+##            cmt = 'xbw_xcolor_xbkg_unif_shdw_scatter_gauss_38_color_bias0_model5_RC4_v1'
+##        else:
+##            cmt = 'xbw_xcolor_xbkg_unif_shdw_scatter_gauss_38_color_bias{}_model5_RC4_v{}'.format(color_pro*25.5, color_pro+1)
+#        if color_pro == 0:
+#            cmt = 'xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_1_color_bias0_model5_RC4_v12'
+#        else:
+#            cmt = 'xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_1_color_bias{}_model5_RC4_v{}'.format(color_pro*25.5, color_pro+12)
+##        if color_pro == 0:
+##            cmt = 'xbw_xcolor_xbkg_unif_shdw_scatter_gauss_50_color_bias0_model5_RC5_v1'
+##        else:
+##            cmt = 'xbw_xcolor_xbkg_unif_shdw_scatter_gauss_50_color_bias{}_model5_RC5_v{}'.format(color_pro*25.5, color_pro+1)
+##            
+##        px_thres = 15
+#        px_thres = 23
 #        whr_thres = 3
 #        dt = 'color'
 #        syn_args = get_args(cmt)
 #        group_object_annotation_and_draw_bbox(dt, px_thres, whr_thres)
 
-    comments = ['xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_bias0_model4_v1',
-    'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_100_bias0_model4_v2',
-    'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias20_model4_v3',
-    'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias40_model4_v4',
-    'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias50_model4_v5',
-    'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias60_model4_v6',
-    'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias70_model4_v7',
-    'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias110_model4_v8',
-    'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_rnd_model4_v9']
-    for cmt in comments:
-        px_thres = 15
-        whr_thres = 3
-        dt = 'color'
-        syn_args = get_args(cmt)
-        group_object_annotation_and_draw_bbox(dt, px_thres, whr_thres)
+#    comments = ['xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_bias0_model4_v1',
+#    'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_100_bias0_model4_v2',
+#    'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias20_model4_v3',
+#    'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias40_model4_v4',
+#    'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias50_model4_v5',
+#    'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias60_model4_v6',
+#    'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias70_model4_v7',
+#    'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias110_model4_v8',
+#    'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_rnd_model4_v9']
+#    for cmt in comments:
+#        px_thres = 15
+#        whr_thres = 3
+#        dt = 'color'
+#        syn_args = get_args(cmt)
+#        group_object_annotation_and_draw_bbox(dt, px_thres, whr_thres)
 
-#    px_thres = 23
+#    cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_bias0_model4_v1'
+#    cmt = 'xbw_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_rnd_color_bias0_model4_v21'
+#    cmt = 'xbw_xcolor_xbkg_unif_shdw_scatter_gauss_50_color_bias0_model5_RC5_v1'
+#    px_thres = 30
 #    whr_thres=3
-#    display_types = ['color']#, 'mixed']# 'color',
+#    display_types = ['color']# , 'mixed'] 'color',
 #    syn_args = get_args(cmt)
 #    for dt in display_types:
-#        group_object_annotation_and_draw_bbox(dt, px_thres, whr_thres)
-##        group_object_annotation_and_draw_bbox(dt, px_thres, whr_thres, upscale=True)
+#        group_object_annotation_and_draw_bbox(dt, px_thres, whr_thres, upscale=True)
 
     '''
     draw bbox on rgb images for syn_xveiw_background data
@@ -515,7 +526,7 @@ if __name__ == '__main__':
 #    cmt = 'xbw_xcolor_xbkg_unif_shdw_rndp_model5_v2'
 #    cmt = 'xbw_xcolor_xbkg_unif_shdw_scatter_gauss_40_bias0_model5_v1'
     
-#    for color_pro in range(5, 6):
+#    for color_pro in range(11):
 ##        if color_pro == 0:
 ##            cmt = 'xbw_xcolor_xbkg_unif_shdw_scatter_gauss_40_bias0_model5_v1'
 ##        else:
@@ -524,11 +535,26 @@ if __name__ == '__main__':
 ##            cmt = 'xbsw_xwing_scatter_gauss_30_bias0_model1_v1'
 ##        else:
 ##            cmt = 'xbsw_xwing_scatter_gauss_30_color_bias{}_model1_v{}'.format(color_pro*25.5, color_pro+1)
-##        px_thres = 23
-##        whr_thres = 3
-##        dt = 'color'
-##        syn_args = get_args(cmt)
-##        draw_bbx_on_rgb_images(dt, px_thres, whr_thres)
+##        if color_pro == 0:
+##            cmt = 'xbw_xcolor_xbkg_unif_shdw_scatter_gauss_38_color_bias0_model5_RC4_v1'
+##        else:
+##            cmt = 'xbw_xcolor_xbkg_unif_shdw_scatter_gauss_38_color_bias{}_model5_RC4_v{}'.format(color_pro*25.5, color_pro+1)
+#        if color_pro == 0:
+#                cmt = 'xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_1_color_bias0_model5_RC4_v12'
+#        else:
+#            cmt = 'xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_1_color_bias{}_model5_RC4_v{}'.format(color_pro*25.5, color_pro+12)
+#        px_thres = 23
+##        if color_pro == 0:
+##            cmt = 'xbw_xcolor_xbkg_unif_shdw_scatter_gauss_50_color_bias0_model5_RC5_v1'
+##        else:
+##            cmt = 'xbw_xcolor_xbkg_unif_shdw_scatter_gauss_50_color_bias{}_model5_RC5_v{}'.format(color_pro*25.5, color_pro+1)
+##        px_thres = 15
+#
+#        whr_thres = 3
+#        dt = 'color'
+#        syn_args = get_args(cmt)
+#        draw_bbx_on_rgb_images(dt, px_thres, whr_thres)
+#
 #        if color_pro == 0:
 #            cmt = 'xbw_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_rnd_color_bias0_model4_v21'
 #        else:

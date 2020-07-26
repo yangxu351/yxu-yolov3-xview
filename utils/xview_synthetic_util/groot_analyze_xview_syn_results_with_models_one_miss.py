@@ -211,7 +211,8 @@ def check_prd_gt_iou_xview_syn(data_file, miss_model_id, rare_class, cmt, prefix
             p_cat_id = p['category_id']
             p_score = p['score']
             img = cv2.rectangle(img, (p_bbx[0], p_bbx[1]), (p_bbx[2], p_bbx[3]), (255, 255, 0), 2)
-            cv2.putText(img, text='[conf:{:.3f}]'.format(p_score), org=(p_bbx[2] + 10, p_bbx[3]), fontFace=cv2.FONT_HERSHEY_SIMPLEX, fontScale=0.5, thickness=1, lineType=cv2.LINE_AA, color=(255, 255, 0))  # cyan
+ #           cv2.putText(img, text='[conf:{:.3f}]'.format(p_score), org=(p_bbx[2] + 10, p_bbx[3]), fontFace=cv2.FONT_HERSHEY_SIMPLEX, fontScale=0.5, thickness=1, lineType=cv2.LINE_AA, color=(255, 255, 0))  # cyan
+            cv2.putText(img, text='[conf:{:.3f}]'.format(p_score), org=(p_bbx[0] , p_bbx[1]-10), fontFace=cv2.FONT_HERSHEY_SIMPLEX, fontScale=0.5, thickness=1, lineType=cv2.LINE_AA, color=(255, 255, 0))  # cyan
 
 #            for g in gt_cat:
 #                g_bbx = [int(x) for x in g[1:]]
@@ -277,10 +278,21 @@ if __name__ == "__main__":
 #    comments = ['syn_xview_bkg_px30whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_120_model4_v21_upscale_color', 'syn_xview_bkg_px30whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_120_model4_v21_upscale_mixed']
 #    comments = ['syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_model4_v23_color', 'syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_model4_v23_mixed']
 
-    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_bias0_model4_v1_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias_all_model4_v20_color']
+#    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_bias0_model4_v1_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias_all_model4_v20_color']
+ 
+#    comments = ['syn_xview_bkg_px30whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_bias0_model4_v1_upscale_color']#, 'syn_xview_bkg_px30whr3_xbw_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_rnd_color_bias0_model4_v21_upscale_color']
+
 #    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias20_model4_v3_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_rnd_model4_v7_color']
-    miss_model_id = 4
-    rare_class = 1
+
+#    comments = []
+#    for color_pro in range(11):
+#        if color_pro == 0:
+#            comments.append('syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_rnd_color_bias0_model4_v21_color') 
+#        else:
+#            comments.append('syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_rnd_color_bias{}_model4_v{}_color'.format(color_pro*25.5, color_pro+21))
+#    miss_model_id = 4
+#    rare_class = 1
+
 #    comments = ['syn_xview_bkg_px23whr3_xbsw_xcolor_xbkg_unif_rndp_model1_v6_color', 'syn_xview_bkg_px23whr3_xbsw_xcolor_xbkg_unif_rndp_model1_v6_mixed']
 #    comments = ['syn_xview_bkg_px23whr3_xbsw_rndcolor_xbkg_unif_rndp_model1_v7_color', 'syn_xview_bkg_px23whr3_xbsw_rndcolor_xbkg_unif_rndp_model1_v7_mixed']
 #    comments = ['syn_xview_bkg_px23whr3_xbsw_xwing_color_xbkg_unif_rndp_model1_v8_color', 'syn_xview_bkg_px23whr3_xbsw_xwing_color_xbkg_unif_rndp_model1_v8_mixed']
@@ -299,6 +311,34 @@ if __name__ == "__main__":
 #    miss_model_id = 5
 #    rare_class = 3
 
+#    comments = []
+#    for color_pro in range(11):
+#        if color_pro == 0:
+#            comments.append('syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_scatter_gauss_38_color_bias0_model5_RC4_v1_color')
+#        else:
+#            comments.append('syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_scatter_gauss_38_color_bias{}_model5_RC4_v{}_color'.format(color_pro*25.5, color_pro+1))
+#    comments = []
+#    for color_pro in range(11):
+#        if color_pro == 0:
+#            comments.append('syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_1_color_bias0_model5_RC4_v12_color')
+#        else:
+#            comments.append('syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_1_color_bias{}_model5_RC4_v{}_color'.format(color_pro*25.5, color_pro+12))
+#    
+#    miss_model_id = 5
+#    rare_class = 4
+  
+    comments = []
+    for color_pro in range(11):
+        if color_pro == 0:
+            comments.append('syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_shdw_scatter_gauss_50_color_bias0_model5_RC5_v1_color')
+        else:
+            comments.append('syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_shdw_scatter_gauss_50_color_bias{}_model5_RC5_v{}_color'.format(color_pro*25.5, color_pro+1))
+    
+#    comments = ['syn_xview_bkg_px30whr3_xbw_xcolor_xbkg_unif_shdw_scatter_gauss_50_color_bias0_model5_RC5_v1_upscale_color']
+    miss_model_id = 5
+    rare_class = 5 
+
+
 ##    res_folder = 'test_on_xview_with_model_{}*_seed{}_miss'
 ##    res_folder = 'test_on_xview_with_model_{}_seed*_hard'
 ##    res_folder = 'test_on_xview_{}_m{}_rc{}_easy'
@@ -306,8 +346,11 @@ if __name__ == "__main__":
 #    # hyp_cmt = 'hgiou1_obj3.5_val_labeled'
 #    # hyp_cmt = 'hgiou1_1gpu_val_labeled'
 #    # hyp_cmt = 'hgiou1_1gpu_val_xview'
+#    hyp_cmt = 'hgiou1_1gpu_val_syn'
+#    prefix = 'results_syn'
     hyp_cmt = 'hgiou1_1gpu_val_syn'
-    prefix = 'results_syn'
+#    prefix = 'results_syn'
+    prefix = 'results_syn_iou20'
 #    hyp_cmt = 'hyp_tuned_val_syn'
 #    prefix = 'results_syn_tuned'
 #    hyp_cmt = 'hgiou1_1gpu_trans_val_syn'
@@ -317,12 +360,13 @@ if __name__ == "__main__":
 #    hyp_cmt = 'hgiou1_half_affine_val_syn'
 #    prefix = 'results_syn_half_affine'
     base_pxwhrs = 'px23whr3_seed17'
-#    data_file = 'xviewtest_{}_with_model_m{}_miss.data'.format(base_pxwhrs, miss_model_id)
-#    data_file = 'xviewtest_{}_m{}_rc{}_{}.data'
-#    res_folder = 'test_on_xview_{}_m{}_rc{}_{}'
 
-    data_file = 'xviewtest_{}_m{}_rc{}_{}_aug.data'
-    res_folder = 'test_on_xview_{}_m{}_rc{}_{}_aug'
+    data_file = 'xviewtest_{}_m{}_rc{}_{}.data'
+#    res_folder = 'test_on_xview_{}_m{}_rc{}_{}'
+    res_folder = 'test_on_xview_{}_m{}_rc{}_{}_iou20'
+
+#    data_file = 'xviewtest_{}_m{}_rc{}_{}_aug.data'
+#    res_folder = 'test_on_xview_{}_m{}_rc{}_{}_aug'
     
 #    data_file = 'xviewtest_{}_upscale_m{}_rc{}_{}.data'
 #    res_folder = 'test_on_xview_{}_upscale_m{}_rc{}_{}'

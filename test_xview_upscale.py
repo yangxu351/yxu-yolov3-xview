@@ -62,11 +62,13 @@ def test(cfg,
          opt=None):
     device = torch_utils.select_device(opt.device, batch_size=batch_size)
     model_maps = torch.load(weights, map_location=device)
-    last_num = 5 
+#    last_num = 5 
+    last_num = 1
     mp_arr = np.zeros((last_num))
     mr_arr = np.zeros((last_num))
     map_arr = np.zeros((last_num))
     mf1_arr = np.zeros((last_num))
+    ix = 0
     # Configure run
     data = parse_data_cfg(data)
     nc = int(data['classes'])  # number of classes
@@ -74,313 +76,310 @@ def test(cfg,
     path = data['test']  # path to test images
     lbl_path = data['test_label']
     names = load_classes(data['names'])  # class names
-#    m_key = 215
-#    for ix, mk in enumerate([m_key]):
-    for ix, mk in enumerate(model_maps.keys()):
-        # Initialize/load model and set device
-        if model is None:
-            device = torch_utils.select_device(opt.device, batch_size=batch_size)
-            verbose = opt.task == 'test'
+    # Initialize/load model and set device
+    if model is None:
+        device = torch_utils.select_device(opt.device, batch_size=batch_size)
+        verbose = opt.task == 'test'
 
-            # Remove previous
-            for f in glob.glob('test_batch*.jpg'):
-                os.remove(f)
+        # Remove previous
+        for f in glob.glob('test_batch*.jpg'):
+            os.remove(f)
 
-            # Initialize model
-            model = Darknet(cfg, img_size).to(device)
+        # Initialize model
+        model = Darknet(cfg, img_size).to(device)
 
-            # Load weights
-            # attempt_download(weights)
-            # pytorch format
-            model.load_state_dict(model_maps[mk]['model'])
-            # else:  # darknet format
-            #     _ = load_darknet_weights(model, model_maps[mk])
+        # Load weights
+        # attempt_download(weights)
+        # pytorch format
+        model.load_state_dict(model_maps['model'])
+        # else:  # darknet format
+        #     _ = load_darknet_weights(model, model_maps[mk])
 
-            if torch.cuda.device_count() > 1:
-                model = nn.DataParallel(model)
-        else:  # called by train.py
-            device = next(model.parameters()).device  # get model device
-            verbose = False
+        if torch.cuda.device_count() > 1:
+            model = nn.DataParallel(model)
+    else:  # called by train.py
+        device = next(model.parameters()).device  # get model device
+        verbose = False
 
 
-        iouv = torch.linspace(0.5, 0.95, 10).to(device)  # iou vector for mAP@0.5:0.95
-        #fixme --yang.xu
-        iouv = iouv[0].view(1)  # for mAP@0.5
-        # iouv = iouv[3].view(1)  # for mAP@0.65
-        # iouv = iouv[5].view(1)  # for mAP@0.75
-        niou = iouv.numel()
+    iouv = torch.linspace(0.5, 0.95, 10).to(device)  # iou vector for mAP@0.5:0.95
+    #fixme --yang.xu
+    iouv = iouv[0].view(1)  # for mAP@0.5
+    # iouv = iouv[3].view(1)  # for mAP@0.65
+    # iouv = iouv[5].view(1)  # for mAP@0.75
+    niou = iouv.numel()
 
-        # Dataloader
-        if dataloader is None:
-            #fixme --Yang.xu
-            # dataset = LoadImagesAndLabels(path, lbl_path, img_size, batch_size, rect=True, cache_labels=True)  #
-            if opt.model_id is not None:
-                dataset = LoadImagesAndLabels(path, lbl_path, img_size, batch_size, rect=True, cache_labels=True, with_modelid=True)
-            else:
-                dataset = LoadImagesAndLabels(path, lbl_path, img_size, batch_size, rect=True, cache_labels=True)
-            batch_size = min(batch_size, len(dataset))
-            dataloader = DataLoader(dataset,
-                                    batch_size=batch_size,
-                                    num_workers=min([os.cpu_count(), batch_size if batch_size > 1 else 0, 8]),
-                                    pin_memory=True,
-                                    collate_fn=dataset.collate_fn)
-
-        seen = 0
-        model.eval()
-        # fixme
-        # coco91class = coco80_to_coco91_class()
-        xview_classes = np.arange(nc)
-        s = ('%20s' + '%10s' * 6) % ('Class', 'Images', 'Targets', 'P', 'R', 'mAP@0.5', 'F1')
-        p, r, f1, mp, mr, map, mf1 = 0., 0., 0., 0., 0., 0., 0.
-        loss = torch.zeros(3)
-        jdict, stats, ap, ap_class = [], [], [], []
-        # fixme --yang.xu
-        sum_labels = 0
-        for batch_i, (imgs, targets, paths, shapes) in enumerate(tqdm(dataloader, desc=s)):
-            imgs = imgs.to(device).float() / 255.0  # uint8 to float32, 0 - 255 to 0.0 - 1.0
-            targets = targets.to(device)
-
-            # print('imgs--', imgs.shape)
-            # print('targets--', targets.shape)
-            # print('targets ', targets)
-            # print('paths--', len(paths))
-            # print('shapes', len(shapes))
-            # exit(0)
-            _, _, height, width = imgs.shape  # batch size, channels, height, width
-
-            # Plot images with bounding boxes
-            if batch_i == 0 and not os.path.exists('test_1gpu.jpg'):
-                plot_images(imgs=imgs, targets=targets, paths=paths, fname='test_batch0.jpg')
-
-            # Disable gradients
-            with torch.no_grad():
-                # Run model
-                inf_out, train_out = model(imgs)  # inference and training outputs
-                # plot_grids(train_out, batch_i, paths=paths, save_dir=opt.grids_dir)
-                # exit(0)
-
-                # Compute loss
-                if hasattr(model, 'hyp'):  # if model has loss hyperparameters
-                    loss += compute_loss(train_out, targets, model)[1][:3].cpu()  # GIoU, obj, cls
-            
-                # Run NMS
-                output = non_max_suppression(inf_out, conf_thres=conf_thres, iou_thres=nms_iou_thres)
-            # Statistics per image
-            for si, pred in enumerate(output):
-                # print('si ', si, targets[si])
-                # print('targets--', targets.shape)
-                labels = targets[targets[:, 0] == si, 1:]
-                # # print('labels--', labels.shape)
-                # # print(labels)
-                nl = len(labels)
-                sum_labels += nl
-                #fixme ---yang.xu
-                # tcls = labels[:, 0].tolist() if nl else []  # target class
-                tcls = labels[:, -1].tolist() if nl else []
-                # print('tcls ', len(tcls))
-                # exit(0)
-
-                seen += 1
-
-                if pred is None:
-                    if nl:
-                        stats.append((torch.zeros(0, 1), torch.Tensor(), torch.Tensor(), tcls, torch.zeros(0, 1)))
-                    continue
-
-                # Append to text file
-                # with open('test.txt', 'a') as file:
-                #    [file.write('%11.5g' * 7 % tuple(x) + '\n') for x in pred]
-
-                # Clip boxes to image bounds
-                clip_coords(pred, (height, width))
-                #fixme --yang.xu
-                pred = drop_boundary(pred, (height, width), margin_thres=opt.margin)
-                # Append to pycocotools JSON dictionary
-                if save_json:
-                    # [{"image_id": 42, "category_id": 18, "bbox": [258.15, 41.29, 348.26, 243.78], "score": 0.236}, ...
-                    #fixme
-                    image_name = paths[si].split('/')[-1]
-                    # image_id = get_val_imgid_by_name(opt.base_dir, image_name)
-
-                    box = pred[:, :4].clone()  # xyxy
-                    scale_coords(imgs[si].shape[1:], box, shapes[si][0], shapes[si][1])  # to original shape
-                    box = xyxy2xywh(box)  # xywh
-                    box[:, :2] -= box[:, 2:] / 2  # xy center to top-left corner # xtlytlwh
-                    for di, d in enumerate(pred):
-                        #fixme
-                        # jdict.append({'image_id': image_id,
-                        #               'category_id': xview_classes[int(d[5])],
-                        #               'bbox': [floatn(x, 3) for x in box[di]],
-                        #               'score': floatn(d[4], 5)})  # conf
-                        jdict.append({'image_name': image_name, # image_id,
-                                      'category_id': xview_classes[int(d[5])],
-                                      'bbox': [floatn(x, 3) for x in box[di]],
-                                      'score': floatn(d[4], 5)})
-
-                # Assign all predictions as incorrect
-                correct = torch.zeros(len(pred), niou, dtype=torch.bool)
-                neu_correct = torch.zeros(len(pred), niou, dtype=torch.bool)
-                if nl:
-                    detected = []  # target indices
-
-                    #fixme --yang.xu
-                    tcls_tensor = labels[:, -1]
-                    # print('tcls_tensor', tcls_tensor)
-                    # exit(0)
-
-                    # target boxes
-                    tbox = xywh2xyxy(labels[:, 1:5]) * torch.Tensor([width, height, width, height]).to(device)
-
-                    # Per target class
-                    # for cls in torch.unique(tcls_tensor):
-
-                    #fixme --yang.xu
-                    # ti = (cls == tcls_tensor).nonzero().view(-1)  # target indices
-                    # pi = (cls == pred[:, 5]).nonzero().view(-1)  # prediction indices
-                    #fixme --yang.xu
-                    ti = (opt.rare_class == tcls_tensor).nonzero().view(-1) # target indices
-                    pi = (0 == pred[:, 5]).nonzero().view(-1)  # prediction indices
-#                    if len(ti):
-#                        print('\nti ', len(ti), ti)
-
-                    if opt.type == 'easy':
-                        neu_cls = 0
-                        ni = (neu_cls == tcls_tensor).nonzero().view(-1) # target neutral indices
-#                        print('ni ', len(ni), ni)
-                    else:
-                        ni = torch.tensor([])
-
-                    # if len(pi):
-                    #     ious, i = box_iou(pred[pi, :4], tbox[ti]).max(1)  # best ious, indices
-                    #     # Append detections
-                    #     for j in (ious > iouv[0]).nonzero():
-                    #         d = ti[i[j]]  # detected target
-                    #         if d not in detected:
-                    #             detected.append(d)
-                    #             correct[pi[j]] = ious[j] > iouv  # iou_thres is 1xn
-                    #             if len(detected) == nl:  # all targets already located in image
-                    #                 break
-
-                    # Search for detections
-                    if len(pi) and len(ti) and not len(ni):
-                        ious, i = box_iou(pred[pi, :4], tbox[ti]).max(1)  # best ious, indices
-                        # print('ious ', ious.shape)
-                        # Append detections
-                        for j in (ious > iouv[0]).nonzero():
-                            d = ti[i[j]]  # detected target
-                            # print('d', d)
-                            if d not in detected:
-                                detected.append(d)
-                                correct[pi[j]] = ious[j] > iouv  # iou_thres is 1xn
-                                if len(detected) == nl:  # all targets already located in image
-                                    break
-                    elif len(pi) and not len(ti) and len(ni):
-                        neu_ious, nix = box_iou(pred[pi, :4], tbox[ni]).max(1)
-                        for s in (neu_ious > iouv[0]).nonzero():
-#                            print('s --------> ', s)
-                            d = ni[nix[s]]  # detected target
-                            if d not in detected:
-                                detected.append(d)
-                                neu_correct[pi[s]] = neu_ious[s] > iouv  # iou_thres is 1xn
-                                if len(detected) == nl:  # all targets already located in image
-                                    break
-                    elif len(pi) and len(ti) and len(ni):
-                        ious, i = box_iou(pred[pi, :4], tbox[ti]).max(1)  # best ious, indices
-                        neu_ious, nix = box_iou(pred[pi, :4], tbox[ni]).max(1)
-                        for j in (ious > iouv[0]).nonzero():
-                            d = ti[i[j]]  # detected target
-                            if d not in detected:
-                                detected.append(d)
-                                correct[pi[j]] = ious[j] > iouv  # iou_thres is 1xn
-                                if len(detected) == nl:  # all targets already located in image
-                                    break
-                        for s in (neu_ious > iouv[0]).nonzero():
-#                            print('s --------> ', s)
-                            d = ni[nix[s]]  # detected neutral target
-                            if d not in detected:
-                                detected.append(d)
-                                neu_correct[pi[s]] = neu_ious[s] > iouv  # iou_thres is 1xn
-                                if len(detected) == nl:  # all targets already located in image
-                                    break
-#                    print('detected ', detected)
-                # Append statistics (correct, conf, pcls, tcls, neu_correct)
-                # pred (x1, y1, x2, y2, object_conf, conf, class)
-                stats.append((correct, pred[:, 4].cpu(), pred[:, 5].cpu(), tcls, neu_correct))
-#                if len(tcls) and len(correct):
-#                    print('\n correct: {}  pred[:,4]:{}  pred[:, 5]:{} tcls:{}'.format(correct, pred[:, 4].cpu(), pred[:, 5].cpu(), tcls))
-                # if len(tcls) and len(neu_correct):
-#                    print('\n neu_correct: {}  pred[:,4]:{}  pred[:, 5]:{} tcls:{}'.format(neu_correct, pred[:, 4].cpu(), pred[:, 5].cpu(), tcls))
-
-        print('sum all labels', sum_labels)
-        # Compute statistics
-        stats = [np.concatenate(x, 0) for x in list(zip(*stats))]  # to numpy
-        if len(stats):
-            pr_name= opt.name + '  @IoU: {:.2f} '.format(iouv[0]) + '  conf_thres: {} '.format(conf_thres)
-            # print('*stats', *stats)
-            p, r, ap, f1, ap_class = ap_per_class(*stats, pr_path=opt.result_dir, pr_name= pr_name, rare_class=opt.rare_class)
-
-            print('dataset.batch ', dataset.batch.shape)
-            # exit(0)
-            area = (img_size*opt.res)*(img_size*opt.res)*dataset.batch.shape[0]*1e-6
-            
-            plot_roc_easy_hard(*stats, pr_path=opt.result_dir, pr_name= pr_name, rare_class=opt.rare_class, area=area, ehtype=opt.type, title_data_name=tif_name)
-            # if niou > 1:
-            #       p, r, ap, f1 = p[:, 0], r[:, 0], ap[:, 0], ap.mean(1)  # average across ious
-            #fixme --yang.xu
-            if niou > 1:
-                p, r, ap, f1 = p[:, 0], r[:, 0], ap.mean(1), ap[:, 0]  # [P, R, AP@0.5:0.95, AP@0.5]
-            mp, mr, map, mf1 = p.mean(), r.mean(), ap.mean(), f1.mean()
-            #fixme --yang.xu compute before
-            # nt = np.bincount(stats[3].astype(np.int64), minlength=nc)  # number of targets per class
-            st3 = stats[3][stats[3] == opt.rare_class]
-            nt = np.bincount(st3.astype(np.int64), minlength=nc)  # number of targets per class
+    # Dataloader
+    if dataloader is None:
+        #fixme --Yang.xu
+        # dataset = LoadImagesAndLabels(path, lbl_path, img_size, batch_size, rect=True, cache_labels=True)  #
+        if opt.model_id is not None:
+            dataset = LoadImagesAndLabels(path, lbl_path, img_size, batch_size, rect=True, cache_labels=True, with_modelid=True)
         else:
-            nt = torch.zeros(1)
+            dataset = LoadImagesAndLabels(path, lbl_path, img_size, batch_size, rect=True, cache_labels=True)
+        batch_size = min(batch_size, len(dataset))
+        dataloader = DataLoader(dataset,
+                                batch_size=batch_size,
+                                num_workers=min([os.cpu_count(), batch_size if batch_size > 1 else 0, 8]),
+                                pin_memory=True,
+                                collate_fn=dataset.collate_fn)
 
-        #fixme--yang.xu
-        mp_arr[ix] = mp
-        mr_arr[ix] = mr
-        map_arr[ix] = map
-        mf1_arr[ix] = mf1
+    seen = 0
+    model.eval()
+    # fixme
+    # coco91class = coco80_to_coco91_class()
+    xview_classes = np.arange(nc)
+    s = ('%20s' + '%10s' * 6) % ('Class', 'Images', 'Targets', 'P', 'R', 'mAP@0.5', 'F1')
+    p, r, f1, mp, mr, map, mf1 = 0., 0., 0., 0., 0., 0., 0.
+    loss = torch.zeros(3)
+    jdict, stats, ap, ap_class = [], [], [], []
+    # fixme --yang.xu
+    sum_labels = 0
+    for batch_i, (imgs, targets, paths, shapes) in enumerate(tqdm(dataloader, desc=s)):
+        imgs = imgs.to(device).float() / 255.0  # uint8 to float32, 0 - 255 to 0.0 - 1.0
+        targets = targets.to(device)
 
-        #fixme--yang.xu
-        # Print results
-        # pf = '%20s' + '%10.3g' * 6  # print format
-        # print(pf % ('all', seen, nt.sum(), mp, mr, map, mf1))
+        # print('imgs--', imgs.shape)
+        # print('targets--', targets.shape)
+        # print('targets ', targets)
+        # print('paths--', len(paths))
+        # print('shapes', len(shapes))
+        # exit(0)
+        _, _, height, width = imgs.shape  # batch size, channels, height, width
 
-        pf = '%20s' + '%10.3g' * 6  # print format
-        # Print results per class
-        if verbose and nc > 1 and len(stats):
-            for i, c in enumerate(ap_class):
-                print(pf % (names[c], seen, nt[c], p[i], r[i], ap[i], f1[i]))
+        # Plot images with bounding boxes
+        if batch_i == 0 and not os.path.exists('test_1gpu.jpg'):
+            plot_images(imgs=imgs, targets=targets, paths=paths, fname='test_batch0.jpg')
 
-        # Save JSON
-        if save_json and map and len(jdict):
-            # fixme
-            # img_names = [os.path.basename(x) for x in dataloader.dataset.img_files]
-            #fixme
-            # img_id_maps = json.load(
-            #     open(os.path.join(opt.label_dir, 'all_image_ids_names_dict_{}cls.json'.format(opt.class_num))))
-            # img_id_list = [k for k in img_id_maps.keys()]
-            # img_name_list = [v for v in img_id_maps.values()]
-            # imgIds = [img_id_list[img_name_list.index(v)] for v in img_name_list if
-            #           v in img_names]  # note: index is the same as the keys
-            # sids = set(imgIds)
-            # print('imgIds', len(imgIds), 'sids', len(sids))
+        # Disable gradients
+        with torch.no_grad():
+            # Run model
+            inf_out, train_out = model(imgs)  # inference and training outputs
+            # plot_grids(train_out, batch_i, paths=paths, save_dir=opt.grids_dir)
+            # exit(0)
 
-            # json_img_id_file = glob.glob(os.path.join(opt.base_dir, 'xview_val*_img_id_map.json'))[0]
-            # img_id_map = json.load(open(json_img_id_file))
-            # imgIds = [id for id in img_id_map.values()]
+            # Compute loss
+            if hasattr(model, 'hyp'):  # if model has loss hyperparameters
+                loss += compute_loss(train_out, targets, model)[1][:3].cpu()  # GIoU, obj, cls
+        
+            # Run NMS
+            output = non_max_suppression(inf_out, conf_thres=conf_thres, iou_thres=nms_iou_thres)
+        # Statistics per image
+        for si, pred in enumerate(output):
+            # print('si ', si, targets[si])
+            # print('targets--', targets.shape)
+            labels = targets[targets[:, 0] == si, 1:]
+            # # print('labels--', labels.shape)
+            # # print(labels)
+            nl = len(labels)
+            sum_labels += nl
+            #fixme ---yang.xu
+            # tcls = labels[:, 0].tolist() if nl else []  # target class
+            tcls = labels[:, -1].tolist() if nl else []
+            # print('tcls ', len(tcls))
+            # exit(0)
 
-            # imgIds = [get_val_imgid_by_name(na) for na in img_names]
-            # sids = set(imgIds)
-            # print('imgIds', len(imgIds), 'sids', len(sids))
-            # imgIds = np.arange(len(output))
+            seen += 1
 
-            result_json_file = 'results_{}_{}.json'.format(opt.name, mk)
-            with open(os.path.join(opt.result_dir, result_json_file), 'w') as file:
-                # json.dump(jdict, file)
-                json.dump(jdict, file, ensure_ascii=False, indent=2, cls=MyEncoder)
+            if pred is None:
+                if nl:
+                    stats.append((torch.zeros(0, 1), torch.Tensor(), torch.Tensor(), tcls, torch.zeros(0, 1)))
+                continue
+
+            # Append to text file
+            # with open('test.txt', 'a') as file:
+            #    [file.write('%11.5g' * 7 % tuple(x) + '\n') for x in pred]
+
+            # Clip boxes to image bounds
+            clip_coords(pred, (height, width))
+            #fixme --yang.xu
+            pred = drop_boundary(pred, (height, width), margin_thres=opt.margin)
+            # Append to pycocotools JSON dictionary
+            if save_json:
+                # [{"image_id": 42, "category_id": 18, "bbox": [258.15, 41.29, 348.26, 243.78], "score": 0.236}, ...
+                #fixme
+                image_name = paths[si].split('/')[-1]
+                # image_id = get_val_imgid_by_name(opt.base_dir, image_name)
+
+                box = pred[:, :4].clone()  # xyxy
+                scale_coords(imgs[si].shape[1:], box, shapes[si][0], shapes[si][1])  # to original shape
+                box = xyxy2xywh(box)  # xywh
+                box[:, :2] -= box[:, 2:] / 2  # xy center to top-left corner # xtlytlwh
+                for di, d in enumerate(pred):
+                    #fixme
+                    # jdict.append({'image_id': image_id,
+                    #               'category_id': xview_classes[int(d[5])],
+                    #               'bbox': [floatn(x, 3) for x in box[di]],
+                    #               'score': floatn(d[4], 5)})  # conf
+                    jdict.append({'image_name': image_name, # image_id,
+                                  'category_id': xview_classes[int(d[5])],
+                                  'bbox': [floatn(x, 3) for x in box[di]],
+                                  'score': floatn(d[4], 5)})
+
+            # Assign all predictions as incorrect
+            correct = torch.zeros(len(pred), niou, dtype=torch.bool)
+            neu_correct = torch.zeros(len(pred), niou, dtype=torch.bool)
+            if nl:
+                detected = []  # target indices
+
+                #fixme --yang.xu
+                tcls_tensor = labels[:, -1]
+                # print('tcls_tensor', tcls_tensor)
+                # exit(0)
+
+                # target boxes
+                tbox = xywh2xyxy(labels[:, 1:5]) * torch.Tensor([width, height, width, height]).to(device)
+
+                # Per target class
+                # for cls in torch.unique(tcls_tensor):
+
+                #fixme --yang.xu
+                # ti = (cls == tcls_tensor).nonzero().view(-1)  # target indices
+                # pi = (cls == pred[:, 5]).nonzero().view(-1)  # prediction indices
+                #fixme --yang.xu
+                ti = (opt.rare_class == tcls_tensor).nonzero().view(-1) # target indices
+                pi = (0 == pred[:, 5]).nonzero().view(-1)  # prediction indices
+#                if len(ti):
+#                    print('\nti ', len(ti), ti)
+
+                if opt.type == 'easy':
+                    neu_cls = 0
+                    ni = (neu_cls == tcls_tensor).nonzero().view(-1) # target neutral indices
+#                    print('ni ', len(ni), ni)
+                else:
+                    ni = torch.tensor([])
+
+                # if len(pi):
+                #     ious, i = box_iou(pred[pi, :4], tbox[ti]).max(1)  # best ious, indices
+                #     # Append detections
+                #     for j in (ious > iouv[0]).nonzero():
+                #         d = ti[i[j]]  # detected target
+                #         if d not in detected:
+                #             detected.append(d)
+                #             correct[pi[j]] = ious[j] > iouv  # iou_thres is 1xn
+                #             if len(detected) == nl:  # all targets already located in image
+                #                 break
+
+                # Search for detections
+                if len(pi) and len(ti) and not len(ni):
+                    ious, i = box_iou(pred[pi, :4], tbox[ti]).max(1)  # best ious, indices
+                    # print('ious ', ious.shape)
+                    # Append detections
+                    for j in (ious > iouv[0]).nonzero():
+                        d = ti[i[j]]  # detected target
+                        # print('d', d)
+                        if d not in detected:
+                            detected.append(d)
+                            correct[pi[j]] = ious[j] > iouv  # iou_thres is 1xn
+                            if len(detected) == nl:  # all targets already located in image
+                                break
+                elif len(pi) and not len(ti) and len(ni):
+                    neu_ious, nix = box_iou(pred[pi, :4], tbox[ni]).max(1)
+                    for s in (neu_ious > iouv[0]).nonzero():
+#                        print('s --------> ', s)
+                        d = ni[nix[s]]  # detected target
+                        if d not in detected:
+                            detected.append(d)
+                            neu_correct[pi[s]] = neu_ious[s] > iouv  # iou_thres is 1xn
+                            if len(detected) == nl:  # all targets already located in image
+                                break
+                elif len(pi) and len(ti) and len(ni):
+                    ious, i = box_iou(pred[pi, :4], tbox[ti]).max(1)  # best ious, indices
+                    neu_ious, nix = box_iou(pred[pi, :4], tbox[ni]).max(1)
+                    for j in (ious > iouv[0]).nonzero():
+                        d = ti[i[j]]  # detected target
+                        if d not in detected:
+                            detected.append(d)
+                            correct[pi[j]] = ious[j] > iouv  # iou_thres is 1xn
+                            if len(detected) == nl:  # all targets already located in image
+                                break
+                    for s in (neu_ious > iouv[0]).nonzero():
+#                        print('s --------> ', s)
+                        d = ni[nix[s]]  # detected neutral target
+                        if d not in detected:
+                            detected.append(d)
+                            neu_correct[pi[s]] = neu_ious[s] > iouv  # iou_thres is 1xn
+                            if len(detected) == nl:  # all targets already located in image
+                                break
+#                print('detected ', detected)
+            # Append statistics (correct, conf, pcls, tcls, neu_correct)
+            # pred (x1, y1, x2, y2, object_conf, conf, class)
+            stats.append((correct, pred[:, 4].cpu(), pred[:, 5].cpu(), tcls, neu_correct))
+#            if len(tcls) and len(correct):
+#                print('\n correct: {}  pred[:,4]:{}  pred[:, 5]:{} tcls:{}'.format(correct, pred[:, 4].cpu(), pred[:, 5].cpu(), tcls))
+            # if len(tcls) and len(neu_correct):
+#                print('\n neu_correct: {}  pred[:,4]:{}  pred[:, 5]:{} tcls:{}'.format(neu_correct, pred[:, 4].cpu(), pred[:, 5].cpu(), tcls))
+
+    print('sum all labels', sum_labels)
+    # Compute statistics
+    stats = [np.concatenate(x, 0) for x in list(zip(*stats))]  # to numpy
+    if len(stats):
+        pr_name= opt.name + '  @IoU: {:.2f} '.format(iouv[0]) + '  conf_thres: {} '.format(conf_thres)
+        # print('*stats', *stats)
+        p, r, ap, f1, ap_class = ap_per_class(*stats, pr_path=opt.result_dir, pr_name= pr_name, rare_class=opt.rare_class)
+
+        print('dataset.batch ', dataset.batch.shape)
+        # exit(0)
+        area = (img_size*opt.res)*(img_size*opt.res)*dataset.batch.shape[0]*1e-6
+        
+        plot_roc_easy_hard(*stats, pr_path=opt.result_dir, pr_name= pr_name, rare_class=opt.rare_class, area=area, ehtype=opt.type, title_data_name=tif_name)
+        # if niou > 1:
+        #       p, r, ap, f1 = p[:, 0], r[:, 0], ap[:, 0], ap.mean(1)  # average across ious
+        #fixme --yang.xu
+        if niou > 1:
+            p, r, ap, f1 = p[:, 0], r[:, 0], ap.mean(1), ap[:, 0]  # [P, R, AP@0.5:0.95, AP@0.5]
+        mp, mr, map, mf1 = p.mean(), r.mean(), ap.mean(), f1.mean()
+        #fixme --yang.xu compute before
+        # nt = np.bincount(stats[3].astype(np.int64), minlength=nc)  # number of targets per class
+        st3 = stats[3][stats[3] == opt.rare_class]
+        nt = np.bincount(st3.astype(np.int64), minlength=nc)  # number of targets per class
+    else:
+        nt = torch.zeros(1)
+
+    #fixme--yang.xu
+    mp_arr[ix] = mp
+    mr_arr[ix] = mr
+    map_arr[ix] = map
+    mf1_arr[ix] = mf1
+
+    #fixme--yang.xu
+    # Print results
+    # pf = '%20s' + '%10.3g' * 6  # print format
+    # print(pf % ('all', seen, nt.sum(), mp, mr, map, mf1))
+
+    pf = '%20s' + '%10.3g' * 6  # print format
+    # Print results per class
+    if verbose and nc > 1 and len(stats):
+        for i, c in enumerate(ap_class):
+            print(pf % (names[c], seen, nt[c], p[i], r[i], ap[i], f1[i]))
+
+    # Save JSON
+    if save_json and map and len(jdict):
+        # fixme
+        # img_names = [os.path.basename(x) for x in dataloader.dataset.img_files]
+        #fixme
+        # img_id_maps = json.load(
+        #     open(os.path.join(opt.label_dir, 'all_image_ids_names_dict_{}cls.json'.format(opt.class_num))))
+        # img_id_list = [k for k in img_id_maps.keys()]
+        # img_name_list = [v for v in img_id_maps.values()]
+        # imgIds = [img_id_list[img_name_list.index(v)] for v in img_name_list if
+        #           v in img_names]  # note: index is the same as the keys
+        # sids = set(imgIds)
+        # print('imgIds', len(imgIds), 'sids', len(sids))
+
+        # json_img_id_file = glob.glob(os.path.join(opt.base_dir, 'xview_val*_img_id_map.json'))[0]
+        # img_id_map = json.load(open(json_img_id_file))
+        # imgIds = [id for id in img_id_map.values()]
+
+        # imgIds = [get_val_imgid_by_name(na) for na in img_names]
+        # sids = set(imgIds)
+        # print('imgIds', len(imgIds), 'sids', len(sids))
+        # imgIds = np.arange(len(output))
+
+        result_json_file = 'results_{}.json'.format(opt.name)
+        with open(os.path.join(opt.result_dir, result_json_file), 'w') as file:
+            # json.dump(jdict, file)
+            json.dump(jdict, file, ensure_ascii=False, indent=2, cls=MyEncoder)
 
     # Print results
     pf = '%20s' + '%10.3g' * 6  # print format
@@ -608,10 +607,9 @@ if __name__ == '__main__':
 #    else:
 #        comments = ['syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_rnd_color_bias{}_model4_v{}_color'.format(color_pro*25.5, color_pro+21)]
  
-#    comments = ['syn_xview_bkg_px30whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_bias0_model4_v1_upscale_color']
+    comments = ['syn_xview_bkg_px30whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_bias0_model4_v1_upscale_color']
 #    comments = ['syn_xview_bkg_px30whr3_xbw_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_rnd_color_bias0_model4_v21_upscale_color']
-
-#    model_id = 4
+    model_id = 4
     # comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v4_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v4_mixed']
     # comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_model4_v6_color']
     # comments = ['syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_gauss_models_color', 'syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_gauss_models_mixed']
@@ -634,12 +632,8 @@ if __name__ == '__main__':
 #    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_shdw_scatter_gauss_50_color_bias0_model5_RC5_v1_color']
 #    color_pro = 10 
 #    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_shdw_scatter_gauss_50_color_bias{}_model5_RC5_v{}_color'.format(color_pro*25.5, color_pro+1)]
-    
-#    comments = ['syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_1_color_bias0_model5_RC4_v12_color']
-#    color_pro = 10 
-#    comments = ['syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_1_color_bias{}_model5_RC4_v{}_color'.format(color_pro*25.5, color_pro+12)]
-    comments = ['syn_xview_bkg_px30whr3_xbw_xcolor_xbkg_unif_shdw_scatter_gauss_50_color_bias0_model5_RC5_v1_upscale_color']
-    model_id = 5
+
+#    model_id = 5
     base_cmt = 'px23whr3_seed{}'
     # hyp_cmt = 'hgiou1_1gpu'
 
@@ -652,14 +646,13 @@ if __name__ == '__main__':
 #    hyp_cmt = 'hgiou1_1gpu_trans_val_syn'
 #    prefix = 'syn_trans'
 
+#    hyp_cmt = 'hgiou1_1gpu_val_syn'
+#    hyp_cmt = 'hgiou1_lr0.01_val_syn'
+    hyp_cmt = 'hgiou1_lr0.001_val_syn'
 
-#    hyp_cmt = 'hgiou1_lr0.001_val_syn'
-#    prefix = 'syn_lr0.001'
-
-    hyp_cmt = 'hgiou1_1gpu_val_syn'
-    prefix = 'syn'
-#    prefix = 'syn_backup100'
-#    prefix = 'syn_backup200'
+#    prefix = 'syn'
+    prefix = 'syn_backup180'
+#    prefix = 'syn_backup180'
 #    prefix = 'syn_px30'
 
 #    hyp_cmt = 'hgiou1_1gpu_anchor_val_syn'
@@ -714,14 +707,15 @@ if __name__ == '__main__':
 #            opt.type = 'easy'
 #            opt.type = 'hard'
             opt.type = typ
-#            opt.rare_class = 1
+            opt.rare_class = 1
 #            opt.rare_class = 2
 #            opt.rare_class = 3
 #            opt.rare_class = 4 
-            opt.rare_class = 5
+#            opt.rare_class = 5
             
             opt.name += '_{}'.format(opt.type)
-            opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_{}_upscale_m{}_rc{}_{}'.format(hyp_cmt, opt.model_id, opt.rare_class, opt.type))
+            opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_{}_upscale_m{}_rc{}_{}_backup180'.format(hyp_cmt, opt.model_id, opt.rare_class, opt.type))
+ #           opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_{}_upscale_m{}_rc{}_{}'.format(hyp_cmt, opt.model_id, opt.rare_class, opt.type))
             opt.data = 'data_xview/{}_cls/{}/xviewtest_{}_upscale_m{}_rc{}_{}.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id, opt.rare_class, opt.type)
 
 #            opt.name += '_{}'.format(opt.type)
@@ -762,7 +756,8 @@ if __name__ == '__main__':
                 os.makedirs(opt.result_dir)
 #            print(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd), '*_{}_seed{}'.format(hyp_cmt, sd), 'best_seed{}.pt'.format(sd)))
 #            print(glob.glob(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd), '*_{}_seed{}'.format(hyp_cmt, sd), 'best_seed{}.pt'.format(sd))))
-            all_weights = glob.glob(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd), '*_{}_seed{}'.format(hyp_cmt, sd), 'best_*seed{}.pt'.format(sd)))
+            all_weights = glob.glob(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd), '*_{}_seed{}'.format(hyp_cmt, sd), 'backup180.pt'.format(sd)))
+ #           all_weights = glob.glob(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd), '*_{}_seed{}'.format(hyp_cmt, sd), 'best_*seed{}.pt'.format(sd)))
             all_weights.sort()
             opt.weights = all_weights[-1]
 

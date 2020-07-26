@@ -329,7 +329,7 @@ def ap_per_class(tp, conf, pred_cls, target_cls, ntp=None, pr_path='', pr_name='
     # Sort by objectness
     i = np.argsort(-conf)
     tp, conf, pred_cls = tp[i], conf[i], pred_cls[i]
-    # print('tp: {} conf:{} pred_cls:{}'.format(tp, conf, pred_cls))
+    #print('tp: {} conf:{} pred_cls:{}'.format(tp, conf, pred_cls))
 
     # Find unique classes
     #fixme

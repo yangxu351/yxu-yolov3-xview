@@ -102,8 +102,8 @@ def test(cfg,
             device = next(model.parameters()).device  # get model device
             verbose = False
 
-
-        iouv = torch.linspace(0.5, 0.95, 10).to(device)  # iou vector for mAP@0.5:0.95
+#        iouv = torch.linspace(0.5, 0.95, 10).to(device)  # iou vector for mAP@0.5:0.95
+        iouv = torch.linspace(0.2, 0.95, 10).to(device)  # iou vector for mAP@0.2:0.95
         #fixme --yang.xu
         iouv = iouv[0].view(1)  # for mAP@0.5
         # iouv = iouv[3].view(1)  # for mAP@0.65
@@ -631,14 +631,14 @@ if __name__ == '__main__':
 #    color_pro = 10 
 #    comments = ['syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_scatter_gauss_38_color_bias{}_model5_RC4_v{}_color'.format(color_pro*25.5, color_pro+1)]
 
-#    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_shdw_scatter_gauss_50_color_bias0_model5_RC5_v1_color']
+    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_shdw_scatter_gauss_50_color_bias0_model5_RC5_v1_color']
 #    color_pro = 10 
 #    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_shdw_scatter_gauss_50_color_bias{}_model5_RC5_v{}_color'.format(color_pro*25.5, color_pro+1)]
     
 #    comments = ['syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_1_color_bias0_model5_RC4_v12_color']
 #    color_pro = 10 
 #    comments = ['syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_1_color_bias{}_model5_RC4_v{}_color'.format(color_pro*25.5, color_pro+12)]
-    comments = ['syn_xview_bkg_px30whr3_xbw_xcolor_xbkg_unif_shdw_scatter_gauss_50_color_bias0_model5_RC5_v1_upscale_color']
+
     model_id = 5
     base_cmt = 'px23whr3_seed{}'
     # hyp_cmt = 'hgiou1_1gpu'
@@ -657,7 +657,8 @@ if __name__ == '__main__':
 #    prefix = 'syn_lr0.001'
 
     hyp_cmt = 'hgiou1_1gpu_val_syn'
-    prefix = 'syn'
+#    prefix = 'syn'
+    prefix = 'syn_iou20'
 #    prefix = 'syn_backup100'
 #    prefix = 'syn_backup200'
 #    prefix = 'syn_px30'
@@ -720,13 +721,14 @@ if __name__ == '__main__':
 #            opt.rare_class = 4 
             opt.rare_class = 5
             
-            opt.name += '_{}'.format(opt.type)
-            opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_{}_upscale_m{}_rc{}_{}'.format(hyp_cmt, opt.model_id, opt.rare_class, opt.type))
-            opt.data = 'data_xview/{}_cls/{}/xviewtest_{}_upscale_m{}_rc{}_{}.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id, opt.rare_class, opt.type)
-
 #            opt.name += '_{}'.format(opt.type)
+#            opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_{}_upscale_m{}_rc{}_{}'.format(hyp_cmt, opt.model_id, opt.rare_class, opt.type))
+#            opt.data = 'data_xview/{}_cls/{}/xviewtest_{}_upscale_m{}_rc{}_{}.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id, opt.rare_class, opt.type)
+
+            opt.name += '_{}'.format(opt.type)
 #            opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_{}_m{}_rc{}_{}'.format(hyp_cmt, opt.model_id, opt.rare_class, opt.type))
-#            opt.data = 'data_xview/{}_cls/{}/xviewtest_{}_m{}_rc{}_{}.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id, opt.rare_class, opt.type)
+            opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_{}_m{}_rc{}_{}_iou20'.format(hyp_cmt, opt.model_id, opt.rare_class, opt.type))
+            opt.data = 'data_xview/{}_cls/{}/xviewtest_{}_m{}_rc{}_{}.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id, opt.rare_class, opt.type)
 
 #            opt.name += '_{}_aug'.format(opt.type)
 #            opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_{}_m{}_rc{}_{}_aug'.format(hyp_cmt, opt.model_id, opt.rare_class, opt.type))

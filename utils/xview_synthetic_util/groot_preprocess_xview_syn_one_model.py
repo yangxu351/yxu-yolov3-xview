@@ -460,21 +460,21 @@ def flip_rotate_coordinates(img_name, angle=0, flip=''):
     gbc.plot_img_with_bbx(img_file, lbl_file, save_path=save_dir)
 
 
-def create_data_for_augment_img_lables(img_name, eh_type):
+def create_data_for_augment_img_lables(img_names, eh_type):
     shutil.copy(os.path.join(args.data_save_dir, 'xviewtest_img_px23whr3_seed17_m4_rc1_{}.txt'.format(eh_type)),
                 os.path.join(args.data_save_dir, 'xviewtest_img_px23whr3_seed17_m4_rc1_{}_aug.txt'.format(eh_type)))
     shutil.copy(os.path.join(args.data_save_dir, 'xviewtest_lbl_px23whr3_seed17_m4_rc1_{}.txt'.format(eh_type)),
                 os.path.join(args.data_save_dir, 'xviewtest_lbl_px23whr3_seed17_m4_rc1_{}_aug.txt'.format(eh_type)))
     val_img_file = open(os.path.join(args.data_save_dir, 'xviewtest_img_px23whr3_seed17_m4_rc1_{}_aug.txt'.format(eh_type)), 'a')
     val_lbl_file = open(os.path.join(args.data_save_dir, 'xviewtest_lbl_px23whr3_seed17_m4_rc1_{}_aug.txt'.format(eh_type)), 'a')
-
-    img_dir = args.images_save_dir[:-1] + '_of_{}/'.format(img_name)
-    lbl_dir = args.annos_save_dir[:-1] + '_val_m4_rc1_{}/'.format(img_name)
-    img_files = glob.glob(os.path.join(img_dir, '{}_*.jpg'.format(img_name)))
-    for f in img_files:
-        name = os.path.basename(f)
-        val_img_file.write('%s\n' % f)
-        val_lbl_file.write('%s\n' % os.path.join(lbl_dir, name.replace('.jpg', '.txt')))
+    for img_name in img_names:
+        img_dir = args.images_save_dir[:-1] + '_of_{}/'.format(img_name)
+        lbl_dir = args.annos_save_dir[:-1] + '_val_m4_rc1_{}/'.format(img_name)
+        img_files = glob.glob(os.path.join(img_dir, '{}_*.jpg'.format(img_name)))
+        for f in img_files:
+            name = os.path.basename(f)
+            val_img_file.write('%s\n' % f)
+            val_lbl_file.write('%s\n' % os.path.join(lbl_dir, name.replace('.jpg', '.txt')))
 
     psx.create_xview_base_data_for_onemodel_aug_easy_hard(model_id=4, rc_id=1, eh_type=eh_type, base_cmt='px23whr3_seed17')
 
@@ -656,10 +656,12 @@ if __name__ == '__main__':
 #    scale=2
 #    px_thres = 30
 #    pxwhrs='px23whr3_seed17'
-#    model_id=4
-#    rare_id=1
-#    type='hard'
-##    type='easy'
+##    model_id=4
+##    rare_id=1
+#    model_id = 5
+#    rare_id = 5
+##    type='hard'
+#    type='easy'
 #    val_resize_crop_by_easy_hard(scale, pxwhrs, model_id, rare_id, type, px_thres)
 #    create_upsample_test_dataset_of_m_rc(model_id, rare_id, type, seed, pxwhrs)
 
@@ -712,9 +714,9 @@ if __name__ == '__main__':
     add augmented images and labels into val file
     create corresponding *.data
     '''
-    # img_name = '2315_359'
-    img_name = '2315_329'
-    eh_type = 'hard'
-    # eh_type = 'easy'
-    create_data_for_augment_img_lables(img_name, eh_type)
+#    # img_name = '2315_359'
+#    img_names = ['2315_329', '2315_359']
+##    eh_type = 'hard'
+#    eh_type = 'easy'
+#    create_data_for_augment_img_lables(img_names, eh_type)
     
