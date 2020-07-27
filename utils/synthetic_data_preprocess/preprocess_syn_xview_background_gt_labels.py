@@ -10,7 +10,7 @@ import os
 import pandas as pd
 import shutil
 from utils.object_score_util import get_bbox_coords_from_annos_with_object_score as gbc
-
+from utils.object_score_util import check_bbox as ckbx
 IMG_FORMAT = '.png'
 TXT_FORMAT = '.txt'
 
@@ -77,8 +77,40 @@ def group_object_annotation_and_draw_bbox(dt, px_thresh=20, whr_thres=4):
 
     gbc.get_object_bbox_after_group(lbl_path, save_txt_path, class_label=0, min_region=syn_args.min_region,
                                     link_r=syn_args.link_r, px_thresh=px_thresh, whr_thres=whr_thres)
+
     gt_files = np.sort(glob.glob(os.path.join(lbl_path, '*{}'.format(IMG_FORMAT))))
     bbox_folder_name = 'minr{}_linkr{}_px{}whr{}_{}_all_annos_with_bbox_step{}'.format(syn_args.min_region, syn_args.link_r,
+                                                                                       px_thresh, whr_thres, dt, step)
+    save_bbx_path = os.path.join(syn_args.syn_box_dir, bbox_folder_name)
+    if not os.path.exists(save_bbx_path):
+        os.makedirs(save_bbx_path)
+    else:
+        shutil.rmtree(save_bbx_path)
+        os.makedirs(save_bbx_path)
+    for g in gt_files:
+        gt_name = g.split('/')[-1]
+        txt_name = gt_name.replace(IMG_FORMAT, TXT_FORMAT)
+        txt_file = os.path.join(save_txt_path, txt_name)
+        gbc.plot_img_with_bbx(g, txt_file, save_bbx_path)
+
+
+def get_annos_from_lbl_image_and_draw_bbox(dt, px_thresh=20, whr_thres=4):
+    step = syn_args.tile_size * syn_args.resolution
+    folder_name = '{}_all_annos_step{}'.format(dt, step)
+    lbl_path = os.path.join(syn_args.syn_data_dir, folder_name)
+    print('lbl_path', lbl_path)
+    txt_folder_name = 'px{}whr{}_{}_all_annos_txt_step{}'.format(px_thresh, whr_thres, dt, step)
+    save_txt_path = os.path.join(syn_args.syn_annos_dir, txt_folder_name)
+    if not os.path.exists(save_txt_path):
+        os.makedirs(save_txt_path)
+    else:
+        shutil.rmtree(save_txt_path)
+        os.makedirs(save_txt_path)
+
+    ckbx.get_bbox_from_lbl_image(lbl_path, save_txt_path, class_label=0, px_thresh=px_thresh, whr_thres=whr_thres)
+
+    gt_files = np.sort(glob.glob(os.path.join(lbl_path, '*{}'.format(IMG_FORMAT))))
+    bbox_folder_name = 'px{}whr{}_{}_all_annos_with_bbox_step{}'.format(syn_args.min_region, syn_args.link_r,
                                                                                        px_thresh, whr_thres, dt, step)
     save_bbx_path = os.path.join(syn_args.syn_box_dir, bbox_folder_name)
     if not os.path.exists(save_bbx_path):
