@@ -224,6 +224,7 @@ def get_txt_contain_model_id(model_id=5, copy_img=False):
 
 def get_txt_contain_model_id(model_id=5, copy_img=False, type='all'):
     src_model_dir = args.annos_save_dir[:-1] + '_all_model/'
+    print('src_model_dir', src_model_dir)
     des_model_dir = args.annos_save_dir[:-1] + '_m{}_{}_model/'.format(model_id, type)
     if not os.path.exists(des_model_dir):
         os.mkdir(des_model_dir)
@@ -236,6 +237,7 @@ def get_txt_contain_model_id(model_id=5, copy_img=False, type='all'):
 
     base_pxwhrs = 'px23whr3_seed17'
     base_dir = args.data_save_dir
+    print('base_dir', base_dir)
     if type != 'all':
         df_val = pd.read_csv(os.path.join(base_dir, 'xview{}_lbl_{}.txt'.format(type, base_pxwhrs)), header=None)
         lbl_model_txts = [os.path.join(src_model_dir, os.path.basename(f)) for f in df_val.loc[:, 0]]
@@ -246,6 +248,7 @@ def get_txt_contain_model_id(model_id=5, copy_img=False, type='all'):
         if not pps.is_non_zero_file(lt):
             continue
         name = os.path.basename(lt)
+        # print('name', name)
         df_txt = pd.read_csv(lt, header=None, sep=' ')
         contain_or_not = df_txt.loc[:, 5] == model_id # series
         contain_or_not = contain_or_not.to_numpy()
@@ -744,10 +747,11 @@ if __name__ == '__main__':
     get txt which contains model_id 
     '''
     # model_id = 4
-    # # model_id = 1
-    # # model_id = 5
+    # model_id = 1
+    model_id = 5
     # type = 'val'
-    # get_txt_contain_model_id(model_id, copy_img=True, type=type)
+    type = 'train'
+    get_txt_contain_model_id(model_id, copy_img=True, type=type)
 
     '''
     manually backup _m*_val_model as _m*_miss_val_model  
@@ -756,12 +760,17 @@ if __name__ == '__main__':
     '''
     # model_id = 4
     # rare_class = 1
-    # # model_id = 1
-    # # rare_class = 2
+    # model_id = 1
+    # rare_class = 2
+    # # # model_id = 5
+    # # # rare_class = 3
     # # model_id = 5
-    # # rare_class = 3
+    # # rare_class = 4
+    # # model_id = 5
+    # # rare_class = 5
     # other_label = 0
     # label_m_val_model_with_other_label(rare_class, model_id, other_label)
+
     '''
     get txt which contains model_id == 5
     '''
@@ -792,13 +801,18 @@ if __name__ == '__main__':
     # args = get_args(px_thres, whr_thres, seed)
     # pxwhr = 'px{}whr{}'.format(px_thres, whr_thres)
     # non_rare_id = 0
-    # model_id = 4
-    # rare_id = 1
+    # # model_id = 4
+    # # rare_id = 1
     # # val_m_rc_path = args.annos_save_dir[:-1] + '_m{}_rc{}'.format(model_id, rare_id)
-    # # model_id = 1
-    # # rare_id = 2
+    # model_id = 1
+    # rare_id = 2
     # # model_id = 5
     # # rare_id = 3
+    # # model_id = 5
+    # # rare_id = 4
+    # # model_id = 5
+    # # rare_id = 5
+    # # other_label = 0
     # val_m_rc_path = args.annos_save_dir[:-1] + '_val_m{}_to_rc{}'.format(model_id, rare_id)
     # create_model_rareclass_hard_easy_set_backup(val_m_rc_path, model_id, rare_id, non_rare_id, seed, pxwhr)
 
@@ -932,10 +946,10 @@ if __name__ == '__main__':
     create corresponding *.data
     '''
     # img_name = '2315_359'
-    img_name = '2315_329'
-    eh_type = 'hard'
-    # eh_type = 'easy'
-    create_data_for_augment_img_lables(img_name, eh_type)
+    # img_name = '2315_329'
+    # eh_type = 'hard'
+    # # eh_type = 'easy'
+    # create_data_for_augment_img_lables(img_name, eh_type)
 
 
 

@@ -89,8 +89,8 @@ def test(cfg,
     data = parse_data_cfg(data)
     nc = int(data['classes'])  # number of classes
     # fixme
-    path = data['valid']  # path to test images
-    lbl_path = data['valid_label']
+    path = data['test']  # path to test images
+    lbl_path = data['test_label']
     # path = data['valid_rare']  # path to test images
     # lbl_path = data['valid_rare_label']
     names = load_classes(data['names'])  # class names

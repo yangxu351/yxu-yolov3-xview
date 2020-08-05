@@ -397,6 +397,7 @@ def ap_per_class(tp, conf, pred_cls, target_cls, ntp=None, pr_path='', pr_name='
                 ax1.set_ylim(0, 1)
                 ax1.grid()
                 fig1.savefig(os.path.join(pr_path, pr_name + '_PR_curve.png'), dpi=300)
+                plt.close(fig1)
 
 
     # Compute F1 score (harmonic mean of precision and recall)
