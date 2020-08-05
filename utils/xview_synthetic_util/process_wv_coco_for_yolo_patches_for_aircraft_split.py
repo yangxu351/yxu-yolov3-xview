@@ -525,6 +525,28 @@ if __name__ == "__main__":
     #     pwv.split_trn_val_with_chips(data_name=data_name, comments=comments, seed=sd, px_thres=px_thres, whr_thres=whr_thres)
 
     '''
+    for yellow aircrafts of RC5 in 1114.tiff
+    split 1114_*.jpg with ratio 0.75:0.25 
+    manually change xview*_img_px23whr3_seed17.txt  xview*_lbl_px23whr3_seed17.txt
+    '''
+    args = pwv.get_args(px_thres=23, whr_thres=3)
+    yel_patches = glob.glob(os.path.join(args.images_save_dir, '1114*.jpg'))
+    np.random.seed(17)
+    yel_patches = np.random.permutation(yel_patches)
+    val_num = int(np.ceil(len(yel_patches)*args.val_percent))
+    print('val_num', val_num)
+    val_imgs = yel_patches[:val_num]
+    print('val_imgs', val_imgs)
+    val_lbls = []
+    labeled_dir = args.annos_save_dir[:-1] + '_all_model'
+    for f in val_imgs:
+        name = os.path.basename(f).replace('.jpg', '.txt')
+        val_lbls.append(os.path.join(args.annos_save_dir, name))
+    print('val lbls', val_lbls)
+
+
+
+    '''
     remove duplicates of training set and val set
     '''
     # seed = 17
