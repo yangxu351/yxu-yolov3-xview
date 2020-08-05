@@ -148,10 +148,25 @@ def resize_crop_windturbine(px_thres = 10):
                 f_txt.write( "%s %s %s %s %s\n" % (0, i3[0], i3[1], i3[2], i3[3]))
             f_txt.close()
 
+def get_lbl_with_modelid(rare_class=6):
+    all_lbls = np.sort(glob.glob(os.path.join(syn_args.syn_annos_dir, '*.txt')))
+    num_files = len(all_lbls)
+
+    des_dir = syn_args.syn_annos_dir[:-1] + '_with_modelid/'
+    if not os.path.exists(des_dir):
+        os.mkdir(des_dir)
+    for i in range(num_files):
+        f = all_lbls[i]
+        if not is_non_zero_file(f):
+            continue
+        df_txt = pd.read_csv(f, header=None, sep=" ")
+        df_txt.loc[:, 6] = rare_class
+        df_txt.to_csv(os.path.join(des_dir, os.path.basename(f)), header=False, index=False, sep=" ")
+
 
 def split_syn_wnd_trn_val(comment='wnd', seed=17, pxs='px10_seed17'):
 
-    all_lbls = np.sort(glob.glob(os.path.join(syn_args.syn_annos_dir, '*.txt')))
+    all_lbls = np.sort(glob.glob(os.path.join(syn_args.syn_annos_dir[:-1] + '_with_modelid/', '*.txt')))
     num_files = len(all_lbls)
 
     np.random.seed(seed)
@@ -167,16 +182,16 @@ def split_syn_wnd_trn_val(comment='wnd', seed=17, pxs='px10_seed17'):
     val_lbl_txt = open(os.path.join(data_txt_dir, '{}_val_lbl_{}.txt'.format(comment, pxs)), 'w')
 
     num_val = int(num_files*syn_args.val_percent)
-    lbl_dir = syn_args.syn_annos_dir
+    img_dir = syn_args.syn_img_dir
 
     for i in all_indices[:num_val]:
-        val_img_txt.write('%s\n' % all_lbls[i])
-        val_lbl_txt.write('%s\n' % os.path.join(lbl_dir, os.path.basename(all_lbls[i]).replace('.txt', '.jpg')))
+        val_lbl_txt.write('%s\n' % all_lbls[i])
+        val_img_txt.write('%s\n' % os.path.join(img_dir, os.path.basename(all_lbls[i]).replace('.txt', '.jpg')))
     val_img_txt.close()
     val_lbl_txt.close()
     for j in all_indices[num_val:]:
-        trn_img_txt.write('%s\n' % all_lbls[j])
-        trn_lbl_txt.write('%s\n' % os.path.join(lbl_dir, os.path.basename(all_lbls[j]).replace('.txt', '.jpg')))
+        trn_lbl_txt.write('%s\n' % all_lbls[j])
+        trn_img_txt.write('%s\n' % os.path.join(img_dir, os.path.basename(all_lbls[j]).replace('.txt', '.jpg')))
     trn_img_txt.close()
     trn_lbl_txt.close()
 
@@ -190,7 +205,7 @@ def create_syn_data(comment='wnd', pxs='px10_seed17'):
 
      #********** syn_0_xview_number corresponds to train*.py the number of train files
     df = pd.read_csv(os.path.join(syn_args.syn_txt_dir, '{}_train_img_{}.txt'.format(comment, pxs)), header=None)
-    data_txt.write('syn_0_xview_number={}\n'.format(df.shape[0]))
+    data_txt.write('syn_wnd_number={}\n'.format(df.shape[0]))
     data_txt.write('classes=%s\n' % str(syn_args.class_num))
 
     data_txt.write('valid={}/{}_val_img_{}.txt\n'.format(data_txt_dir, comment, pxs))
@@ -223,27 +238,52 @@ def sep_tif_bands(img_dir, save_dir):
         # show(dataset.read(1))
 
 
+def get_real_wnd_val(comment='wnd_CA_AZ', pxs='px10_seed17'):
+
+    all_lbls = glob.glob(os.path.join(syn_args.syn_annos_dir[:-1] + '_with_modelid', '*CA*.txt')) \
+               + glob.glob(os.path.join(syn_args.syn_annos_dir[:-1] + '_with_modelid', '*AZ*.txt'))
+    num_files = len(all_lbls)
+    all_indices = np.random.permutation(num_files)
+    data_txt_dir = os.path.join(syn_args.syn_txt_dir, pxs)
+    if not os.path.exists(data_txt_dir):
+        os.mkdir(data_txt_dir)
+
+    val_img_txt = open(os.path.join(data_txt_dir, '{}_val_img_{}.txt'.format(comment, pxs)), 'w')
+    val_lbl_txt = open(os.path.join(data_txt_dir, '{}_val_lbl_{}.txt'.format(comment, pxs)), 'w')
+
+    img_dir = syn_args.syn_img_dir
+
+    for i in all_indices:
+        val_lbl_txt.write('%s\n' % all_lbls[i])
+        val_img_txt.write('%s\n' % os.path.join(img_dir, os.path.basename(all_lbls[i]).replace('.txt', '.jpg')))
+    val_img_txt.close()
+    val_lbl_txt.close()
+
+
+
 def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--syn_data_dir", type=str,
                         help="Path to folder containing raw synthetic images and annos ",
-                        default='/home/jovyan/work/data/wind_turbine/')
-                         # default='/media/lab/Yang/data/wind_turbine/')
+                        # default='/home/jovyan/work/data/wind_turbine/')
+                         default='/media/lab/Yang/data/wind_turbine/')
 
     parser.add_argument("--syn_img_dir", type=str,
                         help="Path to folder containing cropped synthetic images ",
-                        default='/home/jovyan/work/data/wind_turbine_images/')
-                        # default='/media/lab/Yang/data/wind_turbine_images/')
+                        # default='/home/jovyan/work/data/wind_turbine_images/')
+                        default='/media/lab/Yang/data/wind_turbine_images/')
     parser.add_argument("--syn_annos_dir", type=str,
-                        # default='/media/lab/Yang/data/wind_turbine_labels/',
-                        default='/home/jovyan/work/data/wind_turbine_labels/',
+                        default='/media/lab/Yang/data/wind_turbine_labels/',
+                        # default='/home/jovyan/work/data/wind_turbine_labels/',
                         help="syn label.txt")
     parser.add_argument("--syn_box_dir", type=str,
-                        # default='/media/lab/Yang/data/wind_turbine_bbox/',
-                        default='/home/jovyan/work/data/wind_turbine_bbox/',
+                        default='/media/lab/Yang/data/wind_turbine_bbox/',
+                        # default='/home/jovyan/work/data/wind_turbine_bbox/',
                         help="syn related txt files")
 
-    parser.add_argument("--syn_txt_dir", type=str, default='/home/jovyan/work/code/yxu-yolov3-xview/data_wnd/',
+    parser.add_argument("--syn_txt_dir", type=str,
+                        # default='/home/jovyan/work/code/yxu-yolov3-xview/data_wnd/',
+                        default='/media/lab/Yang/code/yolov3/data_wnd/',
                         help="syn related txt files")
 
     parser.add_argument("--syn_display_type", type=str, default='color',
@@ -305,6 +345,12 @@ if __name__ == "__main__":
 
 
     '''
+    get label with rare_class id
+    '''
+    # rare_class = 6
+    # get_lbl_with_modelid(rare_class)
+
+    '''
     split train val
     '''
     # split_syn_wnd_trn_val(comment='wnd', seed=17, pxs='px10_seed17')
@@ -317,6 +363,10 @@ if __name__ == "__main__":
 
 
 
+    '''
+    get real val data for sepcified cities
+    '''
+    get_real_wnd_val(comment='wnd_CA_AZ', pxs='px10_seed17')
 
 
 

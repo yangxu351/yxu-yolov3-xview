@@ -152,9 +152,8 @@ def draw_bbx_on_rgb_images(dt, px_thresh=20, whr_thres=4):
 
 def split_syn_xview_background_trn_val(seed=17, comment='syn_color', pxwhr='px23whr3'):
 
-    display_type = comment.split('_')[-1]
     step = syn_args.tile_size * syn_args.resolution
-    all_files = np.sort(glob.glob(os.path.join(syn_args.syn_data_dir, '{}_all_images_step{}'.format(display_type, step), '*' + IMG_FORMAT)))
+    all_files = np.sort(glob.glob(os.path.join(syn_args.syn_data_dir, '{}_all_images_step{}'.format(syn_args.syn_display_type, step), '*' + IMG_FORMAT)))
     num_files = len(all_files)
 
     np.random.seed(seed)
@@ -168,7 +167,8 @@ def split_syn_xview_background_trn_val(seed=17, comment='syn_color', pxwhr='px23
     val_lbl_txt = open(os.path.join(data_txt_dir, '{}_val_lbl_seed{}.txt'.format(comment, seed)), 'w')
 
     num_val = int(num_files*syn_args.val_percent)
-    lbl_dir = os.path.join(syn_args.syn_annos_dir, 'minr{}_linkr{}_{}_{}_all_annos_txt_step{}'.format(syn_args.min_region, syn_args.link_r, pxwhr, display_type, step))
+    # lbl_dir = os.path.join(syn_args.syn_annos_dir, 'minr{}_linkr{}_{}_{}_all_annos_txt_step{}'.format(syn_args.min_region, syn_args.link_r, pxwhr, display_type, step))
+    lbl_dir = os.path.join(syn_args.syn_annos_dir, '{}_{}_all_annos_txt_step{}'.format(pxwhr, syn_args.syn_display_type, step))
     for i in all_indices[:num_val]:
         val_img_txt.write('%s\n' % all_files[i])
         val_lbl_txt.write('%s\n' % os.path.join(lbl_dir, os.path.basename(all_files[i]).replace(IMG_FORMAT, TXT_FORMAT)))
@@ -202,7 +202,7 @@ def create_syn_data(comment='syn_texture', seed=17):
     data_txt.close()
 
 def split_trn_val_for_syn_and_real(seed=17, comment='wnd_syn_real', pxwhr='px23whr3', real_img_dir='', real_lbl_dir=''):
-
+    data_txt_dir = syn_args.syn_data_dir
     step = syn_args.tile_size * syn_args.resolution
     all_syn_files = np.sort(glob.glob(os.path.join(syn_args.syn_data_dir, 'color_all_images_step{}'.format(step), '*.png')))
     num_syn_files = len(all_syn_files)
@@ -211,7 +211,6 @@ def split_trn_val_for_syn_and_real(seed=17, comment='wnd_syn_real', pxwhr='px23w
     np.random.seed(seed)
     syn_indices = np.random.permutation(num_syn_files)
     real_indices = np.random.permutation(num_real_files)
-    data_txt_dir = syn_args.syn_data_dir
 
     trn_img_txt = open(os.path.join(data_txt_dir, '{}_train_img_seed{}.txt'.format(comment, seed)), 'w')
     trn_lbl_txt = open(os.path.join(data_txt_dir, '{}_train_lbl_seed{}.txt'.format(comment, seed)), 'w')
@@ -268,7 +267,7 @@ def get_args(cmt=''):
     parser = argparse.ArgumentParser()
     parser.add_argument("--syn_data_dir", type=str,
                         help="Path to folder containing synthetic images and annos ",
-                        default='/home/jovyan/work/data/synthetic_data/{}/')
+                        default='/home/jovyan/work/data/synthetic_data/{}_{}/')
     parser.add_argument("--syn_annos_dir", type=str, default='/home/jovyan/work/data/synthetic_data/{}_txt_xcycwh/',
                         help="syn label.txt")
     parser.add_argument("--syn_box_dir", type=str, default='/home/jovyan/work/data/synthetic_data/{}_gt_bbox/',
@@ -297,7 +296,7 @@ def get_args(cmt=''):
     parser.add_argument("--val_percent", type=float, default=0.25, help="train:val=0.75:0.25")
 
     args = parser.parse_args()
-    args.syn_data_dir = args.syn_data_dir.format(cmt)
+    args.syn_data_dir = args.syn_data_dir.format(cmt, args.syn_display_type)
     args.syn_annos_dir = args.syn_annos_dir.format(cmt)
     args.syn_txt_dir = args.syn_txt_dir.format(cmt)
     args.syn_box_dir = args.syn_box_dir.format(cmt)
@@ -338,7 +337,8 @@ if __name__ == '__main__':
     # cmt = 'syn_uspp_bkg_shdw_scatter_uniform_60_wnd_v1'
     # syn_args = get_args(cmt)
     # for dt in display_types:
-    #     group_object_annotation_and_draw_bbox(dt, px_thres, whr_thres)
+    # #     group_object_annotation_and_draw_bbox(dt, px_thres, whr_thres)
+    #     get_annos_from_lbl_image_and_draw_bbox(dt, px_thres, whr_thres)
 
     '''
     draw bbox on rgb images for syn_background data

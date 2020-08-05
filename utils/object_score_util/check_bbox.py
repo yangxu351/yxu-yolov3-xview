@@ -24,8 +24,8 @@ def img_to_bbox(img):
     # dilate the image
     kernel = np.ones((5, 5), np.uint8)
     img_dilation = cv2.dilate(img, kernel, iterations=1)
-    plt.imshow(img_dilation)
-    plt.show()
+    # plt.imshow(img_dilation)
+    # plt.show()
     # connected components
     im_label = measure.label(img_dilation > 0)
     reg_props = measure.regionprops(im_label, img)
@@ -56,9 +56,9 @@ def get_bbox_from_lbl_image(label_path, save_path, class_label=0, px_thresh=6, w
     for i, f in enumerate(lbl_files):
         lbl = misc_utils.load_file(f) # h, w, c
         bboxes = img_to_bbox(lbl)
-        f_txt = open(os.path.join(save_path, lbl_names[i].replace(lbl_names[i][-3:], '.txt')), 'w')
+        f_txt = open(os.path.join(save_path, lbl_names[i].replace(lbl_names[i][-3:], 'txt')), 'w')
         for bbox in bboxes: # exclude id==0
-            min_w, min_h, max_w, max_h = bbox
+            min_h, min_w, max_h, max_w = bbox
             w = max_w - min_w
             h = max_h - min_h
             whr = np.maximum(w / (h + 1e-16), h / (w + 1e-16))
