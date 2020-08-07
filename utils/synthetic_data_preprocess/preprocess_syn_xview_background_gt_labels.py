@@ -355,22 +355,22 @@ if __name__ == '__main__':
     '''
     split train val
     '''
-    comments = ['syn_uspp_bkg_shdw_scatter_uniform_60_wnd_v1_color'] #['syn_mixed']
-    pxwhr = 'px15whr6'
-    base_pxwhrs = 'px15whr6_seed{}'
-    cmt = 'syn_uspp_bkg_shdw_scatter_uniform_60_wnd_v1'
-    syn_args = get_args(cmt)
-    seed = 17
-    for cmt in comments:
-        base_pxwhrs = base_pxwhrs.format(seed)
-        split_syn_xview_background_trn_val(seed, cmt, pxwhr)
+    # comments = ['syn_uspp_bkg_shdw_scatter_uniform_60_wnd_v1_color'] #['syn_mixed']
+    # pxwhr = 'px15whr6'
+    # base_pxwhrs = 'px15whr6_seed{}'
+    # cmt = 'syn_uspp_bkg_shdw_scatter_uniform_60_wnd_v1'
+    # syn_args = get_args(cmt)
+    # seed = 17
+    # for cmt in comments:
+    #     base_pxwhrs = base_pxwhrs.format(seed)
+    #     split_syn_xview_background_trn_val(seed, cmt, pxwhr)
 
     '''
     create *.data
     '''
-    comments = ['syn_uspp_bkg_shdw_scatter_uniform_60_wnd_v1_color'] #['syn_mixed'] ['syn_mixed']
-    for cmt in comments:
-        create_syn_data(cmt, seed=17)
+    # comments = ['syn_uspp_bkg_shdw_scatter_uniform_60_wnd_v1_color'] #['syn_mixed'] ['syn_mixed']
+    # for cmt in comments:
+    #     create_syn_data(cmt, seed=17)
 
 
     #################################
