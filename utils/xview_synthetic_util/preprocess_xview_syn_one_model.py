@@ -736,10 +736,6 @@ if __name__ == '__main__':
     # model_id = 4
     # psx.create_xview_base_data_for_onemodel_only(model_id, base_cmt)
 
-    '''
-    get lbl txt and images  of val or train
-    '''
-    # get_trn_val_txt_contain_all_models(type='val', copy_img=True)
 
     ####################################################################################### m*_to_rc*
 
@@ -748,10 +744,10 @@ if __name__ == '__main__':
     '''
     # model_id = 4
     # model_id = 1
-    model_id = 5
+    # model_id = 5
     # type = 'val'
-    type = 'train'
-    get_txt_contain_model_id(model_id, copy_img=True, type=type)
+    # # type = 'train'
+    # get_txt_contain_model_id(model_id, copy_img=True, type=type)
 
     '''
     manually backup _m*_val_model as _m*_miss_val_model  
@@ -759,16 +755,16 @@ if __name__ == '__main__':
     except rc2 all others of model1 labeled as 0
     '''
 
-    # model_id = 4
-    # rare_class = 1
-    # model_id = 1
-    # rare_class = 2
-    # # # model_id = 5
-    # # # rare_class = 3
+    # # model_id = 4
+    # # rare_class = 1
+    # # model_id = 1
+    # # rare_class = 2
+    # # model_id = 5
+    # # rare_class = 3
     # # model_id = 5
     # # rare_class = 4
-    # # model_id = 5
-    # # rare_class = 5
+    # model_id = 5
+    # rare_class = 5
     # other_label = 0
     # label_m_val_model_with_other_label(rare_class, model_id, other_label)
 
@@ -796,27 +792,28 @@ if __name__ == '__main__':
     all models that are not belong to the rare object will be labeled as 0  
     '''
 
-    # seed = 17
-    # # seed = 199
-    # px_thres = 23
-    # whr_thres = 3
-    # args = get_args(px_thres, whr_thres, seed)
-    # pxwhr = 'px{}whr{}'.format(px_thres, whr_thres)
-    # non_rare_id = 0
-    # # model_id = 4
-    # # rare_id = 1
-    # # val_m_rc_path = args.annos_save_dir[:-1] + '_m{}_rc{}'.format(model_id, rare_id)
+    seed = 17
+    # seed = 199
+    px_thres = 23
+    whr_thres = 3
+    args = get_args(px_thres, whr_thres, seed)
+    pxwhr = 'px{}whr{}'.format(px_thres, whr_thres)
+    non_rare_id = 0
+    model_id = 4
+    rare_id = 1
+    # val_m_rc_path = args.annos_save_dir[:-1] + '_m{}_rc{}'.format(model_id, rare_id)
     # model_id = 1
     # rare_id = 2
-    # # model_id = 5
-    # # rare_id = 3
-    # # model_id = 5
-    # # rare_id = 4
-    # # model_id = 5
-    # # rare_id = 5
-    # # other_label = 0
-    # val_m_rc_path = args.annos_save_dir[:-1] + '_val_m{}_to_rc{}'.format(model_id, rare_id)
-    # create_model_rareclass_hard_easy_set_backup(val_m_rc_path, model_id, rare_id, non_rare_id, seed, pxwhr)
+    # model_id = 5
+    # rare_id = 3
+    # model_id = 5
+    # rare_id = 4
+    # model_id = 5
+    # rare_id = 5
+
+    other_label = 0
+    val_m_rc_path = args.annos_save_dir[:-1] + '_val_m{}_to_rc{}'.format(model_id, rare_id)
+    create_model_rareclass_hard_easy_set_backup(val_m_rc_path, model_id, rare_id, non_rare_id, seed, pxwhr)
 
 
     '''                                                                                                 
