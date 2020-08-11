@@ -220,9 +220,16 @@ def create_chips_and_txt_geojson_2_json(args):
     img_num_list = []
     image_info_list = []
     annotation_list = []
-    if os.path.exists(args.images_save_dir):
-            shutil.rmtree(args.images_save_dir)
-            os.mkdir(args.images_save_dir)
+    image_save_dir = args.images_save_dir[:-1] + '_airplane_chips'
+    if not os.path.exists(image_save_dir):
+        os.mkdir(image_save_dir)
+    bkg_dir = args.images_save_dir[:-1] + '_noairplane_bkg_chips'
+    if not os.path.exists(bkg_dir):
+        os.mkdir(bkg_dir)
+
+    if os.path.exists(image_save_dir):
+            shutil.rmtree(image_save_dir)
+            os.mkdir(image_save_dir)
 
     for f_name in tqdm(file_names):
         # Needs to be "X.tif", ie ("5.tif")
@@ -234,11 +241,14 @@ def create_chips_and_txt_geojson_2_json(args):
         '''
         if name == '1395.tif' or  name == '2524.tif':
             continue
-
-        ims, img_names, box, classes_final, box_ids = wv.chip_image(arr, coords[chips == name],
+        # ims, img_names, box, classes_final, box_ids = wv.chip_image(arr, coords[chips == name],
+        #                                                             classes[chips == name],
+        #                                                             features_ids[chips == name], res,
+        #                                                             name.split('.')[0], image_save_dir)
+        ims, img_names, box, classes_final, box_ids = wv.chip_image_with_bkg(arr, coords[chips == name],
                                                                     classes[chips == name],
                                                                     features_ids[chips == name], res,
-                                                                    name.split('.')[0], args.images_save_dir)
+                                                                    name.split('.')[0], image_save_dir, bkg_dir)
         if not img_names:
             continue
 
@@ -249,7 +259,7 @@ def create_chips_and_txt_geojson_2_json(args):
             image_names_list.append(file_name)
             ana_txt_name = file_name.split(".")[0] + ".txt"
             f_txt = open(os.path.join(txt_norm_dir, ana_txt_name), 'w')
-            img = wv.get_image(os.path.join(args.images_save_dir, file_name))
+            img = wv.get_image(os.path.join(image_save_dir, file_name))
             image_info = {
                 "id": _img_num,
                 "file_name": file_name,
@@ -288,14 +298,14 @@ def create_chips_and_txt_geojson_2_json(args):
     df_img_num_names['id'] = img_num_list
     df_img_num_names['file_name'] = image_names_list
     df_img_num_names.to_csv(
-        os.path.join(args.txt_save_dir, 'xview_all_image_names_ids_{}_{}cls.csv'.format(args.input_size, args.class_num)),
+        os.path.join(args.txt_save_dir, 'xview_all_image_names_ids_{}_{}cls-v2.csv'.format(args.input_size, args.class_num)),
         index=False)
 
     trn_instance = {'info': 'xView {} cls chips 608 yx185 created {}'.format(args.class_num, time.strftime('%Y-%m-%d_%H.%M', time.localtime())),
                     'license': 'license', 'images': image_info_list,
                     'annotations': annotation_list, 'categories': wv.get_all_categories(args.class_num)}
     json_file = os.path.join(args.txt_save_dir,
-                             'xview_all_{}_{}cls_xtlytlwh.json'.format(args.input_size, args.class_num))  # topleft
+                             'xview_all_{}_{}cls_xtlytlwh-v2.json'.format(args.input_size, args.class_num))  # topleft
     json.dump(trn_instance, open(json_file, 'w'), ensure_ascii=False, indent=2, cls=MyEncoder)
 
 
@@ -610,7 +620,7 @@ def split_trn_val_with_chips(data_name='xview', comments='', seed=17, px_thres=N
 
     data_save_dir = args.data_save_dir
     if comments:
-        txt_save_dir = args.data_list_save_dir + comments[1:] + '_bh'+ '/'
+        txt_save_dir = args.data_list_save_dir + comments[1:] # + '_bh'+ '/'
         if os.path.exists(txt_save_dir):
             shutil.rmtree(txt_save_dir)
             os.makedirs(txt_save_dir)
@@ -642,50 +652,14 @@ def split_trn_val_with_chips(data_name='xview', comments='', seed=17, px_thres=N
     np.random.seed(seed)
     perm_files = np.random.permutation(all_name_set)
     print('perm_files ', perm_files)
-    # indices = np.random.permutation(num_all_tif)
-    # print('indices ', indices)
-
-    # num_files = len(all_files)
-    # trn_num = int(num_files * (1 - args.val_percent))
-    # print('trn_num ', trn_num)
-    # np.random.seed(seed)
-    # perm_files = np.random.permutation(all_name_set)
-    # # np.random.shuffle(all_name_set)
 
     trn_img_txt = open(os.path.join(txt_save_dir, '{}train_img{}.txt'.format(data_name, comments)), 'w')
     trn_lbl_txt = open(os.path.join(txt_save_dir, '{}train_lbl{}.txt'.format(data_name, comments)), 'w')
     val_img_txt = open(os.path.join(txt_save_dir, '{}val_img{}.txt'.format(data_name, comments)), 'w')
     val_lbl_txt = open(os.path.join(txt_save_dir, '{}val_lbl{}.txt'.format(data_name, comments)), 'w')
 
-    #fixme --yang.xu no dulplicate
-    # cnt = 0
-    # for fn in all_name_set:
-    #     #fixme --yang.xu
-    #     # ########################### important!!!!! the difference between '*.txt' and '_*.txt'
-    #     # if '*.txt' 86_*.txt and 860_*.txt are included and there are duplications
-    #     # if '_*.txt' 86_*.txt and 860_*.txt are independent
-    #     start_files = glob.glob(os.path.join(lbl_path, fn + '*.txt'))
-    #     for f in start_files:
-    #         cnt += 1
-    #         if cnt <= trn_num:
-    #             if cnt==trn_num:
-    #                 print('cnt', cnt)
-    #             trn_lbl_txt.write("%s\n" % f)
-    #             lbl_name = os.path.basename(f)
-    #             img_name = lbl_name.replace('.txt', '.jpg')
-    #             trn_img_txt.write("%s\n" % os.path.join(images_save_dir, img_name))
-    #         else:
-    #             val_lbl_txt.write("%s\n" % f)
-    #             lbl_name = os.path.basename(f)
-    #             img_name = lbl_name.replace('.txt', '.jpg')
-    #             val_img_txt.write("%s\n" % os.path.join(images_save_dir, img_name))
-    #
-    # trn_img_txt.close()
-    # trn_lbl_txt.close()
-    # val_img_txt.close()
-    # val_lbl_txt.close()
-    trn_lbl_dir = args.data_list_save_dir + comments[1:] + '_bh_trn_lbl'
-    val_lbl_dir = args.data_list_save_dir + comments[1:] + '_bh_val_lbl'
+    trn_lbl_dir = args.data_list_save_dir + comments[1:] + '_trn_lbl'
+    val_lbl_dir = args.data_list_save_dir + comments[1:] + '_val_lbl'
     if os.path.exists(trn_lbl_dir):
         shutil.rmtree(trn_lbl_dir)
         os.mkdir(trn_lbl_dir)
@@ -738,9 +712,150 @@ def split_trn_val_with_chips(data_name='xview', comments='', seed=17, px_thres=N
     shutil.copyfile(os.path.join(txt_save_dir, '{}val_lbl{}.txt'.format(data_name, comments)),
                     os.path.join(data_save_dir, '{}val_lbl{}.txt'.format(data_name, comments)))
 
-    #judge if there are duplicates
-    # import collections
-    # print([item for item, count in collections.Counter(a).items() if count > 1])
+def split_trn_val_with_rc_step_by_step(data_name='xview', comments='', seed=17, px_thres=None, whr_thres=None):
+    '''
+    first step: split data contains aircrafts but no rc images
+    second step: split data contains no aircrafts (bkg images)
+    third step: split RC images train:val targets ~ 1:1 !!!! manully split
+    ###################### important!!!!! the difference between '*.txt' and '_*.txt'
+    ######################  set(l) will change the order of list
+                           list(dict.fromkeys(l)) doesn't change the order of list
+    '''
+    args = get_args(px_thres, whr_thres)
+
+    # import random
+    # random.seed(seed)
+
+    data_save_dir = args.data_save_dir
+    if comments:
+        txt_save_dir = args.data_list_save_dir + comments[1:] # + '_bh'+ '/'
+        if not os.path.exists(txt_save_dir):
+        #     shutil.rmtree(txt_save_dir)
+        #     os.makedirs(txt_save_dir)
+        # else:
+            os.makedirs(txt_save_dir)
+        data_save_dir = os.path.join(data_save_dir, comments[1:])
+        if not os.path.exists(data_save_dir):
+        #     shutil.rmtree(data_save_dir)
+        #     os.makedirs(data_save_dir)
+        # else:
+            os.makedirs(data_save_dir)
+    else:
+        txt_save_dir = args.data_list_save_dir
+
+    lbl_path = args.annos_save_dir
+    bkg_lbl_dir = args.annos_save_dir[:-1] + '_bkg'
+
+    images_save_dir = args.images_save_dir
+    trn_rc_img_dir = args.images_save_dir[:-1] + '_rc_train'
+    val_rc_img_dir = args.images_save_dir[:-1] + '_rc_val'
+    rc_img_dir = args.images_save_dir[:-1] + '_rc'
+    bkg_img_dir = args.images_save_dir[:-1] + '_noairplane_bkg_chips'
+
+    ##### rare classes
+    all_rc_imgs = glob.glob(os.path.join(rc_img_dir, '*.jpg'))
+    all_rc_img_names = [os.path.basename(f) for f in all_rc_imgs]
+    # print('lbl_path', lbl_path)
+    trn_rc_lbl_files = [os.path.join(lbl_path, os.path.basename(f).replace('.jpg', '.txt')) for f in glob.glob(os.path.join(trn_rc_img_dir, '*.jpg'))]
+    val_rc_lbl_files = [os.path.join(lbl_path, os.path.basename(f).replace('.jpg', '.txt')) for f in glob.glob(os.path.join(val_rc_img_dir, '*.jpg'))]
+    # print('trn_rc_lbl_files', trn_rc_lbl_files)
+    trn_rc_img_files = [os.path.join(rc_img_dir, os.path.basename(f).replace('.txt', '.jpg')) for f in trn_rc_lbl_files]
+    val_rc_img_files = [os.path.join(rc_img_dir, os.path.basename(f).replace('.txt', '.jpg')) for f in val_rc_lbl_files]
+    print('trn_rc_img_files', trn_rc_img_files)
+    # print('trn_rc_lbl_files', trn_rc_lbl_files)
+
+    ##### images that contain aircrafts
+    airplane_lbl_files = [f for f in glob.glob(os.path.join(lbl_path, '*.txt')) if pps.is_non_zero_file(f)]
+    airplane_lbl_files.sort()
+    num_air_files = len(airplane_lbl_files)
+    print('num_air_files', num_air_files)
+
+    ##### images that contain no aircrafts (drop out by rules)
+    airplane_ept_lbl_files = [os.path.join(lbl_path, os.path.basename(f)) for f in glob.glob(os.path.join(lbl_path, '*.txt')) if not pps.is_non_zero_file(f)]
+    airplane_ept_img_files = [os.path.join(images_save_dir, os.path.basename(f).replace('.txt', '.jpg')) for f in airplane_ept_lbl_files]
+
+    ##### images that contain no aircrafts-- BKG
+    bkg_lbl_files = glob.glob(os.path.join(bkg_lbl_dir, '*.txt'))
+    bkg_lbl_files.sort()
+    bkg_img_files = [os.path.join(bkg_img_dir, os.path.basename(f).replace('.txt', '.jpg')) for f in bkg_lbl_files]
+    bkg_lbl_files = bkg_lbl_files + airplane_ept_lbl_files
+    bkg_img_files = bkg_img_files + airplane_ept_img_files
+
+    np.random.seed(seed)
+    nrc_lbl_files = [f for f in airplane_lbl_files if os.path.basename(f).replace('.txt', '.img') not in all_rc_img_names]
+    nrc_img_files = [os.path.join(images_save_dir, os.path.basename(f).replace('.txt', '.jpg')) for f in nrc_lbl_files]
+    print('len nrc img, len nrc lbl',len(nrc_img_files), len(nrc_lbl_files))
+    nrc_ixes = np.random.permutation(len(nrc_lbl_files))
+    nrc_val_num = int(len(nrc_lbl_files)*args.val_percent)
+    val_nrc_lbl_files = [nrc_lbl_files[i] for i in nrc_ixes[:nrc_val_num]]
+    val_nrc_img_files = [nrc_img_files[i] for i in nrc_ixes[:nrc_val_num]]
+    trn_nrc_lbl_files = [nrc_lbl_files[i] for i in nrc_ixes[nrc_val_num:]]
+    trn_nrc_img_files = [nrc_img_files[i] for i in nrc_ixes[nrc_val_num:]]
+
+    print('trn_nrc_img, trn_nrc_lbl', len(trn_nrc_img_files), len(trn_nrc_lbl_files))
+
+    bkg_ixes = np.random.permutation(len(bkg_lbl_files))
+    trn_bkg_lbl_files =[bkg_lbl_files[i] for i in bkg_ixes[: len(trn_nrc_lbl_files)]]
+    val_bkg_lbl_files = [bkg_lbl_files[i] for i in bkg_ixes[ len(trn_nrc_lbl_files):nrc_val_num + len(trn_nrc_lbl_files)]]
+    trn_bkg_img_files = [bkg_img_files[i] for i in bkg_ixes[: len(trn_nrc_lbl_files)]]
+    val_bkg_img_files = [bkg_img_files[i] for i in bkg_ixes[len(trn_nrc_lbl_files): nrc_val_num + len(trn_nrc_lbl_files)]]
+    print('trn_bkg_lbl_files', len(trn_bkg_lbl_files), len(trn_bkg_img_files))
+
+    # exit(0)
+
+    trn_lbl_files = trn_bkg_lbl_files + trn_nrc_lbl_files + trn_rc_lbl_files
+    val_lbl_files = val_bkg_lbl_files + val_nrc_lbl_files + val_rc_lbl_files
+    trn_img_files = trn_bkg_img_files + trn_nrc_img_files + trn_rc_img_files
+    val_img_files = val_bkg_img_files + val_nrc_img_files + val_rc_img_files
+
+    print('trn_num ', len(trn_lbl_files), len(trn_img_files))
+    print('val_num ', len(val_lbl_files), len(val_img_files))
+
+    trn_img_txt = open(os.path.join(txt_save_dir, '{}train_img{}.txt'.format(data_name, comments)), 'w')
+    trn_lbl_txt = open(os.path.join(txt_save_dir, '{}train_lbl{}.txt'.format(data_name, comments)), 'w')
+    val_img_txt = open(os.path.join(txt_save_dir, '{}val_img{}.txt'.format(data_name, comments)), 'w')
+    val_lbl_txt = open(os.path.join(txt_save_dir, '{}val_lbl{}.txt'.format(data_name, comments)), 'w')
+
+    trn_lbl_dir = args.data_list_save_dir + comments[1:] + '_trn_lbl'
+    val_lbl_dir = args.data_list_save_dir + comments[1:] + '_val_lbl'
+    if os.path.exists(trn_lbl_dir):
+        shutil.rmtree(trn_lbl_dir)
+        os.mkdir(trn_lbl_dir)
+    else:
+        os.mkdir(trn_lbl_dir)
+    if os.path.exists(val_lbl_dir):
+        shutil.rmtree(val_lbl_dir)
+        os.mkdir(val_lbl_dir)
+    else:
+        os.mkdir(val_lbl_dir)
+
+    for i in range(len(trn_lbl_files)):
+        trn_lbl_txt.write("%s\n" % trn_lbl_files[i])
+        lbl_name = os.path.basename(trn_lbl_files[i])
+        trn_img_txt.write("%s\n" % trn_img_files[i])
+        shutil.copy(trn_lbl_files[i], os.path.join(trn_lbl_dir, lbl_name))
+    trn_img_txt.close()
+    trn_lbl_txt.close()
+
+    for j in range(len(val_lbl_files)):
+        print('val_lbl_files[j]', val_lbl_files[j])
+        val_lbl_txt.write("%s\n" % val_lbl_files[j])
+        lbl_name = os.path.basename(val_lbl_files[j])
+        val_img_txt.write("%s\n" % val_img_files[j])
+        shutil.copy(val_lbl_files[j], os.path.join(val_lbl_dir, lbl_name))
+        # exit(0)
+    val_img_txt.close()
+    val_lbl_txt.close()
+
+    shutil.copyfile(os.path.join(txt_save_dir, '{}train_img{}.txt'.format(data_name, comments)),
+                    os.path.join(data_save_dir, '{}train_img{}.txt'.format(data_name, comments)))
+    shutil.copyfile(os.path.join(txt_save_dir, '{}train_lbl{}.txt'.format(data_name, comments)),
+                    os.path.join(data_save_dir, '{}train_lbl{}.txt'.format(data_name, comments)))
+    shutil.copyfile(os.path.join(txt_save_dir, '{}val_img{}.txt'.format(data_name, comments)),
+                    os.path.join(data_save_dir, '{}val_img{}.txt'.format(data_name, comments)))
+    shutil.copyfile(os.path.join(txt_save_dir, '{}val_lbl{}.txt'.format(data_name, comments)),
+                    os.path.join(data_save_dir, '{}val_lbl{}.txt'.format(data_name, comments)))
+
 
 def create_json_for_train_or_val_according_to_all_json(data_name='xview', comments='', seed=1024, px_thres=None, whr_thres=None, typestr='val'):
     args = get_args(px_thres, whr_thres)
@@ -2264,6 +2379,46 @@ if __name__ == "__main__":
     # create_chips_and_txt_geojson_2_json(args)
 
     '''
+    create empty label files for bkg images
+    '''
+    # args = get_args(px_thres=23, whr_thres=3)
+    # bkg_annos_dir = args.annos_save_dir[:-1] + '_bkg'
+    # if not os.path.exists(bkg_annos_dir):
+    #     os.mkdir(bkg_annos_dir)
+    # bkg_img_dir = args.images_save_dir[:-1] + '_noairplane_bkg_chips'
+    # print('bkg_img_dir', bkg_img_dir)
+    # bkg_imgs = glob.glob(os.path.join(bkg_img_dir, '*.jpg'))
+    # for f in bkg_imgs:
+    #     name = os.path.basename(f).replace('.jpg', '.txt')
+    #     lbl = open(os.path.join(bkg_annos_dir, name), 'w')
+    #     lbl.close()
+
+
+    ''' 
+    correct errors
+    RENAME from 878bkg_0_1.jpg to 878_bkg_0_1.jpg
+    '''
+    # args = get_args()
+    # bkg_dir = args.images_save_dir[:-1] + '_noairplane_bkg_chips'
+    # for name in os.listdir(bkg_dir):
+    #     inx = name.find('bkg')
+    #     new_name = name[:inx] + '_' + name[inx:]
+    #     print(new_name)
+    #     os.rename(os.path.join(bkg_dir, name),
+    #               os.path.join(bkg_dir, new_name))
+    '''
+    select bkg images
+    '''
+    # args = get_args()
+    # bkg_dir = args.images_save_dir[:-1] + '_noairplane_bkg_chips'
+    # prefix_list = []
+    # for name in os.listdir(bkg_dir):
+    #     prefix_list.append(name.split('_bkg')[0])
+    # prefix_list = list(dict.fromkeys(prefix_list))
+    # print('len prefix_list', len(prefix_list))
+    # print('prefix_list', prefix_list)
+
+    '''
     plot images with bbox from patches 
     '''
     # args = get_args(px_thres=None, whr_thres=None)
@@ -2387,12 +2542,13 @@ if __name__ == "__main__":
     # comments = ''
     # comments = '_px4whr3'
     # comments = '_px6whr4_giou0'
-    # px_thres = 23
-    # whr_thres = 3
-    # comments = '_px23whr3_seed17'
-    # data_name = 'xview'
-    # seed=17
-    # split_trn_val_with_chips(data_name, comments, seed = 17, px_thres=px_thres, whr_thres=whr_thres)
+    px_thres = 23
+    whr_thres = 3
+    seed = 17
+    comments = '_px23whr3_seed{}'.format(seed)
+    data_name = 'xview_rc'
+    # split_trn_val_with_chips(data_name, comments, seed = 8, px_thres=px_thres, whr_thres=whr_thres)
+    split_trn_val_with_rc_step_by_step(data_name, comments, seed, px_thres=px_thres, whr_thres=whr_thres)
 
     '''
     create json for val according to all jsons 
@@ -2526,13 +2682,13 @@ if __name__ == "__main__":
     # typestr = 'train'
     # plot_val_image_with_gt_bbx_by_image_name_from_patches(image_name, typestr)
 
-    typestr = 'val'
-    typestr = 'train'
-    comments = '_px23whr3_seed17'
-    px_thres = 23
-    whr_thres = 3
-    args = get_args(px_thres, whr_thres)
-    plot_val_image_with_gt_bbx_by_image_name_from_patches(None, typestr, comments)
+    # typestr = 'val'
+    # typestr = 'train'
+    # comments = '_px23whr3_seed17'
+    # px_thres = 23
+    # whr_thres = 3
+    # args = get_args(px_thres, whr_thres)
+    # plot_val_image_with_gt_bbx_by_image_name_from_patches(None, typestr, comments)
 
     '''
     copy_lbl_to_lbl_model
