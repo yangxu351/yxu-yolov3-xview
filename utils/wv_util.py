@@ -289,6 +289,117 @@ def chip_image(img, ci_coords, ci_classes, feature_ids, shape=(300, 300), name="
     return images, image_names, total_boxes, total_classes, total_box_ids
 
 
+def chip_image_with_bkg(img, ci_coords, ci_classes, feature_ids, shape=(300, 300), name="", dir='', bkg_dir=''):
+    """
+    even images don't have corresponding annotations, save images with empty labels
+    chip images first
+    Chip an image and get relative coordinates and classes.  Bounding boxes that pass into
+        multiple chips are clipped: each portion that is in a chip is labeled. For example,
+        half a building will be labeled if it is cut off in a chip. If there are no boxes,
+        the boxes array will be [[0,0,0,0]] and classes [0].
+        Note: This chip_image method is only tested on xView data-- there are some image manipulations that can mess up different images.
+
+    Args:
+        img: the image to be chipped in array format
+        ci_coords: an (N,4) array of bounding box coordinates for that image
+        ci_classes: an (N,1) array of classes for each bounding box
+        shape: an (W,H) tuple indicating width and height of chips
+
+    Output:
+        An image array of shape (M,W,H,C), where M is the number of chips,
+        W and H are the dimensions of the image, and C is the number of color
+        channels.  Also returns boxes and classes dictionaries for each corresponding chip.
+        :param ci_classes:
+        :param ci_coords:
+        :param img:
+        :param dir:
+        :param name:
+        :param shape:
+        :param feature_ids:
+    """
+
+
+    height, width, _ = img.shape
+    ws, hs = shape
+
+    # w_num, h_num = (int(width / wn), int(height / hn))
+    w_num, h_num = (round(width / ws), round(height / hs))
+    images = {}
+    image_names = {}
+    total_boxes = {}
+    total_classes = {}
+    total_box_ids = {}
+    #FIXME --YANG
+    # if shape[0] == 300:
+    #     thr = 0.3
+    # else:
+    #     thr = 0.1
+    thr = 0.3
+
+    k = 0
+    for i in range(w_num):
+        for j in range(h_num):
+            hmin = hs * j
+            hmax = hs * (j + 1)
+            wmin = ws * i
+            wmax = ws * (i + 1)
+
+            chip = np.zeros_like(img)
+            if hmax >= height and wmax >= width:
+                chip[:height-hmin, :width-wmin, :3] = img[hmin : height, wmin : width, :3]
+            elif hmax >= height and wmax < width:
+                chip[:height-hmin, :wmax-wmin, :3] = img[hmin : height, wmin : wmax, :3]
+            elif hmax < height and wmax >= width:
+                chip[:hmax-hmin, :width-wmin, :3] = img[hmin : hmax, wmin : width, :3]
+            else:
+                chip = img[hmin : hmax, wmin : wmax, :3]
+
+            # remove figures with more than 10% black pixels
+            im = Image.fromarray(chip)
+            im_gray = np.array(im.convert('L'))
+            non_black_percent = np.count_nonzero(im_gray) / (im_gray.shape[0] * im_gray.shape[1])
+
+            # NOTE: when the image is full of black pixel  or larger than (1-thr) covered with black pixel
+            if non_black_percent < thr:
+                continue
+
+            x = np.logical_or(np.logical_and((ci_coords[:, 0] < wmax), (ci_coords[:, 0] >= wmin)),
+                              np.logical_and((ci_coords[:, 2] < wmax), (ci_coords[:, 2] >= wmin)))
+            out = ci_coords[x]
+            y = np.logical_or(np.logical_and((out[:, 1] < hmax), (out[:, 1] >= hmin)),
+                              np.logical_and((out[:, 3] < hmax), (out[:, 3] >= hmin)))
+            out_drop = out[y]
+
+            if out_drop.shape[0] == 0:
+                image_name = name + '_bkg_{}_{}.jpg'.format(i, j)
+                im.save(os.path.join(bkg_dir, image_name))
+                continue
+            # bounding boxes partially overlapped with a chip
+            # were cropped at the chip edge
+            out = np.transpose(np.vstack((np.clip(out_drop[:, 0] - wmin, 0, ws),
+                                          np.clip(out_drop[:, 1] - hmin, 0, hs),
+                                          np.clip(out_drop[:, 2] - wmin, 0, ws),
+                                          np.clip(out_drop[:, 3] - hmin, 0, hs))))
+
+            print('out shape', out.shape)
+            if out.shape[0] == 0:
+                image_name = name + '_bkg_{}_{}.jpg'.format(i, j)
+                im.save(os.path.join(bkg_dir, image_name))
+                continue
+            total_boxes[k] = out
+            total_classes[k] = ci_classes[x][y]
+            total_box_ids[k] = feature_ids[x][y]
+
+            image_name = name + '_{}.jpg'.format(k)
+            im.save(os.path.join(dir, image_name))
+            image_names[k] = image_name
+            images[k] = chip
+
+            k += 1
+
+    return images, image_names, total_boxes, total_classes, total_box_ids
+
+
 def chip_image_with_sliding_widow(img, ci_coords, ci_classes, feature_ids, shape=(300, 300), name="", dir=''):
     """
     Chip an image and get relative coordinates and classes.  Bounding boxes that pass into

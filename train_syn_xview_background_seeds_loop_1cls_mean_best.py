@@ -642,19 +642,21 @@ if __name__ == '__main__':
         hyp['obj_pw'] = 1.
     for cx, cmt in enumerate(comments):
         # sr = syn_ratios[cx]
-        # opt.resume = True
-        
-        cinx = cmt.find('model') # first letter index
-        endstr = cmt[cinx:]
-        rcinx = endstr.rfind('_')
-        fstr = endstr[rcinx:] # '_' is included
-        sstr = endstr[:rcinx]
+        # cinx = cmt.find('model') # first letter index
+        # endstr = cmt[cinx:]
+        # rcinx = endstr.rfind('_')
+        # fstr = endstr[rcinx:] # '_' is included
+        # sstr = endstr[:rcinx]
+        # suffix = fstr + '_' + sstr
+        cinx = cmt.find('_RC')
         if cinx >= 0:
-            suffix = fstr + '_' + sstr
+            endstr = cmt[cinx:]
+            rcinx = endstr.rfind('_')
+            sstr = endstr[:rcinx]
         else:
-            suffix = ''
+            sstr = ''
 
-        opt.name = prefix + suffix
+        opt.name = prefix + sstr
 
         opt.base_dir = opt.base_dir.format(opt.class_num, pxwhrsd.format(opt.seed))
         if val_syn:
@@ -669,7 +671,7 @@ if __name__ == '__main__':
             opt.data = 'data_xview/{}_{}_cls/{}_seed{}/{}_seed{}_xview_val_labeled_miss.data'.format(cmt, opt.class_num, cmt, opt.seed, cmt, opt.seed)
         elif opt.model_id < 0:
             hyp_cmt_name = hyp_cmt + 'xview_only'
-            opt.data = 'data_xview/{}_cls/{}_seed{}/xview_{}_seed{}.data'.format(opt.class_num, cmt, opt.seed, cmt, opt.seed)
+            opt.data = 'data_xview/{}_cls/{}_seed{}/{}_{}_seed{}.data'.format(opt.class_num, cmt, opt.seed, prefix, cmt, opt.seed)
         else:
             hyp_cmt_name = hyp_cmt + '_val_xview'
             opt.data = 'data_xview/{}_{}_cls/{}_seed{}/{}_seed{}_xview_val.data'.format(cmt, opt.class_num, cmt, opt.seed, cmt, opt.seed)

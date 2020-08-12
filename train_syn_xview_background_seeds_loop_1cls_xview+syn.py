@@ -683,14 +683,20 @@ if __name__ == '__main__':
     for cx, cmt in enumerate(comments):
         hyp_cmt = hyp_cmt.format(opt.batch_size - opt.syn_batch_size, opt.syn_batch_size)
 
-        cinx = cmt.find('model') # first letter index
-        endstr = cmt[cinx:]
-        rcinx = endstr.rfind('_')
-        fstr = endstr[rcinx:] # '_' is included
-        sstr = endstr[:rcinx]
-        suffix = fstr + '_' + sstr
-
-        opt.name = prefix + suffix
+        # cinx = cmt.find('model') # first letter index
+        # endstr = cmt[cinx:]
+        # rcinx = endstr.rfind('_')
+        # fstr = endstr[rcinx:] # '_' is included
+        # sstr = endstr[:rcinx]
+        # suffix = fstr + '_' + sstr
+        cinx = cmt.find('_RC')
+        if cinx >= 0:
+            endstr = cmt[cinx:]
+            rcinx = endstr.rfind('_')
+            sstr = endstr[:rcinx]
+        else:
+            sstr = ''
+        opt.name = prefix + sstr
 
         opt.base_dir = opt.base_dir.format(opt.class_num, pxwhrsd.format(opt.seed))
         if syn_only:
@@ -701,7 +707,7 @@ if __name__ == '__main__':
         elif xbkgonly and model_id>=0:
             opt.data = 'data_xview/{}_cls/{}_seed{}/{}_seed{}_xbkgonly_m{}_only.data'.format(opt.class_num, cmt, opt.seed, cmt, opt.seed, model_id)
         else:
-            opt.data = 'data_xview/{}_cls/{}_seed{}/{}_seed{}.data'.format(opt.class_num, cmt, opt.seed, cmt, opt.seed)
+            opt.data = 'data_xview/{}_cls/{}_seed{}/{}_{}_seed{}.data'.format(opt.class_num, cmt, opt.seed, prefix, cmt, opt.seed)
 
         time_marker = time.strftime('%Y-%m-%d_%H.%M', time.localtime())
         opt.weights_dir = opt.weights_dir.format(opt.class_num, cmt, opt.seed, '{}_{}_seed{}'.format(time_marker, hyp_cmt, opt.seed))

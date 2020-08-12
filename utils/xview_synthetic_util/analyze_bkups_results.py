@@ -4,10 +4,10 @@ import pandas as pd
 
 if __name__ == '__main__':
 
-#    comments = ["syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_scatter_gauss_40_bias0_model5_v1_color", "syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_scatter_gauss_40_color_bias76.5_model5_v4_color", "syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_scatter_gauss_40_color_bias178.5_model5_v8_color", "syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_scatter_gauss_40_color_bias255.0_model5_v11_color"]
-#    model_id = 5
-#    rare_cls = 3
-    
+    comments = ["syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_scatter_gauss_40_bias0_model5_v1_color", "syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_scatter_gauss_40_color_bias76.5_model5_v4_color", "syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_scatter_gauss_40_color_bias178.5_model5_v8_color", "syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_scatter_gauss_40_color_bias255.0_model5_v11_color"]
+    model_id = 5
+    rare_cls = 3
+
 #    comments = ["syn_xview_bkg_px23whr3_xbsw_xwing_scatter_gauss_30_bias0_model1_v1_color", "syn_xview_bkg_px23whr3_xbsw_xwing_scatter_gauss_30_color_bias76.5_model1_v4_color", "syn_xview_bkg_px23whr3_xbsw_xwing_scatter_gauss_30_color_bias178.5_model1_v8_color", "syn_xview_bkg_px23whr3_xbsw_xwing_scatter_gauss_30_color_bias255.0_model1_v11_color"]
 #    model_id = 1
 #    rare_cls = 2
@@ -42,12 +42,13 @@ if __name__ == '__main__':
             df_far_thres = df_far[df_far<=far_thres]
             df_far_thres = df_far_thres.dropna()
             df_rec_thres = df_rec.loc[:df_far_thres.shape[0]-1]         
+
             result_dir = 'result_output/1_cls/{}_seed{}/'.format(cmt, sd)
             bkup_file_name = '{}_iou{}_bkups_{}.txt'.format(cmt, apN, typ)
             df_bkup = pd.read_csv(os.path.join(result_dir, bkup_file_name), header=None, sep=' ')
             ### 'Class', 'Images', 'Targets', 'P', 'R', 'mAP@0.2', 'F1'
             legends.append(cmt[cmt.find('model'):])
-            
+
             ax_r.plot(X, df_bkup.loc[:, 4], '-o', markersize=3)
             ax_r.set_title('Recall')
             ax_r.set_xlabel('epochs')
@@ -67,12 +68,12 @@ if __name__ == '__main__':
             ax_f1.set_ylim(0, 1)
             ax_f1.grid(True)
             
-            ax_roc.plot(df_far_thres.loc[:], df_rec_thres.loc[:], '-o', markersize=4, alpha=0.5)
+            ax_roc.plot(df_rec_thres.loc[:], df_far_thres.loc[:], '-o', markersize=3)
             ax_roc.set_title('ROC of Last Epoch')
             ax_roc.set_xlabel('FAR')
             ax_roc.set_ylabel('Recall')
-            ax_roc.set_ylim(0, 1.1)
-            ax_roc.set_xlim(-0.1, 3)
+            ax_roc.set_ylim(-0.5, 1.1)
+            ax_roc.set_xlim(-0.5,4)
             ax_roc.grid(True)
         fig.legend(legends)
         plt.tight_layout()

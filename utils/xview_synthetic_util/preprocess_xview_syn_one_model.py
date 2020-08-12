@@ -227,6 +227,7 @@ def get_txt_contain_model_id(model_id=5, copy_img=False):
 
 def get_txt_contain_model_id(model_id=5, copy_img=False, type='all'):
     src_model_dir = args.annos_save_dir[:-1] + '_all_model/'
+    print('src_model_dir', src_model_dir)
     des_model_dir = args.annos_save_dir[:-1] + '_m{}_{}_model/'.format(model_id, type)
     if not os.path.exists(des_model_dir):
         os.mkdir(des_model_dir)
@@ -239,6 +240,7 @@ def get_txt_contain_model_id(model_id=5, copy_img=False, type='all'):
 
     base_pxwhrs = 'px23whr3_seed17'
     base_dir = args.data_save_dir
+    print('base_dir', base_dir)
     if type != 'all':
         df_val = pd.read_csv(os.path.join(base_dir, 'xview{}_lbl_{}.txt'.format(type, base_pxwhrs)), header=None)
         lbl_model_txts = [os.path.join(src_model_dir, os.path.basename(f)) for f in df_val.loc[:, 0]]
@@ -249,6 +251,7 @@ def get_txt_contain_model_id(model_id=5, copy_img=False, type='all'):
         if not pps.is_non_zero_file(lt):
             continue
         name = os.path.basename(lt)
+        # print('name', name)
         df_txt = pd.read_csv(lt, header=None, sep=' ')
         contain_or_not = df_txt.loc[:, 5] == model_id # series
         contain_or_not = contain_or_not.to_numpy()
@@ -619,21 +622,21 @@ def flip_rotate_coordinates(img_name, angle=0, flip=''):
     gbc.plot_img_with_bbx(img_file, lbl_file, save_path=save_dir)
 
 
-def create_data_for_augment_img_lables(img_name, eh_type):
+def create_data_for_augment_img_lables(img_names, eh_type):
     shutil.copy(os.path.join(args.data_save_dir, 'xviewtest_img_px23whr3_seed17_m4_rc1_{}.txt'.format(eh_type)),
                 os.path.join(args.data_save_dir, 'xviewtest_img_px23whr3_seed17_m4_rc1_{}_aug.txt'.format(eh_type)))
     shutil.copy(os.path.join(args.data_save_dir, 'xviewtest_lbl_px23whr3_seed17_m4_rc1_{}.txt'.format(eh_type)),
                 os.path.join(args.data_save_dir, 'xviewtest_lbl_px23whr3_seed17_m4_rc1_{}_aug.txt'.format(eh_type)))
     val_img_file = open(os.path.join(args.data_save_dir, 'xviewtest_img_px23whr3_seed17_m4_rc1_{}_aug.txt'.format(eh_type)), 'a')
     val_lbl_file = open(os.path.join(args.data_save_dir, 'xviewtest_lbl_px23whr3_seed17_m4_rc1_{}_aug.txt'.format(eh_type)), 'a')
-
-    img_dir = args.images_save_dir[:-1] + '_of_{}/'.format(img_name)
-    lbl_dir = args.annos_save_dir[:-1] + '_val_m4_rc1_{}/'.format(img_name)
-    img_files = glob.glob(os.path.join(img_dir, '{}_*.jpg'.format(img_name)))
-    for f in img_files:
-        name = os.path.basename(f)
-        val_img_file.write('%s\n' % f)
-        val_lbl_file.write('%s\n' % os.path.join(lbl_dir, name.replace('.jpg', '.txt')))
+    for img_name in img_names:
+        img_dir = args.images_save_dir[:-1] + '_of_{}/'.format(img_name)
+        lbl_dir = args.annos_save_dir[:-1] + '_val_m4_rc1_{}/'.format(img_name)
+        img_files = glob.glob(os.path.join(img_dir, '{}_*.jpg'.format(img_name)))
+        for f in img_files:
+            name = os.path.basename(f)
+            val_img_file.write('%s\n' % f)
+            val_lbl_file.write('%s\n' % os.path.join(lbl_dir, name.replace('.jpg', '.txt')))
 
     psx.create_xview_base_data_for_onemodel_aug_easy_hard(model_id=4, rc_id=1, eh_type=eh_type, base_cmt='px23whr3_seed17')
 
@@ -736,10 +739,6 @@ if __name__ == '__main__':
     # model_id = 4
     # psx.create_xview_base_data_for_onemodel_only(model_id, base_cmt)
 
-    '''
-    get lbl txt and images  of val or train
-    '''
-    # get_trn_val_txt_contain_all_models(type='val', copy_img=True)
 
     ####################################################################################### m*_to_rc*
 
@@ -747,9 +746,10 @@ if __name__ == '__main__':
     get txt which contains model_id 
     '''
     # model_id = 4
-    # # model_id = 1
-    # # model_id = 5
+    # model_id = 1
+    # model_id = 5
     # type = 'val'
+    # # type = 'train'
     # get_txt_contain_model_id(model_id, copy_img=True, type=type)
 
     '''
@@ -757,14 +757,20 @@ if __name__ == '__main__':
     manually select rc2 from m1_val_model 
     except rc2 all others of model1 labeled as 0
     '''
-    # model_id = 4
-    # rare_class = 1
+
+    # # model_id = 4
+    # # rare_class = 1
     # # model_id = 1
     # # rare_class = 2
     # # model_id = 5
     # # rare_class = 3
+    # # model_id = 5
+    # # rare_class = 4
+    # model_id = 5
+    # rare_class = 5
     # other_label = 0
     # label_m_val_model_with_other_label(rare_class, model_id, other_label)
+
     '''
     get txt which contains model_id == 5
     '''
@@ -788,22 +794,30 @@ if __name__ == '__main__':
     seed = 199                                                                                          
     all models that are not belong to the rare object will be labeled as 0  
     '''
-    # seed = 17
-    # # seed = 199
-    # px_thres = 23
-    # whr_thres = 3
-    # args = get_args(px_thres, whr_thres, seed)
-    # pxwhr = 'px{}whr{}'.format(px_thres, whr_thres)
-    # non_rare_id = 0
-    # model_id = 4
-    # rare_id = 1
-    # # val_m_rc_path = args.annos_save_dir[:-1] + '_m{}_rc{}'.format(model_id, rare_id)
-    # # model_id = 1
-    # # rare_id = 2
-    # # model_id = 5
-    # # rare_id = 3
-    # val_m_rc_path = args.annos_save_dir[:-1] + '_val_m{}_to_rc{}'.format(model_id, rare_id)
-    # create_model_rareclass_hard_easy_set_backup(val_m_rc_path, model_id, rare_id, non_rare_id, seed, pxwhr)
+
+    seed = 17
+    # seed = 199
+    px_thres = 23
+    whr_thres = 3
+    args = get_args(px_thres, whr_thres, seed)
+    pxwhr = 'px{}whr{}'.format(px_thres, whr_thres)
+    non_rare_id = 0
+    model_id = 4
+    rare_id = 1
+    # val_m_rc_path = args.annos_save_dir[:-1] + '_m{}_rc{}'.format(model_id, rare_id)
+    # model_id = 1
+    # rare_id = 2
+    # model_id = 5
+    # rare_id = 3
+    # model_id = 5
+    # rare_id = 4
+    # model_id = 5
+    # rare_id = 5
+
+    other_label = 0
+    val_m_rc_path = args.annos_save_dir[:-1] + '_val_m{}_to_rc{}'.format(model_id, rare_id)
+    create_model_rareclass_hard_easy_set_backup(val_m_rc_path, model_id, rare_id, non_rare_id, seed, pxwhr)
+
 
     '''                                                                                                 
     create *.data for zero-learning (easy) and zero-learning (hard)
@@ -812,26 +826,24 @@ if __name__ == '__main__':
     seed = 17                                                                                           
     seed = 199                                                                                          
     '''
-    seed = 17
-    # seed = 199
-    px_thres = 23
-    whr_thres = 3
-    args = get_args(px_thres, whr_thres, seed)
-    pxwhrs = 'px{}whr{}_seed{}'.format(px_thres, whr_thres, seed)
-    model_id = 4
-    rare_id = 1
-#    model_id = 1
-#    rare_id = 2
-#    model_id = 5
-#    rare_id = 3
-#    model_id = 5
-#    rare_id = 4
-#    model_id = 5
-#    rare_id = 5
-    non_rare_id = 0
-    types = ['hard', 'easy']
-    for type in types:
-        create_test_dataset_of_m_rc(model_id, rare_id, type, seed, pxwhrs)
+    # seed = 17
+    # # seed = 199
+    # px_thres = 23
+    # whr_thres = 3
+    # args = get_args(px_thres, whr_thres, seed)
+    # pxwhrs = 'px{}whr{}_seed{}'.format(px_thres, whr_thres, seed)
+    # # model_id = 4
+    # # rare_id = 1
+    # # model_id = 1
+    # # rare_id = 2
+    # # model_id = 5
+    # # rare_id = 3
+    # model_id = 5
+    # rare_id = 4
+    # non_rare_id = 0
+    # types = ['hard', 'easy']
+    # for type in types:
+    #     create_test_dataset_of_m_rc(model_id, rare_id, type, seed, pxwhrs)
 
 
     # import collections
@@ -938,11 +950,12 @@ if __name__ == '__main__':
     add augmented images and labels into val file
     create corresponding *.data
     '''
-#    # img_name = '2315_359'
-#    img_name = '2315_329'
-#    eh_type = 'hard'
-#    # eh_type = 'easy'
-#    create_data_for_augment_img_lables(img_name, eh_type)
+    # # img_name = '2315_359'
+    # img_names = ['2315_329', '2315_359']
+    # # eh_type = 'hard'
+    # eh_type = 'easy'
+    # create_data_for_augment_img_lables(img_names, eh_type)
+
 
 
 

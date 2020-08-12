@@ -65,6 +65,10 @@ def resize_crop(comments, display_types, scale=2):
             step = sys_args.resolution * sys_args.tile_size
             save_img_dir = os.path.join(sys_args.syn_data_dir.format(dt), 'upscale_{}_all_images_step{}'.format(dt, step))
             save_lbl_dir = os.path.join(sys_args.syn_data_dir.format(dt), 'upscale_{}_lbl_images_step{}'.format(dt, step))
+            if not os.path.exists(save_img_dir):
+                os.mkdir(save_img_dir)
+            if not os.path.exists(save_lbl_dir):
+                os.mkdir(save_lbl_dir)
             img_path = os.path.join(sys_args.syn_data_dir.format(dt), '{}_all_images_step{}'.format(dt, step))
             lbl_path = os.path.join(sys_args.syn_data_dir.format(dt), '{}_all_annos_step{}'.format(dt, step))
             img_list = np.sort(glob.glob(os.path.join(img_path, '*.png')))
@@ -424,16 +428,16 @@ if __name__ == '__main__':
     # cmt = 'xbsw_xcolor_xbkg_gauss_model1_v4'
     # px_thres=23 #20 #30
 
-    for color_pro in range(5, 6):
-        if color_pro == 0:
-          cmt = 'xbw_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_rnd_color_bias0_model4_v1'
-        else:
-          cmt = 'xbw_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_rnd_color_bias{}_model4_v{}'.format(color_pro*25.5, color_pro+21)
-        px_thres = 15
-        whr_thres = 3
-        syn_args = get_args(cmt)
-        dt = 'color'
-        draw_bbx_on_rgb_images(dt, px_thres, whr_thres)
+    # for color_pro in range(5, 6):
+    #     if color_pro == 0:
+    #       cmt = 'xbw_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_rnd_color_bias0_model4_v1'
+    #     else:
+    #       cmt = 'xbw_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_rnd_color_bias{}_model4_v{}'.format(color_pro*25.5, color_pro+21)
+    #     px_thres = 15
+    #     whr_thres = 3
+    #     syn_args = get_args(cmt)
+    #     dt = 'color'
+    #     draw_bbx_on_rgb_images(dt, px_thres, whr_thres)
 
     # whr_thres=3
     # display_types = ['color', 'mixed']
@@ -443,13 +447,15 @@ if __name__ == '__main__':
 
 
 
-    # img_path = '/media/lab/Yang/data/synthetic_data/syn_xview_bkg_xbw_xcolor_xbkg_unif_model4_v6_color/color_all_images_step182.4/color_airplanes_xview_background_sd12_3.png'
-    # lbl_path = '/media/lab/Yang/data/synthetic_data/syn_xview_bkg_xbw_xcolor_xbkg_unif_model4_v6_color/color_all_annos_step182.4/color_airplanes_xview_background_sd12_3.png'
-    # save_dir = '/media/lab/Yang/data/synthetic_data/syn_xview_bkg_xbw_xcolor_xbkg_unif_model4_v6_color/'
-    #
-    # comments = ['xbw_xcolor_xbkg_unif_model4_v6_color']
-    # display_types = ['color', 'mixed']
-    # resize_crop(comments, display_types)
+    '''
+    resize crop 
+    upscale
+    upsample
+    '''
+
+    # comments = ['xbw_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_rnd_color_bias0_model4_v21']
+    # display_types = ['color'] # , 'mixed'
+    # resize_crop(comments, display_types, scale=2)
 
     # lbl = Image.open(lbl_path)
     # lbl2 = lbl.resize((2*w, 2*h))
