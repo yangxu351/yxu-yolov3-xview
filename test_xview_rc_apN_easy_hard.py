@@ -414,113 +414,6 @@ if __name__ == "__main__":
     '''
     test for syn_xveiw_background_*_with_model
     '''
-    # # comments = ["syn_xview_background_texture", "syn_xview_background_color", "syn_xview_background_mixed"]
-    # # comments = ["syn_xview_bkg_certain_models_texture", "syn_xview_bkg_certain_models_color", "syn_xview_bkg_certain_models_mixed"]
-    # # comments = ["syn_xview_bkg_px20whr4_certain_models_texture", "syn_xview_bkg_px20whr4_certain_models_color", "syn_xview_bkg_px20whr4_certain_models_mixed"]
-    # comments = ["syn_xview_bkg_px23whr4_scale_models_texture", "syn_xview_bkg_px23whr4_scale_models_color", "syn_xview_bkg_px23whr4_scale_models_mixed"]
-    # comments = ["syn_xview_bkg_px23whr4_small_models_color"]
-    # comments = ["syn_xview_bkg_px23whr4_small_fw_models_color"]
-    # comments = ["syn_xview_bkg_px23whr3_6groups_models_color", "syn_xview_bkg_px23whr3_6groups_models_mixed"]
-    # comments = ["syn_xview_bkg_px23whr3_rnd_bwratio_models_color", "syn_xview_bkg_px23whr3_rnd_bwratio_models_mixed"]
-    # # hyp_cmt = "hgiou1_fitness"
-    # comments = ["syn_xview_bkg_px23whr3_6groups_models_color", "syn_xview_bkg_px23whr3_6groups_models_mixed"]
-    # comments = ["syn_xview_bkg_px23whr3_rnd_bwratio_models_color", "syn_xview_bkg_px23whr3_rnd_bwratio_models_mixed"]
-    # comments = ["syn_xview_bkg_px23whr3_rnd_bwratio_flat0.8_models_color", "syn_xview_bkg_px23whr3_rnd_bwratio_flat0.8_models_mixed"]
-    # comments = ["syn_xview_bkg_px23whr3_rnd_bwratio_asx_models_color", "syn_xview_bkg_px23whr3_rnd_bwratio_asx_models_mixed"]
-    # comments = ["syn_xview_bkg_px23whr3_xratio_xcolor_models_color", "syn_xview_bkg_px23whr3_xratio_xcolor_models_mixed"]
-    # comments = ["syn_xview_bkg_px23whr3_sbwratio_xratio_xcolor_models_color", "syn_xview_bkg_px23whr3_sbwratio_xratio_xcolor_models_mixed"]
-    # comments = ["syn_xview_bkg_px23whr3_sbwratio_new_xratio_xcolor_models_color", "syn_xview_bkg_px23whr3_sbwratio_new_xratio_xcolor_models_mixed"]
-    # comments = ["syn_xview_bkg_px23whr3_sbw_xcolor_model0_color", "syn_xview_bkg_px23whr3_sbw_xcolor_model0_mixed"]
-    # comments = ["syn_xview_bkg_px15whr3_sbw_xcolor_model4_color", "syn_xview_bkg_px15whr3_sbw_xcolor_model4_mixed"]
-    # comments = ["syn_xview_bkg_px15whr3_sbw_xcolor_model4_v1_color", "syn_xview_bkg_px15whr3_sbw_xcolor_model4_v1_mixed"]
-    # comments = ["syn_xview_bkg_px15whr3_sbw_xcolor_model4_v2_color", "syn_xview_bkg_px15whr3_sbw_xcolor_model4_v2_mixed"]
-    # comments = ["syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v3_color", "syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v3_mixed"]
-    # comments = ["syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v4_color"]
-    # comments = ["syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v4_mixed"]
-    # comments = ["syn_xview_bkg_px15whr3_sbw_xcolor_model4_v2_mixed"]
-#    comments = ["syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_model4_v7_color","syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_model4_v7_mixed"]
-#    comments = ["syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_rndp_model4_v7_color","syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_rndp_model4_v7_mixed"]
-#    comments = ["syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_unif_mig21_model4_v8_color","syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_unif_mig21_model4_v8_mixed"]
-#    comments = ["syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_unif_mig21_rndp_model4_v9_color","syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_unif_mig21_rndp_model4_v9_mixed"]
-#    comments = ["syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_rndp_shdw_model4_v10_color","syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_rndp_shdw_model4_v10_mixed"]
-#    comments = ["syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_unif_mig21_rndp_shdw_model4_v11_color","syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_unif_mig21_rndp_shdw_model4_v11_mixed"]
-#    comments = ["syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_rndp_shdw_dense_model4_v12_color","syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_rndp_shdw_dense_model4_v12_mixed"]
-#    comments = ["syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_rndp_shdw_dense_angle_model4_v13_color","syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_rndp_shdw_dense_angle_model4_v13_mixed"]
-#    comments = ["syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_rndp_shdw_dense_angle_fwc_model4_v14_color","syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_rndp_shdw_dense_angle_fwc_model4_v14_mixed"]
-#    comments = ["syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_mig21_rndp_shdw_dense_angle_fwc_model4_v14_color","syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_mig21_rndp_shdw_dense_angle_fwc_model4_v14_mixed"]
-#    comments = ["syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_angle_fwc_scatter_gauss_dense_model4_v15_color","syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_angle_fwc_scatter_gauss_dense_model4_v15_mixed"]
-#    comments = ["syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_angle_fwc_scatter_gauss_dense_model4_v16_color","syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_angle_fwc_scatter_gauss_dense_model4_v16_mixed"]
-#    comments = ["syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_dense_model4_v17_color","syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_dense_model4_v17_mixed"]
-#    comments = ["syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_dense_solar_model4_v18_color","syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_dense_solar_model4_v18_mixed"]
-#    comments = ["syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_uniform_50_model4_v19_color","syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_uniform_50_model4_v19_mixed"]
-#    comments = ["syn_xview_bkg_px50whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_uniform_50_model4_v19_color","syn_xview_bkg_px50whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_uniform_50_model4_v19_mixed"]
-#    comments = ["syn_xview_bkg_px50whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_120_model4_v21_color","syn_xview_bkg_px50whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_120_model4_v21_mixed"]
-#    comments = ["syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_120_model4_v21_color","syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_120_model4_v21_mixed"]
-#    comments = ["syn_xview_bkg_px30whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_120_model4_v21_upscale_color","syn_xview_bkg_px30whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_120_model4_v21_upscale_mixed"]
-#    comments = ["syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_uniform_50_rdegree_model4_v22_color","syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_uniform_50_rdegree_model4_v22_mixed"]
-#    comments = ["syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_model4_v23_color","syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_model4_v23_mixed"]
-#    comments = ["syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_bias0_model4_v1_color","syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_bias0_model4_v1_mixed"]
-#    comments = ["syn_xview_bkg_px30whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_bias0_model4_v1_color","syn_xview_bkg_px30whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_bias0_model4_v1_mixed" 
-#    comments = ["syn_xview_bkg_px30whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_bias0_model4_v1_color"]
-#    comments = ["syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_100_bias0_model4_v2_color","syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_100_bias0_model4_v2_mixed"]
-#    comments = ["syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias20_model4_v3_color"]
-#    comments = ["syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias40_model4_v4_color"]
-#    comments = ["syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias50_model4_v9_color"]
-#    comments = ["syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias60_model4_v8_color"]
-#    comments = ["syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias70_model4_v5_color"]
-#    comments = ["syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias110_model4_v6_color"]
-#    comments = ["syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_rnd_model4_v7_color"]
-
-#    comments = ["syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_bias0_model4_v1_color"]
-
-#    comments = ["syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias_all_model4_v20_color"]    
-#    comments = ["syn_xview_bkg_px30whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_bias0_model4_v1_color","syn_xview_bkg_px30whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_bias0_model4_v1_mixed"
-#    comments = ["syn_xview_bkg_px30whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_bias0_model4_v1_color"]
-#    comments = ["syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_100_bias0_model4_v2_color"]
-#    comments = ["syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias20_model4_v3_color"]
-#    comments = ["syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias40_model4_v4_color"]
-#    comments = ["syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias50_model4_v5_color"]
-#    comments = ["syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias60_model4_v6_color"]
-#    comments = ["syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias70_model4_v7_color"]
-#    comments = ["syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias110_model4_v8_color"]
-#    comments = ["syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_rnd_model4_v9_color"]
-    
-
-#    comments = ["syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_bias0_model4_v1_color"]
-
-#    comments = ["syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias_all_model4_v20_color"]
-
-#    comments = ["syn_xview_bkg_px30whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_bias0_model4_v1_upscale_color"]
-#    comments = ["syn_xview_bkg_px30whr3_xbw_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_rnd_color_bias0_model4_v21_upscale_color"]
-
-#    model_id = 4
-    # comments = ["syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v4_color", "syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v4_mixed"]
-    # comments = ["syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_model4_v6_color"]
-    # comments = ["syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_gauss_models_color", "syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_gauss_models_mixed"]
-    # comments = ["syn_xview_bkg_px23whr3_sbw_xcolor_model1_color", "syn_xview_bkg_px23whr3_sbw_xcolor_model1_mixed"]
-    # comments = ["syn_xview_bkg_px23whr3_xbw_xcolor_gauss_model1_v1_color", "syn_xview_bkg_px23whr3_xbw_xcolor_gauss_model1_v1_mixed"]
-    # comments = ["syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_gauss_model1_v2_color", "syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_gauss_model1_v2_mixed"]
-    # comments = ["syn_xview_bkg_px23whr3_sbw_xcolor_xbkg_unif_model1_v3_color", "syn_xview_bkg_px23whr3_sbw_xcolor_xbkg_unif_model1_v3_mixed"]
-    # comments = ["syn_xview_bkg_px23whr3_xbsw_xcolor_xbkg_gauss_model1_v4_color", "syn_xview_bkg_px23whr3_xbsw_xcolor_xbkg_gauss_model1_v4_mixed"]
-#    comments = ["syn_xview_bkg_px23whr3_xbsw_xcolor_xbkg_unif_rndp_model1_v6_color", "syn_xview_bkg_px23whr3_xbsw_xcolor_xbkg_unif_rndp_model1_v6_mixed"]
-#    comments = ["syn_xview_bkg_px23whr3_xbsw_xwing_color_xbkg_unif_rndp_model1_v8_color", "syn_xview_bkg_px23whr3_xbsw_xwing_color_xbkg_unif_rndp_model1_v8_mixed"]
-#    comments = ["syn_xview_bkg_px23whr3_xbsw_xwing_color_xbkg_unif_rndp_shdw_model1_v9_color", "syn_xview_bkg_px23whr3_xbsw_xwing_color_xbkg_unif_rndp_shdw_model1_v9_mixed"]
-#    model_id = 1
-#    comments = ["syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_scatter_uniform_model5_v1_color","syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_scatter_uniform_model5_v1_mixed"]
-#    comments = ["syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_rndp_model5_v2_color","syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_rndp_model5_v2_mixed"]
-    
-#    comments = ["syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_scatter_gauss_38_color_bias0_model5_RC4_v1_color"]
-#    color_pro = 10 
-#    comments = ["syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_scatter_gauss_38_color_bias{}_model5_RC4_v{}_color".format(color_pro*25.5, color_pro+1)]
-
-#    comments = ["syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_shdw_scatter_gauss_50_color_bias0_model5_RC5_v1_color"]
-#    color_pro = 10 
-#    comments = ["syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_shdw_scatter_gauss_50_color_bias{}_model5_RC5_v{}_color".format(color_pro*25.5, color_pro+1)]
-    
-#    comments = ["syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_1_color_bias0_model5_RC4_v12_color"]
-#    color_pro = 10 
-#    comments = ["syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_1_color_bias{}_model5_RC4_v{}_color".format(color_pro*25.5, color_pro+12)]
-
 
 #    comments = []
 #    for color_pro in range(11):
@@ -533,17 +426,7 @@ if __name__ == "__main__":
 #    model_id = 4
 #    rare_cls = 1
  
-    comments = []
-    for color_pro in range(5):
-        base_version = 12
-        if color_pro == 0:
-            cmt = 'syn_xview_bkg_px23whr3_xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_color_bias0_RC2_v{}_color'.format(color_pro + base_version)
-        else:
-            cmt = "syn_xview_bkg_px23whr3_xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_color_bias{}_RC2_v{}_color".format(color_pro*25.5, color_pro+base_version)           
-        comments.append(cmt)
-       
-    model_id = 1
-    rare_cls = 2
+
 
 #    comments = []
 #    for color_pro in range(11):
@@ -557,6 +440,17 @@ if __name__ == "__main__":
 #    model_id = 1
 #    rare_cls = 2   
 
+    comments = []
+    for color_pro in range(5):
+        base_version = 12
+        if color_pro == 0:
+            cmt = 'syn_xview_bkg_px23whr3_xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_color_bias0_RC2_v{}_color'.format(color_pro + base_version)
+        else:
+            cmt = "syn_xview_bkg_px23whr3_xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_color_bias{}_RC2_v{}_color".format(color_pro*25.5, color_pro+base_version)           
+        comments.append(cmt)
+       
+    model_id = 1
+    rare_cls = 2
 
 #    comments = []
 #    for color_pro in range(11):
@@ -600,9 +494,9 @@ if __name__ == "__main__":
 
     hyp_cmt = "hgiou1_1gpu_val_syn"
 
-#    apN = 20
+    apN = 20
 #    apN = 40
-    apN = 50
+#    apN = 50
     prefix = "syn_iou{}".format(apN)
 #    prefix = "syn_backup100"
 #    prefix = "syn_backup200"
@@ -620,10 +514,10 @@ if __name__ == "__main__":
             opt = get_opt(comments=cmt)
             opt.device = "2"
 
-            cinx = cmt.find("model") # first letter index
+            cinx = cmt.find("RC") # first letter index RC2_v{}_color
             endstr = cmt[cinx:]
             rcinx = endstr.rfind("_")
-            fstr = endstr[rcinx:] # "_" is included
+            fstr = endstr[rcinx:] # "_" is included 
             sstr = endstr[:rcinx]
             suffix = fstr + "_" + sstr
             if cinx < 0:
@@ -632,8 +526,8 @@ if __name__ == "__main__":
 
             ''' for specified model id '''
             opt.batch_size = 8
-            sidx = cmt.split("model")[-1][0]
-            opt.model_id = int(sidx)
+
+            opt.model_id = model_id
             print("opt.model_id", opt.model_id)
             opt.conf_thres = 0.01
             tif_name = "xview"
@@ -710,7 +604,7 @@ if __name__ == "__main__":
                  opt.save_json, opt=opt)
         
         csv_name =  "{}_rc{}_ap{}_{}.xls".format(cmt[cmt.find("xb"):cmt.find("bias")+4], rare_cls, apN, typ)      
-        csv_dir = "result_output/{}_cls/{}/".format(opt.class_num, cmt[:cmt.find("bias")+4] + cmt[cmt.find("_model"):cmt.find("_v")])
+        csv_dir = "result_output/{}_cls/{}/".format(opt.class_num, cmt[:cmt.find("bias")+4] + cmt[cmt.find("_RC"):cmt.find("_v")])
         if not os.path.exists(csv_dir):
             os.mkdir(csv_dir)
         df_pr_ap.to_excel(os.path.join(csv_dir, csv_name), index=False)

@@ -627,7 +627,10 @@ if __name__ == '__main__':
     opt.conf_thres = cfg_dict['conf_thres']
     opt.nms_iou_thres = cfg_dict['nms_iou_thres']
 
-    comments = cfg_dict['comments']
+    comment = cfg_dict['comment']
+    base_bias = cfg_dict['base_bias']
+    pros = cfg_dict['pros']
+    version_base = cfg_dict['version_base']
     prefix = cfg_dict['prefix']
 
     pxwhrsd = cfg_dict['pxwhrsd']
@@ -640,17 +643,14 @@ if __name__ == '__main__':
     if 'pw' not in opt.arc:  # remove BCELoss positive weights
         hyp['cls_pw'] = 1.
         hyp['obj_pw'] = 1.
-    for cx, cmt in enumerate(comments):
-        # sr = syn_ratios[cx]
-        # opt.resume = True
-        
-        cinx = cmt.find('model') # first letter index
+    for cx, pro in enumerate(pros):
+        cmt = comment.format(base_bias*pro, version_base+cx) 
+        cinx = cmt.find('_RC') # first letter index
         endstr = cmt[cinx:]
         rcinx = endstr.rfind('_')
-        fstr = endstr[rcinx:] # '_' is included
         sstr = endstr[:rcinx]
         if cinx >= 0:
-            suffix = fstr + '_' + sstr
+            suffix = sstr
         else:
             suffix = ''
 
