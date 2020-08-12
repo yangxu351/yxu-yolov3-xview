@@ -756,12 +756,14 @@ def split_trn_val_with_rc_step_by_step(data_name='xview', comments='', seed=17, 
     all_rc_imgs = glob.glob(os.path.join(rc_img_dir, '*.jpg'))
     all_rc_img_names = [os.path.basename(f) for f in all_rc_imgs]
     # print('lbl_path', lbl_path)
-    trn_rc_lbl_files = [os.path.join(lbl_path, os.path.basename(f).replace('.jpg', '.txt')) for f in glob.glob(os.path.join(trn_rc_img_dir, '*.jpg'))]
-    val_rc_lbl_files = [os.path.join(lbl_path, os.path.basename(f).replace('.jpg', '.txt')) for f in glob.glob(os.path.join(val_rc_img_dir, '*.jpg'))]
+
     # print('trn_rc_lbl_files', trn_rc_lbl_files)
-    trn_rc_img_files = [os.path.join(rc_img_dir, os.path.basename(f).replace('.txt', '.jpg')) for f in trn_rc_lbl_files]
-    val_rc_img_files = [os.path.join(rc_img_dir, os.path.basename(f).replace('.txt', '.jpg')) for f in val_rc_lbl_files]
+    trn_rc_img_files = [f for f in glob.glob(os.path.join(trn_rc_img_dir, '*.jpg'))]
+    val_rc_img_files = [f for f in glob.glob(os.path.join(val_rc_img_dir, '*.jpg'))]
     print('trn_rc_img_files', trn_rc_img_files)
+    trn_rc_lbl_files = [os.path.join(lbl_path, os.path.basename(f).replace('.jpg', '.txt')) for f in trn_rc_img_files]
+    val_rc_lbl_files = [os.path.join(lbl_path, os.path.basename(f).replace('.jpg', '.txt')) for f in val_rc_img_files]
+
     # print('trn_rc_lbl_files', trn_rc_lbl_files)
 
     ##### images that contain aircrafts
