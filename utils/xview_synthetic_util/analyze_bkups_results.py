@@ -66,7 +66,7 @@ if __name__ == '__main__':
             ax_f1.set_ylim(0, 1)
             ax_f1.grid(True)
 
-            ax_roc.plot(df_rec_thres.loc[:], df_far_thres.loc[:], '-o', markersize=3)
+            ax_roc.plot(df_far_thres.loc[:], df_rec_thres.loc[:],'-o', markersize=3)
             ax_roc.set_title('ROC of Last Epoch')
             ax_roc.set_xlabel('FAR')
             ax_roc.set_ylabel('Recall')
