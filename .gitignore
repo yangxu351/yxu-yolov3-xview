@@ -22,7 +22,7 @@
 
 *.cfg
 !cfg/yolov3*.cfg
-
+*.sh
 storage.googleapis.com
 runs/*
 data/*

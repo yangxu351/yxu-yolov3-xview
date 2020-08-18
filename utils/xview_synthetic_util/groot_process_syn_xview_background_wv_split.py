@@ -84,7 +84,8 @@ def split_syn_xview_background_trn_val(seed=17, comment='syn_xview_background_te
     val_lbl_txt = open(os.path.join(data_dir, '{}_val_lbl_seed{}.txt'.format(comment, seed)), 'w')
 #    print(os.path.join(syn_args.syn_data_dir.format(display_type), '{}_all_images_step{}'.format(display_type, step), '*' + IMG_FORMAT))
     num_files = len(all_files)
-    print('num_files', num_files)
+#    print('num_files', num_files)
+
     #fixme---yang.xu
     num_val = int(num_files*syn_args.val_percent)
     num_trn = num_files - num_val
@@ -477,316 +478,387 @@ if __name__ == '__main__':
     '''
     synthetic only
     '''
-    # # # comments = ['syn_xview_background_texture', 'syn_xview_background_color', 'syn_xview_background_mixed']
-    # # comments = ['syn_xview_bkg_certain_models_texture', 'syn_xview_bkg_certain_models_color', 'syn_xview_bkg_certain_models_mixed']
-    # # # pxwhr = 'px6whr4_ng0'
-    # # pxwhr = 'px6whr4'
-    # # comments = ['syn_xview_bkg_px20whr4_certain_models_texture', 'syn_xview_bkg_px20whr4_certain_models_color', 'syn_xview_bkg_px20whr4_certain_models_mixed']
-    # # pxwhr = 'px20whr4'
-    # # seeds = [17, 1024, 5, 9, 3]
-    # # comments = ['syn_xview_bkg_px23whr4_scale_models_texture', 'syn_xview_bkg_px23whr4_scale_models_color', 'syn_xview_bkg_px23whr4_scale_models_mixed']
-    # # pxwhr = 'px23whr4'
-    # # seeds = [17, 5, 9] #, 1024, 3, 5, 9
-    # # model_cmt = 'scale_models'
-    # comments = ['syn_xview_bkg_px23whr4_small_models_color', 'syn_xview_bkg_px23whr4_small_models_mixed']
-    # comments = ['syn_xview_bkg_px23whr4_small_fw_models_color', 'syn_xview_bkg_px23whr4_small_fw_models_mixed']
-    # pxwhr = 'px23whr4'
-    # model_cmt = 'small_models'
-    # model_cmt = 'small_fw_models'
-
-    # comments = ['syn_xview_bkg_px23whr3_6groups_models_color', 'syn_xview_bkg_px23whr3_6groups_models_mixed']
-    # model_cmt = '6groups_models'
-    # # comments = ['syn_xview_bkg_px23whr3_rnd_bwratio_models_color', 'syn_xview_bkg_px23whr3_rnd_bwratio_models_mixed']
-    # # model_cmt = 'rnd_bwratio_models'
-    # # comments = ['syn_xview_bkg_px23whr3_rnd_bwratio_flat0.8_models_color', 'syn_xview_bkg_px23whr3_rnd_bwratio_flat0.8_models_mixed']
-    # # model_cmt = 'rnd_bwratio_flat0.8_models'
-    # comments = ['syn_xview_bkg_px23whr3_rnd_bwratio_asx_models_color', 'syn_xview_bkg_px23whr3_rnd_bwratio_asx_models_mixed']
-    # model_cmt = 'rnd_bwratio_asx_models'
-    # comments = ['syn_xview_bkg_px23whr3_xratio_xcolor_models_color', 'syn_xview_bkg_px23whr3_xratio_xcolor_models_mixed']
-    # model_cmt = 'xratio_xcolor_models'
-    # comments = ['syn_xview_bkg_px23whr3_sbwratio_xratio_xcolor_models_color', 'syn_xview_bkg_px23whr3_sbwratio_xratio_xcolor_models_mixed']
-    # model_cmt = 'sbwratio_xratio_xcolor_models'
-    # comments = ['syn_xview_bkg_px23whr3_sbwratio_xratio_xcolor_dark_models_color', 'syn_xview_bkg_px23whr3_sbwratio_xratio_xcolor_dark_models_mixed']
-    # model_cmt = 'sbwratio_xratio_xcolor_dark_models'
-    # comments = ['syn_xview_bkg_px23whr3_sbwratio_new_xratio_xcolor_models_color', 'syn_xview_bkg_px23whr3_sbwratio_new_xratio_xcolor_models_mixed']
-    # model_cmt = 'sbwratio_new_xratio_xcolor_models'
-    # comments = ['syn_xview_bkg_px15whr3_sbw_xcolor_model4_color', 'syn_xview_bkg_px15whr3_sbw_xcolor_model4_mixed']
-    # model_cmt = 'sbw_xcolor_model4'
-    # comments = ['syn_xview_bkg_px15whr3_sbw_xcolor_model4_v1_color', 'syn_xview_bkg_px15whr3_sbw_xcolor_model4_v1_mixed']
-    # model_cmt = 'sbw_xcolor_model4_v1'
-    # comments = ['syn_xview_bkg_px15whr3_sbw_xcolor_model4_v2_color', 'syn_xview_bkg_px15whr3_sbw_xcolor_model4_v2_mixed']
-    # model_cmt = 'sbw_xcolor_model4_v2'
-    # # comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v3_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v3_mixed']
-    # # model_cmt = 'xbw_xcolor_xbkg_gauss_model4_v3'
-    # pxwhr = 'px15whr3' # only for model4
-
-    # comments = ['syn_xview_bkg_px23whr3_sbw_xcolor_model0_color', 'syn_xview_bkg_px23whr3_sbw_xcolor_model0_mixed']
-    # model_cmt = 'sbw_xcolor_model0'
-    # comments = ['syn_xview_bkg_px23whr3_sbw_xcolor_model1_color', 'syn_xview_bkg_px23whr3_sbw_xcolor_model1_mixed']
-    # model_cmt = 'sbw_xcolor_model1'
-    # comments = ['syn_xview_bkg_px23whr3_sbw_xcolor_xbkg_unif_model1_v3_color', 'syn_xview_bkg_px23whr3_sbw_xcolor_xbkg_unif_model1_v3_mixed']
-    # model_cmt = 'sbw_xcolor_xbkg_unif_model1_v3'
-    # comments = ['syn_xview_bkg_px23whr3_xbsw_xcolor_xbkg_gauss_model1_v4_color', 'syn_xview_bkg_px23whr3_xbsw_xcolor_xbkg_gauss_model1_v4_mixed']
-    # model_cmt = 'xbsw_xcolor_xbkg_gauss_model1_v4'
-    # pxwhr = 'px23whr3'
-    # comments = ['syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_models_color', 'syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_models_mixed']
-    # model_cmt = 'xbw_xrxc_spr_sml_models'
-    # comments = ['syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_gauss_models_color', 'syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_gauss_models_mixed']
-    # model_cmt = 'xbw_xrxc_spr_sml_gauss_models'
-    # comments = ['syn_xview_bkg_px23whr3_xbw_xcolor_gauss_model1_v1_color', 'syn_xview_bkg_px23whr3_xbw_xcolor_gauss_model1_v1_mixed']
-    # model_cmt = 'xbw_xcolor_gauss_model1_v1' # v1
-    # comments = ['syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_gauss_model1_v2_color', 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_gauss_model1_v2_mixed']
-    # model_cmt = 'xbw_xcolor_xbkg_gauss_model1_v2'
-    # pxwhr = 'px23whr3'
-    # comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v4_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v4_mixed']
-    # model_cmt = 'xbw_xcolor_xbkg_gauss_model4_v4'
-    # comments = ['syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_gauss_model4_v5_color', 'syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_gauss_model4_v5_mixed']
-    # model_cmt = 'xbw_rndcolor_xbkg_gauss_model4_v5'
-#    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_model4_v7_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_model4_v7_mixed']
-#    model_cmt = 'xbw_xcolor_xbkg_unif_mig21_model4_v7'
-#    comments = ['syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_unif_mig21_model4_v8_color', 'syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_unif_mig21_model4_v8_mixed']
-#    model_cmt = 'xbw_rndcolor_xbkg_unif_mig21_model4_v8'
-#    comments = ['syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_unif_mig21_rndp_model4_v9_color', 'syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_unif_mig21_rndp_model4_v9_mixed']
-#    model_cmt = 'xbw_rndcolor_xbkg_unif_mig21_rndp_model4_v9'
-#    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_rndp_shdw_model4_v10_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_rndp_shdw_model4_v10_mixed']
-#    model_cmt = 'xbw_xcolor_xbkg_unif_mig21_rndp_shdw_model4_v10'
-#    comments = ['syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_unif_mig21_rndp_shdw_model4_v11_color', 'syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_unif_mig21_rndp_shdw_model4_v11_mixed']
-#    model_cmt = 'xbw_rndcolor_xbkg_unif_mig21_rndp_shdw_model4_v11'
-#    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_rndp_shdw_dense_model4_v12_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_rndp_shdw_dense_model4_v12_mixed']
-#    model_cmt = 'xbw_xcolor_xbkg_unif_mig21_rndp_shdw_dense_model4_v12'
-#    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_rndp_shdw_dense_angle_model4_v13_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_rndp_shdw_dense_angle_model4_v13_mixed']
-#    model_cmt = 'xbw_xcolor_xbkg_unif_mig21_rndp_shdw_dense_angle_model4_v13'
-#    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_rndp_shdw_dense_angle_fwc_model4_v14_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_rndp_shdw_dense_angle_fwc_model4_v14_mixed']
-#    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_angle_fwc_scatter_gauss_dense_model4_v15_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_angle_fwc_scatter_gauss_dense_model4_v15_mixed']
-#    pxwhr = 'px15whr3'
-#    comments = ['syn_xview_bkg_px30whr3_xbw_xcolor_xbkg_unif_mig21_shdw_angle_fwc_scatter_gauss_dense_model4_v15_color', 'syn_xview_bkg_px30whr3_xbw_xcolor_xbkg_unif_mig21_shdw_angle_fwc_scatter_gauss_dense_model4_v15_mixed']
-#    model_cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_angle_fwc_scatter_gauss_dense_model4_v15'
-#    pxwhr = 'px30whr3'
-#    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_angle_fwc_scatter_gauss_dense_model4_v16_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_angle_fwc_scatter_gauss_dense_model4_v16_mixed']
-#    model_cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_angle_fwc_scatter_gauss_dense_model4_v16'
-#    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_dense_model4_v17_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_dense_model4_v17_mixed']
-#    model_cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_dense_model4_v17'
-#    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_dense_solar_model4_v18_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_dense_solar_model4_v18_mixed']
-#    model_cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_dense_solar_model4_v18'
-#    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_uniform_50_model4_v19_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_uniform_50_model4_v19_mixed']
-#    pxwhr = 'px15whr3'
-#    comments = ['syn_xview_bkg_px50whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_uniform_50_model4_v19_color', 'syn_xview_bkg_px50whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_uniform_50_model4_v19_mixed']
-#    pxwhr = 'px50whr3'
-#    comments = ['syn_xview_bkg_px30whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_uniform_50_model4_v19_upscale_color', 'syn_xview_bkg_px30whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_uniform_50_model4_v19_upscale_mixed']
-#    model_cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_uniform_50_model4_v19'
-#    pxwhr = 'px30whr3'
-#    model_cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_uniform_50_model4_v19'
-#    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_50_model4_v20_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_50_model4_v20_mixed']
-#    model_cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_50_model4_v20'
-#    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_120_model4_v21_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_120_model4_v21_mixed']
-#    model_cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_120_model4_v21'
-#    pxwhr = 'px15whr3'
-#    comments = ['syn_xview_bkg_px30whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_120_model4_v21_upscale_color', 'syn_xview_bkg_px30whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_120_model4_v21_upscale_mixed']
-#    model_cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_120_model4_v21'
-#    pxwhr = 'px30whr3'
-#    comments = ['syn_xview_bkg_px50whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_120_model4_v21_color', 'syn_xview_bkg_px50whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_120_model4_v21_mixed']
-#    model_cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_120_model4_v21'
-#    pxwhr = 'px50whr3'
-#    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_120_model4_v21_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_120_model4_v21_mixed']
-#    model_cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_120_model4_v21'
-#    pxwhr = 'px15whr3'
-#    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_uniform_50_rdegree_model4_v22_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_uniform_50_rdegree_model4_v22_mixed']
-#    model_cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_uniform_50_rdegree_model4_v22'
-#    comments = ['syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_model4_v23_color', 'syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_model4_v23_mixed']
-#    model_cmt = 'xbw_rndcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_model4_v23'
-#    pxwhr = 'px15whr3'
-#    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_bias0_model4_v1_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_bias0_model4_v1_mixed']
-#    model_cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_bias0_model4_v1'
-#    pxwhr = 'px15whr3'
-#    comments = ['syn_xview_bkg_px30whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_bias0_model4_v1_color', 'syn_xview_bkg_px30whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_bias0_model4_v1_mixed']
-#    model_cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_bias0_model4_v1'
-#    pxwhr = 'px30whr3'
-#    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_100_bias0_model4_v2_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_100_bias0_model4_v2_mixed']
-#    model_cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_100_bias0_model4_v2'
-#    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias20_model4_v3_color']
-#    model_cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias20_model4_v3'
-#    pxwhr = 'px15whr3'
-#    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias40_model4_v4_color']
-#    model_cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias40_model4_v4'
-#    pxwhr = 'px15whr3'
-#    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias50_model4_v9_color']
-#    model_cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias50_model4_v9'
-#    pxwhr = 'px15whr3'
-#    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias60_model4_v8_color']
-#    model_cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias60_model4_v8'
-#    pxwhr = 'px15whr3'
-#    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias70_model4_v5_color']
-#    model_cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias70_model4_v5'
-#    pxwhr = 'px15whr3'
-#    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias110_model4_v6_color']
-#    model_cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias110_model4_v6'
-#    pxwhr = 'px15whr3'
-#    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_rnd_model4_v7_color']
-#    model_cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_rnd_model4_v7'
-#    pxwhr = 'px15whr3'
-
-#    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_rndp_model4_v7_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_rndp_model4_v7_mixed']
-#    model_cmt = 'xbw_xcolor_xbkg_unif_mig21_rndp_model4_v7'
-#    pxwhr = 'px15whr3'
-#    comments = ['syn_xview_bkg_px23whr3_xbsw_xcolor_xbkg_unif_rndp_model1_v6_color', 'syn_xview_bkg_px23whr3_xbsw_xcolor_xbkg_unif_rndp_model1_v6_mixed']
-#    model_cmt = 'xbsw_xcolor_xbkg_unif_rndp_model1_v6'
-#    comments = ['syn_xview_bkg_px23whr3_xbsw_rndcolor_xbkg_unif_rndp_model1_v7_color', 'syn_xview_bkg_px23whr3_xbsw_rndcolor_xbkg_unif_rndp_model1_v7_mixed']
-#    model_cmt = 'xbsw_rndcolor_xbkg_unif_rndp_model1_v7'
-#    comments = ['syn_xview_bkg_px23whr3_xbsw_xwing_color_xbkg_unif_rndp_model1_v8_color', 'syn_xview_bkg_px23whr3_xbsw_xwing_color_xbkg_unif_rndp_model1_v8_mixed']
-#    model_cmt = 'xbsw_xwing_color_xbkg_unif_rndp_model1_v8'
-#    comments = ['syn_xview_bkg_px23whr3_xbsw_xwing_color_xbkg_unif_rndp_shdw_model1_v9_color', 'syn_xview_bkg_px23whr3_xbsw_xwing_color_xbkg_unif_rndp_shdw_model1_v9_mixed']
-#    model_cmt = 'xbsw_xwing_color_xbkg_unif_rndp_shdw_model1_v9'
-#    pxwhr = 'px23whr3'
-#    comments = ['syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_scatter_uniform_model5_v1_color', 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_scatter_uniform_model5_v1_mixed']
-#    model_cmt = 'xbw_xcolor_xbkg_unif_shdw_scatter_uniform_model5_v1'
-#    comments = ['syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_rndp_model5_v2_color', 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_rndp_model5_v2_mixed']
-#    model_cmt = 'xbw_xcolor_xbkg_unif_shdw_rndp_model5_v2'  
-#    pxwhr = 'px23whr3'
-
-#    comments = ['syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_scatter_gauss_40_bias0_model5_v1_color']
-#    model_cmt = 'xbw_xcolor_xbkg_unif_shdw_scatter_gauss_40_bias0_model5_v1'
-#    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_bias0_model4_v1_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_100_bias0_model4_v2_color',    'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias20_model4_v3_color',    'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias40_model4_v4_color',    'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias50_model4_v5_color',    'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias60_model4_v6_color',    'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias70_model4_v7_color',    'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias110_model4_v8_color',    'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_rnd_model4_v9_color']
-    
-#    model_comments = ['xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_bias0_model4_v1', 'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_100_bias0_model4_v2',    'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias20_model4_v3',    'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias40_model4_v4',    'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias50_model4_v5',    'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias60_model4_v6',    'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias70_model4_v7',    'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias110_model4_v8',    'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_rnd_model4_v9']
- 
-#    comments = ['syn_xview_bkg_px30whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_bias0_model4_v1_upscale_color', 'syn_xview_bkg_px30whr3_xbw_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_rnd_color_bias0_model4_v21_upscale_color']
-#    model_comments = ['xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_bias0_model4_v1', 'xbw_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_rnd_color_bias0_model4_v21']
-#    comments = ['syn_xview_bkg_px30whr3_xbw_xcolor_xbkg_unif_shdw_scatter_gauss_50_color_bias0_model5_RC5_v1_upscale_color']
-#    model_comments = ['xbw_xcolor_xbkg_unif_shdw_scatter_gauss_50_color_bias0_model5_RC5_v1']
-#    pxwhr = 'px30whr3'
+#    # # # comments = ['syn_xview_background_texture', 'syn_xview_background_color', 'syn_xview_background_mixed']
+#    # # comments = ['syn_xview_bkg_certain_models_texture', 'syn_xview_bkg_certain_models_color', 'syn_xview_bkg_certain_models_mixed']
+#    # # # pxwhr = 'px6whr4_ng0'
+#    # # pxwhr = 'px6whr4'
+#    # # comments = ['syn_xview_bkg_px20whr4_certain_models_texture', 'syn_xview_bkg_px20whr4_certain_models_color', 'syn_xview_bkg_px20whr4_certain_models_mixed']
+#    # # pxwhr = 'px20whr4'
+#    # # seeds = [17, 1024, 5, 9, 3]
+#    # # comments = ['syn_xview_bkg_px23whr4_scale_models_texture', 'syn_xview_bkg_px23whr4_scale_models_color', 'syn_xview_bkg_px23whr4_scale_models_mixed']
+#    # # pxwhr = 'px23whr4'
+#    # # seeds = [17, 5, 9] #, 1024, 3, 5, 9
+#    # # model_cmt = 'scale_models'
+#    # comments = ['syn_xview_bkg_px23whr4_small_models_color', 'syn_xview_bkg_px23whr4_small_models_mixed']
+#    # comments = ['syn_xview_bkg_px23whr4_small_fw_models_color', 'syn_xview_bkg_px23whr4_small_fw_models_mixed']
+#    # pxwhr = 'px23whr4'
+#    # model_cmt = 'small_models'
+#    # model_cmt = 'small_fw_models'
 #
-#    base_pxwhrs = 'px23whr3_seed{}'
-#    sd = 17
+#    # comments = ['syn_xview_bkg_px23whr3_6groups_models_color', 'syn_xview_bkg_px23whr3_6groups_models_mixed']
+#    # model_cmt = '6groups_models'
+#    # # comments = ['syn_xview_bkg_px23whr3_rnd_bwratio_models_color', 'syn_xview_bkg_px23whr3_rnd_bwratio_models_mixed']
+#    # # model_cmt = 'rnd_bwratio_models'
+#    # # comments = ['syn_xview_bkg_px23whr3_rnd_bwratio_flat0.8_models_color', 'syn_xview_bkg_px23whr3_rnd_bwratio_flat0.8_models_mixed']
+#    # # model_cmt = 'rnd_bwratio_flat0.8_models'
+#    # comments = ['syn_xview_bkg_px23whr3_rnd_bwratio_asx_models_color', 'syn_xview_bkg_px23whr3_rnd_bwratio_asx_models_mixed']
+#    # model_cmt = 'rnd_bwratio_asx_models'
+#    # comments = ['syn_xview_bkg_px23whr3_xratio_xcolor_models_color', 'syn_xview_bkg_px23whr3_xratio_xcolor_models_mixed']
+#    # model_cmt = 'xratio_xcolor_models'
+#    # comments = ['syn_xview_bkg_px23whr3_sbwratio_xratio_xcolor_models_color', 'syn_xview_bkg_px23whr3_sbwratio_xratio_xcolor_models_mixed']
+#    # model_cmt = 'sbwratio_xratio_xcolor_models'
+#    # comments = ['syn_xview_bkg_px23whr3_sbwratio_xratio_xcolor_dark_models_color', 'syn_xview_bkg_px23whr3_sbwratio_xratio_xcolor_dark_models_mixed']
+#    # model_cmt = 'sbwratio_xratio_xcolor_dark_models'
+#    # comments = ['syn_xview_bkg_px23whr3_sbwratio_new_xratio_xcolor_models_color', 'syn_xview_bkg_px23whr3_sbwratio_new_xratio_xcolor_models_mixed']
+#    # model_cmt = 'sbwratio_new_xratio_xcolor_models'
+#    # comments = ['syn_xview_bkg_px15whr3_sbw_xcolor_model4_color', 'syn_xview_bkg_px15whr3_sbw_xcolor_model4_mixed']
+#    # model_cmt = 'sbw_xcolor_model4'
+#    # comments = ['syn_xview_bkg_px15whr3_sbw_xcolor_model4_v1_color', 'syn_xview_bkg_px15whr3_sbw_xcolor_model4_v1_mixed']
+#    # model_cmt = 'sbw_xcolor_model4_v1'
+#    # comments = ['syn_xview_bkg_px15whr3_sbw_xcolor_model4_v2_color', 'syn_xview_bkg_px15whr3_sbw_xcolor_model4_v2_mixed']
+#    # model_cmt = 'sbw_xcolor_model4_v2'
+#    # # comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v3_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v3_mixed']
+#    # # model_cmt = 'xbw_xcolor_xbkg_gauss_model4_v3'
+#    # pxwhr = 'px15whr3' # only for model4
+#
+#    # comments = ['syn_xview_bkg_px23whr3_sbw_xcolor_model0_color', 'syn_xview_bkg_px23whr3_sbw_xcolor_model0_mixed']
+#    # model_cmt = 'sbw_xcolor_model0'
+#    # comments = ['syn_xview_bkg_px23whr3_sbw_xcolor_model1_color', 'syn_xview_bkg_px23whr3_sbw_xcolor_model1_mixed']
+#    # model_cmt = 'sbw_xcolor_model1'
+#    # comments = ['syn_xview_bkg_px23whr3_sbw_xcolor_xbkg_unif_model1_v3_color', 'syn_xview_bkg_px23whr3_sbw_xcolor_xbkg_unif_model1_v3_mixed']
+#    # model_cmt = 'sbw_xcolor_xbkg_unif_model1_v3'
+#    # comments = ['syn_xview_bkg_px23whr3_xbsw_xcolor_xbkg_gauss_model1_v4_color', 'syn_xview_bkg_px23whr3_xbsw_xcolor_xbkg_gauss_model1_v4_mixed']
+#    # model_cmt = 'xbsw_xcolor_xbkg_gauss_model1_v4'
+#    # pxwhr = 'px23whr3'
+#    # comments = ['syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_models_color', 'syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_models_mixed']
+#    # model_cmt = 'xbw_xrxc_spr_sml_models'
+#    # comments = ['syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_gauss_models_color', 'syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_gauss_models_mixed']
+#    # model_cmt = 'xbw_xrxc_spr_sml_gauss_models'
+#    # comments = ['syn_xview_bkg_px23whr3_xbw_xcolor_gauss_model1_v1_color', 'syn_xview_bkg_px23whr3_xbw_xcolor_gauss_model1_v1_mixed']
+#    # model_cmt = 'xbw_xcolor_gauss_model1_v1' # v1
+#    # comments = ['syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_gauss_model1_v2_color', 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_gauss_model1_v2_mixed']
+#    # model_cmt = 'xbw_xcolor_xbkg_gauss_model1_v2'
+#    # pxwhr = 'px23whr3'
+#    # comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v4_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v4_mixed']
+#    # model_cmt = 'xbw_xcolor_xbkg_gauss_model4_v4'
+#    # comments = ['syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_gauss_model4_v5_color', 'syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_gauss_model4_v5_mixed']
+#    # model_cmt = 'xbw_rndcolor_xbkg_gauss_model4_v5'
+##    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_model4_v7_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_model4_v7_mixed']
+##    model_cmt = 'xbw_xcolor_xbkg_unif_mig21_model4_v7'
+##    comments = ['syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_unif_mig21_model4_v8_color', 'syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_unif_mig21_model4_v8_mixed']
+##    model_cmt = 'xbw_rndcolor_xbkg_unif_mig21_model4_v8'
+##    comments = ['syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_unif_mig21_rndp_model4_v9_color', 'syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_unif_mig21_rndp_model4_v9_mixed']
+##    model_cmt = 'xbw_rndcolor_xbkg_unif_mig21_rndp_model4_v9'
+##    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_rndp_shdw_model4_v10_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_rndp_shdw_model4_v10_mixed']
+##    model_cmt = 'xbw_xcolor_xbkg_unif_mig21_rndp_shdw_model4_v10'
+##    comments = ['syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_unif_mig21_rndp_shdw_model4_v11_color', 'syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_unif_mig21_rndp_shdw_model4_v11_mixed']
+##    model_cmt = 'xbw_rndcolor_xbkg_unif_mig21_rndp_shdw_model4_v11'
+##    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_rndp_shdw_dense_model4_v12_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_rndp_shdw_dense_model4_v12_mixed']
+##    model_cmt = 'xbw_xcolor_xbkg_unif_mig21_rndp_shdw_dense_model4_v12'
+##    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_rndp_shdw_dense_angle_model4_v13_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_rndp_shdw_dense_angle_model4_v13_mixed']
+##    model_cmt = 'xbw_xcolor_xbkg_unif_mig21_rndp_shdw_dense_angle_model4_v13'
+##    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_rndp_shdw_dense_angle_fwc_model4_v14_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_rndp_shdw_dense_angle_fwc_model4_v14_mixed']
+##    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_angle_fwc_scatter_gauss_dense_model4_v15_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_angle_fwc_scatter_gauss_dense_model4_v15_mixed']
 ##    pxwhr = 'px15whr3'
-#    for ix, cmt in enumerate(comments):
-#        syn_args = get_syn_args(model_comments[ix])
-#        base_pxwhrs = base_pxwhrs.format(sd)
-#        #split_syn_xview_background_trn_val(sd, cmt, pxwhr, base_pxwhrs)
-#        split_syn_xview_background_trn_val(sd, cmt, pxwhr, base_pxwhrs, upscale=True)
-
-#    for color_pro in range(11):
-#        if color_pro == 0:
-#            cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_scatter_gauss_40_bias0_model5_v1_color'
-#            model_cmt = 'xbw_xcolor_xbkg_unif_shdw_scatter_gauss_40_bias0_model5_v1'
-#        else: 
-#            cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_scatter_gauss_40_color_bias{}_model5_v{}_color'.format(color_pro*25.5, color_pro+1)
-#            model_cmt = 'xbw_xcolor_xbkg_unif_shdw_scatter_gauss_40_color_bias{}_model5_v{}'.format(color_pro*25.5, color_pro+1)
+##    comments = ['syn_xview_bkg_px30whr3_xbw_xcolor_xbkg_unif_mig21_shdw_angle_fwc_scatter_gauss_dense_model4_v15_color', 'syn_xview_bkg_px30whr3_xbw_xcolor_xbkg_unif_mig21_shdw_angle_fwc_scatter_gauss_dense_model4_v15_mixed']
+##    model_cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_angle_fwc_scatter_gauss_dense_model4_v15'
+##    pxwhr = 'px30whr3'
+##    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_angle_fwc_scatter_gauss_dense_model4_v16_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_angle_fwc_scatter_gauss_dense_model4_v16_mixed']
+##    model_cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_angle_fwc_scatter_gauss_dense_model4_v16'
+##    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_dense_model4_v17_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_dense_model4_v17_mixed']
+##    model_cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_dense_model4_v17'
+##    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_dense_solar_model4_v18_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_dense_solar_model4_v18_mixed']
+##    model_cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_dense_solar_model4_v18'
+##    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_uniform_50_model4_v19_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_uniform_50_model4_v19_mixed']
+##    pxwhr = 'px15whr3'
+##    comments = ['syn_xview_bkg_px50whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_uniform_50_model4_v19_color', 'syn_xview_bkg_px50whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_uniform_50_model4_v19_mixed']
+##    pxwhr = 'px50whr3'
+##    comments = ['syn_xview_bkg_px30whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_uniform_50_model4_v19_upscale_color', 'syn_xview_bkg_px30whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_uniform_50_model4_v19_upscale_mixed']
+##    model_cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_uniform_50_model4_v19'
+##    pxwhr = 'px30whr3'
+##    model_cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_uniform_50_model4_v19'
+##    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_50_model4_v20_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_50_model4_v20_mixed']
+##    model_cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_50_model4_v20'
+##    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_120_model4_v21_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_120_model4_v21_mixed']
+##    model_cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_120_model4_v21'
+##    pxwhr = 'px15whr3'
+##    comments = ['syn_xview_bkg_px30whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_120_model4_v21_upscale_color', 'syn_xview_bkg_px30whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_120_model4_v21_upscale_mixed']
+##    model_cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_120_model4_v21'
+##    pxwhr = 'px30whr3'
+##    comments = ['syn_xview_bkg_px50whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_120_model4_v21_color', 'syn_xview_bkg_px50whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_120_model4_v21_mixed']
+##    model_cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_120_model4_v21'
+##    pxwhr = 'px50whr3'
+##    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_120_model4_v21_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_120_model4_v21_mixed']
+##    model_cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_gauss_120_model4_v21'
+##    pxwhr = 'px15whr3'
+##    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_uniform_50_rdegree_model4_v22_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_uniform_50_rdegree_model4_v22_mixed']
+##    model_cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_fwc_scatter_uniform_50_rdegree_model4_v22'
+##    comments = ['syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_model4_v23_color', 'syn_xview_bkg_px15whr3_xbw_rndcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_model4_v23_mixed']
+##    model_cmt = 'xbw_rndcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_model4_v23'
+##    pxwhr = 'px15whr3'
+##    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_bias0_model4_v1_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_bias0_model4_v1_mixed']
+##    model_cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_bias0_model4_v1'
+##    pxwhr = 'px15whr3'
+##    comments = ['syn_xview_bkg_px30whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_bias0_model4_v1_color', 'syn_xview_bkg_px30whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_bias0_model4_v1_mixed']
+##    model_cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_bias0_model4_v1'
+##    pxwhr = 'px30whr3'
+##    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_100_bias0_model4_v2_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_100_bias0_model4_v2_mixed']
+##    model_cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_100_bias0_model4_v2'
+##    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias20_model4_v3_color']
+##    model_cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias20_model4_v3'
+##    pxwhr = 'px15whr3'
+##    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias40_model4_v4_color']
+##    model_cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias40_model4_v4'
+##    pxwhr = 'px15whr3'
+##    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias50_model4_v9_color']
+##    model_cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias50_model4_v9'
+##    pxwhr = 'px15whr3'
+##    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias60_model4_v8_color']
+##    model_cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias60_model4_v8'
+##    pxwhr = 'px15whr3'
+##    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias70_model4_v5_color']
+##    model_cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias70_model4_v5'
+##    pxwhr = 'px15whr3'
+##    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias110_model4_v6_color']
+##    model_cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias110_model4_v6'
+##    pxwhr = 'px15whr3'
+##    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_rnd_model4_v7_color']
+##    model_cmt = 'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_rnd_model4_v7'
+##    pxwhr = 'px15whr3'
+#
+##    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_rndp_model4_v7_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_rndp_model4_v7_mixed']
+##    model_cmt = 'xbw_xcolor_xbkg_unif_mig21_rndp_model4_v7'
+##    pxwhr = 'px15whr3'
+##    comments = ['syn_xview_bkg_px23whr3_xbsw_xcolor_xbkg_unif_rndp_model1_v6_color', 'syn_xview_bkg_px23whr3_xbsw_xcolor_xbkg_unif_rndp_model1_v6_mixed']
+##    model_cmt = 'xbsw_xcolor_xbkg_unif_rndp_model1_v6'
+##    comments = ['syn_xview_bkg_px23whr3_xbsw_rndcolor_xbkg_unif_rndp_model1_v7_color', 'syn_xview_bkg_px23whr3_xbsw_rndcolor_xbkg_unif_rndp_model1_v7_mixed']
+##    model_cmt = 'xbsw_rndcolor_xbkg_unif_rndp_model1_v7'
+##    comments = ['syn_xview_bkg_px23whr3_xbsw_xwing_color_xbkg_unif_rndp_model1_v8_color', 'syn_xview_bkg_px23whr3_xbsw_xwing_color_xbkg_unif_rndp_model1_v8_mixed']
+##    model_cmt = 'xbsw_xwing_color_xbkg_unif_rndp_model1_v8'
+##    comments = ['syn_xview_bkg_px23whr3_xbsw_xwing_color_xbkg_unif_rndp_shdw_model1_v9_color', 'syn_xview_bkg_px23whr3_xbsw_xwing_color_xbkg_unif_rndp_shdw_model1_v9_mixed']
+##    model_cmt = 'xbsw_xwing_color_xbkg_unif_rndp_shdw_model1_v9'
+##    pxwhr = 'px23whr3'
+##    comments = ['syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_scatter_uniform_model5_v1_color', 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_scatter_uniform_model5_v1_mixed']
+##    model_cmt = 'xbw_xcolor_xbkg_unif_shdw_scatter_uniform_model5_v1'
+##    comments = ['syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_rndp_model5_v2_color', 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_rndp_model5_v2_mixed']
+##    model_cmt = 'xbw_xcolor_xbkg_unif_shdw_rndp_model5_v2'  
+##    pxwhr = 'px23whr3'
+#
+##    comments = ['syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_scatter_gauss_40_bias0_model5_v1_color']
+##    model_cmt = 'xbw_xcolor_xbkg_unif_shdw_scatter_gauss_40_bias0_model5_v1'
+##    comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_bias0_model4_v1_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_100_bias0_model4_v2_color',    'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias20_model4_v3_color',    'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias40_model4_v4_color',    'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias50_model4_v5_color',    'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias60_model4_v6_color',    'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias70_model4_v7_color',    'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias110_model4_v8_color',    'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_rnd_model4_v9_color']
+#    
+##    model_comments = ['xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_bias0_model4_v1', 'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_100_bias0_model4_v2',    'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias20_model4_v3',    'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias40_model4_v4',    'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias50_model4_v5',    'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias60_model4_v6',    'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias70_model4_v7',    'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_bias110_model4_v8',    'xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_rnd_model4_v9']
+# 
+##    comments = ['syn_xview_bkg_px30whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_bias0_model4_v1_upscale_color', 'syn_xview_bkg_px30whr3_xbw_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_rnd_color_bias0_model4_v21_upscale_color']
+##    model_comments = ['xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_bias0_model4_v1', 'xbw_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_rnd_color_bias0_model4_v21']
+##    comments = ['syn_xview_bkg_px30whr3_xbw_xcolor_xbkg_unif_shdw_scatter_gauss_50_color_bias0_model5_RC5_v1_upscale_color']
+##    model_comments = ['xbw_xcolor_xbkg_unif_shdw_scatter_gauss_50_color_bias0_model5_RC5_v1']
+##    pxwhr = 'px30whr3'
+##
+##    base_pxwhrs = 'px23whr3_seed{}'
+##    sd = 17
+###    pxwhr = 'px15whr3'
+##    for ix, cmt in enumerate(comments):
+##        syn_args = get_syn_args(model_comments[ix])
+##        base_pxwhrs = base_pxwhrs.format(sd)
+##        #split_syn_xview_background_trn_val(sd, cmt, pxwhr, base_pxwhrs)
+##        split_syn_xview_background_trn_val(sd, cmt, pxwhr, base_pxwhrs, upscale=True)
+#
+##    for color_pro in range(11):
+##        if color_pro == 0:
+##            cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_scatter_gauss_40_bias0_model5_v1_color'
+##            model_cmt = 'xbw_xcolor_xbkg_unif_shdw_scatter_gauss_40_bias0_model5_v1'
+##        else: 
+##            cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_scatter_gauss_40_color_bias{}_model5_v{}_color'.format(color_pro*25.5, color_pro+1)
+##            model_cmt = 'xbw_xcolor_xbkg_unif_shdw_scatter_gauss_40_color_bias{}_model5_v{}'.format(color_pro*25.5, color_pro+1)
+##
+###        if color_pro == 0:
+###            cmt = 'syn_xview_bkg_px23whr3_xbsw_xwing_scatter_gauss_30_bias0_model1_v1_color'
+###            model_cmt = 'xbsw_xwing_scatter_gauss_30_bias0_model1_v1'
+###        else: 
+###            cmt = 'syn_xview_bkg_px23whr3_xbsw_xwing_scatter_gauss_30_color_bias{}_model1_v{}_color'.format(color_pro*25.5, color_pro+1)
+###            model_cmt = 'xbsw_xwing_scatter_gauss_30_color_bias{}_model1_v{}'.format(color_pro*25.5, color_pro+1)
+###        pxwhr = 'px23whr3'
+##        if color_pro == 0:
+##            cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_rnd_color_bias0_model4_v21_color'
+##            model_cmt = 'xbw_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_rnd_color_bias0_model4_v21'
+##        else:
+##            cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_rnd_color_bias{}_model4_v{}_color'.format(color_pro*25.5, color_pro+21)
+##            model_cmt = 'xbw_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_rnd_color_bias{}_model4_v{}'.format(color_pro*25.5, color_pro+21)
+##        pxwhr = 'px15whr3'
+#
+#
+##    for color_pro in range(11):
+##        if color_pro == 0:
+##            cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_scatter_gauss_38_color_bias0_model5_RC4_v1_color'
+##            model_cmt = 'xbw_xcolor_xbkg_unif_shdw_scatter_gauss_38_color_bias0_model5_RC4_v1'
+##        else:
+##            cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_scatter_gauss_38_color_bias{}_model5_RC4_v{}_color'.format(color_pro*25.5, color_pro+1)
+##            model_cmt = 'xbw_xcolor_xbkg_unif_shdw_scatter_gauss_38_color_bias{}_model5_RC4_v{}'.format(color_pro*25.5, color_pro+1)
+##        if color_pro == 0:    
+##            cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_1_color_bias0_model5_RC4_v12_color'
+##            model_cmt = 'xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_1_color_bias0_model5_RC4_v12'
+##        else:
+##            cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_1_color_bias{}_model5_RC4_v{}_color'.format(color_pro*25.5, color_pro+12)
+##            model_cmt = 'xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_1_color_bias{}_model5_RC4_v{}'.format(color_pro*25.5, color_pro+12)
+##        pxwhr = 'px23whr3'
 #
 ##        if color_pro == 0:
-##            cmt = 'syn_xview_bkg_px23whr3_xbsw_xwing_scatter_gauss_30_bias0_model1_v1_color'
-##            model_cmt = 'xbsw_xwing_scatter_gauss_30_bias0_model1_v1'
-##        else: 
-##            cmt = 'syn_xview_bkg_px23whr3_xbsw_xwing_scatter_gauss_30_color_bias{}_model1_v{}_color'.format(color_pro*25.5, color_pro+1)
-##            model_cmt = 'xbsw_xwing_scatter_gauss_30_color_bias{}_model1_v{}'.format(color_pro*25.5, color_pro+1)
+##            cmt = 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_shdw_scatter_gauss_50_color_bias0_model5_RC5_v1_color'
+##            model_cmt = 'xbw_xcolor_xbkg_unif_shdw_scatter_gauss_50_color_bias0_model5_RC5_v1'
+##        else:
+##            cmt = 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_shdw_scatter_gauss_50_color_bias{}_model5_RC5_v{}_color'.format(color_pro*25.5, color_pro+1)
+##            model_cmt = 'xbw_xcolor_xbkg_unif_shdw_scatter_gauss_50_color_bias{}_model5_RC5_v{}'.format(color_pro*25.5, color_pro+1)
+##        pxwhr = 'px15whr3'
+#
+##    for color_pro in range(11):        
+##        if color_pro == 0:
+##            cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_scatter_uniform_50_rndangle_rndsolar_color_bias0_RC1_v32_color'
+##            model_cmt = 'xbw_xbkg_unif_mig21_shdw_scatter_uniform_50_rndangle_rndsolar_color_bias0_RC1_v32'
+##        else:
+##            cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_scatter_uniform_50_rndangle_rndsolar_color_bias{}_RC1_v{}_color'.format(color_pro*25.5, color_pro+32)
+##            model_cmt = 'xbw_xbkg_unif_mig21_shdw_scatter_uniform_50_rndangle_rndsolar_color_bias{}_RC1_v{}'.format(color_pro*25.5, color_pro+32)
+##        pxwhr = 'px15whr3'
+#        
+##    for color_pro in range(11):
+##        if color_pro == 0:
+##            cmt = 'syn_xview_bkg_px23whr3_xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_color_bias0_RC2_v12_color'
+##            model_cmt = 'xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_color_bias0_RC2_v12'
+##        else:
+##            cmt = 'syn_xview_bkg_px23whr3_xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_color_bias{}_RC2_v{}_color'.format(color_pro*25.5, color_pro+12)
+##            model_cmt = 'xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_color_bias{}_RC2_v{}'.format(color_pro*25.5, color_pro+12)
 ##        pxwhr = 'px23whr3'
-#        if color_pro == 0:
-#            cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_rnd_color_bias0_model4_v21_color'
-#            model_cmt = 'xbw_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_rnd_color_bias0_model4_v21'
-#        else:
-#            cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_rnd_color_bias{}_model4_v{}_color'.format(color_pro*25.5, color_pro+21)
-#            model_cmt = 'xbw_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_rnd_color_bias{}_model4_v{}'.format(color_pro*25.5, color_pro+21)
-#        pxwhr = 'px15whr3'
-
-
-#    for color_pro in range(11):
-#        if color_pro == 0:
-#            cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_scatter_gauss_38_color_bias0_model5_RC4_v1_color'
-#            model_cmt = 'xbw_xcolor_xbkg_unif_shdw_scatter_gauss_38_color_bias0_model5_RC4_v1'
-#        else:
-#            cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_scatter_gauss_38_color_bias{}_model5_RC4_v{}_color'.format(color_pro*25.5, color_pro+1)
-#            model_cmt = 'xbw_xcolor_xbkg_unif_shdw_scatter_gauss_38_color_bias{}_model5_RC4_v{}'.format(color_pro*25.5, color_pro+1)
-#        if color_pro == 0:    
-#            cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_1_color_bias0_model5_RC4_v12_color'
-#            model_cmt = 'xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_1_color_bias0_model5_RC4_v12'
-#        else:
-#            cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_1_color_bias{}_model5_RC4_v{}_color'.format(color_pro*25.5, color_pro+12)
-#            model_cmt = 'xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_1_color_bias{}_model5_RC4_v{}'.format(color_pro*25.5, color_pro+12)
-#        pxwhr = 'px23whr3'
-
-#        if color_pro == 0:
-#            cmt = 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_shdw_scatter_gauss_50_color_bias0_model5_RC5_v1_color'
-#            model_cmt = 'xbw_xcolor_xbkg_unif_shdw_scatter_gauss_50_color_bias0_model5_RC5_v1'
-#        else:
-#            cmt = 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_unif_shdw_scatter_gauss_50_color_bias{}_model5_RC5_v{}_color'.format(color_pro*25.5, color_pro+1)
-#            model_cmt = 'xbw_xcolor_xbkg_unif_shdw_scatter_gauss_50_color_bias{}_model5_RC5_v{}'.format(color_pro*25.5, color_pro+1)
-#        pxwhr = 'px15whr3'
-
-#    for color_pro in range(11):        
-#        if color_pro == 0:
-#            cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_scatter_uniform_50_rndangle_rndsolar_color_bias0_RC1_v32_color'
-#            model_cmt = 'xbw_xbkg_unif_mig21_shdw_scatter_uniform_50_rndangle_rndsolar_color_bias0_RC1_v32'
-#        else:
-#            cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_scatter_uniform_50_rndangle_rndsolar_color_bias{}_RC1_v{}_color'.format(color_pro*25.5, color_pro+32)
-#            model_cmt = 'xbw_xbkg_unif_mig21_shdw_scatter_uniform_50_rndangle_rndsolar_color_bias{}_RC1_v{}'.format(color_pro*25.5, color_pro+32)
-#        pxwhr = 'px15whr3'
-        
-#    for color_pro in range(11):
-#        if color_pro == 0:
-#            cmt = 'syn_xview_bkg_px23whr3_xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_color_bias0_RC2_v12_color'
-#            model_cmt = 'xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_color_bias0_RC2_v12'
-#        else:
-#            cmt = 'syn_xview_bkg_px23whr3_xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_color_bias{}_RC2_v{}_color'.format(color_pro*25.5, color_pro+12)
-#            model_cmt = 'xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_color_bias{}_RC2_v{}'.format(color_pro*25.5, color_pro+12)
+#    
+##    for ix, size_pro in enumerate(range(6)):
+##        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_scatter_gauss_2_7_rndsolar_dynmu_size_bias{}_RC1_v{}_color'.format(size_pro*5, ix+43)
+##        model_cmt = 'xbw_xbkg_unif_mig21_shdw_scatter_gauss_2_7_rndsolar_dynmu_size_bias{}_RC1_v{}'.format(size_pro*5, ix+43)
+##        pxwhr = 'px15whr3'
+#
+##    for ix, size_pro in enumerate([-2,-1,0,1,1.5,2]):
+##        cmt = 'syn_xview_bkg_px23whr3_xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_dynmu_size_bias{}_RC2_v{}_color'.format(size_pro*10, ix+23)
+##        model_cmt = 'xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_dynmu_size_bias{}_RC2_v{}'.format(size_pro*10, ix+23)
+##        pxwhr = 'px23whr3'
+#
+##    for ix, size_pro in enumerate(range(-1, 5)):
+##        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_size_bias{}_RC3_v{}_color'.format(size_pro*7, ix+23)
+##        model_cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_size_bias{}_RC3_v{}'.format(size_pro*7, ix+23)
+##        pxwhr = 'px23whr3'
+#        
+##    for ix, size_pro in enumerate(range(-3, 3)):
+##        cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_size_bias{}_RC4_v{}_color'.format(size_pro*5, ix+23)
+##        model_cmt = 'xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_size_bias{}_RC4_v{}'.format(size_pro*5, ix+23)
+##        pxwhr = 'px23whr3'
+#
+##    for ix, size_pro in enumerate(range(6)):
+##        cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_size_bias{}_RC5_v{}_color'.format(size_pro*5, ix+12)
+##        model_cmt = 'xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_size_bias{}_RC5_v{}'.format(size_pro*5, ix+12)
+##        pxwhr = 'px23whr3'
+#
+##    for ix, color_pro in enumerate([-2.5, -1.5, 0, 0.5, 1.5, 2.5 ]):
+##        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias{}_RC1_v{}_color'.format(color_pro, ix+50)
+##        model_cmt = 'xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias{}_RC1_v{}'.format(color_pro, ix+50)
+##        pxwhr = 'px15whr3'
+#
+##    for ix, color_pro in enumerate([0, -0.5, -1.5, -2.5, -3.5, -4.5]):
+##        cmt = 'syn_xview_bkg_px23whr3_xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias{}_RC2_v{}_color'.format(color_pro, ix+30)
+##        model_cmt = 'xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias{}_RC2_v{}'.format(color_pro, ix+30)
+##        pxwhr = 'px23whr3'
+# 
+##    for ix, color_pro in enumerate([0, -0.5, -1.5, -2.5, -3.5, -4.5]):
+##        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias{}_RC3_v{}_color'.format(color_pro, ix+30)
+##        model_cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias{}_RC3_v{}'.format(color_pro, ix+30)
+##        pxwhr = 'px23whr3'
+#  
+##    for ix, color_pro in enumerate([-1.5, 0, 0.5, 1.5, 2.5, 3.5]):
+##        cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias{}_RC4_v{}_color'.format(color_pro, ix+30)
+##        model_cmt = 'xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias{}_RC4_v{}'.format(color_pro, ix+30)
+##        pxwhr = 'px23whr3'
+#
+##    for ix, color_pro in enumerate([-2.5,-1.5, 0, 0.5, 1.5, 2.5]):
+##        cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias{}_RC5_v{}_color'.format(color_pro, ix+20)
+##        model_cmt = 'xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias{}_RC5_v{}'.format(color_pro, ix+20)
+##        pxwhr = 'px23whr3'
+#
+##    bias_steps = [0, 0.2, 0.4, 0.6, 0.8]
+##    for ix, color_pro in enumerate(bias_steps):
+##        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_dynsigma_color_bias{}_RC1_v{}_color'.format(color_pro, ix+60)
+##        model_cmt = 'xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_dynsigma_color_bias{}_RC1_v{}'.format(color_pro, ix+60)
+##        pxwhr = 'px15whr3'
+#
+##    bias_steps = [0, 0.2, 0.4, 0.6, 0.8]
+##    for ix, color_pro in enumerate(bias_steps):
+##        cmt = 'syn_xview_bkg_px23whr3_xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_dynsigma_color_bias{}_RC2_v{}_color'.format(color_pro, ix+40)
+##        model_cmt = 'xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_dynsigma_color_bias{}_RC2_v{}'.format(color_pro, ix+40)
+##        pxwhr = 'px23whr3'
+#
+##    bias_steps = [0, 0.2, 0.4, 0.6, 0.8]
+##    for ix, color_pro in enumerate(bias_steps):
+##        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynsigma_color_bias{}_RC3_v{}_color'.format(color_pro, ix+40)
+##        model_cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynsigma_color_bias{}_RC3_v{}'.format(color_pro, ix+40)
+##        pxwhr = 'px23whr3'
+#
+#
+##    bias_steps = [0, 0.2, 0.4, 0.6, 0.8]
+##    for ix, color_pro in enumerate(bias_steps):
+##        cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynsigma_color_bias{}_RC4_v{}_color'.format(color_pro, ix+40)
+##        model_cmt = 'xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynsigma_color_bias{}_RC4_v{}'.format(color_pro, ix+40)
+##        pxwhr = 'px23whr3'
+#
+#    bias_steps = [0, 0.2, 0.4, 0.6, 0.8]
+#    for ix, color_pro in enumerate(bias_steps):
+#        cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynsigma_color_bias{}_RC5_v{}_color'.format(color_pro, ix+30)
+#        model_cmt = 'xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynsigma_color_bias{}_RC5_v{}'.format(color_pro, ix+30)
 #        pxwhr = 'px23whr3'
     
-#    for ix, size_pro in enumerate(range(6)):
-#        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_scatter_gauss_2_7_rndsolar_dynmu_size_bias{}_RC1_v{}_color'.format(size_pro*5, ix+43)
-#        model_cmt = 'xbw_xbkg_unif_mig21_shdw_scatter_gauss_2_7_rndsolar_dynmu_size_bias{}_RC1_v{}'.format(size_pro*5, ix+43)
-#        pxwhr = 'px15whr3'
-
-#    for ix, size_pro in enumerate([-2,-1,0,1,1.5,2]):
-#        cmt = 'syn_xview_bkg_px23whr3_xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_dynmu_size_bias{}_RC2_v{}_color'.format(size_pro*10, ix+23)
-#        model_cmt = 'xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_dynmu_size_bias{}_RC2_v{}'.format(size_pro*10, ix+23)
+#    for ix, size_pro in enumerate([0, 0.2, 0.4, 0.6]):
+#        cmt = 'syn_xview_bkg_px23whr3_xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_dynsigma_size_bias{}_RC2_v{}_color'.format(size_pro, ix+50)
+#        model_cmt = 'xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_dynsigma_size_bias{}_RC2_v{}'.format(size_pro, ix+50)
+#        pxwhr = 'px23whr3'
+   
+#    for ix, size_pro in enumerate([0, 0.2, 0.4, 0.6]):
+#        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynsigma_size_bias{}_RC3_v{}_color'.format(size_pro, ix+50)
+#        model_cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynsigma_size_bias{}_RC3_v{}'.format(size_pro, ix+50)
 #        pxwhr = 'px23whr3'
 
-#    for ix, size_pro in enumerate(range(-1, 5)):
-#        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_size_bias{}_RC3_v{}_color'.format(size_pro*7, ix+23)
-#        model_cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_size_bias{}_RC3_v{}'.format(size_pro*7, ix+23)
+#    for ix, size_pro in enumerate([0, 0.2, 0.4, 0.6]):
+#        cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynsigma_size_bias{}_RC4_v{}_color'.format(size_pro, ix+50)
+#        model_cmt = 'xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynsigma_size_bias{}_RC4_v{}'.format(size_pro, ix+50)
 #        pxwhr = 'px23whr3'
         
-#    for ix, size_pro in enumerate(range(-3, 3)):
-#        cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_size_bias{}_RC4_v{}_color'.format(size_pro*5, ix+23)
-#        model_cmt = 'xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_size_bias{}_RC4_v{}'.format(size_pro*5, ix+23)
-#        pxwhr = 'px23whr3'
-
-#    for ix, size_pro in enumerate(range(6)):
-#        cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_size_bias{}_RC5_v{}_color'.format(size_pro*5, ix+12)
-#        model_cmt = 'xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_size_bias{}_RC5_v{}'.format(size_pro*5, ix+12)
-#        pxwhr = 'px23whr3'
-
-#    for ix, color_pro in enumerate([-2.5, -1.5, 0, 0.5, 1.5, 2.5 ]):
-#        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias{}_RC1_v{}_color'.format(color_pro, ix+50)
-#        model_cmt = 'xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias{}_RC1_v{}'.format(color_pro, ix+50)
+#    for ix, size_pro in enumerate([0, 0.05, 0.1, 0.15]):
+#        model_cmt = 'xbw_xbkg_unif_mig21_shdw_scatter_gauss_2_7_rndsolar_dynsigma_size_bias{}_RC1_v{}'.format(size_pro, ix+70)
+#        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_scatter_gauss_2_7_rndsolar_dynsigma_size_bias{}_RC1_v{}_color'.format(size_pro, ix+70)
 #        pxwhr = 'px15whr3'
 
-#    for ix, color_pro in enumerate([0, -0.5, -1.5, -2.5, -3.5, -4.5]):
-#        cmt = 'syn_xview_bkg_px23whr3_xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias{}_RC2_v{}_color'.format(color_pro, ix+30)
-#        model_cmt = 'xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias{}_RC2_v{}'.format(color_pro, ix+30)
+#        cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynsigma_size_bias{}_RC5_v{}_color'.format(size_pro, ix+40)
+#        model_cmt = 'xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynsigma_size_bias{}_RC5_v{}'.format(size_pro, ix+40)
 #        pxwhr = 'px23whr3'
- 
-    for ix, color_pro in enumerate([0, -0.5, -1.5, -2.5, -3.5, -4.5]):
-        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias{}_RC3_v{}_color'.format(color_pro, ix+30)
-        model_cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias{}_RC3_v{}'.format(color_pro, ix+30)
+
+    for i in range(1):
+        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias0.5_RC3_v30_color'
+        model_cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias0.5_RC3_v30'   
+
+#        cmt = 'syn_xview_bkg_px23whr3_xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias0.5_RC2_v30_color'
+#        model_cmt = 'xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias0.5_RC2_v30'
         pxwhr = 'px23whr3'
-  
-#    for ix, color_pro in enumerate([-2.5,-1.5, 0, 0.5, 1.5, 2.5]):
-#        cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias{}_RC4_v{}_color'.format(color_pro, ix+30)
-#        model_cmt = 'xbw_xcolor_xbkg_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias{}_RC4_v{}'.format(color_pro, ix+30)
-#        pxwhr = 'px23whr3'
-#
-#    for ix, color_pro in enumerate([-2.5,-1.5, 0, 0.5, 1.5, 2.5]):
-#        cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias{}_RC5_v{}_color'.format(color_pro, ix+20)
-#        model_cmt = 'xbw_xcolor_xbkg_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias{}_RC5_v{}'.format(color_pro, ix+20)
-#        pxwhr = 'px23whr3'
+#        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias-0.5_RC1_v52_color'
+#        model_cmt = 'xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias-0.5_RC1_v52'
+#        pxwhr = 'px15whr3'
+        
+#        cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias-0.5_RC4_v31_color'
+#        model_cmt= 'xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias-0.5_RC4_v31'
+        
+#        cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias-0.5_RC5_v22_color'
+#        model_cmt = 'xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias-0.5_RC5_v22'
+#        pxwhr = 'px23whr3'       
 
         sd = 17
         base_pxwhrs = 'px23whr3_seed{}'
         syn_args = get_syn_args(model_cmt)
-
         base_pxwhrs = base_pxwhrs.format(sd)
         split_syn_xview_background_trn_val(sd, cmt, pxwhr, base_pxwhrs)
 
-    
 #    pxwhr = 'px15whr3'
 #    seed=17
 #    base_pxwhrs='px23whr3_seed17'
@@ -1095,34 +1167,119 @@ if __name__ == '__main__':
 #        label_id = 1
 #        miss_id = 2
 
-    for ix, color_pro in enumerate([0, -0.5, -1.5, -2.5, -3.5, -4.5]):
-        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias{}_RC3_v{}_color'.format(color_pro, ix+30)
-        model_cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias{}_RC3_v{}'.format(color_pro, ix+30)
-        pxwhr = 'px23whr3'
-        label_id = 5
-        miss_id = 3
+#    for ix, color_pro in enumerate([0, -0.5, -1.5, -2.5, -3.5, -4.5]):
+#        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias{}_RC3_v{}_color'.format(color_pro, ix+30)
+#        model_cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias{}_RC3_v{}'.format(color_pro, ix+30)
+#        pxwhr = 'px23whr3'
+#        label_id = 5
+#        miss_id = 3
 
-#    for ix, color_pro in enumerate([-2.5,-1.5, 0, 0.5, 1.5, 2.5]):
+#    for ix, color_pro in enumerate([-1.5, 0, 0.5, 1.5, 2.5, 3.5]):
 #        cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias{}_RC4_v{}_color'.format(color_pro, ix+30)
-#        model_cmt = 'xbw_xcolor_xbkg_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias{}_RC4_v{}'.format(color_pro, ix+30)
+#        model_cmt = 'xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias{}_RC4_v{}'.format(color_pro, ix+30)
 #        pxwhr = 'px23whr3'
 #        label_id = 5
 #        miss_id = 4
-#
+
 #    for ix, color_pro in enumerate([-2.5,-1.5, 0, 0.5, 1.5, 2.5]):
 #        cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias{}_RC5_v{}_color'.format(color_pro, ix+20)
-#        model_cmt = 'xbw_xcolor_xbkg_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias{}_RC5_v{}'.format(color_pro, ix+20)
+#        model_cmt = 'xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias{}_RC5_v{}'.format(color_pro, ix+20)
 #        pxwhr = 'px23whr3'
 #        label_id = 5
 #        miss_id = 5
 
+#    bias_steps = [0, 0.2, 0.4, 0.6, 0.8]
+#    for ix, color_pro in enumerate(bias_steps):
+#        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_dynsigma_color_bias{}_RC1_v{}_color'.format(color_pro, ix+60)
+#        model_cmt = 'xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_dynsigma_color_bias{}_RC1_v{}'.format(color_pro, ix+60)
+#        pxwhr = 'px15whr3'
+#        label_id = 4
+#        miss_id = 1
+
+#    bias_steps = [0, 0.2, 0.4, 0.6, 0.8]
+#    for ix, color_pro in enumerate(bias_steps):
+#        cmt = 'syn_xview_bkg_px23whr3_xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_dynsigma_color_bias{}_RC2_v{}_color'.format(color_pro, ix+40)
+#        model_cmt = 'xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_dynsigma_color_bias{}_RC2_v{}'.format(color_pro, ix+40)
+#        pxwhr = 'px23whr3'
+#        label_id = 1
+#        miss_id = 2
+
+#    bias_steps = [0, 0.2, 0.4, 0.6, 0.8]
+#    for ix, color_pro in enumerate(bias_steps):
+#        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynsigma_color_bias{}_RC3_v{}_color'.format(color_pro, ix+40)
+#        model_cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynsigma_color_bias{}_RC3_v{}'.format(color_pro, ix+40)
+#        pxwhr = 'px23whr3'
+#        label_id = 5
+#        miss_id = 3 
+
+#    bias_steps = [0, 0.2, 0.4, 0.6, 0.8]
+#    for ix, color_pro in enumerate(bias_steps):
+#        cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynsigma_color_bias{}_RC4_v{}_color'.format(color_pro, ix+40)
+#        model_cmt = 'xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynsigma_color_bias{}_RC4_v{}'.format(color_pro, ix+40)
+#        pxwhr = 'px23whr3'
+#        label_id = 5
+#        miss_id = 4
+
+#    bias_steps = [0, 0.2, 0.4, 0.6, 0.8]
+#    for ix, color_pro in enumerate(bias_steps):
+#        cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynsigma_color_bias{}_RC5_v{}_color'.format(color_pro, ix+30)
+#        model_cmt = 'xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynsigma_color_bias{}_RC5_v{}'.format(color_pro, ix+30)
+#        pxwhr = 'px23whr3'
+#        label_id = 5
+#        miss_id = 5
+    
+#    for ix, size_pro in enumerate([0, 0.2, 0.4, 0.6]):
+#        cmt = 'syn_xview_bkg_px23whr3_xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_dynsigma_size_bias{}_RC2_v{}_color'.format(size_pro, ix+50)
+#        model_cmt = 'xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_dynsigma_size_bias{}_RC2_v{}'.format(size_pro, ix+50)
+#        pxwhr = 'px23whr3'
+#        label_id = 1
+#        miss_id = 2
+
+#    for ix, size_pro in enumerate([0, 0.2, 0.4, 0.6]):
+#        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynsigma_size_bias{}_RC3_v{}_color'.format(size_pro, ix+50)
+#        model_cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynsigma_size_bias{}_RC3_v{}'.format(size_pro, ix+50)
+#        pxwhr = 'px23whr3'
+#        label_id = 5
+#        miss_id = 3
+
+#    for ix, size_pro in enumerate([0, 0.2, 0.4, 0.6]):
+#        cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynsigma_size_bias{}_RC4_v{}_color'.format(size_pro, ix+50)
+#        model_cmt = 'xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynsigma_size_bias{}_RC4_v{}'.format(size_pro, ix+50)
+#        pxwhr = 'px23whr3'
+#        label_id = 5
+#        miss_id = 4
+
+#    for ix, size_pro in enumerate([0, 0.05, 0.1, 0.15]):
+#        model_cmt = 'xbw_xbkg_unif_mig21_shdw_scatter_gauss_2_7_rndsolar_dynsigma_size_bias{}_RC1_v{}'.format(size_pro, ix+70)
+#        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_scatter_gauss_2_7_rndsolar_dynsigma_size_bias{}_RC1_v{}_color'.format(size_pro, ix+70)
+        
+#        model_cmt = 'xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynsigma_size_bias{}_RC5_v{}'.format(size_pro, ix+40)
+#        cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynsigma_size_bias{}_RC5_v{}_color'.format(size_pro, ix+40)
+        
+    for i in range(1):
+        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias0.5_RC3_v30_color'
+        model_cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias0.5_RC3_v30'   
+#        cmt = 'syn_xview_bkg_px23whr3_xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias0.5_RC2_v30_color'
+#        model_cmt = 'xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias0.5_RC2_v30'
+        pxwhr = 'px23whr3'
+
+#        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias-0.5_RC1_v52_color'
+#        model_cmt = 'xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias-0.5_RC1_v52'
+#        pxwhr = 'px15whr3'
+
+#        cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias-0.5_RC4_v31_color'
+#        model_cmt= 'xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias-0.5_RC4_v31'
+
+#        cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias-0.5_RC5_v22_color'
+#        model_cmt = 'xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias-0.5_RC5_v22'
+#        pxwhr = 'px23whr3'
+       
         base_pxwhrs = 'px23whr3_seed{}'
         syn_args = get_syn_args(model_cmt)
         sd = 17
         base_pxwhrs = base_pxwhrs.format(sd)
         create_syn_data(cmt, sd, base_pxwhrs, val_xview=False)
 
-       
 #        if color_pro == 0:
 #            cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_rnd_color_bias0_model4_v21_color'
 #        else:

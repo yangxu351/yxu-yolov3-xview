@@ -317,15 +317,16 @@ def test(cfg,
         # Compute statistics
         stats = [np.concatenate(x, 0) for x in list(zip(*stats))]  # to numpy
         if len(stats):
-            pr_name= opt.name + '  @IoU: {:.2f} '.format(iouv[0]) + '  conf_thres: {} '.format(conf_thres)
+            pr_name= opt.name # + ' @IoU: {:.2f} '.format(iouv[0]) + ' conf_thres: {} '.format(conf_thres)
+            pr_legend = opt.legend
             # print('*stats', *stats)
-            p, r, ap, f1, ap_class = ap_per_class(*stats, pr_path=opt.result_dir, pr_name= pr_name, rare_class=opt.rare_class)
+            p, r, ap, f1, ap_class = ap_per_class(*stats, pr_path=opt.result_dir, pr_name= pr_name, pr_legend=pr_legend, rare_class=opt.rare_class, apN=apN)
 
             print('dataset.batch ', dataset.batch.shape)
             # exit(0)
             area = (img_size*opt.res)*(img_size*opt.res)*dataset.batch.shape[0]*1e-6
             
-            plot_roc_easy_hard(*stats, pr_path=opt.result_dir, pr_name= pr_name, rare_class=opt.rare_class, area=area, ehtype=opt.type, title_data_name=tif_name)
+            plot_roc_easy_hard(*stats, pr_path=opt.result_dir, pr_name= pr_name, pr_legend=pr_legend, rare_class=opt.rare_class, area=area, ehtype=opt.type, title_data_name=tif_name)
             # if niou > 1:
             #       p, r, ap, f1 = p[:, 0], r[:, 0], ap[:, 0], ap.mean(1)  # average across ious
             #fixme --yang.xu
@@ -397,7 +398,8 @@ def get_opt(dt=None, sr=None, comments=''):
     parser.add_argument("--save_json", action="store_true", default=True, help="save a cocoapi-compatible JSON results file")
     parser.add_argument("--task", default="test", help="test study benchmark")
     parser.add_argument("--device", default="1", help="device id (i.e. 0 or 0,1) or cpu")
-    parser.add_argument("--name", default='', help="name")
+    parser.add_argument("--name", default='', help="file name")
+    parser.add_argument("--legend", default='', help="figure legend")
     parser.add_argument("--cmt", default=comments, help="comments")
     parser.add_argument("--model_id", type=int, default=None, help="specified model id")
     parser.add_argument("--rare_class", type=int, default=None, help="specified rare class")
@@ -533,17 +535,17 @@ if __name__ == "__main__":
 #    model_id = 4
 #    rare_cls = 1
  
-    comments = []
-    for color_pro in range(5):
-        base_version = 12
-        if color_pro == 0:
-            cmt = 'syn_xview_bkg_px23whr3_xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_color_bias0_RC2_v{}_color'.format(color_pro + base_version)
-        else:
-            cmt = "syn_xview_bkg_px23whr3_xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_color_bias{}_RC2_v{}_color".format(color_pro*25.5, color_pro+base_version)           
-        comments.append(cmt)
-       
-    model_id = 1
-    rare_cls = 2
+#    comments = []
+#    for color_pro in range(5):
+#        base_version = 12
+#        if color_pro == 0:
+#            cmt = 'syn_xview_bkg_px23whr3_xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_color_bias0_RC2_v{}_color'.format(color_pro + base_version)
+#        else:
+#            cmt = "syn_xview_bkg_px23whr3_xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_color_bias{}_RC2_v{}_color".format(color_pro*25.5, color_pro+base_version)           
+#        comments.append(cmt)
+#       
+#    model_id = 1
+#    rare_cls = 2
 
 #    comments = []
 #    for color_pro in range(11):
@@ -593,8 +595,46 @@ if __name__ == "__main__":
 #        
 #    model_id = 5
 #    rare_cls = 5 
-     
 
+    ################ dynmu color
+    comments = []
+    '''RC1'''
+#    pros = [-2.5, -1.5, -0.5, 0.5, 1.5, 2.5]
+#    base_version = 50
+#    for ix, pro in enumerate(pros):
+#        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias{}_RC1_v{}_color'.format(pro, ix+ base_version)
+#        comments.append(cmt)
+    
+    '''RC2'''    
+    pros = [0.5, -0.5, -1.5, -2.5, -3.5, -4.5]
+    base_version = 30
+    for ix, pro in enumerate(pros):
+        cmt = 'syn_xview_bkg_px23whr3_xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias{}_RC2_v{}_color'.format(pro, ix+ base_version)
+        comments.append(cmt)
+    
+#    '''RC3'''    
+#    pros = [0.5, -0.5, -1.5, -2.5, -3.5, -4.5]
+#    base_version = 30
+#    for ix, pro in enumerate(pros):
+#        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias{}_RC3_v{}_color'.format(pro, ix+ base_version)
+#        comments.append(cmt)
+#
+#    '''RC4'''    
+#    pros = [-1.5, -0.5, 0.5, 1.5, 2.5, 3.5]
+#    base_version = 30
+#    for ix, pro in enumerate(pros):
+#        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias{}_RC3_v{}_color'.format(pro, ix+ base_version)
+#        comments.append(cmt)
+#    
+#    '''RC5'''    
+#    pros = [-2.5, -1.5, 0.5, 0.5, 1.5, 2.5]
+#    base_version = 20
+#    for ix, pro in enumerate(pros):
+#        cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias{}_RC5_v{}_color'.format(pro, ix+ base_version)
+#        comments.append(cmt)
+        
+        
+    ###########################################    
     base_cmt = "px23whr3_seed{}"
     # hyp_cmt = "hgiou1_1gpu"
 
@@ -603,7 +643,8 @@ if __name__ == "__main__":
 #    apN = 20
 #    apN = 40
     apN = 50
-    prefix = "syn_iou{}".format(apN)
+    prefix = 'syn'
+#    prefix = "syn_iou{}".format(apN)
 #    prefix = "syn_backup100"
 #    prefix = "syn_backup200"
 #    prefix = "syn_px30"
@@ -611,6 +652,9 @@ if __name__ == "__main__":
     px_thres = 23
     whr_thres = 3 # 4
     sd = 17
+    model_ids = [4, 1, 5, 5, 5]
+    rare_classes = [1, 2, 3, 4, 5]
+    
     eh_types = ["hard", "easy"]
     for typ in eh_types:
         df_pr_ap = pd.DataFrame(columns=["Version", "Seen", "NT", "Precision", "Recall", "AP@{}".format(apN), "F1"])
@@ -620,21 +664,37 @@ if __name__ == "__main__":
             opt = get_opt(comments=cmt)
             opt.device = "2"
 
-            cinx = cmt.find("model") # first letter index
-            endstr = cmt[cinx:]
-            rcinx = endstr.rfind("_")
-            fstr = endstr[rcinx:] # "_" is included
-            sstr = endstr[:rcinx]
-            suffix = fstr + "_" + sstr
-            if cinx < 0:
-                suffix = ''
-            opt.name = prefix + suffix
+#            cinx = cmt.find("model") # first letter index
+#            endstr = cmt[cinx:]
+#            rcinx = endstr.rfind("_")
+#            fstr = endstr[rcinx:] # "_" is included
+#            sstr = endstr[:rcinx]
+#            suffix = fstr + "_" + sstr
+#            if cinx < 0:
+#                suffix = ''
+#            opt.name = prefix + suffix
 
+            cinx = cmt.find('_RC') # first letter index
+            endstr = cmt[cinx:]
+            rcinx = endstr.rfind('_') # _RC*_v*
+            sstr = endstr[:rcinx]
+            if cinx >= 0:
+                medix = cmt.find('_dyn')
+                mstr =  cmt[medix:cinx] # _dyn*_color_bias*
+                suffix = sstr + '_AP{}'.format(apN)
+            else:
+                mstr = ''
+                suffix = ''
+    
+            opt.legend = prefix + suffix
+            opt.name = prefix + mstr + suffix
+            
             ''' for specified model id '''
             opt.batch_size = 8
-            sidx = cmt.split("model")[-1][0]
-            opt.model_id = int(sidx)
-            print("opt.model_id", opt.model_id)
+            opt.rare_class = int(cmt[cinx+3])
+            opt.model_id = model_ids[rare_classes.index(opt.rare_class)]
+            print("opt.model_id", opt.model_id, 'opt.rare_class ', opt.rare_class)
+            
             opt.conf_thres = 0.01
             tif_name = "xview"
             ############# 2 images test set
@@ -646,7 +706,7 @@ if __name__ == "__main__":
 #            opt.rare_class = 3
 #            opt.rare_class = 4 
 #            opt.rare_class = 5
-            opt.rare_class = rare_cls
+            #opt.rare_class = rare_cls
             
 #            opt.name += "_{}".format(opt.type)
 #            opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, "test_on_xview_{}_upscale_m{}_rc{}_{}".format(hyp_cmt, opt.model_id, opt.rare_class, opt.type))
@@ -655,7 +715,8 @@ if __name__ == "__main__":
             opt.name += "_{}".format(opt.type)
 #            opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, "test_on_xview_{}_m{}_rc{}_{}".format(hyp_cmt, opt.model_id, opt.rare_class, opt.type))
             opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, "test_on_xview_{}_m{}_rc{}_ap{}_{}".format(hyp_cmt, opt.model_id, opt.rare_class, apN, opt.type))
-            opt.data = "data_xview/{}_cls/{}/xviewtest_{}_m{}_rc{}_{}.data".format(opt.class_num, base_cmt, base_cmt, opt.model_id, opt.rare_class, opt.type)
+#            opt.data = "data_xview/{}_cls/{}/xviewtest_{}_m{}_rc{}_{}.data".format(opt.class_num, base_cmt, base_cmt, opt.model_id, opt.rare_class, opt.type)
+            opt.data = "data_xview/{}_cls/{}/xview_rc_test_{}_m{}_rc{}_{}.data".format(opt.class_num, base_cmt, base_cmt, opt.model_id, opt.rare_class, opt.type)
 
 
 #            opt.name += "_{}_aug".format(opt.type)
@@ -709,8 +770,11 @@ if __name__ == "__main__":
                  opt.nms_iou_thres,
                  opt.save_json, opt=opt)
         
-        csv_name =  "{}_rc{}_ap{}_{}.xls".format(cmt[cmt.find("xb"):cmt.find("bias")+4], rare_cls, apN, typ)      
-        csv_dir = "result_output/{}_cls/{}/".format(opt.class_num, cmt[:cmt.find("bias")+4] + cmt[cmt.find("_model"):cmt.find("_v")])
+#        csv_name =  "{}_rc{}_ap{}_{}.xls".format(cmt[cmt.find("xb"):cmt.find("bias")+4], opt.rare_class, apN, typ)      
+#        csv_dir = "result_output/{}_cls/{}/".format(opt.class_num, cmt[:cmt.find("bias")+4] + cmt[cmt.find("_model"):cmt.find("_v")])
+
+        csv_name =  "{}.xls".format(opt.name)      
+        csv_dir = "result_output/{}_cls/{}/".format(opt.class_num, cmt[:cmt.find("bias")+4] + '_RC' + str(opt.rare_class))
         if not os.path.exists(csv_dir):
             os.mkdir(csv_dir)
         df_pr_ap.to_excel(os.path.join(csv_dir, csv_name), index=False)
