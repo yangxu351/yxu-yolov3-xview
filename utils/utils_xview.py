@@ -391,11 +391,7 @@ def ap_per_class(tp, conf, pred_cls, target_cls, ntp=None, pr_path='', pr_name='
                 # ax.plot(np.concatenate(([0.], recall)), np.concatenate(([0.], precision)))
                 np.savetxt(os.path.join(pr_path, 'recall.txt'), recall)
                 np.savetxt(os.path.join(pr_path, 'precision.txt'), precision)
-<<<<<<< HEAD
-                ax1.plot(recall, precision, label=pr_legend + ' AP$_%d$: %.3f' % (apN, ap[ci]))
-=======
                 ax1.plot(recall, precision, label=pr_legend + '  AP$_%d$: %.3f' % (apN, ap[ci]))
->>>>>>> ca83e56... dynmu dynsigma color size roc plot
                 ax1.legend()
                 ax1.set_title('PR-Curve')
                 ax1.set_xlabel('Recall')
@@ -461,11 +457,7 @@ def plot_roc_easy_hard(tp, conf, pred_cls, target_cls, ntp, pr_path='', pr_name=
         font_label = {'family': 'serif', 'weight': 'normal', 'size': 12}
 
         fig2, ax2= plt.subplots(1, figsize=(10, 8))
-<<<<<<< HEAD
-        ax2.plot(far_list, rec_list, label=pr_legend + ' AUC: %.3f'%(auc))
-=======
         ax2.plot(far_list, rec_list, label=pr_legend + '  AUC: %.3f'%(auc))
->>>>>>> ca83e56... dynmu dynsigma color size roc plot
         ax2.legend()
         ax2.set_title(title, font_title)
         ax2.set_xlabel('FAR', font_label)

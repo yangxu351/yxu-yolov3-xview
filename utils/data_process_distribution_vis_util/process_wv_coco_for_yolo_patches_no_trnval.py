@@ -753,16 +753,20 @@ def split_trn_val_with_rc_step_by_step(data_name='xview', comments='', seed=17, 
     bkg_img_dir = args.images_save_dir[:-1] + '_noairplane_bkg_chips'
 
     ##### rare classes
-    all_rc_imgs = glob.glob(os.path.join(rc_img_dir, '*.jpg'))
+    all_rc_imgs = glob.glob(os.path.join(trn_rc_img_dir, '*.jpg')) + glob.glob(os.path.join(val_rc_img_dir, '*.jpg'))
     all_rc_img_names = [os.path.basename(f) for f in all_rc_imgs]
+    all_rc_lbl_names = [f.replace('.jpg', '.txt') for f in all_rc_img_names]
     # print('lbl_path', lbl_path)
+    print('all_rc_img_names', len(all_rc_img_names))
 
     # print('trn_rc_lbl_files', trn_rc_lbl_files)
     trn_rc_img_files = [f for f in glob.glob(os.path.join(trn_rc_img_dir, '*.jpg'))]
     val_rc_img_files = [f for f in glob.glob(os.path.join(val_rc_img_dir, '*.jpg'))]
-    print('trn_rc_img_files', trn_rc_img_files)
+    print('trn_rc_img_files', len(trn_rc_img_files))
+    print('val_rc_img_files', len(val_rc_img_files))
     trn_rc_lbl_files = [os.path.join(lbl_path, os.path.basename(f).replace('.jpg', '.txt')) for f in trn_rc_img_files]
     val_rc_lbl_files = [os.path.join(lbl_path, os.path.basename(f).replace('.jpg', '.txt')) for f in val_rc_img_files]
+
 
     # print('trn_rc_lbl_files', trn_rc_lbl_files)
 
@@ -775,6 +779,7 @@ def split_trn_val_with_rc_step_by_step(data_name='xview', comments='', seed=17, 
     ##### images that contain no aircrafts (drop out by rules)
     airplane_ept_lbl_files = [os.path.join(lbl_path, os.path.basename(f)) for f in glob.glob(os.path.join(lbl_path, '*.txt')) if not pps.is_non_zero_file(f)]
     airplane_ept_img_files = [os.path.join(images_save_dir, os.path.basename(f).replace('.txt', '.jpg')) for f in airplane_ept_lbl_files]
+    print('airplane_ept_img_files', len(airplane_ept_img_files))
 
     ##### images that contain no aircrafts-- BKG
     bkg_lbl_files = glob.glob(os.path.join(bkg_lbl_dir, '*.txt'))
@@ -784,9 +789,10 @@ def split_trn_val_with_rc_step_by_step(data_name='xview', comments='', seed=17, 
     bkg_img_files = bkg_img_files + airplane_ept_img_files
 
     np.random.seed(seed)
-    nrc_lbl_files = [f for f in airplane_lbl_files if os.path.basename(f).replace('.txt', '.img') not in all_rc_img_names]
+    nrc_lbl_files = [f for f in airplane_lbl_files if os.path.basename(f) not in all_rc_lbl_names]
     nrc_img_files = [os.path.join(images_save_dir, os.path.basename(f).replace('.txt', '.jpg')) for f in nrc_lbl_files]
     print('len nrc img, len nrc lbl',len(nrc_img_files), len(nrc_lbl_files))
+
     nrc_ixes = np.random.permutation(len(nrc_lbl_files))
     nrc_val_num = int(len(nrc_lbl_files)*args.val_percent)
     val_nrc_lbl_files = [nrc_lbl_files[i] for i in nrc_ixes[:nrc_val_num]]
@@ -797,10 +803,12 @@ def split_trn_val_with_rc_step_by_step(data_name='xview', comments='', seed=17, 
     print('trn_nrc_img, trn_nrc_lbl', len(trn_nrc_img_files), len(trn_nrc_lbl_files))
 
     bkg_ixes = np.random.permutation(len(bkg_lbl_files))
-    trn_bkg_lbl_files =[bkg_lbl_files[i] for i in bkg_ixes[: len(trn_nrc_lbl_files)]]
-    val_bkg_lbl_files = [bkg_lbl_files[i] for i in bkg_ixes[ len(trn_nrc_lbl_files):nrc_val_num + len(trn_nrc_lbl_files)]]
-    trn_bkg_img_files = [bkg_img_files[i] for i in bkg_ixes[: len(trn_nrc_lbl_files)]]
-    val_bkg_img_files = [bkg_img_files[i] for i in bkg_ixes[len(trn_nrc_lbl_files): nrc_val_num + len(trn_nrc_lbl_files)]]
+    trn_non_bkg_num = len(trn_nrc_lbl_files) + len(trn_rc_lbl_files)
+    val_non_bkg_num = len(val_rc_lbl_files) + len(val_rc_lbl_files)
+    trn_bkg_lbl_files =[bkg_lbl_files[i] for i in bkg_ixes[:trn_non_bkg_num ]]
+    val_bkg_lbl_files = [bkg_lbl_files[i] for i in bkg_ixes[ trn_non_bkg_num: val_non_bkg_num + trn_non_bkg_num]]
+    trn_bkg_img_files = [bkg_img_files[i] for i in bkg_ixes[: trn_non_bkg_num]]
+    val_bkg_img_files = [bkg_img_files[i] for i in bkg_ixes[trn_non_bkg_num: val_non_bkg_num + trn_non_bkg_num]]
     print('trn_bkg_lbl_files', len(trn_bkg_lbl_files), len(trn_bkg_img_files))
 
     # exit(0)
@@ -840,7 +848,7 @@ def split_trn_val_with_rc_step_by_step(data_name='xview', comments='', seed=17, 
     trn_lbl_txt.close()
 
     for j in range(len(val_lbl_files)):
-        print('val_lbl_files[j]', val_lbl_files[j])
+        # print('val_lbl_files ', j, val_lbl_files[j])
         val_lbl_txt.write("%s\n" % val_lbl_files[j])
         lbl_name = os.path.basename(val_lbl_files[j])
         val_img_txt.write("%s\n" % val_img_files[j])
@@ -2545,13 +2553,13 @@ if __name__ == "__main__":
     # comments = ''
     # comments = '_px4whr3'
     # comments = '_px6whr4_giou0'
-    px_thres = 23
-    whr_thres = 3
-    seed = 17
-    comments = '_px23whr3_seed{}'.format(seed)
-    data_name = 'xview_rc'
-    # split_trn_val_with_chips(data_name, comments, seed = 8, px_thres=px_thres, whr_thres=whr_thres)
-    split_trn_val_with_rc_step_by_step(data_name, comments, seed, px_thres=px_thres, whr_thres=whr_thres)
+    # px_thres = 23
+    # whr_thres = 3
+    # seed = 17
+    # comments = '_px23whr3_seed{}'.format(seed)
+    # data_name = 'xview_rc'
+    # # split_trn_val_with_chips(data_name, comments, seed = 8, px_thres=px_thres, whr_thres=whr_thres)
+    # split_trn_val_with_rc_step_by_step(data_name, comments, seed, px_thres=px_thres, whr_thres=whr_thres)
 
     '''
     create json for val according to all jsons 

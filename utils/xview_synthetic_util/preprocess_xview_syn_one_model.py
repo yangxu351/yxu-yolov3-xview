@@ -225,7 +225,7 @@ def get_txt_contain_model_id(model_id=5, copy_img=False):
                         os.path.join(des_img_dir, img_name))
 
 
-def get_txt_contain_model_id(model_id=5, copy_img=False, type='all'):
+def get_txt_contain_model_id(model_id=5, copy_img=False, type='all', name='xview'):
     src_model_dir = args.annos_save_dir[:-1] + '_all_model/'
     print('src_model_dir', src_model_dir)
     des_model_dir = args.annos_save_dir[:-1] + '_m{}_{}_model/'.format(model_id, type)
@@ -242,7 +242,7 @@ def get_txt_contain_model_id(model_id=5, copy_img=False, type='all'):
     base_dir = args.data_save_dir
     print('base_dir', base_dir)
     if type != 'all':
-        df_val = pd.read_csv(os.path.join(base_dir, 'xview{}_lbl_{}.txt'.format(type, base_pxwhrs)), header=None)
+        df_val = pd.read_csv(os.path.join(base_dir, '{}{}_lbl_{}.txt'.format(name, type, base_pxwhrs)), header=None)
         lbl_model_txts = [os.path.join(src_model_dir, os.path.basename(f)) for f in df_val.loc[:, 0]]
     else:
         lbl_model_txts = glob.glob(os.path.join(src_model_dir, '*.txt'))
@@ -764,16 +764,16 @@ if __name__ == '__main__':
     except rc2 all others of model1 labeled as 0
     '''
 
-    # # model_id = 4
-    # # rare_class = 1
+    # model_id = 4
+    # rare_class = 1
     # # model_id = 1
     # # rare_class = 2
     # # model_id = 5
     # # rare_class = 3
     # # model_id = 5
     # # rare_class = 4
-    # model_id = 5
-    # rare_class = 5
+    # # model_id = 5
+    # # rare_class = 5
     # other_label = 0
     # label_m_val_model_with_other_label(rare_class, model_id, other_label)
 
