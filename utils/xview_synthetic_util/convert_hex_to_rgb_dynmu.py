@@ -5,18 +5,17 @@ import os
 
 if __name__ == '__main__':
     np.random.seed(1)
-    seeds = np.random.choice(range(5000), 450)
+
     ## rc1 (137, 116, 97) (22.1, 19.5, 17.1)
-    # left_bias = [-2.5, -1.5, 0, 0.5, 1.5, 2.5]
-    # right_bias = [-1.5, -0.5, 0, 1.5, 2.5, 3.5]
-    # hexes = "#685C45;#786755;#897954;#8D7C6A;#7B6A59;#857861"
-    # num_img = 450
-    # base_ix = 50
-    # rare_cls = 1
+    left_bias = [-2.5, -1.5, -0.5, 0.5, 1.5, 2.5]
+    right_bias = [-1.5, -0.5, 0.5, 1.5, 2.5, 3.5]
+    base_version = 50
+    hexes = "#685C45;#786755;#897954;#8D7C6A;#7B6A59;#857861"
+    rare_cls = 1
 
     ## rc2
-    # left_bias = [0, -0.5, -1.5, -2.5, -3.5, -4.5]
-    # right_bias = [0, -1.5, -2.5, -3.5, -4.5, -5.5]
+    # left_bias = [0.5, -0.5, -1.5, -2.5, -3.5, -4.5]
+    # right_bias = [-0.5, -1.5, -2.5, -3.5, -4.5, -5.5]
     # hexes = '#E5DAD8;#F5EAE1;#E6E5E6;#EBE6E1;#FFFEFF;#FEF9F7' # body
     # num_img = 450
     # base_ix = 30
@@ -39,13 +38,15 @@ if __name__ == '__main__':
     # rare_cls = 4
 
     ## rc5
-    hexes = '#C28634;#9C6932;#AA752B;#D89B43;#CD9644;#846830'
-    left_bias = [-2.5, -1.5, 0, 0.5, 1.5, 2.5]
-    right_bias = [-1.5, -0.5, 0, 1.5, 2.5, 3.5]
-    num_aft = 450
-    base_ix = 20
-    rare_cls = 5
+    # hexes = '#C28634;#9C6932;#AA752B;#D89B43;#CD9644;#846830'
+    # left_bias = [-2.5, -1.5, 0, 0.5, 1.5, 2.5]
+    # right_bias = [-1.5, -0.5, 0, 1.5, 2.5, 3.5]
+    # num_aft = 450
+    # base_ix = 20
+    # rare_cls = 5
 
+
+    # seeds = np.random.choice(range(5000), 450)
     hex_list = [s for s in hexes.split(';')]
     r_list = []
     g_list = []
@@ -61,74 +62,25 @@ if __name__ == '__main__':
     r_std = np.std(r_list)
     g_std = np.std(g_list)
     b_std = np.std(b_list)
-    print('rgb mean', (r_mean, g_mean, b_mean))
-    print('rgb std', (r_std, g_std, b_std))
-    num_hex = len(hex_list)
-    r_std_list = []
-    g_std_list = []
-    b_std_list = []
-    r_mean_list = []
-    g_mean_list = []
-    b_mean_list = []
+    rgb_mean = np.array([r_mean, g_mean, b_mean])
+    rgb_std = np.around([r_std, g_std, b_std], decimals=1)
+    print('rgb mean', rgb_mean)
+    print('rgb std', rgb_std)
 
     for ix in range(len(left_bias)):
         lbp = left_bias[ix] * 25.5
         rbp = right_bias[ix] * 25.5
-        r_unif_list = []
-        g_unif_list = []
-        b_unif_list = []
-        for i in range(len(seeds)):
-            np.random.seed(seeds[i])
-            num_aft = np.random.randint(2, 6)
-            cix = np.random.randint(len(hex_list))
-            r_unif = np.random.uniform(np.clip(r_list[cix] + lbp, 0, 255), np.clip(r_list[cix] + rbp, 0, 255), num_aft)
-            g_unif = np.random.uniform(np.clip(g_list[cix] + lbp, 0, 255), np.clip(g_list[cix] + rbp, 0, 255), num_aft)
-            b_unif = np.random.uniform(np.clip(b_list[cix] + lbp, 0, 255), np.clip(b_list[cix] + rbp, 0, 255), num_aft)
-            r_unif_list.extend(r_unif)
-            g_unif_list.extend(g_unif)
-            b_unif_list.extend(b_unif)
-    # for color_pro in range(11):
-    #     if half:
-    #         bias = color_pro*25.5/2
-    #     else:
-    #         bias = color_pro*25.5
-    #     ix = color_pro + base_ix
-    #     r_unif_list = []
-    #     g_unif_list = []
-    #     b_unif_list = []
-    #     for i in range(num_hex):
-    #         if half:
-    #             r_unif = np.random.uniform((r_list[i] - bias)% 255, (r_list[i] + bias)% 255, num_aft // num_hex)
-    #             g_unif = np.random.uniform((g_list[i] - bias)% 255, (g_list[i] + bias)% 255, num_aft // num_hex)
-    #             b_unif = np.random.uniform((b_list[i] - bias)% 255, (b_list[i] + bias)% 255, num_aft // num_hex)
-    #         else:
-    #             r_unif = np.random.uniform(r_list[i] - bias, r_list[i], num_aft // num_hex)
-    #             g_unif = np.random.uniform(g_list[i] - bias, g_list[i], num_aft // num_hex)
-    #             b_unif = np.random.uniform(b_list[i] - bias, b_list[i], num_aft // num_hex)
-    #         # print('r_unif', r_unif)
-    #         r_unif_list.extend(r_unif)
-    #         g_unif_list.extend(g_unif)
-    #         b_unif_list.extend(b_unif)
-        print('mean, std r', np.mean(r_unif_list), np.std(r_unif_list))
-        print('mean, std g', np.mean(g_unif_list), np.std(g_unif_list))
-        print('mean, std b', np.mean(b_unif_list), np.std(b_unif_list))
-        r_mean_list.append(np.mean(r_unif_list) )
-        g_mean_list.append(np.mean(g_unif_list) )
-        b_mean_list.append(np.mean(b_unif_list) )
-        r_std_list.append(np.std(r_unif_list))
-        g_std_list.append(np.std(g_unif_list))
-        b_std_list.append(np.std(b_unif_list))
-    print('r mean, std', r_mean_list, r_std_list)
-    print('g mean, std', g_mean_list, g_std_list)
-    print('b mean, std', b_mean_list, b_std_list)
-    rgb_mean = np.array([s for s in zip(r_mean_list, g_mean_list, b_mean_list)], dtype=np.int)
-    rgb_std = np.around([s for s in zip(r_std_list, g_std_list, b_std_list)], decimals=1)
-    print('rgb_mean', rgb_mean)
-    print('rgb_std', rgb_std)
+        print('lbp, rbp', lbp, rbp)
+        low = np.clip(rgb_mean + lbp, 0, 255)
+        high = np.clip(rgb_mean + rbp, 0, 255)
+        # print('low', low, 'high', high)
+        unif_rgb_mean = (low+high)/2
+        unif_rgb_std = np.power(high-low,2)/12
+        print('unif mean, std', unif_rgb_mean, unif_rgb_std)
 
     df_rgb = pd.DataFrame(columns=['Version', 'rgb_mean', 'rgb_std'], index=None)
     for ix in range(len(left_bias)): # range(11)
-        vix = ix + base_ix
+        vix = ix + base_version
         df_rgb = df_rgb.append({'Version':vix, 'rgb_mean':rgb_mean[ix], 'rgb_std':rgb_std[ix]}, ignore_index=True)
     print(df_rgb)
     if rare_cls == 1:
