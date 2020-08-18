@@ -222,7 +222,7 @@ def get_txt_contain_model_id(model_id=5, copy_img=False):
                         os.path.join(des_img_dir, img_name))
 
 
-def get_txt_contain_model_id(model_id=5, copy_img=False, type='all'):
+def get_txt_contain_model_id(model_id=5, copy_img=False, type='all', name='xview'):
     src_model_dir = args.annos_save_dir[:-1] + '_all_model/'
     print('src_model_dir', src_model_dir)
     des_model_dir = args.annos_save_dir[:-1] + '_m{}_{}_model/'.format(model_id, type)
@@ -239,7 +239,7 @@ def get_txt_contain_model_id(model_id=5, copy_img=False, type='all'):
     base_dir = args.data_save_dir
     print('base_dir', base_dir)
     if type != 'all':
-        df_val = pd.read_csv(os.path.join(base_dir, 'xview{}_lbl_{}.txt'.format(type, base_pxwhrs)), header=None)
+        df_val = pd.read_csv(os.path.join(base_dir, '{}{}_lbl_{}.txt'.format(name, type, base_pxwhrs)), header=None)
         lbl_model_txts = [os.path.join(src_model_dir, os.path.basename(f)) for f in df_val.loc[:, 0]]
     else:
         lbl_model_txts = glob.glob(os.path.join(src_model_dir, '*.txt'))
@@ -371,27 +371,33 @@ def create_model_rareclass_hard_easy_set_backup(val_m_rc_path, model_id, rare_id
             shutil.copy(vf, os.path.join(des_hard_dir, f_name))
 
 
-def create_test_dataset_of_m_rc(model_id, rare_id, type='hard', seed=199, pxwhrs='px23whr3_seed199'):
+def create_test_dataset_of_m_rc(model_id, rare_id, type='hard', seed=199, pxwhrs='px23whr3_seed199', name='xview'):
     val_dir = args.annos_save_dir[:-1] + '_val_m{}_rc{}_{}_seed{}'.format(model_id, rare_id, type, seed)
     print('val_dir', val_dir)
-    val_lbl_files = glob.glob(os.path.join(val_dir, '*.txt'))
+    # val_lbl_files = glob.glob(os.path.join(val_dir, '*.txt'))
 
     base_dir = args.data_save_dir
-    test_lbl_txt = open(os.path.join(base_dir, 'xviewtest_lbl_{}_m{}_rc{}_{}.txt'.format(pxwhrs, model_id, rare_id, type)), 'w')
-    test_img_txt = open(os.path.join(base_dir, 'xviewtest_img_{}_m{}_rc{}_{}.txt'.format(pxwhrs, model_id, rare_id, type)), 'w')
+    val_img_files = pd.read_csv(os.path.join(base_dir, '{}val_img_{}.txt'.format(name, pxwhrs)), header=None)
+    test_lbl_txt = open(os.path.join(base_dir, '{}_test_lbl_{}_m{}_rc{}_{}.txt'.format(name, pxwhrs, model_id, rare_id, type)), 'w')
+    test_img_txt = open(os.path.join(base_dir, '{}_test_img_{}_m{}_rc{}_{}.txt'.format(name, pxwhrs, model_id, rare_id, type)), 'w')
 
-    for lf in val_lbl_files:
-        lbl_name = os.path.basename(lf)
-        img_name = lbl_name.replace('.txt', '.jpg')
-        test_lbl_txt.write('%s\n' % lf)
-        test_img_txt.write('%s\n' % os.path.join(args.images_save_dir, img_name))
+    # for lf in val_lbl_files:
+    #     lbl_name = os.path.basename(lf)
+    #     img_name = lbl_name.replace('.txt', '.jpg')
+    #     test_lbl_txt.write('%s\n' % lf)
+    #     test_img_txt.write('%s\n' % os.path.join(args.images_save_dir, img_name)
+    for lf in val_img_files.loc[:, 0]:
+        img_name = os.path.basename(lf)
+        lbl_name = img_name.replace('.jpg', '.txt')
+        test_lbl_txt.write('%s\n' % os.path.join(val_dir, lbl_name))
+        test_img_txt.write('%s\n' % lf)
     test_img_txt.close()
     test_lbl_txt.close()
 
-    data_txt = open(os.path.join(base_dir, 'xviewtest_{}_m{}_rc{}_{}.data'.format(pxwhrs, model_id, rare_id, type)), 'w')
+    data_txt = open(os.path.join(base_dir, '{}_test_{}_m{}_rc{}_{}.data'.format(name, pxwhrs, model_id, rare_id, type)), 'w')
     data_txt.write('classes=%s\n' % str(args.class_num))
-    data_txt.write('test=./data_xview/{}_cls/{}/xviewtest_img_{}_m{}_rc{}_{}.txt\n'.format(args.class_num, pxwhrs, pxwhrs, model_id, rare_id, type))
-    data_txt.write('test_label=./data_xview/{}_cls/{}/xviewtest_lbl_{}_m{}_rc{}_{}.txt\n'.format(args.class_num, pxwhrs, pxwhrs, model_id, rare_id, type))
+    data_txt.write('test=./data_xview/{}_cls/{}/{}_test_img_{}_m{}_rc{}_{}.txt\n'.format(args.class_num, pxwhrs, name, pxwhrs, model_id, rare_id, type))
+    data_txt.write('test_label=./data_xview/{}_cls/{}/{}_test_lbl_{}_m{}_rc{}_{}.txt\n'.format(args.class_num, pxwhrs, name, pxwhrs, model_id, rare_id, type))
     data_txt.write('names=./data_xview/{}_cls/xview.names\n'.format(args.class_num))
     data_txt.close()
 
@@ -755,16 +761,16 @@ if __name__ == '__main__':
     except rc2 all others of model1 labeled as 0
     '''
 
-    # # model_id = 4
-    # # rare_class = 1
+    # model_id = 4
+    # rare_class = 1
     # # model_id = 1
     # # rare_class = 2
     # # model_id = 5
     # # rare_class = 3
     # # model_id = 5
     # # rare_class = 4
-    # model_id = 5
-    # rare_class = 5
+    # # model_id = 5
+    # # rare_class = 5
     # other_label = 0
     # label_m_val_model_with_other_label(rare_class, model_id, other_label)
 
@@ -791,29 +797,28 @@ if __name__ == '__main__':
     seed = 199                                                                                          
     all models that are not belong to the rare object will be labeled as 0  
     '''
-
-    seed = 17
-    # seed = 199
-    px_thres = 23
-    whr_thres = 3
-    args = get_args(px_thres, whr_thres, seed)
-    pxwhr = 'px{}whr{}'.format(px_thres, whr_thres)
-    non_rare_id = 0
-    model_id = 4
-    rare_id = 1
-    # val_m_rc_path = args.annos_save_dir[:-1] + '_m{}_rc{}'.format(model_id, rare_id)
-    # model_id = 1
-    # rare_id = 2
-    # model_id = 5
-    # rare_id = 3
-    # model_id = 5
-    # rare_id = 4
+    # seed = 17
+    # # seed = 199
+    # px_thres = 23
+    # whr_thres = 3
+    # args = get_args(px_thres, whr_thres, seed)
+    # pxwhr = 'px{}whr{}'.format(px_thres, whr_thres)
+    # non_rare_id = 0
+    # # model_id = 4
+    # # rare_id = 1
+    # # val_m_rc_path = args.annos_save_dir[:-1] + '_m{}_rc{}'.format(model_id, rare_id)
+    # # model_id = 1
+    # # rare_id = 2
+    # # model_id = 5
+    # # rare_id = 3
+    # # model_id = 5
+    # # rare_id = 4
     # model_id = 5
     # rare_id = 5
-
-    other_label = 0
-    val_m_rc_path = args.annos_save_dir[:-1] + '_val_m{}_to_rc{}'.format(model_id, rare_id)
-    create_model_rareclass_hard_easy_set_backup(val_m_rc_path, model_id, rare_id, non_rare_id, seed, pxwhr)
+    #
+    # other_label = 0
+    # val_m_rc_path = args.annos_save_dir[:-1] + '_val_m{}_to_rc{}'.format(model_id, rare_id)
+    # create_model_rareclass_hard_easy_set_backup(val_m_rc_path, model_id, rare_id, non_rare_id, seed, pxwhr)
 
 
     '''                                                                                                 
@@ -823,24 +828,30 @@ if __name__ == '__main__':
     seed = 17                                                                                           
     seed = 199                                                                                          
     '''
-    # seed = 17
-    # # seed = 199
-    # px_thres = 23
-    # whr_thres = 3
-    # args = get_args(px_thres, whr_thres, seed)
-    # pxwhrs = 'px{}whr{}_seed{}'.format(px_thres, whr_thres, seed)
-    # # model_id = 4
-    # # rare_id = 1
-    # # model_id = 1
-    # # rare_id = 2
-    # # model_id = 5
-    # # rare_id = 3
+    seed = 17
+    # seed = 199
+    px_thres = 23
+    whr_thres = 3
+    args = get_args(px_thres, whr_thres, seed)
+    pxwhrs = 'px{}whr{}_seed{}'.format(px_thres, whr_thres, seed)
+    # model_id = 4
+    # rare_id = 1
+    # model_id = 1
+    # rare_id = 2
+    # model_id = 5
+    # rare_id = 3
     # model_id = 5
     # rare_id = 4
-    # non_rare_id = 0
-    # types = ['hard', 'easy']
-    # for type in types:
-    #     create_test_dataset_of_m_rc(model_id, rare_id, type, seed, pxwhrs)
+    non_rare_id = 0
+    types = ['hard', 'easy']
+    model_ids = [4, 1, 5, 5, 5]
+    rare_ids = [1, 2, 3, 4, 5]
+    # name = 'xview'
+    name = 'xview_rc'
+    for ix, model_id in enumerate(model_ids):
+        rare_id = rare_ids[ix]
+        for type in types:
+            create_test_dataset_of_m_rc(model_id, rare_id, type, seed, pxwhrs, name)
 
 
     # import collections
