@@ -456,6 +456,7 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
                     print('Corrupted image detected: %s' % file)
         # print('self.lables[0]', self.labels[0])
 
+
     def __len__(self):
         return len(self.img_files)
 
