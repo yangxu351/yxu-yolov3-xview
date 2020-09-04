@@ -8,7 +8,8 @@ import torch.optim.lr_scheduler as lr_scheduler
 
 import test_xview as test  # import test.py to get mAP after each epoch
 from models_xview import *
-from utils.datasets_xview import *
+#from utils.datasets_xview import *
+from utils.datasets_xview_fixedseed import *
 from utils.utils_xview import *
 from utils.torch_utils import *
 import warnings
@@ -430,7 +431,7 @@ def train(opt):
             # Save backup every 10 epochs (optional)
             #fixme
             # if (epoch > 0 and epoch % 10 == 0):
-            if (epoch > 0 and epoch % 50 == 0) :
+            if (epoch > 0 and epoch % 50 == 0) or (epoch > 100 and epoch % 20 == 0) :
                 torch.save(chkpt, opt.weights_dir + 'backup%g.pt' % epoch)
 
             # Delete checkpoint
