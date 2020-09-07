@@ -454,6 +454,9 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
                 except:
                     print('Corrupted image detected: %s' % file)
         # print('self.lables[0]', self.labels[0])
+        #fixme--yang.xu
+        np.random.seed(0)
+        random.seed(0)
 
     def __len__(self):
         return len(self.img_files)
@@ -709,8 +712,6 @@ def letterbox(img, new_shape=(416, 416), color=(128, 128, 128),
 def random_affine(img, targets=(), degrees=10, translate=.1, scale=.1, shear=10, border=0):
     # torchvision.transforms.RandomAffine(degrees=(-10, 10), translate=(.1, .1), scale=(.9, 1.1), shear=(-10, 10))
     # https://medium.com/uruvideo/dataset-augmentation-with-random-homographies-a8f4b44830d4
-    #fixme--yang.xu
-    # random.seed(0)
     if targets is None:  # targets = [cls, xyxy]
         targets = []
     height = img.shape[0] + border * 2
