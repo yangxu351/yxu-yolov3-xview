@@ -400,9 +400,9 @@ def create_val_aug_rc_hard_easy_txt_list_data(model_id, rare_id, pxwhrs='px23whr
     if not os.path.exists(hard_easy_aug_dir):
         os.mkdir(hard_easy_aug_dir)
 
-    val_labeled_m_rc_hard = os.path.join(hard_easy_aug_dir, '{}_val_lbl_m{}_rc{}_hard'.format(pxwhrs, model_id, rare_id))
-    if not os.path.exists(val_labeled_m_rc_hard):
-        os.mkdir(val_labeled_m_rc_hard)
+    # val_labeled_m_rc_hard = os.path.join(hard_easy_aug_dir, '{}_val_lbl_m{}_rc{}_hard'.format(pxwhrs, model_id, rare_id))
+    # if not os.path.exists(val_labeled_m_rc_hard):
+    #     os.mkdir(val_labeled_m_rc_hard)
 
     nrcbkg_lbl_path = args.annos_save_dir[:-1] + '_val_nrcbkg_lbl_with_modelid'
     nrcbkg_lbl_files = glob.glob(os.path.join(nrcbkg_lbl_path, '*.txt'))
@@ -614,7 +614,26 @@ if __name__ == '__main__':
     # for img in img_list:
     #     lbl_name = os.path.basename(img).replace('.jpg', '.txt')
     #     lbl_file = os.path.join(annos_dir, lbl_name)
-    #     gbc.plot_img_with_bbx(img, lbl_file, save_path, label_index=True)
+    #     gbc.plot_img_with_bbx(img, lbl_file, save_path, Model_id=True)
+
+
+    model_ids = [4, 1, 5, 5, 5]
+    rare_ids = [1, 2, 3, 4, 5]
+    aug_rc_annos_dir = args.annos_save_dir[:-1] + '_rc_val_new_ori_multi_modelid_aug_easy_hard/val_aug_m{}_rc{}_hard/'
+    images_dir = args.images_save_dir[:-1] + '_rc_val_new_ori_multi_aug/' # 282
+    print('images_dir', images_dir)
+    img_list = np.sort(glob.glob(os.path.join(images_dir, '*.jpg')))
+    for ix, rid in enumerate(rare_ids):
+        mid = model_ids[ix]
+        annos_dir = aug_rc_annos_dir.format(mid, rid)
+        print('annos_dir', annos_dir)
+        save_path = args.cat_sample_dir + 'image_with_bbox/val_aug_m{}_rc{}_hard/'.format(mid, rid)
+        if not os.path.exists(save_path):
+            os.makedirs(save_path)
+        for img in img_list:
+            lbl_name = os.path.basename(img).replace('.jpg', '.txt')
+            lbl_file = os.path.join(annos_dir, lbl_name)
+            gbc.plot_img_with_bbx(img, lbl_file, save_path, Model_id=True)
 
 
     '''

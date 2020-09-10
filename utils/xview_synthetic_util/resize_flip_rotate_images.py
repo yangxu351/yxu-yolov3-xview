@@ -16,10 +16,12 @@ def flip_rotate_images(img_name, src_dir=None):
         save_dir = src_dir + '_aug'
         if not os.path.exists(save_dir):
             os.mkdir(save_dir)
+        shutil.copy(os.path.join(src_dir, img_name), os.path.join(save_dir, img_name))
+
         out_lr_flip = img.transpose(Image.FLIP_LEFT_RIGHT)
         out_lr_flip.save(os.path.join(save_dir,'{}_lr.jpg'.format(name_str)))
-        out_tb_flip = img.transpose(Image.FLIP_TOP_BOTTOM)
-        out_tb_flip.save(os.path.join(save_dir,'{}_tb.jpg'.format(name_str)))
+        # out_tb_flip = img.transpose(Image.FLIP_TOP_BOTTOM)
+        # out_tb_flip.save(os.path.join(save_dir,'{}_tb.jpg'.format(name_str)))
         out_rt_90 = img.transpose(Image.ROTATE_90)
         out_rt_90.save(os.path.join(save_dir,'{}_rt90.jpg'.format(name_str)))
         out_rt_180 = img.transpose(Image.ROTATE_180)
@@ -31,8 +33,8 @@ def flip_rotate_images(img_name, src_dir=None):
         img = Image.open(args.images_save_dir[:-1] + '_of_{}/{}.jpg'.format(img_name, img_name))
         out_lr_flip = img.transpose(Image.FLIP_LEFT_RIGHT)
         out_lr_flip.save(args.images_save_dir[:-1] + '_of_{}/{}_lr.jpg'.format(img_name, img_name))
-        out_tb_flip = img.transpose(Image.FLIP_TOP_BOTTOM)
-        out_tb_flip.save(args.images_save_dir[:-1] + '_of_{}/{}_tb.jpg'.format(img_name, img_name))
+        # out_tb_flip = img.transpose(Image.FLIP_TOP_BOTTOM)
+        # out_tb_flip.save(args.images_save_dir[:-1] + '_of_{}/{}_tb.jpg'.format(img_name, img_name))
         out_rt_90 = img.transpose(Image.ROTATE_90)
         out_rt_90.save(args.images_save_dir[:-1] + '_of_{}/{}_rt90.jpg'.format(img_name, img_name))
         out_rt_180 = img.transpose(Image.ROTATE_180)
@@ -84,6 +86,8 @@ def flip_rotate_coordinates(img_dir, lbl_dir, name, angle=0, flip=''):
     aug_dir = lbl_dir + '_aug'
     if not os.path.exists(aug_dir):
         os.mkdir(aug_dir)
+    # backup the original lbl first
+    shutil.copy(os.path.join(lbl_dir, '{}.txt'.format(name)), os.path.join(aug_dir, '{}.txt'.format(name)))
     if angle:
         lbl_file = os.path.join(aug_dir, '{}_rt{}.txt'.format(name, angle))
     elif flip:
@@ -189,6 +193,7 @@ if __name__ == '__main__':
 
     # img_dir = args.images_save_dir[:-1] + '_rc_val_new_ori_multi'
     # img_list = glob.glob(os.path.join(img_dir, '*.jpg'))
+    # print('img_list', len(img_list))
     # for f in img_list:
     #     name = os.path.basename(f)
     #     img_dir = os.path.dirname(f)
@@ -214,17 +219,17 @@ if __name__ == '__main__':
     # flip = 'lr'
     # flip_rotate_coordinates(img_dir, lbl_dir, img_name, flip=flip)
 
-    img_dir = args.images_save_dir[:-1] + '_rc_val_new_ori_multi_aug'
-    lbl_dir = args.annos_save_dir[:-1] + '_rc_val_new_ori_multi_modelid'
-    lbl_list = glob.glob(os.path.join(lbl_dir, '*.txt'))
-    for lbl in lbl_list:
-        name = os.path.basename(lbl).split('.')[0]
-        angle_list = [90, 180, 270]
-        for angle in angle_list:
-            flip_rotate_coordinates(img_dir, lbl_dir, name, angle=angle)
-        flip_list = ['lr', 'tb']
-        for flip in flip_list:
-            flip_rotate_coordinates(img_dir, lbl_dir, name, flip=flip)
+    # img_dir = args.images_save_dir[:-1] + '_rc_val_new_ori_multi_aug'
+    # lbl_dir = args.annos_save_dir[:-1] + '_rc_val_new_ori_multi_modelid'
+    # lbl_list = glob.glob(os.path.join(lbl_dir, '*.txt'))
+    # for lbl in lbl_list:
+    #     name = os.path.basename(lbl).split('.')[0]
+    #     angle_list = [90, 180, 270]
+    #     for angle in angle_list:
+    #         flip_rotate_coordinates(img_dir, lbl_dir, name, angle=angle)
+    #     flip_list = ['lr'] # 'tb
+    #     for flip in flip_list:
+    #         flip_rotate_coordinates(img_dir, lbl_dir, name, flip=flip)
 
 
     '''
