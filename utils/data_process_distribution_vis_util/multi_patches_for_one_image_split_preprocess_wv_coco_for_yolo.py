@@ -126,12 +126,13 @@ def get_img_txt_for_multi_chips(tif_name):
 
 
 def draw_bbox_with_indices(tif_name):
-    txt_rc_val_dir = args.annos_save_dir[:-1] + '_rc_val_multi_with_modelid'
+    # txt_rc_val_dir = args.annos_save_dir[:-1] + '_rc_val_multi_with_modelid'
+    txt_rc_val_dir = args.annos_save_dir[:-1] + '_rc_val_new_ori_multi_modelid'
     # txt_rc_val_dir = args.annos_save_dir[:-1] + '_rc_val_multi'
     image_rc_val_dir = os.path.join(args.images_save_dir[:-1] + '_of_{}'.format(tif_name.split('.')[0]), '{}_rc_val'.format(tif_name.split('.')[0]))
     image_list = glob.glob(os.path.join(image_rc_val_dir, '*.jpg'))
     bbox_folder_name = 'val_rc_images_{}'.format(tif_name.split('.tif')[0])
-    img_with_bbx_dir = os.path.join(args.cat_sample_dir, 'image_with_bbox_indices_val', bbox_folder_name)
+    img_with_bbx_dir = os.path.join(args.cat_sample_dir, 'image_with_bbox_indices_val', bbox_folder_name) #
     if not os.path.exists(img_with_bbx_dir):
         os.makedirs(img_with_bbx_dir)
     for f in image_list:
@@ -547,7 +548,7 @@ if __name__ == '__main__':
     draw bbox on multi crops of rc with indices
     '''
     # tif_list = ['86.tif', '88.tif', '311.tif', '546.tif', '1052.tif', '1076.tif', '1114.tif', '2160.tif', '2315.tif']
-    # tif_list = ['1114.tif']
+    # # tif_list = ['1114.tif']
     # for tif_name in tif_list:
     #     draw_bbox_with_indices(tif_name)
 
@@ -582,7 +583,7 @@ if __name__ == '__main__':
     '''
     split train val 4 with augmented val rc data
     nrc + bkg + augmented rc
-    '''
+    # '''
     # seed = 17
     # comments = '_px23whr3_seed{}'.format(seed)
     # split_trn_val_with_aug_rc_nrcbkg_step_by_step(data_name='xview', comments=comments, seed=seed)
@@ -593,33 +594,27 @@ if __name__ == '__main__':
     easy: keep other labels
     hard except rc*, drop others
     '''
-    model_ids = [4, 1, 5, 5, 5]
-    rare_ids = [1, 2, 3, 4, 5]
-    for ix, rare_id in enumerate(rare_ids):
-        model_id = model_ids[ix]
-        create_val_aug_rc_hard_easy_txt_list_data(model_id, rare_id, pxwhrs='px23whr3_seed17')
+    # model_ids = [4, 1, 5, 5, 5]
+    # rare_ids = [1, 2, 3, 4, 5]
+    # for ix, rare_id in enumerate(rare_ids):
+    #     model_id = model_ids[ix]
+    #     create_val_aug_rc_hard_easy_txt_list_data(model_id, rare_id, pxwhrs='px23whr3_seed17')
 
     '''
     cheke bbox on images
     '''
-    # # whr_thres = 3 # 3.5
-    # # # px_thres= 23
-    # # px_thres= 15
-    # # args = get_args(px_thres, whr_thres)
-
-    # args = get_args()
-    # save_path = args.cat_sample_dir + 'image_with_bbox/m4_2315/'
+    # save_path = args.cat_sample_dir + 'image_with_bbox/'
     # if not os.path.exists(save_path):
     #     os.makedirs(save_path)
-    # images_dir = args.images_save_dir[:-1] + '_of_2315/m4_2315/' # 282
-    # annos_dir = args.annos_save_dir[:-1] + '_of_2315/m4_2315/'
+    # images_dir = args.images_save_dir[:-1] + '_rc_val_new_ori_multi_aug/' # 282
+    # annos_dir = args.annos_save_dir[:-1] + '_rc_val_new_ori_multi_modelid_aug/'
     # print('images_dir', images_dir)
     # print('annos_dir', annos_dir)
     # img_list = np.sort(glob.glob(os.path.join(images_dir, '*.jpg')))
     # for img in img_list:
     #     lbl_name = os.path.basename(img).replace('.jpg', '.txt')
     #     lbl_file = os.path.join(annos_dir, lbl_name)
-    #     gbc.plot_img_with_bbx(img, lbl_file, save_path, label_index=False)
+    #     gbc.plot_img_with_bbx(img, lbl_file, save_path, label_index=True)
 
 
     '''
