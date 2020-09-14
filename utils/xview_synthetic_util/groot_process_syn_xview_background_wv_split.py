@@ -730,80 +730,92 @@ if __name__ == '__main__':
 ##            model_cmt = 'xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_color_bias{}_RC2_v{}'.format(color_pro*25.5, color_pro+12)
 ##        pxwhr = 'px23whr3'
 #    
-##    for ix, size_pro in enumerate(range(6)):
-##        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_scatter_gauss_2_7_rndsolar_dynmu_size_bias{}_RC1_v{}_color'.format(size_pro*5, ix+43)
-##        model_cmt = 'xbw_xbkg_unif_mig21_shdw_scatter_gauss_2_7_rndsolar_dynmu_size_bias{}_RC1_v{}'.format(size_pro*5, ix+43)
-##        pxwhr = 'px15whr3'
+#    for ix, size_pro in enumerate(range(6)):
+#        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_scatter_gauss_2_7_rndsolar_dynmu_size_bias{}_RC1_v{}_color'.format(size_pro*5, ix+43)
+#        model_cmt = 'xbw_xbkg_unif_mig21_shdw_scatter_gauss_2_7_rndsolar_dynmu_size_bias{}_RC1_v{}'.format(size_pro*5, ix+43)
+#        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_fixedangle_dynmu_size_bias{}_RC1_v{}_color'.format(size_pro*5, ix+110)
+#        model_cmt = 'xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_fixedangle_dynmu_size_bias{}_RC1_v{}'.format(size_pro*5, ix+110)
+#        pxwhr = 'px15whr3'
+#    for ix, size_pro in enumerate(range(6)):
+#        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_dynmu_size_bias{}_RC1_v{}_color'.format(size_pro*5, ix+130)
+#        model_cmt = 'xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_dynmu_size_bias{}_RC1_v{}'.format(size_pro*5, ix+130)
+#        pxwhr = 'px15whr3'
 #
-##    for ix, size_pro in enumerate([-2,-1,0,1,1.5,2]):
-##        cmt = 'syn_xview_bkg_px23whr3_xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_dynmu_size_bias{}_RC2_v{}_color'.format(size_pro*10, ix+23)
-##        model_cmt = 'xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_dynmu_size_bias{}_RC2_v{}'.format(size_pro*10, ix+23)
-##        pxwhr = 'px23whr3'
-#
-##    for ix, size_pro in enumerate(range(-1, 5)):
-##        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_size_bias{}_RC3_v{}_color'.format(size_pro*7, ix+23)
-##        model_cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_size_bias{}_RC3_v{}'.format(size_pro*7, ix+23)
-##        pxwhr = 'px23whr3'
+#    for ix, size_pro in enumerate([-2,-1,0,1,1.5,2]):
+#        cmt = 'syn_xview_bkg_px23whr3_xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_dynmu_size_bias{}_RC2_v{}_color'.format(size_pro*10, ix+23)
+#        model_cmt = 'xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_dynmu_size_bias{}_RC2_v{}'.format(size_pro*10, ix+23)
+#        pxwhr = 'px23whr3'
+
+#    for ix, size_pro in enumerate(range(-1, 5)):
+#        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_size_bias{}_RC3_v{}_color'.format(size_pro*7, ix+23)
+#        model_cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_size_bias{}_RC3_v{}'.format(size_pro*7, ix+23)
+#        pxwhr = 'px23whr3'
 #        
-##    for ix, size_pro in enumerate(range(-3, 3)):
-##        cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_size_bias{}_RC4_v{}_color'.format(size_pro*5, ix+23)
-##        model_cmt = 'xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_size_bias{}_RC4_v{}'.format(size_pro*5, ix+23)
-##        pxwhr = 'px23whr3'
+#    for ix, size_pro in enumerate(range(-3, 3)):
+#        cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_size_bias{}_RC4_v{}_color'.format(size_pro*5, ix+23)
+#        model_cmt = 'xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_size_bias{}_RC4_v{}'.format(size_pro*5, ix+23)
+#        pxwhr = 'px23whr3'
 #
-##    for ix, size_pro in enumerate(range(6)):
-##        cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_size_bias{}_RC5_v{}_color'.format(size_pro*5, ix+12)
-##        model_cmt = 'xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_size_bias{}_RC5_v{}'.format(size_pro*5, ix+12)
-##        pxwhr = 'px23whr3'
+#    for ix, size_pro in enumerate(range(6)):
+#        cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_size_bias{}_RC5_v{}_color'.format(size_pro*5, ix+12)
+#        model_cmt = 'xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_size_bias{}_RC5_v{}'.format(size_pro*5, ix+12)
+#        pxwhr = 'px23whr3'
 #
-##    for ix, color_pro in enumerate([-2.5, -1.5, 0, 0.5, 1.5, 2.5 ]):
-##        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias{}_RC1_v{}_color'.format(color_pro, ix+50)
-##        model_cmt = 'xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias{}_RC1_v{}'.format(color_pro, ix+50)
-##        pxwhr = 'px15whr3'
+#    for ix, color_pro in enumerate([-2.5, -1.5, -0.5, 0.5, 1.5, 2.5 ]):
+#        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias{}_RC1_v{}_color'.format(color_pro, ix+50)
+#        model_cmt = 'xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias{}_RC1_v{}'.format(color_pro, ix+50)
+#        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_fixedangle_dynmu_color_bias{}_RC1_v{}_color'.format(color_pro, ix+90)
+#        model_cmt = 'xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_fixedangle_dynmu_color_bias{}_RC1_v{}'.format(color_pro, ix+90)
+#        pxwhr = 'px15whr3'
 #
-##    for ix, color_pro in enumerate([0, -0.5, -1.5, -2.5, -3.5, -4.5]):
-##        cmt = 'syn_xview_bkg_px23whr3_xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias{}_RC2_v{}_color'.format(color_pro, ix+30)
-##        model_cmt = 'xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias{}_RC2_v{}'.format(color_pro, ix+30)
-##        pxwhr = 'px23whr3'
+#    for ix, color_pro in enumerate([0.5, -0.5, -1.5, -2.5, -3.5, -4.5]):
+#        cmt = 'syn_xview_bkg_px23whr3_xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias{}_RC2_v{}_color'.format(color_pro, ix+30)
+#        model_cmt = 'xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias{}_RC2_v{}'.format(color_pro, ix+30)
+#        pxwhr = 'px23whr3'
 # 
 ##    for ix, color_pro in enumerate([0, -0.5, -1.5, -2.5, -3.5, -4.5]):
 ##        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias{}_RC3_v{}_color'.format(color_pro, ix+30)
 ##        model_cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias{}_RC3_v{}'.format(color_pro, ix+30)
 ##        pxwhr = 'px23whr3'
 #  
-##    for ix, color_pro in enumerate([-1.5, 0, 0.5, 1.5, 2.5, 3.5]):
-##        cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias{}_RC4_v{}_color'.format(color_pro, ix+30)
-##        model_cmt = 'xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias{}_RC4_v{}'.format(color_pro, ix+30)
-##        pxwhr = 'px23whr3'
+#    for ix, color_pro in enumerate([-1.5, 0, 0.5, 1.5, 2.5, 3.5]):
+#        cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias{}_RC4_v{}_color'.format(color_pro, ix+30)
+#        model_cmt = 'xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias{}_RC4_v{}'.format(color_pro, ix+30)
+#        pxwhr = 'px23whr3'
 #
 ##    for ix, color_pro in enumerate([-2.5,-1.5, 0, 0.5, 1.5, 2.5]):
 ##        cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias{}_RC5_v{}_color'.format(color_pro, ix+20)
 ##        model_cmt = 'xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias{}_RC5_v{}'.format(color_pro, ix+20)
 ##        pxwhr = 'px23whr3'
 #
-##    bias_steps = [0, 0.2, 0.4, 0.6, 0.8]
-##    for ix, color_pro in enumerate(bias_steps):
-##        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_dynsigma_color_bias{}_RC1_v{}_color'.format(color_pro, ix+60)
-##        model_cmt = 'xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_dynsigma_color_bias{}_RC1_v{}'.format(color_pro, ix+60)
-##        pxwhr = 'px15whr3'
+    bias_steps = [0, 0.2, 0.4, 0.6, 0.8]
+    for ix, color_pro in enumerate(bias_steps):
+        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_dynsigma_color_bias{}_RC1_v{}_color'.format(color_pro, ix+60)
+        model_cmt = 'xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_dynsigma_color_bias{}_RC1_v{}'.format(color_pro, ix+60)
+##        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_light_dynsigma_color_bias{}_RC1_v{}_color'.format(color_pro, ix+80)
+##        model_cmt = 'xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_light_dynsigma_color_bias{}_RC1_v{}'.format(color_pro, ix+80)
+#        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_fixedangle_dynsigma_color_bias{}_RC1_v{}_color'.format(color_pro, ix+100)
+#        model_cmt = 'xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_fixedangle_dynsigma_color_bias{}_RC1_v{}'.format(color_pro, ix+100)
+        pxwhr = 'px15whr3'
 #
-##    bias_steps = [0, 0.2, 0.4, 0.6, 0.8]
-##    for ix, color_pro in enumerate(bias_steps):
-##        cmt = 'syn_xview_bkg_px23whr3_xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_dynsigma_color_bias{}_RC2_v{}_color'.format(color_pro, ix+40)
-##        model_cmt = 'xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_dynsigma_color_bias{}_RC2_v{}'.format(color_pro, ix+40)
-##        pxwhr = 'px23whr3'
+#    bias_steps = [0, 0.2, 0.4, 0.6, 0.8]
+#    for ix, color_pro in enumerate(bias_steps):
+#        cmt = 'syn_xview_bkg_px23whr3_xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_dynsigma_color_bias{}_RC2_v{}_color'.format(color_pro, ix+40)
+#        model_cmt = 'xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_dynsigma_color_bias{}_RC2_v{}'.format(color_pro, ix+40)
+#        pxwhr = 'px23whr3'
 #
-##    bias_steps = [0, 0.2, 0.4, 0.6, 0.8]
-##    for ix, color_pro in enumerate(bias_steps):
-##        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynsigma_color_bias{}_RC3_v{}_color'.format(color_pro, ix+40)
-##        model_cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynsigma_color_bias{}_RC3_v{}'.format(color_pro, ix+40)
-##        pxwhr = 'px23whr3'
+#    bias_steps = [0, 0.2, 0.4, 0.6, 0.8]
+#    for ix, color_pro in enumerate(bias_steps):
+#        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynsigma_color_bias{}_RC3_v{}_color'.format(color_pro, ix+40)
+#        model_cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynsigma_color_bias{}_RC3_v{}'.format(color_pro, ix+40)
+#        pxwhr = 'px23whr3'
 #
 #
-##    bias_steps = [0, 0.2, 0.4, 0.6, 0.8]
-##    for ix, color_pro in enumerate(bias_steps):
-##        cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynsigma_color_bias{}_RC4_v{}_color'.format(color_pro, ix+40)
-##        model_cmt = 'xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynsigma_color_bias{}_RC4_v{}'.format(color_pro, ix+40)
-##        pxwhr = 'px23whr3'
+#    bias_steps = [0, 0.2, 0.4, 0.6, 0.8]
+#    for ix, color_pro in enumerate(bias_steps):
+#        cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynsigma_color_bias{}_RC4_v{}_color'.format(color_pro, ix+40)
+#        model_cmt = 'xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynsigma_color_bias{}_RC4_v{}'.format(color_pro, ix+40)
+#        pxwhr = 'px23whr3'
 #
 #    bias_steps = [0, 0.2, 0.4, 0.6, 0.8]
 #    for ix, color_pro in enumerate(bias_steps):
@@ -826,22 +838,27 @@ if __name__ == '__main__':
 #        model_cmt = 'xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynsigma_size_bias{}_RC4_v{}'.format(size_pro, ix+50)
 #        pxwhr = 'px23whr3'
         
-#    for ix, size_pro in enumerate([0, 0.05, 0.1, 0.15]):
-#        model_cmt = 'xbw_xbkg_unif_mig21_shdw_scatter_gauss_2_7_rndsolar_dynsigma_size_bias{}_RC1_v{}'.format(size_pro, ix+70)
-#        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_scatter_gauss_2_7_rndsolar_dynsigma_size_bias{}_RC1_v{}_color'.format(size_pro, ix+70)
-#        pxwhr = 'px15whr3'
+    for ix, size_pro in enumerate([0, 0.05, 0.1, 0.15]):
+###        model_cmt = 'xbw_xbkg_unif_mig21_shdw_scatter_gauss_2_7_rndsolar_dynsigma_size_bias{}_RC1_v{}'.format(size_pro, ix+70)
+###        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_scatter_gauss_2_7_rndsolar_dynsigma_size_bias{}_RC1_v{}_color'.format(size_pro, ix+70)
+#        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_fixedangle_dynsigma_size_bias{}_RC1_v{}_color'.format(size_pro, ix+120)
+#        model_cmt = 'xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_fixedangle_dynsigma_size_bias{}_RC1_v{}'.format(size_pro, ix+120)
+        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_dynsigma_size_bias{}_RC1_v{}_color'.format(size_pro, ix+140)
+        model_cmt = 'xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_dynsigma_size_bias{}_RC1_v{}'.format(size_pro, ix+140)
+        pxwhr = 'px15whr3'
 
+#    for ix, size_pro in enumerate([0, 0.05, 0.1, 0.15]):
 #        cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynsigma_size_bias{}_RC5_v{}_color'.format(size_pro, ix+40)
 #        model_cmt = 'xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynsigma_size_bias{}_RC5_v{}'.format(size_pro, ix+40)
 #        pxwhr = 'px23whr3'
 
-    for i in range(1):
-        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias0.5_RC3_v30_color'
-        model_cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias0.5_RC3_v30'   
+#    for i in range(1):
+#        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias0.5_RC3_v30_color'
+#        model_cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias0.5_RC3_v30'   
 
 #        cmt = 'syn_xview_bkg_px23whr3_xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias0.5_RC2_v30_color'
 #        model_cmt = 'xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias0.5_RC2_v30'
-        pxwhr = 'px23whr3'
+#        pxwhr = 'px23whr3'
 #        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias-0.5_RC1_v52_color'
 #        model_cmt = 'xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias-0.5_RC1_v52'
 #        pxwhr = 'px15whr3'
@@ -858,6 +875,7 @@ if __name__ == '__main__':
         syn_args = get_syn_args(model_cmt)
         base_pxwhrs = base_pxwhrs.format(sd)
         split_syn_xview_background_trn_val(sd, cmt, pxwhr, base_pxwhrs)
+        create_syn_data(cmt, sd, base_pxwhrs, val_xview=False)
 
 #    pxwhr = 'px15whr3'
 #    seed=17
@@ -1118,12 +1136,14 @@ if __name__ == '__main__':
 #        label_id = 1
 #        miss_id = 2
 
-#    for ix, size_pro in enumerate(range(6)):
+    for ix, size_pro in enumerate(range(6)):
 #        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_scatter_gauss_2_7_rndsolar_dynmu_size_bias{}_RC1_v{}_color'.format(size_pro*5, ix+43)
 #        model_cmt = 'xbw_xbkg_unif_mig21_shdw_scatter_gauss_2_7_rndsolar_dynmu_size_bias{}_RC1_v{}'.format(size_pro*5, ix+43)
-#        pxwhr = 'px15whr3'
-#        label_id = 4
-#        miss_id = 1
+        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_fixedangle_dynmu_size_bias{}_RC1_v{}_color'.format(size_pro*5, ix+110)
+        model_cmt = 'xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_fixedangle_dynmu_size_bias{}_RC1_v{}'.format(size_pro*5, ix+110)
+        pxwhr = 'px15whr3'
+        label_id = 4
+        miss_id = 1
 
 #    for ix, size_pro in enumerate([-2,-1,0,1,1.5,2]):
 #        cmt = 'syn_xview_bkg_px23whr3_xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_dynmu_size_bias{}_RC2_v{}_color'.format(size_pro*10, ix+23)
@@ -1153,9 +1173,11 @@ if __name__ == '__main__':
 #        label_id = 5
 #        miss_id = 5
 
-#    for ix, color_pro in enumerate([-2.5, -1.5, 0, 0.5, 1.5, 2.5 ]):
-#        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias{}_RC1_v{}_color'.format(color_pro, ix+50)
-#        model_cmt = 'xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias{}_RC1_v{}'.format(color_pro, ix+50)
+#    for ix, color_pro in enumerate([-2.5, -1.5, -0.5, 0.5, 1.5, 2.5 ]):
+##        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias{}_RC1_v{}_color'.format(color_pro, ix+50)
+##        model_cmt = 'xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias{}_RC1_v{}'.format(color_pro, ix+50)
+#        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_fixedangle_dynmu_color_bias{}_RC1_v{}_color'.format(color_pro, ix+90)
+#        model_cmt = 'xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_fixedangle_dynmu_color_bias{}_RC1_v{}'.format(color_pro, ix+90)
 #        pxwhr = 'px15whr3'
 #        label_id = 4
 #        miss_id = 1
@@ -1190,8 +1212,12 @@ if __name__ == '__main__':
 
 #    bias_steps = [0, 0.2, 0.4, 0.6, 0.8]
 #    for ix, color_pro in enumerate(bias_steps):
-#        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_dynsigma_color_bias{}_RC1_v{}_color'.format(color_pro, ix+60)
-#        model_cmt = 'xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_dynsigma_color_bias{}_RC1_v{}'.format(color_pro, ix+60)
+##        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_dynsigma_color_bias{}_RC1_v{}_color'.format(color_pro, ix+60)
+##        model_cmt = 'xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_dynsigma_color_bias{}_RC1_v{}'.format(color_pro, ix+60)
+##        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_light_dynsigma_color_bias{}_RC1_v{}_color'.format(color_pro, ix+80)
+##        model_cmt = 'xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_light_dynsigma_color_bias{}_RC1_v{}'.format(color_pro, ix+80)
+#        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_fixedangle_dynsigma_color_bias{}_RC1_v{}_color'.format(color_pro, ix+100)
+#        model_cmt = 'xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_fixedangle_dynsigma_color_bias{}_RC1_v{}'.format(color_pro, ix+100)
 #        pxwhr = 'px15whr3'
 #        label_id = 4
 #        miss_id = 1
@@ -1250,18 +1276,22 @@ if __name__ == '__main__':
 #        miss_id = 4
 
 #    for ix, size_pro in enumerate([0, 0.05, 0.1, 0.15]):
-#        model_cmt = 'xbw_xbkg_unif_mig21_shdw_scatter_gauss_2_7_rndsolar_dynsigma_size_bias{}_RC1_v{}'.format(size_pro, ix+70)
-#        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_scatter_gauss_2_7_rndsolar_dynsigma_size_bias{}_RC1_v{}_color'.format(size_pro, ix+70)
-        
+#    for ix, size_pro in enumerate([0]):
+###        model_cmt = 'xbw_xbkg_unif_mig21_shdw_scatter_gauss_2_7_rndsolar_dynsigma_size_bias{}_RC1_v{}'.format(size_pro, ix+70)
+###        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_scatter_gauss_2_7_rndsolar_dynsigma_size_bias{}_RC1_v{}_color'.format(size_pro, ix+70)
+##        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_fixedangle_dynsigma_size_bias{}_RC1_v{}_color'.format(size_pro, ix+120)
+##        model_cmt = 'xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_fixedangle_dynsigma_size_bias{}_RC1_v{}'.format(size_pro, ix+120)
+#       
 #        model_cmt = 'xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynsigma_size_bias{}_RC5_v{}'.format(size_pro, ix+40)
 #        cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynsigma_size_bias{}_RC5_v{}_color'.format(size_pro, ix+40)
+#        pxwhr = 'px23whr3'
         
-    for i in range(1):
-        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias0.5_RC3_v30_color'
-        model_cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias0.5_RC3_v30'   
+#    for i in range(1):
+#        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias0.5_RC3_v30_color'
+#        model_cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias0.5_RC3_v30'   
 #        cmt = 'syn_xview_bkg_px23whr3_xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias0.5_RC2_v30_color'
 #        model_cmt = 'xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias0.5_RC2_v30'
-        pxwhr = 'px23whr3'
+#        pxwhr = 'px23whr3'
 
 #        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias-0.5_RC1_v52_color'
 #        model_cmt = 'xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias-0.5_RC1_v52'
@@ -1274,11 +1304,11 @@ if __name__ == '__main__':
 #        model_cmt = 'xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias-0.5_RC5_v22'
 #        pxwhr = 'px23whr3'
        
-        base_pxwhrs = 'px23whr3_seed{}'
-        syn_args = get_syn_args(model_cmt)
-        sd = 17
-        base_pxwhrs = base_pxwhrs.format(sd)
-        create_syn_data(cmt, sd, base_pxwhrs, val_xview=False)
+#        base_pxwhrs = 'px23whr3_seed{}'
+#        syn_args = get_syn_args(model_cmt)
+#        sd = 17
+#        base_pxwhrs = base_pxwhrs.format(sd)
+#        create_syn_data(cmt, sd, base_pxwhrs, val_xview=False)
 
 #        if color_pro == 0:
 #            cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_rnd_color_bias0_model4_v21_color'
@@ -1292,13 +1322,13 @@ if __name__ == '__main__':
 
 #    comments = ['syn_xview_bkg_px30whr3_xbw_xcolor_xbkg_unif_mig21_shdw_scatter_uniform_50_bias0_model4_v1_upscale_color', 'syn_xview_bkg_px30whr3_xbw_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_rnd_color_bias0_model4_v21_upscale_color']
 
-    comments = ['syn_xview_bkg_px30whr3_xbw_xcolor_xbkg_unif_shdw_scatter_gauss_50_color_bias0_model5_RC5_v1_upscale_color']
-    sd = 17
-    base_pxwhrs = 'px23whr3_seed{}'.format(sd)
-    for cmt in comments:
-        syn_args = get_syn_args(cmt)
-#        create_syn_data(cmt, sd, base_pxwhrs, val_xview=False)
-        create_syn_data(cmt, sd, base_pxwhrs, val_xview=False, upscale=True)
+#    comments = ['syn_xview_bkg_px30whr3_xbw_xcolor_xbkg_unif_shdw_scatter_gauss_50_color_bias0_model5_RC5_v1_upscale_color']
+#    sd = 17
+#    base_pxwhrs = 'px23whr3_seed{}'.format(sd)
+#    for cmt in comments:
+#        syn_args = get_syn_args(cmt)
+##        create_syn_data(cmt, sd, base_pxwhrs, val_xview=False)
+#        create_syn_data(cmt, sd, base_pxwhrs, val_xview=False, upscale=True)
 
 #    sd = 17
 #    base_pxwhrs = 'px23whr3_seed{}'.format(sd)
