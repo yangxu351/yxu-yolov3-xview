@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import os
+os.environ['QT_QPA_PLATFORM']='offscreen'
 import pandas as pd
 import numpy as np
 from ast import literal_eval
@@ -51,14 +52,18 @@ def plot_roc_of_dynamic_sigma_color(comments, pros, hexes):
     lgd_font = "{'family': 'serif', 'weight': 'normal', 'size': 8}"
     tlt_font = "{'family': 'serif', 'weight': 'normal', 'size': 13}"
     sd = 17
+#    ap_list = [50, 40, 20]
     apN = 50
     ehtypes = ['hard', 'easy']
     model_ids = [4, 1, 5, 5, 5]
     rare_classes = [1, 2, 3, 4, 5]
-    marker_list = ['-o', '-^', '-v', '-<', '->']
+    marker_list = ['-^', '-v', '-<', '->', '-o', '-*']
     hyp_cmt = 'hgiou1_1gpu_val_syn'
+#    hyp_cmt = 'hgiou1_1gpu_39.5obj_val_syn'
     far_thres = 3
     for ehtp in ehtypes:
+#        for apN in ap_list:
+#            df_roc = pd.DataFrame(columns=["Version", "Pd(FAR=0.5)", "Pd(FAR=1)"])
         fig, ax_roc = plt.subplots(1, 1)  # figsize=(10, 8)
         yticks = [0]
         legends = []
@@ -66,10 +71,11 @@ def plot_roc_of_dynamic_sigma_color(comments, pros, hexes):
             rix = cmt.find('RC')
             rare_id = int(cmt[rix + 2])
             bix = cmt.find('bias')
-            model_id = model_ids[rare_classes.index(rare_id)]
+            rcinx = rare_classes.index(rare_id)
+            model_id = model_ids[rcinx]
             folder = 'test_on_xview_{}_m{}_rc{}_ap{}_{}'.format(hyp_cmt, model_id, rare_id, apN, ehtp)
-            result_src_dir = '/data/users/yang/code/result_output/1_cls/{}_seed{}/{}/'.format(cmt, sd, folder)
-            save_dir = '/data/users/yang/code/result_output/1_cls/{}_RC{}/'.format(cmt[:bix + 4], rare_id)
+            result_src_dir = '/data/users/yang/code/yxu-yolov3-xview/result_output/1_cls/{}_seed{}/{}/'.format(cmt, sd, folder)
+            save_dir = '/data/users/yang/code/yxu-yolov3-xview/result_output/1_cls/{}_RC{}/'.format(cmt[:bix + 4], rare_id)
             # result_src_dir = '/media/lab/Yang/code/results_groot/1_cls/{}_seed{}/{}/'.format(cmt, sd, folder)
             # save_dir = '/media/lab/Yang/code/results_groot/1_cls/{}_RC{}/'.format(cmt[:bix + 4], rare_id)
             if not os.path.exists(save_dir):
@@ -78,9 +84,9 @@ def plot_roc_of_dynamic_sigma_color(comments, pros, hexes):
             dynamic_sigma_color(rgb_mean, pros, base_version, rare_id, save_dir, file_name='dynsigma_color_RC{}.xlsx'.format(rare_id))
 
             dix = cmt.find('dyn')
-            save_name = 'ROC_{}_RC{}_{}.png'.format(cmt[dix:bix + 4], rare_id, ehtp)
+            save_name = 'ROC_{}_RC{}_AP{}_{}.png'.format(cmt[dix:bix + 4], rare_id, apN, ehtp)
             lix = cmt.rfind('_')
-            lgd = 'syn_{}'.format(cmt[rix:lix]) # 'RC*_v*'
+            lgd = 'syn_{}_AP{}'.format(cmt[rix:lix], apN) # 'RC*_v*_AP*'
             legends.append(lgd)
 
             df_rec = pd.read_csv(os.path.join(result_src_dir, 'rec_list.txt'), header=None)
@@ -98,6 +104,18 @@ def plot_roc_of_dynamic_sigma_color(comments, pros, hexes):
             ax_roc.set_xlim(-0.05, 3.05)
             ax_roc.grid(True)
 
+#                df_roc.at[ix, "Version"] = base_version + ix
+#                idx5_mx = df_far[df_far>=0.5].dropna()
+#                idx5_mx = idx5_mx.idxmin()[0]
+#                idx5_mn = idx5_mx - 1
+#                pd_5 = df_rec_thres.loc[idx5_mn, 0]
+#                idx1_mx = df_far[df_far>=1].dropna()
+#                idx1_mx = idx1_mx.idxmin()[0]
+#                idx1_mn = idx1_mx - 1
+#                pd_1 = df_rec_thres.loc[idx1_mn, 0]
+#                df_roc.at[ix, "Pd(FAR=0.5)"] = pd_5
+#                df_roc.at[ix, "Pd(FAR=1)"] = pd_1
+
         fig.legend(legends, prop=literal_eval(lgd_font), loc='upper right')
         yticks.append(1)
         yticks = list(dict.fromkeys(yticks))
@@ -107,6 +125,14 @@ def plot_roc_of_dynamic_sigma_color(comments, pros, hexes):
         plt.tight_layout()
         fig.savefig(os.path.join(save_dir, save_name), dpi=300)
         plt.close(fig)
+            
+#            csv_name = 'Pd_{}_RC{}_{}.xlsx'.format(cmt[dix:bix + 4], rare_id, ehtp)
+#            if apN > 20 and os.path.exists(os.path.join(save_dir, csv_name)):
+#                mode = 'a'
+#            else:
+#                mode = 'w'
+#            with pd.ExcelWriter(os.path.join(save_dir, csv_name), mode=mode) as writer:
+#                df_roc.to_excel(writer, sheet_name='AP{}'.format(apN), index=False) # 
 
 
 if __name__ == '__main__':
@@ -121,59 +147,71 @@ if __name__ == '__main__':
         cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_dynsigma_color_bias{}_RC1_v{}_color'.format(
             pro, ix + base_version)
         comments.append(cmt)
+#    base_version = 80
+#    for ix, pro in enumerate(pros):
+#        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_light_dynsigma_color_bias{}_RC1_v{}_color'.format(
+#            pro, ix + base_version)
+#        comments.append(cmt)
+#    base_version = 100
+#    for ix, pro in enumerate(pros):
+#        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_fixedangle_dynsigma_color_bias{}_RC1_v{}_color'.format(
+#            pro, ix + base_version)
+#        comments.append(cmt)
     plot_roc_of_dynamic_sigma_color(comments, pros, hexes)
     ##########################################
 
     '''RC2  dynsigma color
      '''
-    comments = []
-    pros = [0, 0.2, 0.4, 0.6, 0.8]
-    hexes = "#E5DAD8;#F5EAE1;#E6E5E6;#EBE6E1;#FFFEFF;#FEF9F7"
-    base_version = 40
-    for ix, pro in enumerate(pros):
-        cmt = 'syn_xview_bkg_px23whr3_xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_dynsigma_color_bias{}_RC2_v{}_color'.format(
-            pro, ix + base_version)
-        comments.append(cmt)
-    plot_roc_of_dynamic_sigma_color(comments, pros, hexes)
-    ##########################################
+#    comments = []
+#    pros = [0, 0.2, 0.4, 0.6, 0.8]
+#    hexes = "#E5DAD8;#F5EAE1;#E6E5E6;#EBE6E1;#FFFEFF;#FEF9F7"
+#    base_version = 40
+#    for ix, pro in enumerate(pros):
+#        cmt = 'syn_xview_bkg_px23whr3_xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_dynsigma_color_bias{}_RC2_v{}_color'.format(
+#            pro, ix + base_version)
+#        comments.append(cmt)
+#    plot_roc_of_dynamic_sigma_color(comments, pros, hexes)
+    #########################################
 
     '''RC3  dynsigma color
      '''
-    comments = []
-    pros = [0, 0.2, 0.4, 0.6, 0.8]
-    hexes = "#FFFFF9;#FFFFEF;#FFFFFB;#F9F5E6;#F7F6F0;#EFEEE7"
-    base_version = 40
-    for ix, pro in enumerate(pros):
-        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynsigma_color_bias{}_RC3_v{}_color'.format(
-            pro, ix + base_version)
-        comments.append(cmt)
-    plot_roc_of_dynamic_sigma_color(comments, pros, hexes)
-    ##########################################
+#    comments = []
+#    pros = [0, 0.2, 0.4, 0.6, 0.8]
+##    pros = [0.6]
+#    hexes = "#FFFFF9;#FFFFEF;#FFFFFB;#F9F5E6;#F7F6F0;#EFEEE7"
+#    base_version = 40
+#    for ix, pro in enumerate(pros):
+#        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynsigma_color_bias{}_RC3_v{}_color'.format(
+#            pro, ix + base_version)
+#        comments.append(cmt)
+#    plot_roc_of_dynamic_sigma_color(comments, pros, hexes)
+#    ##########################################
+#
+#    '''RC4  dynsigma color
+#     '''
+#    comments = []
+#    pros = [0, 0.2, 0.4, 0.6, 0.8]
+#    hexes = "#4C4B4E;#454545;#4A4744;#3D382C;#49483B;#453F37;#403B31;#504E41"
+#    base_version = 40
+#    for ix, pro in enumerate(pros):
+#        cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynsigma_color_bias{}_RC4_v{}_color'.format(
+#            pro, ix + base_version)
+#        comments.append(cmt)
+#    plot_roc_of_dynamic_sigma_color(comments, pros, hexes)
+#    ##########################################
 
-    '''RC4  dynsigma color
-     '''
-    comments = []
-    pros = [0, 0.2, 0.4, 0.6, 0.8]
-    hexes = "#4C4B4E;#454545;#4A4744;#3D382C;#49483B;#453F37;#403B31;#504E41"
-    base_version = 40
-    for ix, pro in enumerate(pros):
-        cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynsigma_color_bias{}_RC4_v{}_color'.format(
-            pro, ix + base_version)
-        comments.append(cmt)
-    plot_roc_of_dynamic_sigma_color(comments, pros, hexes)
-    ##########################################
-
-    '''RC5  dynsigma color
-     '''
-    comments = []
-    pros = [0, 0.2, 0.4, 0.6, 0.8]
-    hexes = "#C28634;#9C6932;#AA752B;#D89B43;#CD9644;#846830"
-    base_version = 30
-    for ix, pro in enumerate(pros):
-        cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynsigma_color_bias{}_RC5_v{}_color'.format(
-            pro, ix + base_version)
-        comments.append(cmt)
-    plot_roc_of_dynamic_sigma_color(comments, pros, hexes)
+    '''
+    RC5  dynsigma color
+    '''
+#    comments = []
+#    pros = [0, 0.2, 0.4, 0.6, 0.8]
+#    hexes = "#C28634;#9C6932;#AA752B;#D89B43;#CD9644;#846830"
+#    base_version = 30
+#    for ix, pro in enumerate(pros):
+#        cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynsigma_color_bias{}_RC5_v{}_color'.format(
+#            pro, ix + base_version)
+#        comments.append(cmt)
+#    plot_roc_of_dynamic_sigma_color(comments, pros, hexes)
     ##########################################
 
 
