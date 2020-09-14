@@ -429,9 +429,9 @@ def main():
     for typ in eh_types:
         for i, cmt in enumerate(comments):
             df_epoch = pd.DataFrame(columns=["Version", "Seen", "NT", "#Num"]+[ "epoch{}".format(x) for x in range(150, 220, 5)])
-            for n in range(1, 5): 
-                if n==3:
-                    continue
+            for n in range(1, 4): 
+#                if n==3:
+#                    continue
                 base_cmt = base_cmt.format(sd)
                 opt = get_opt(comments=cmt)
                 
@@ -443,13 +443,14 @@ def main():
                 VN = int(vstr)
                 if cinx >= 0:
                     medix = cmt.find('_dyn')
+                    #medix = cmt.find('_bxmuller')
                     mstr =  cmt[medix:cinx] # _dyn*_color_bias*
                     suffix = rcvstr + '_AP{}'.format(apN) # _RC*_v*_AP* 
                 else:
                     mstr = ''
                     suffix = ''
                 
-                opt.device = "0"
+                opt.device = "3"
                 opt.apN = apN
     #            df_epoch = pd.DataFrame(columns=["Version", "Seen", "NT", "epoch", "AP{}".format(apN), "Pd(FAR=0.5)", "Pd(FAR=1)", "Precision", "Recall" , "F1"])
                 df_epoch.at[n, "Version"] = VN
@@ -477,6 +478,8 @@ def main():
                     opt.name += '_{}_epoch{}'.format(opt.type, epoch)
                     opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_{}_m{}_rc{}_{}_iou{}_epochs_v{}'.format(hyp_cmt, opt.model_id, opt.rare_class, opt.type, apN, n))
                     opt.data = 'data_xview/{}_cls/{}/xview_rc_test_{}_m{}_rc{}_{}.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id, opt.rare_class, opt.type)
+#                    opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_ori_nrcbkg_aug_rc_{}_m{}_rc{}_{}_iou{}_epochs_v{}'.format(hyp_cmt, opt.model_id, opt.rare_class, opt.type, apN, n))
+#                    opt.data = 'data_xview/{}_cls/{}/xview_ori_nrcbkg_aug_rc_test_{}_m{}_rc{}_{}.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id, opt.rare_class, opt.type)
     
     
                     if not os.path.exists(opt.result_dir):
@@ -509,8 +512,8 @@ def main():
             einx = cmt.find('bias')+4
             dynstr = cmt[sinx:einx]  
             
-            csv_name =  "{}_{}_RC{}_epochs_{}_3trials.xlsx".format(prefix, dynstr, opt.rare_class, opt.type)      
-               
+            csv_name =  "{}_{}_RC{}_ori_epochs_{}_3trials.xlsx".format(prefix, dynstr, opt.rare_class, opt.type)      
+            #csv_name =  "{}_{}_RC{}_ori_nrcbkg_aug_rc_epochs_{}_3trials.xlsx".format(prefix, dynstr, opt.rare_class, opt.type)      
     #            if os.path.exists(os.path.join(csv_dir, csv_name)): 
     #                mode = 'a'
     #            else:
@@ -532,14 +535,12 @@ if __name__ == '__main__':
 #    for ix, pro in enumerate(pros):
 #        cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias{}_RC5_v{}_color'.format(pro, ix+ base_version)
 #        comments.append(cmt) 
-    comments = [#'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_dynmu_size_bias0_RC1_v130_color',
+    comments = ['syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias2.5_RC1_v55_color',
                 'syn_xview_bkg_px23whr3_xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_dynmu_size_bias0_RC2_v25_color',
-#                'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_size_bias0_RC3_v24_color',
-                'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_size_bias0_RC4_v26_color'
-#                'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias-0.5_RC5_v22_color'
+                'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_size_bias0_RC3_v24_color',
+                'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_size_bias0_RC4_v26_color',
+                'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias-0.5_RC5_v22_color'
     ]        
-#    comments = ['syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias2.5_RC1_v55_color']
-#    comments = ['syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias-0.5_RC5_v22_color']
     ############### dynsigma color
 #    pros = [0]
 #    base_version = 30
