@@ -8,8 +8,8 @@ import torch.optim.lr_scheduler as lr_scheduler
 
 import test_xview as test  # import test.py to get mAP after each epoch
 from models_xview import *
-#from utils.datasets_xview import *
-from utils.datasets_xview_fixedseed import *
+from utils.datasets_xview import *
+#from utils.datasets_xview_fixedseed import * # bxmuller results before 09/14/2020_16.34.pm are with fixed seed
 from utils.utils_xview import *
 from utils.torch_utils import *
 import warnings

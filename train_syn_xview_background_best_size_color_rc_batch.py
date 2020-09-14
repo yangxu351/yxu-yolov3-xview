@@ -8,8 +8,8 @@ import torch.optim.lr_scheduler as lr_scheduler
 
 import test_xview as test  # import test.py to get mAP after each epoch
 from models_xview import *
-from utils.datasets_xview import *
-#from utils.datasets_xview_fixedseed import * # bxmuller results before 09/14/2020_16.34.pm are with fixed seed
+#from utils.datasets_xview import *
+from utils.datasets_xview_fixedseed import *
 from utils.utils_xview import *
 from utils.torch_utils import *
 import warnings
@@ -500,119 +500,7 @@ def get_opt():
 
 
 if __name__ == '__main__':
-    # main()
-    # seeds = [17]#, 5, 9, 1024, 3] #   5, 9, 1024,
-    # comments = ['syn_xview_background_color', 'syn_xview_background_mixed']
-    # comments = ['xview_syn_xview_bkg_texture', 'xview_syn_xview_bkg_color', 'xview_syn_xview_bkg_mixed']
-    # syn_ratios = [1, 2]
-    # comments = ['px6whr4_ng0']
-    # syn_ratios = [0]
-    # comments = ['px23whr4']
-    # syn_ratios = [0]
-    # comments = ['syn_xview_bkg_certain_models_texture', 'syn_xview_bkg_certain_models_color', 'syn_xview_bkg_certain_models_mixed']
-    # syn_ratios = [None]
-    # comments = ['xview_syn_xview_bkg_certain_models_texture', 'xview_syn_xview_bkg_certain_models_color', 'xview_syn_xview_bkg_certain_models_mixed']
-    # syn_ratios = [2]
-    # comments = ['syn_xview_bkg_px20whr4_certain_models_texture', 'syn_xview_bkg_px20whr4_certain_models_color', 'syn_xview_bkg_px20whr4_certain_models_mixed']
-    # syn_ratios = [None]
-    # comments = ['xview_syn_xview_bkg_px20whr4_certain_models_texture', 'xview_syn_xview_bkg_px20whr4_certain_models_color', 'xview_syn_xview_bkg_px20whr4_certain_models_mixed']
-    # syn_ratios = [1]
-    # comments = ['syn_xview_bkg_px23whr4_scale_models_texture', 'syn_xview_bkg_px23whr4_scale_models_color', 'syn_xview_bkg_px23whr4_scale_models_mixed']
-    # syn_ratios = [None]
-    # comments = ['xview_syn_xview_bkg_px23whr4_scale_models_texture', 'xview_syn_xview_bkg_px23whr4_scale_models_color', 'xview_syn_xview_bkg_px23whr4_scale_models_mixed']
-    # syn_ratios = [1]
-    # comments = ['xview_syn_xview_bkg_px23whr4_small_models_color', 'xview_syn_xview_bkg_px23whr4_small_models_mixed']
-    # syn_ratios = [1]
-    # comments = ['syn_xview_bkg_px23whr4_small_models_color', 'syn_xview_bkg_px23whr4_small_models_mixed']
-    # syn_ratios = [None]
-    # comments = ['syn_xview_bkg_px23whr4_small_fw_models_color', 'syn_xview_bkg_px23whr4_small_fw_models_mixed']
-    # syn_ratios = [None]
-    # comments = ['px23whr3']
-    # syn_ratios = [0]
-    # comments = ['px23whr3']
-    # syn_ratios = [0]
-    # comments = ['syn_xview_bkg_px23whr3_small_models_color', 'syn_xview_bkg_px23whr3_small_models_mixed']
-    # syn_ratios = [None]
-    # comments = ['xview_syn_xview_bkg_px23whr3_small_models_color', 'xview_syn_xview_bkg_px23whr3_small_models_mixed']
-    # syn_ratios = [1]
-    # comments = ['syn_xview_bkg_px23whr3_6groups_models_color', 'syn_xview_bkg_px23whr3_6groups_models_mixed'] #
-    # syn_ratios = [None, None]
-    # comments = ['syn_xview_bkg_px23whr3_rnd_bwratio_models_color', 'syn_xview_bkg_px23whr3_rnd_bwratio_models_mixed'] #
-    # syn_ratios = [None, None]
-    # comments = ['xview_syn_xview_bkg_px23whr3_small_models_color', 'xview_syn_xview_bkg_px23whr3_small_models_mixed', 'px23whr3']
-    # comments = ['xview_syn_xview_bkg_px23whr3_6groups_models_color','xview_syn_xview_bkg_px23whr3_6groups_models_mixed']
-    # syn_ratios = [ 1, 1]
-    # comments = ['px23whr3']
-    # syn_ratios = [0]
-    # comments = ['xview_syn_xview_bkg_px23whr3_rnd_bwratio_models_color','xview_syn_xview_bkg_px23whr3_rnd_bwratio_models_mixed']
-    # syn_ratios = [1, 1]
-    # comments = ['xview_syn_xview_bkg_px23whr3_rnd_bwratio_models_color','xview_syn_xview_bkg_px23whr3_rnd_bwratio_models_mixed',
-    #             'syn_xview_bkg_px23whr3_rnd_bwratio_models_color', 'syn_xview_bkg_px23whr3_rnd_bwratio_models_mixed']
-    # syn_ratios = [1, 1, None, None]
-    # comments = ['syn_xview_bkg_px23whr3_rnd_bwratio_models_mixed']
-    # syn_ratios = [None]
-    # comments = ['xview_syn_xview_bkg_px23whr3_rnd_bwratio_flat0.8_models_color','xview_syn_xview_bkg_px23whr3_rnd_bwratio_flat0.8_models_mixed',
-    #             'syn_xview_bkg_px23whr3_rnd_bwratio_flat0.8_models_color', 'syn_xview_bkg_px23whr3_rnd_bwratio_flat0.8_models_mixed']
-    # syn_ratios = [1, 1, None, None]
-    # comments = ['px23whr3', 'xview_syn_xview_bkg_px23whr3_6groups_models_color', 'xview_syn_xview_bkg_px23whr3_6groups_models_mixed']
-    # syn_ratios = [0, 1, 1]
-    # comments = ['xview_syn_xview_bkg_px23whr3_rnd_bwratio_asx_models_color', 'xview_syn_xview_bkg_px23whr3_rnd_bwratio_asx_models_mixed',
-    #             'syn_xview_bkg_px23whr3_rnd_bwratio_asx_models_color', 'syn_xview_bkg_px23whr3_rnd_bwratio_asx_models_mixed']
-    # syn_ratios = [1, 1, None, None]
-    # comments = ['xview_syn_xview_bkg_px23whr3_xratio_xcolor_models_color', 'xview_syn_xview_bkg_px23whr3_xratio_xcolor_models_mixed',
-    #             'syn_xview_bkg_px23whr3_xratio_xcolor_models_color', 'syn_xview_bkg_px23whr3_xratio_xcolor_models_mixed']
-    # syn_ratios = [1, 1, None, None]
-    # comments = ['xview_syn_xview_bkg_px23whr3_sbwratio_xratio_xcolor_models_color', 'xview_syn_xview_bkg_px23whr3_sbwratio_xratio_xcolor_models_mixed',
-    #             'syn_xview_bkg_px23whr3_sbwratio_xratio_xcolor_models_color', 'syn_xview_bkg_px23whr3_sbwratio_xratio_xcolor_models_mixed']
-    # syn_ratios = [1, 1, None, None]
-    # comments = ['syn_xview_bkg_px23whr3_sbwratio_xratio_xcolor_models_color', 'syn_xview_bkg_px23whr3_sbwratio_xratio_xcolor_models_mixed']
-    # syn_ratios = [None, None]
-    # comments = ['xview_syn_xview_bkg_px23whr3_sbwratio_xratio_xcolor_dark_models_color', 'xview_syn_xview_bkg_px23whr3_sbwratio_xratio_xcolor_dark_models_mixed']
-    # syn_ratios = [1, 1]
-    # comments = ['xview_syn_xview_bkg_px23whr3_sbwratio_new_xratio_xcolor_models_color', 'xview_syn_xview_bkg_px23whr3_sbwratio_new_xratio_xcolor_models_mixed']
-    # syn_ratios = [1, 1]
-    # comments = ['syn_xview_bkg_px23whr3_sbwratio_xratio_xcolor_dark_models_color', 'syn_xview_bkg_px23whr3_sbwratio_xratio_xcolor_dark_models_mixed']
-    # syn_ratios = [None, None]
-    # comments = ['xview_syn_xview_bkg_px23whr3_xbw_xcolor_model0_color', 'xview_syn_xview_bkg_px23whr3_xbw_xcolor_model0_mixed',
-    #             'syn_xview_bkg_px23whr3_xbw_xcolor_model0_color', 'syn_xview_bkg_px23whr3_xbw_xcolor_model0_mixed']
-    # syn_ratios = [1, 1, None, None]
-    # comments = ['syn_xview_bkg_px23whr3_xbw_xcolor_model0_color', 'syn_xview_bkg_px23whr3_xbw_xcolor_model0_mixed']
-    # syn_ratios = [None, None]
-    # comments = ['xview_syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_models_color', 'xview_syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_models_mixed',
-    #             'px23whr3']
-    # syn_ratios = [1, 1, 0]#,
-    # comments = ['syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_models_color', 'syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_models_mixed']
-    # syn_ratios = [ None, None]
-    # comments = ['px23whr3']
-    # syn_ratios = [0]
-    # comments = ['xview_syn_xview_bkg_px15whr3_xbw_xcolor_model4_color', 'xview_syn_xview_bkg_px15whr3_xbw_xcolor_model4_mixed',
-    #             'xview_syn_xview_bkg_px23whr3_xbw_xcolor_model0_color', 'xview_syn_xview_bkg_px23whr3_xbw_xcolor_model0_mixed']
-    # syn_ratios = [1, 1, 1, 1]
-    # comments = ['xview_syn_xview_bkg_px15whr3_xbw_xcolor_model4_color', 'xview_syn_xview_bkg_px15whr3_xbw_xcolor_model4_mixed']
-    # syn_ratios = [1, 1]
-    # comments = ['xview_syn_xview_bkg_px23whr3_xbw_xcolor_model1_color', 'xview_syn_xview_bkg_px23whr3_xbw_xcolor_model1_mixed']
-    # syn_ratios = [1, 1]
-    # comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_model4_v1_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_model4_v1_mixed']
-    # comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_model4_v2_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_model4_v2_mixed']
-    # comments = ['syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v3_color', 'syn_xview_bkg_px15whr3_xbw_xcolor_xbkg_gauss_model4_v3_mixed']
-    # syn_ratios = [None, None]
-    # comments = ['syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_models_gauss_color', 'syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_models_gauss_mixed']
-    # comments = ['syn_xview_bkg_px23whr3_xbw_xrxc_model1_gauss_color', 'syn_xview_bkg_px23whr3_xbw_xrxc_model1_gauss_mixed']
-    # syn_ratios = [None, None]
-    # comments = ['syn_xview_bkg_px23whr3_sbw_xcolor_xbkg_unif_model1_v3_color', 'syn_xview_bkg_px23whr3_sbw_xcolor_xbkg_unif_model1_v3_mixed']
-    # syn_ratios = [None, None]
-    # comments = ['syn_xview_bkg_px23whr3_xbsw_xcolor_xbkg_gauss_model1_v4_color', 'syn_xview_bkg_px23whr3_xbsw_xcolor_xbkg_gauss_model1_v4_mixed']
-    # syn_ratios = [None, None]
-    # hyp_cmt = 'hgiou1_fitness'
-    # hyp_cmt = 'hgiou1_mean_best'
-    # hyp_cmt = 'hgiou1_2gpus'
-    # hyp_cmt = 'hgiou1_1gpu_nohsv'
-# "syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_scatter_gauss_40_bias0_model5_v1_color",
-#     "syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_scatter_gauss_40_color_bias25.5_model5_v2_color",
-#     "syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_scatter_gauss_40_color_bias51.0_model5_v3_color",
-#     "syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_scatter_gauss_40_color_bias76.5_model5_v4_color",
-#     "syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_scatter_gauss_40_color_bias102.0_model5_v5_color",
-#     "syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_scatter_gauss_40_color_bias127.5_model5_v6_color", -----need resume
+ 
     opt = get_opt()
     Configure_file = opt.cfg_dict
     cfg_dict = json.load(open(Configure_file))
@@ -628,10 +516,9 @@ if __name__ == '__main__':
     opt.conf_thres = cfg_dict['conf_thres']
     opt.nms_iou_thres = cfg_dict['nms_iou_thres']
 
-    comment = cfg_dict['comment']
-    base_bias = cfg_dict['base_bias']
-    pros = cfg_dict['pros']
-    version_base = cfg_dict['version_base']
+    cmt = cfg_dict['comment']
+#    base_bias = cfg_dict['base_bias']
+#    version_base = cfg_dict['version_base']
     prefix = cfg_dict['prefix']
 
     pxwhrsd = cfg_dict['pxwhrsd']
@@ -644,110 +531,100 @@ if __name__ == '__main__':
     if 'pw' not in opt.arc:  # remove BCELoss positive weights
         hyp['cls_pw'] = 1.
         hyp['obj_pw'] = 1.
-    for cx, pro in enumerate(pros):
-        cmt = comment.format(base_bias*pro, version_base+cx) 
-#        cinx = cmt.find('_RC') # first letter index
-#        endstr = cmt[cinx:]
-#        rcinx = endstr.rfind('_')
-#        sstr = endstr[:rcinx]
-#        if cinx >= 0:
-#            suffix = sstr
-#        else:
-#            suffix = ''
 
-        cinx = cmt.find('_RC') # first letter index
-        endstr = cmt[cinx:] # _RC*_v*
-        if cinx >= 0:
-            suffix = endstr # _RC*_v*
-        else:
-            suffix = ''
+    cinx = cmt.find('_RC') # first letter index
+    endstr = cmt[cinx:] # _RC*_v*
+    if cinx >= 0:
+        suffix = endstr # _RC*_v*
+    else:
+        suffix = ''
 
-        opt.name = prefix + suffix
+    opt.name = prefix + suffix
 
-        opt.base_dir = opt.base_dir.format(opt.class_num, pxwhrsd.format(opt.seed))
-        if val_syn:
-            hyp_cmt_name = hyp_cmt + '_val_syn'
-            opt.model_id = None
-            opt.data = 'data_xview/{}_{}_cls/{}_seed{}/{}_seed{}.data'.format(cmt, opt.class_num, cmt, opt.seed, cmt, opt.seed)
-        elif val_labeled:
-            hyp_cmt_name = hyp_cmt + '_val_labeled'
-            opt.data = 'data_xview/{}_{}_cls/{}_seed{}/{}_seed{}_xview_val_labeled.data'.format(cmt, opt.class_num, cmt, opt.seed, cmt, opt.seed)
-        elif val_miss:
-            hyp_cmt_name = hyp_cmt + '_val_labeled_miss'
-            opt.data = 'data_xview/{}_{}_cls/{}_seed{}/{}_seed{}_xview_val_labeled_miss.data'.format(cmt, opt.class_num, cmt, opt.seed, cmt, opt.seed)
-        elif opt.model_id < 0:
-            hyp_cmt_name = hyp_cmt + 'xview_only'
-            opt.data = 'data_xview/{}_cls/{}_seed{}/xview_{}_seed{}.data'.format(opt.class_num, cmt, opt.seed, cmt, opt.seed)
-        else:
-            hyp_cmt_name = hyp_cmt + '_val_xview'
-            opt.data = 'data_xview/{}_{}_cls/{}_seed{}/{}_seed{}_xview_val.data'.format(cmt, opt.class_num, cmt, opt.seed, cmt, opt.seed)
+    opt.base_dir = opt.base_dir.format(opt.class_num, pxwhrsd.format(opt.seed))
+    if val_syn:
+        hyp_cmt_name = hyp_cmt + '_val_syn'
+        opt.model_id = None
+        opt.data = 'data_xview/{}_{}_cls/{}_seed{}/{}_seed{}.data'.format(cmt, opt.class_num, cmt, opt.seed, cmt, opt.seed)
+    elif val_labeled:
+        hyp_cmt_name = hyp_cmt + '_val_labeled'
+        opt.data = 'data_xview/{}_{}_cls/{}_seed{}/{}_seed{}_xview_val_labeled.data'.format(cmt, opt.class_num, cmt, opt.seed, cmt, opt.seed)
+    elif val_miss:
+        hyp_cmt_name = hyp_cmt + '_val_labeled_miss'
+        opt.data = 'data_xview/{}_{}_cls/{}_seed{}/{}_seed{}_xview_val_labeled_miss.data'.format(cmt, opt.class_num, cmt, opt.seed, cmt, opt.seed)
+    elif opt.model_id < 0:
+        hyp_cmt_name = hyp_cmt + 'xview_only'
+        opt.data = 'data_xview/{}_cls/{}_seed{}/xview_{}_seed{}.data'.format(opt.class_num, cmt, opt.seed, cmt, opt.seed)
+    else:
+        hyp_cmt_name = hyp_cmt + '_val_xview'
+        opt.data = 'data_xview/{}_{}_cls/{}_seed{}/{}_seed{}_xview_val.data'.format(cmt, opt.class_num, cmt, opt.seed, cmt, opt.seed)
 
-        time_marker = time.strftime('%Y-%m-%d_%H.%M', time.localtime())
+    time_marker = time.strftime('%Y-%m-%d_%H.%M', time.localtime())
 #        time_marker = '2020-06-30_10.03'
-        opt.weights_dir = 'weights/{}_cls/{}_seed{}/{}/'.format(opt.class_num, cmt, opt.seed, '{}_{}_seed{}'.format(time_marker, hyp_cmt_name, opt.seed))
-        opt.writer_dir = 'writer_output/{}_cls/{}_seed{}/{}/'.format(opt.class_num, cmt, opt.seed, '{}_{}_seed{}'.format(time_marker, hyp_cmt_name, opt.seed))
-        opt.result_dir = 'result_output/{}_cls/{}_seed{}/{}/'.format(opt.class_num, cmt, opt.seed, '{}_{}_seed{}'.format(time_marker, hyp_cmt_name, opt.seed))
+    opt.weights_dir = 'weights/{}_cls/{}_seed{}/{}/'.format(opt.class_num, cmt, opt.seed, '{}_{}_seed{}'.format(time_marker, hyp_cmt_name, opt.seed))
+    opt.writer_dir = 'writer_output/{}_cls/{}_seed{}/{}/'.format(opt.class_num, cmt, opt.seed, '{}_{}_seed{}'.format(time_marker, hyp_cmt_name, opt.seed))
+    opt.result_dir = 'result_output/{}_cls/{}_seed{}/{}/'.format(opt.class_num, cmt, opt.seed, '{}_{}_seed{}'.format(time_marker, hyp_cmt_name, opt.seed))
 
-        if not os.path.exists(opt.weights_dir):
-            os.makedirs(opt.weights_dir)
+    if not os.path.exists(opt.weights_dir):
+        os.makedirs(opt.weights_dir)
 
-        if not os.path.exists(opt.writer_dir):
-            os.makedirs(opt.writer_dir)
+    if not os.path.exists(opt.writer_dir):
+        os.makedirs(opt.writer_dir)
 
-        if not os.path.exists(opt.result_dir):
-            os.makedirs(opt.result_dir)
-        results_file = os.path.join(opt.result_dir, 'results_{}_seed{}.txt'.format(opt.name, opt.seed))
-        last = os.path.join(opt.weights_dir, 'last_seed{}.pt'.format(opt.seed))
-        best = os.path.join(opt.weights_dir, 'best_seed{}.pt'.format(opt.seed))
-        opt.weights = last if opt.resume else opt.weights
-        print(opt)
-        # scale hyp['obj'] by img_size (evolved at 320)
-        # hyp['obj'] *= opt.img_size / 320.
+    if not os.path.exists(opt.result_dir):
+        os.makedirs(opt.result_dir)
+    results_file = os.path.join(opt.result_dir, 'results_{}_seed{}.txt'.format(opt.name, opt.seed))
+    last = os.path.join(opt.weights_dir, 'last_seed{}.pt'.format(opt.seed))
+    best = os.path.join(opt.weights_dir, 'best_seed{}.pt'.format(opt.seed))
+    opt.weights = last if opt.resume else opt.weights
+    print(opt)
+    # scale hyp['obj'] by img_size (evolved at 320)
+    # hyp['obj'] *= opt.img_size / 320.
 
-        if not opt.evolve:  # Train normally
-            # prebias()  # optional
-            train(opt)  # train normally
-            # plot_results(result_dir=opt.result_dir, png_name='results_{}_{}.png'.format(opt.syn_display_type, opt.syn_ratio))
-        else:  # Evolve hyperparameters (optional)
-            opt.notest = True  # only test final epoch
-            opt.nosave = True  # only save final checkpoint
-            if opt.bucket:
-                os.system('gsutil cp gs://%s/evolve.txt .' % opt.bucket)  # download evolve.txt if exists
+    if not opt.evolve:  # Train normally
+        # prebias()  # optional
+        train(opt)  # train normally
+        # plot_results(result_dir=opt.result_dir, png_name='results_{}_{}.png'.format(opt.syn_display_type, opt.syn_ratio))
+    else:  # Evolve hyperparameters (optional)
+        opt.notest = True  # only test final epoch
+        opt.nosave = True  # only save final checkpoint
+        if opt.bucket:
+            os.system('gsutil cp gs://%s/evolve.txt .' % opt.bucket)  # download evolve.txt if exists
 
-            for _ in range(1):  # generations to evolve
-                if os.path.exists('evolve.txt'):  # if evolve.txt exists: select best hyps and mutate
-                    # Select parent(s)
-                    x = np.loadtxt('evolve.txt', ndmin=2)
-                    parent = 'weighted'  # parent selection method: 'single' or 'weighted'
-                    if parent == 'single' or len(x) == 1:
-                        x = x[fitness(x).argmax()]
-                    elif parent == 'weighted':  # weighted combination
-                        n = min(10, x.shape[0])  # number to merge
-                        x = x[np.argsort(-fitness(x))][:n]  # top n mutations
-                        w = fitness(x) - fitness(x).min()  # weights
-                        x = (x[:n] * w.reshape(n, 1)).sum(0) / w.sum()  # new parent
-                    for i, k in enumerate(hyp.keys()):
-                        hyp[k] = x[i + 7]
+        for _ in range(1):  # generations to evolve
+            if os.path.exists('evolve.txt'):  # if evolve.txt exists: select best hyps and mutate
+                # Select parent(s)
+                x = np.loadtxt('evolve.txt', ndmin=2)
+                parent = 'weighted'  # parent selection method: 'single' or 'weighted'
+                if parent == 'single' or len(x) == 1:
+                    x = x[fitness(x).argmax()]
+                elif parent == 'weighted':  # weighted combination
+                    n = min(10, x.shape[0])  # number to merge
+                    x = x[np.argsort(-fitness(x))][:n]  # top n mutations
+                    w = fitness(x) - fitness(x).min()  # weights
+                    x = (x[:n] * w.reshape(n, 1)).sum(0) / w.sum()  # new parent
+                for i, k in enumerate(hyp.keys()):
+                    hyp[k] = x[i + 7]
 
-                    # Mutate
-                    np.random.seed(int(time.time()))
-                    s = np.random.random() * 0.15  # sigma
-                    g = [1, 1, 1, 1, 1, 1, 1, 0, .1, 1, 1, 1, 1, 1, 1, 1, 1, 1]  # gains
-                    for i, k in enumerate(hyp.keys()):
-                        x = (np.random.randn() * s * g[i] + 1) ** 2.0  # plt.hist(x.ravel(), 300)
-                        hyp[k] *= float(x)  # vary by sigmas
+                # Mutate
+                np.random.seed(int(time.time()))
+                s = np.random.random() * 0.15  # sigma
+                g = [1, 1, 1, 1, 1, 1, 1, 0, .1, 1, 1, 1, 1, 1, 1, 1, 1, 1]  # gains
+                for i, k in enumerate(hyp.keys()):
+                    x = (np.random.randn() * s * g[i] + 1) ** 2.0  # plt.hist(x.ravel(), 300)
+                    hyp[k] *= float(x)  # vary by sigmas
 
-                # Clip to limits
-                keys = ['lr0', 'iou_t', 'momentum', 'weight_decay', 'hsv_s', 'hsv_v', 'translate', 'scale', 'fl_gamma']
-                limits = [(1e-5, 1e-2), (0.00, 0.70), (0.60, 0.98), (0, 0.001), (0, .9), (0, .9), (0, .9), (0, .9), (0, 3)]
-                for k, v in zip(keys, limits):
-                    hyp[k] = np.clip(hyp[k], v[0], v[1])
+            # Clip to limits
+            keys = ['lr0', 'iou_t', 'momentum', 'weight_decay', 'hsv_s', 'hsv_v', 'translate', 'scale', 'fl_gamma']
+            limits = [(1e-5, 1e-2), (0.00, 0.70), (0.60, 0.98), (0, 0.001), (0, .9), (0, .9), (0, .9), (0, .9), (0, 3)]
+            for k, v in zip(keys, limits):
+                hyp[k] = np.clip(hyp[k], v[0], v[1])
 
-                # Train mutation
-                # prebias()
-                results = train()
+            # Train mutation
+            # prebias()
+            results = train()
 
-                # Write mutation results
-                print_mutation(hyp, results, opt.bucket)
+            # Write mutation results
+            print_mutation(hyp, results, opt.bucket)
 
 
