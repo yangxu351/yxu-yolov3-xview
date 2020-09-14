@@ -132,7 +132,7 @@ def test(cfg,
         # fixme
         # coco91class = coco80_to_coco91_class()
         xview_classes = np.arange(nc)
-        s = ('%20s' + '%10s' * 6) % ('Class', 'Images', 'Targets', 'P', 'R', 'mAP@{:.1f}'.format(opt.apN/100), 'F1')
+        s = ('%20s' + '%10s' * 6) % ('Class', 'Images', 'Targets', 'P', 'R', 'AP@{:.1f}'.format(opt.apN/100), 'F1')
         p, r, f1, mp, mr, map, mf1 = 0., 0., 0., 0., 0., 0., 0.
         loss = torch.zeros(3)
         jdict, stats, ap, ap_class = [], [], [], []
@@ -330,8 +330,8 @@ def test(cfg,
             # if niou > 1:
             #       p, r, ap, f1 = p[:, 0], r[:, 0], ap[:, 0], ap.mean(1)  # average across ious
             #fixme --yang.xu
-            if niou > 1:
-                p, r, ap, f1 = p[:, 0], r[:, 0], ap.mean(1), ap[:, 0]  # [P, R, AP@0.5:0.95, AP@0.5]
+#            if niou > 1:
+#                p, r, ap, f1 = p[:, 0], r[:, 0], ap.mean(1), ap[:, 0]  # [P, R, AP@0.5:0.95, AP@0.5]
             mp, mr, map, mf1 = p.mean(), r.mean(), ap.mean(), f1.mean()
             #fixme --yang.xu compute before
             # nt = np.bincount(stats[3].astype(np.int64), minlength=nc)  # number of targets per class
@@ -371,7 +371,6 @@ def test(cfg,
     return seen, nt.sum(), mp_arr.mean(), mr_arr.mean(), map_arr.mean(), mf1_arr.mean()
     
 
-
 def get_opt(dt=None, sr=None, comments=''):
     parser = argparse.ArgumentParser() # prog="test.py"
 
@@ -397,14 +396,14 @@ def get_opt(dt=None, sr=None, comments=''):
     parser.add_argument("--nms-iou-thres", type=float, default=0.5, help="NMS 0.5  0.6 IOU threshold for NMS")
     parser.add_argument("--save_json", action="store_true", default=True, help="save a cocoapi-compatible JSON results file")
     parser.add_argument("--task", default="test", help="test study benchmark")
-    parser.add_argument("--device", default="1", help="device id (i.e. 0 or 0,1) or cpu")
+    parser.add_argument("--device", default="3", help="device id (i.e. 0 or 0,1) or cpu")
     parser.add_argument("--name", default='', help="file name")
     parser.add_argument("--legend", default='', help="figure legend")
     parser.add_argument("--cmt", default=comments, help="comments")
     parser.add_argument("--model_id", type=int, default=None, help="specified model id")
     parser.add_argument("--rare_class", type=int, default=None, help="specified rare class")
     parser.add_argument("--type", default="hard", help="hard, easy")
-    parser.add_argument("--apN", type=int,  default=50, help="AP 50, 40, 20")
+    parser.add_argument("--apN", type=int, default=50, help="ap@N 50, 40, 20")
     opt = parser.parse_args()
     # opt.save_json = opt.save_json or any([x in opt.data for x in ["xview.data"]])
     opt.cfg = opt.cfg.format(opt.class_num)
@@ -412,14 +411,12 @@ def get_opt(dt=None, sr=None, comments=''):
     return opt
 
 
-
 def main():
-
     base_cmt = "px23whr3_seed{}"
     # hyp_cmt = "hgiou1_1gpu"
 
     hyp_cmt = "hgiou1_1gpu_val_syn"
-
+#    hyp_cmt = "hgiou1_1gpu_39.5obj_val_syn"
 #    apN = 20
 ##    apN = 40
 ##    apN = 50
@@ -434,45 +431,40 @@ def main():
     sd = 17
     model_ids = [4, 1, 5, 5, 5]
     rare_classes = [1, 2, 3, 4, 5]
-#    ap_list = [20, 40, 50]
-    apN = 50  
+#    ap_list = [20, 40, 50] #
+    apN = 50 
     eh_types = ["hard", "easy"]
     far_thres = 3
-    for typ in eh_types:
-#        df_pr_ap = pd.DataFrame(columns=["Version","Seen", "NT", "AP{}".format(ap_list[0]), "AP{}".format(ap_list[1]), "AP{}".format(ap_list[2])])
-        df_pr_ap_far = pd.DataFrame(columns=["Version", "Seen", "NT", "AP{}".format(apN), "Pd(FAR=0.25)",  "Pd(FAR=0.5)", "Pd(FAR=1)", "Precision", "Recall" , "F1"])
-        for ix, cmt in enumerate(comments):
-
-            VN = ix + base_version
+    for typ in eh_types:  
+#        df_pr_ap_far = pd.DataFrame(columns=["Version","Seen", "NT", "AP{}".format(ap_list[0]), "AP{}".format(ap_list[1]), "AP{}".format(ap_list[2])])
+        df_pr_ap_far = pd.DataFrame(columns=["Version", "Seen", "NT", "AP{}".format(apN), "Pd(FAR=0.25)", "Pd(FAR=0.5)", "Pd(FAR=1)", "Precision", "Recall" , "F1"]) #, "Precision", "Recall" , "F1"
+        for ix, cmt in enumerate(comments):    
+            VN = base_version
             base_cmt = base_cmt.format(sd)
             opt = get_opt(comments=cmt)
             opt.device = "3"
             opt.apN = apN
 
-#            cinx = cmt.find('_RC') # first letter index
+#            cinx = cmt.find("model") # first letter index
 #            endstr = cmt[cinx:]
-#            rcinx = endstr.rfind('_') 
-#            sstr = endstr[:rcinx] # _RC*_v*
-#            if cinx >= 0:
-#                medix = cmt.find('_dyn')
-#                mstr =  cmt[medix:cinx] # _dyn*_color_bias*
-#                suffix = sstr + '_AP{}'.format(apN) # _RC*_v*_AP* 
-#            else:
-#                mstr = ''
+#            rcinx = endstr.rfind("_")
+#            fstr = endstr[rcinx:] # "_" is included
+#            sstr = endstr[:rcinx]
+#            suffix = fstr + "_" + sstr
+#            if cinx < 0:
 #                suffix = ''
+#            opt.name = prefix + suffix
 
             cinx = cmt.find('_RC') # first letter index
-            endstr = cmt[cinx:]
-            if cinx >= 0:
-                medix = cmt.find('_bxmuller')
-                mstr =  cmt[medix:cinx] # _bxmuller*_color_bias*
-                suffix = endstr + '_AP{}'.format(apN) # _RC*_v*_AP* 
-            else:
-                mstr = ''
-                suffix = ''
+            endstr = cmt[cinx:] # _RC*_v*
+
+            medix = cmt.find('_fixedsolar')
+            mstr =  cmt[medix:] # _fixedsolar*_ssig*_csig*_RC*_V*
+            suffix = mstr + '_AP{}'.format(apN)
     
-            opt.legend = prefix + suffix
+            opt.legend = prefix + endstr
             opt.name = prefix + mstr + suffix # 'syn_RC*_v*_dyn*_color_bias*_AP*
+
             
             ''' for specified model id '''
             opt.batch_size = 8
@@ -488,12 +480,12 @@ def main():
             opt.type = typ
 
             opt.name += "_{}".format(opt.type)
+
 #            opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, "test_on_xview_{}_m{}_rc{}_ap{}_{}".format(hyp_cmt, opt.model_id, opt.rare_class, apN, opt.type))
 #            opt.data = "data_xview/{}_cls/{}/xview_rc_test_{}_m{}_rc{}_{}.data".format(opt.class_num, base_cmt, base_cmt, opt.model_id, opt.rare_class, opt.type)
 
             opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_ori_nrcbkg_aug_rc_{}_m{}_rc{}_{}_iou{}'.format(hyp_cmt, opt.model_id, opt.rare_class, opt.type, apN))
             opt.data = 'data_xview/{}_cls/{}/xview_ori_nrcbkg_aug_rc_test_{}_m{}_rc{}_{}.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id, opt.rare_class, opt.type)
-
 
             if not os.path.exists(opt.result_dir):
                 os.makedirs(opt.result_dir)
@@ -515,12 +507,11 @@ def main():
                  opt.conf_thres,
                  opt.nms_iou_thres,
                  opt.save_json, opt=opt)
-                 
-
+            
             df_pr_ap_far.at[ix, "Version"] = VN
             df_pr_ap_far.at[ix, "Seen"] = seen
             df_pr_ap_far.at[ix, "NT"] = nt
-            df_pr_ap_far.at[ix, "AP{}".format(apN)] = mapv    
+            df_pr_ap_far.at[ix, "AP{}".format(apN)] = mapv
             df_pr_ap_far.at[ix, "Precision"] = mp
             df_pr_ap_far.at[ix, "Recall"] = mr
             df_pr_ap_far.at[ix, "F1"] = mf1
@@ -560,20 +551,23 @@ def main():
             df_pr_ap_far.at[ix, "Pd(FAR=0.25)"] = pd_25
             df_pr_ap_far.at[ix, "Pd(FAR=0.5)"] = pd_5
             df_pr_ap_far.at[ix, "Pd(FAR=1)"] = pd_1
-    
-        csv_dir = "result_output/{}_cls/{}/".format(opt.class_num, cmt[:cmt.find("bias")+4] + '_RC' + str(opt.rare_class))
+            
+        
+        csv_dir = "result_output/{}_cls/{}/".format(opt.class_num, 'syn_fixedsolar_best_size_color_RC{}'.format(opt.rare_class))
         if not os.path.exists(csv_dir):
             os.mkdir(csv_dir)
-        #sinx = cmt.find('dyn')
-        sinx = cmt.find('bxmuller')
-        einx = cmt.find('bias')+4
-        dynstr = cmt[sinx:einx]  
+#        csv_name =  "{}_{}_RC{}_AP{}_{}.xls".format(prefix, dynstr, opt.rare_class, apN, opt.type)      
+#        df_pr_ap_far.to_excel(os.path.join(csv_dir, csv_name), index=False)
+
+        sinx = cmt.find('fixedsolar')
+        dynstr = cmt[sinx:]
         
-        csv_name =  "{}_{}_RC{}_{}-v2.xlsx".format(prefix, dynstr, opt.rare_class, opt.type)          
-#        csv_name =  "{}_{}_RC{}_{}.xlsx".format(prefix, 'old_testset_size', opt.rare_class, opt.type)          
+        csv_name =  "{}_{}_{}.xlsx".format(prefix, dynstr, opt.type)         
+#        csv_name =  "{}_{}_RC{}_{}.xlsx".format(prefix, 'old_testset_size', opt.rare_class, opt.type)         
         mode = 'w'
         with pd.ExcelWriter(os.path.join(csv_dir, csv_name), mode=mode) as writer:
             df_pr_ap_far.to_excel(writer, sheet_name='RC{}_{}'.format(opt.rare_class, opt.type), index=False) # 
+
 
 
 if __name__ == "__main__":
@@ -581,169 +575,18 @@ if __name__ == "__main__":
     '''
     test for syn_xveiw_background_*_with_model
     '''
-
-
-    ################ dynmu size
-    '''RC1''' 
-#    comments = [] 
-#    pros = [0, 1, 2, 3, 4, 5]
-#    size_base = 5
-##    base_version = 43
-##    for ix, pro in enumerate(pros):
-##        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_scatter_gauss_2_7_rndsolar_dynmu_size_bias{}_RC1_v{}_color'.format(pro*size_base, ix+ base_version)
-##        comments.append(cmt)
-##    base_version = 110
-##    for ix, pro in enumerate(pros):
-##        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_fixedangle_dynmu_size_bias{}_RC1_v{}_color'.format(pro*size_base, ix+ base_version)
-##        comments.append(cmt)
-#    base_version = 130
-#    for ix, pro in enumerate(pros):
-#        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_dynmu_size_bias{}_RC1_v{}_color'.format(pro*size_base, ix+base_version)
-#        comments.append(cmt)
-#    main()
-
-    '''RC2''' 
-#    comments = [] 
-#    pros = [-2, -1, 0, 1, 1.5, 2]
-#    size_base = 10
-#    base_version = 23
-#    for ix, pro in enumerate(pros):
-#        cmt = 'syn_xview_bkg_px23whr3_xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_dynmu_size_bias{}_RC2_v{}_color'.format(pro*size_base, ix+ base_version)
-#        comments.append(cmt)
-#    main()
-#
-#    '''RC3''' 
-##    comments = [] 
-#    pros = [-1, 0, 1, 2, 3, 4]
-#    size_base = 7
-#    base_version = 23
-#    for ix, pro in enumerate(pros):
-#        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_size_bias{}_RC3_v{}_color'.format(pro*size_base, ix+ base_version)
-#        comments.append(cmt)          
-#    main()
-#
-#    '''RC4''' 
-#    comments = [] 
-#    pros = [-3, -2, -1, 0, 1, 2]
-#    size_base = 5
-#    base_version = 23
-#    for ix, pro in enumerate(pros):
-#        cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_size_bias{}_RC4_v{}_color'.format(pro*size_base, ix+ base_version)
-#        comments.append(cmt)   
-#    main()
-#
-#    '''RC5''' 
-#    comments = [] 
-#    pros = [0, 1, 2, 3, 4, 5]
-#    size_base = 5
-#    base_version = 12
-#    for ix, pro in enumerate(pros):
-#        cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_size_bias{}_RC5_v{}_color'.format(pro*size_base, ix+ base_version)
-#        comments.append(cmt)   
-#    main()
-                        
-    ###########################################  
-      
-    ################ dynsigma size 
-    '''RC1'''
-#    comments = [] 
-#    pros = [0, 0.05, 0.1, 0.15]
-#    size_base = 1
-##    base_version = 70
-##    for ix, pro in enumerate(pros):
-##        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_scatter_gauss_2_7_rndsolar_dynsigma_size_bias{}_RC1_v{}_color'.format(pro*size_base, ix+ base_version)
-##        comments.append(cmt)
-##    base_version = 120
-##    for ix, pro in enumerate(pros):
-##        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_fixedangle_dynsigma_size_bias{}_RC1_v{}_color'.format(pro*size_base, ix+ base_version)
-##        comments.append(cmt)
-#    base_version = 140
-#    for ix, pro in enumerate(pros):
-#        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_dynsigma_size_bias{}_RC1_v{}_color'.format(pro*size_base, ix+ base_version)
-#        comments.append(cmt)
-#    main()
-
-    '''RC2''' 
-#    comments = [] 
-#    pros = [0, 0.2, 0.4, 0.6]
-#    size_base = 1
-#    base_version = 50
-#    for ix, pro in enumerate(pros):
-#        cmt = 'syn_xview_bkg_px23whr3_xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_dynsigma_size_bias{}_RC2_v{}_color'.format(pro*size_base, ix+ base_version)
-#        comments.append(cmt)
-#    main()
-#
-#    '''RC3''' 
-#    comments = [] 
-#    pros = [0, 0.2, 0.4, 0.6]
-#    size_base = 1
-#    base_version = 50
-#    for ix, pro in enumerate(pros):
-#        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynsigma_size_bias{}_RC3_v{}_color'.format(pro*size_base, ix+ base_version)
-#        comments.append(cmt)          
-#    main()
-#
-#    '''RC4''' 
-#    comments = [] 
-#    pros = [0, 0.2, 0.4, 0.6]
-#    size_base = 1
-#    base_version = 50
-#    for ix, pro in enumerate(pros):
-#        cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynsigma_size_bias{}_RC4_v{}_color'.format(pro*size_base, ix+ base_version)
-#        comments.append(cmt)   
-#    main()
-#
-#    '''RC5''' 
-#    comments = [] 
-#    pros = [0, 0.05, 0.1, 0.15]
-#    size_base = 1
-#    base_version = 40
-#    for ix, pro in enumerate(pros):
-#        cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynsigma_size_bias{}_RC5_v{}_color'.format(pro*size_base, ix+ base_version)
-#        comments.append(cmt)   
-#    main()
-                       
+    # # 
+#                             
     ###########################################    
 
-    ###########################################  
-      
-    ################ dynsigma size 
-#    comments = []
-#    base_version = 1
-#    size_squsigma = [0, 0.03, 0.06, 0.09, 0.12]
-#    for ix,ssig in enumerate(size_squsigma):
-##        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_bxmuller_size_bias{}_RC1_v{}'.format(ssig, ix+1)
-##        px_thres = 15
-#        
-##        cmt = 'syn_xview_bkg_px23whr3_xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_bxmuller_size_bias{}_RC2_v{}'.format(ssig, ix+1)
-##        px_thres = 23
-##        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_bxmuller_size_bias{}_RC3_v{}'.format(ssig, ix+1)
-##        px_thres = 23
-##        cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_bxmuller_size_bias{}_RC4_v{}'.format(ssig, ix+1)
-##        px_thres = 23
-#        cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_bxmuller_size_bias{}_RC5_v{}'.format(ssig, ix+1)
-#        px_thres = 23
-#        comments.append(cmt)
-#    main()
+    base_version = 30
+#    comments = ['syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_fixedsolar_ssig0.03_csig20_RC1_v30']
+#    comments = ['syn_xview_bkg_px23whr3_xbsw_xwing_xbkg_shdw_split_scatter_gauss_fixedsolar_ssig0.12_csig10_RC2_v30']
+#    comments = ['syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_fixedsolar_ssig0_csig0_RC3_v30']  
+#    comments = ['syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_fixedsolar_ssig0.09_csig0_RC4_v30']
+    comments = ['syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_fixedsolar_ssig0.06_csig10_RC5_v30']
+    main()
 
-    ################  promu size 
-    comments = []
-    base_version = 1
-    size_sigma = [0, 0.03, 0.06, 0.09, 0.12]
-    for ix,ssig in enumerate(size_sigma):
-#        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_bxmuller_promu_size_bias{}_RC1_v{}'.format(ssig, ix+21)
-#        px_thres = 15
-        
-#        cmt = 'syn_xview_bkg_px23whr3_xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_bxmuller_promu_size_bias{}_RC2_v{}'.format(ssig, ix+21)
-#        px_thres = 23
+    
 
-#        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_bxmuller_promu_size_bias{}_RC3_v{}'.format(ssig, ix+21)
-#        px_thres = 23
 
-#        cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_bxmuller_promu_size_bias{}_RC4_v{}'.format(ssig, ix+21)
-#        px_thres = 23
-
-        cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_bxmuller_promu_size_bias{}_RC5_v{}'.format(ssig, ix+21)
-        px_thres = 23
-        comments.append(cmt)
-    main()   

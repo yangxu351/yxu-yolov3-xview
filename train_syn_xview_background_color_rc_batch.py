@@ -646,12 +646,19 @@ if __name__ == '__main__':
         hyp['obj_pw'] = 1.
     for cx, pro in enumerate(pros):
         cmt = comment.format(base_bias*pro, version_base+cx) 
+#        cinx = cmt.find('_RC') # first letter index
+#        endstr = cmt[cinx:]
+#        rcinx = endstr.rfind('_')
+#        sstr = endstr[:rcinx]
+#        if cinx >= 0:
+#            suffix = sstr
+#        else:
+#            suffix = ''
+
         cinx = cmt.find('_RC') # first letter index
-        endstr = cmt[cinx:]
-        rcinx = endstr.rfind('_')
-        sstr = endstr[:rcinx]
+        endstr = cmt[cinx:] # _RC*_v*
         if cinx >= 0:
-            suffix = sstr
+            suffix = endstr # _RC*_v*
         else:
             suffix = ''
 
