@@ -348,13 +348,16 @@ def split_trn_val_nrc_bkg_with_rc_sep_step_by_step(data_name='xview_nrcbkg', com
                     os.path.join(data_save_dir, 'xview_rc_nrcbkg_val_lbl{}.txt'.format(comments)))
 
 
-def create_xview_rc_nrcbkg_data(px_thres=23, whr_thres=3, seed=17):
+def create_xview_rc_nrcbkg_data(px_thres=23, whr_thres=3, seed=17, val_aug=True):
     args = get_args(px_thres, whr_thres)
 
     base_cmt = 'px{}whr{}_seed{}'.format(px_thres, whr_thres, seed)
     data_save_dir = args.data_save_dir
     print('data_save_dir', data_save_dir)
-    data_txt = open(os.path.join(data_save_dir, base_cmt, 'xview_rc_nrcbkg_{}.data'.format(base_cmt)), 'w')
+    if val_aug:
+        data_txt = open(os.path.join(data_save_dir, base_cmt, 'xview_ori_nrcbkg_aug_rc_{}.data'.format(base_cmt)), 'w')
+    else:
+        data_txt = open(os.path.join(data_save_dir, base_cmt, 'xview_rc_nrcbkg_{}.data'.format(base_cmt)), 'w')
     data_txt.write(
         'xview_train={}\n'.format(os.path.join(data_save_dir, base_cmt, 'xview_nrcbkg_train_img_{}.txt'.format(base_cmt))))
     data_txt.write(
@@ -364,10 +367,16 @@ def create_xview_rc_nrcbkg_data(px_thres=23, whr_thres=3, seed=17):
         'rc_train={}\n'.format(os.path.join(data_save_dir, base_cmt,  'only_rc_train_img_{}.txt'.format(base_cmt))))
     data_txt.write(
         'rc_train_label={}\n'.format(os.path.join(data_save_dir,  base_cmt, 'only_rc_train_lbl_{}.txt'.format(base_cmt))))
-    data_txt.write(
-        'valid={}\n'.format(os.path.join(data_save_dir, base_cmt, 'xview_rc_nrcbkg_val_img_{}.txt'.format(base_cmt))))
-    data_txt.write(
-        'valid_label={}\n'.format(os.path.join(data_save_dir, base_cmt, 'xview_rc_nrcbkg_val_lbl_{}.txt'.format(base_cmt))))
+    if val_aug:
+        data_txt.write(
+            'valid={}\n'.format(os.path.join(data_save_dir, base_cmt, 'xview_ori_nrcbkg_aug_rc_val_img_{}.txt'.format(base_cmt))))
+        data_txt.write(
+            'valid_label={}\n'.format(os.path.join(data_save_dir, base_cmt, 'xview_ori_nrcbkg_aug_rc_val_lbl_{}.txt'.format(base_cmt))))
+    else:
+        data_txt.write(
+            'valid={}\n'.format(os.path.join(data_save_dir, base_cmt, 'xview_rc_nrcbkg_val_img_{}.txt'.format(base_cmt))))
+        data_txt.write(
+            'valid_label={}\n'.format(os.path.join(data_save_dir, base_cmt, 'xview_rc_nrcbkg_val_lbl_{}.txt'.format(base_cmt))))
 
     df_trn_nrcbkg = pd.read_csv(os.path.join(data_save_dir, base_cmt, 'xview_nrcbkg_train_img_{}.txt'.format(base_cmt)), header=None)
     df_trn_rc = pd.read_csv(os.path.join(data_save_dir, base_cmt,  'only_rc_train_img_{}.txt'.format(base_cmt)), header=None)
@@ -456,6 +465,6 @@ if __name__ == '__main__':
     whr_thres = 3
     seed = 17
     comments = '_px{}whr{}_seed{}'.format(px_thres, whr_thres, seed)
-    data_name = 'xview_nrcbkg'
+    # data_name = 'xview_nrcbkg'
     # split_trn_val_nrc_bkg_with_rc_sep_step_by_step(data_name, comments, seed, px_thres, whr_thres)
-    create_xview_rc_nrcbkg_data(px_thres, whr_thres, seed)
+    create_xview_rc_nrcbkg_data(px_thres, whr_thres, seed, val_aug=True)

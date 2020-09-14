@@ -73,10 +73,10 @@ def plot_roc_of_dynamic_mu_color(comments, left_bias, right_bias, hexes):
             rcinx = rare_classes.index(rare_id)
             model_id = model_ids[rcinx]
             folder = 'test_on_xview_{}_m{}_rc{}_ap{}_{}'.format(hyp_cmt, model_id, rare_id, apN, ehtp)
-            result_src_dir = '/data/users/yang/code/yxu-yolov3-xview/result_output/1_cls/{}_seed{}/{}/'.format(cmt, sd, folder)
-            save_dir = '/data/users/yang/code/yxu-yolov3-xview/result_output/1_cls/{}_RC{}/'.format(cmt[:bix + 4], rare_id)
-            # result_src_dir = '/media/lab/Yang/code/results_groot/1_cls/{}_seed{}/{}/'.format(cmt, sd, folder)
-            # save_dir = '/media/lab/Yang/code/results_groot/1_cls/{}_RC{}/'.format(cmt[:bix + 4], rare_id)
+            # result_src_dir = '/data/users/yang/code/yxu-yolov3-xview/result_output/1_cls/{}_seed{}/{}/'.format(cmt, sd, folder)
+            # save_dir = '/data/users/yang/code/yxu-yolov3-xview/result_output/1_cls/{}_RC{}/'.format(cmt[:bix + 4], rare_id)
+            result_src_dir = '/media/lab/Yang/code/results_groot/1_cls/{}_seed{}/{}/'.format(cmt, sd, folder)
+            save_dir = '/media/lab/Yang/code/results_groot/1_cls/{}_RC{}/'.format(cmt[:bix + 4], rare_id)
             if not os.path.exists(save_dir):
                 os.mkdir(save_dir)
             rgb_mean, _ = hex_to_rgb(hexes)
@@ -125,13 +125,6 @@ def plot_roc_of_dynamic_mu_color(comments, left_bias, right_bias, hexes):
         fig.savefig(os.path.join(save_dir, save_name), dpi=300)
         plt.close(fig)
 
-#            csv_name = 'Pd_{}_RC{}_{}.xlsx'.format(cmt[dix:bix + 4], rare_id, ehtp)
-#            if os.path.exists(os.path.join(save_dir, csv_name)):
-#                mode = 'a'
-#            else:
-#                mode = 'w'
-#            with pd.ExcelWriter(os.path.join(save_dir, csv_name), mode=mode) as writer:
-#                df_roc.to_excel(writer, sheet_name='AP{}'.format(apN), index=False) #
 
 if __name__ == '__main__':
 
@@ -139,70 +132,70 @@ if __name__ == '__main__':
      mu color = [126 111  88]
      std = [12.4 11.5 11.5]
      '''
-    comments = []
-    left_bias = [-2.5, -1.5, -0.5, 0.5, 1.5, 2.5]
-    right_bias = [-1.5, -0.5, 0.5, 1.5, 2.5, 3.5]
-    hexes = "#685C45;#786755;#897954;#8D7C6A;#7B6A59;#857861"
-#    base_version = 50
-#    for ix, pro in enumerate(left_bias):
-#        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias{}_RC1_v{}_color'.format(
-#            pro, ix + base_version)
-#        comments.append(cmt)
-    base_version = 90
-    for ix, pro in enumerate(left_bias):
-        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_fixedangle_dynmu_color_bias{}_RC1_v{}_color'.format(
-            pro, ix + base_version)
-        comments.append(cmt)
-
-    plot_roc_of_dynamic_mu_color(comments, left_bias, right_bias, hexes)
-    ##########################################
-
-    '''RC2  dynmu color
-     mu color = [241 236 233]
-     std = [10.7 12.3 13.6]
-     '''
-    comments = []
-    left_bias = [0.5, -0.5, -1.5, -2.5, -3.5, -4.5]
-    right_bias = [-0.5, -1.5, -2.5, -3.5, -4.5, -5.5]
-    hexes = "#E5DAD8;#F5EAE1;#E6E5E6;#EBE6E1;#FFFEFF;#FEF9F7"
-    base_version = 30
-    for ix, pro in enumerate(left_bias):
-        cmt = 'syn_xview_bkg_px23whr3_xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias{}_RC2_v{}_color'.format(
-            pro, ix + base_version)
-        comments.append(cmt)
-    plot_roc_of_dynamic_mu_color(comments, left_bias, right_bias, hexes)
-    ##########################################
-
-    '''RC3  dynmu color
-     mu color = [250 249 240]
-     std = [5.9 6.5 8. ]
-     '''
-    comments = []
-    left_bias = [-0.5, -1.5, -2.5, -3.5, -4.5, -5.5]
-    right_bias = [0.5, -0.5, -1.5, -2.5, -3.5, -4.5]
-    hexes = "#FFFFF9;#FFFFEF;#FFFFFB;#F9F5E6;#F7F6F0;#EFEEE7"
-    base_version = 30
-    for ix, pro in enumerate(right_bias):
-        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias{}_RC3_v{}_color'.format(
-            pro, ix + base_version)
-        comments.append(cmt)
-    plot_roc_of_dynamic_mu_color(comments, left_bias, right_bias, hexes)
-    ##########################################
-
-    '''RC4  dynmu color
-     mu color = [71 68 61]
-     std = [ 5.9  7.3 10.6]
-     '''
-    comments = []
-    left_bias = [-1.5, -0.5, 0.5, 1.5, 2.5, 3.5]
-    right_bias = [-0.5, 0.5, 1.5, 2.5, 3.5, 4.5]
-    hexes = "#4C4B4E;#454545;#4A4744;#3D382C;#49483B;#453F37;#403B31;#504E41"
-    base_version = 30
-    for ix, pro in enumerate(left_bias):
-        cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias{}_RC4_v{}_color'.format(
-            pro, ix + base_version)
-        comments.append(cmt)
-    plot_roc_of_dynamic_mu_color(comments, left_bias, right_bias, hexes)
+#     comments = []
+#     left_bias = [-2.5, -1.5, -0.5, 0.5, 1.5, 2.5]
+#     right_bias = [-1.5, -0.5, 0.5, 1.5, 2.5, 3.5]
+#     hexes = "#685C45;#786755;#897954;#8D7C6A;#7B6A59;#857861"
+# #    base_version = 50
+# #    for ix, pro in enumerate(left_bias):
+# #        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias{}_RC1_v{}_color'.format(
+# #            pro, ix + base_version)
+# #        comments.append(cmt)
+#     base_version = 90
+#     for ix, pro in enumerate(left_bias):
+#         cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_fixedangle_dynmu_color_bias{}_RC1_v{}_color'.format(
+#             pro, ix + base_version)
+#         comments.append(cmt)
+#
+#     plot_roc_of_dynamic_mu_color(comments, left_bias, right_bias, hexes)
+#     ##########################################
+#
+#     '''RC2  dynmu color
+#      mu color = [241 236 233]
+#      std = [10.7 12.3 13.6]
+#      '''
+#     comments = []
+#     left_bias = [-0.5, -1.5, -2.5, -3.5, -4.5, -5.5]
+#     right_bias = [0.5, -0.5, -1.5, -2.5, -3.5, -4.5]
+#     hexes = "#E5DAD8;#F5EAE1;#E6E5E6;#EBE6E1;#FFFEFF;#FEF9F7"
+#     base_version = 30
+#     for ix, pro in enumerate(left_bias):
+#         cmt = 'syn_xview_bkg_px23whr3_xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias{}_RC2_v{}_color'.format(
+#             pro, ix + base_version)
+#         comments.append(cmt)
+#     plot_roc_of_dynamic_mu_color(comments, left_bias, right_bias, hexes)
+#     ##########################################
+#
+#     '''RC3  dynmu color
+#      mu color = [250 249 240]
+#      std = [5.9 6.5 8. ]
+#      '''
+#     comments = []
+#     left_bias = [-0.5, -1.5, -2.5, -3.5, -4.5, -5.5]
+#     right_bias = [0.5, -0.5, -1.5, -2.5, -3.5, -4.5]
+#     hexes = "#FFFFF9;#FFFFEF;#FFFFFB;#F9F5E6;#F7F6F0;#EFEEE7"
+#     base_version = 30
+#     for ix, pro in enumerate(right_bias):
+#         cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias{}_RC3_v{}_color'.format(
+#             pro, ix + base_version)
+#         comments.append(cmt)
+#     plot_roc_of_dynamic_mu_color(comments, left_bias, right_bias, hexes)
+#     ##########################################
+#
+#     '''RC4  dynmu color
+#      mu color = [71 68 61]
+#      std = [ 5.9  7.3 10.6]
+#      '''
+#     comments = []
+#     left_bias = [-1.5, -0.5, 0.5, 1.5, 2.5, 3.5]
+#     right_bias = [-0.5, 0.5, 1.5, 2.5, 3.5, 4.5]
+#     hexes = "#4C4B4E;#454545;#4A4744;#3D382C;#49483B;#453F37;#403B31;#504E41"
+#     base_version = 30
+#     for ix, pro in enumerate(left_bias):
+#         cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias{}_RC4_v{}_color'.format(
+#             pro, ix + base_version)
+#         comments.append(cmt)
+#     plot_roc_of_dynamic_mu_color(comments, left_bias, right_bias, hexes)
     ##########################################
 
     '''RC5  dynmu color

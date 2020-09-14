@@ -63,7 +63,6 @@ def gaussian_disribution_of_size(mu, ssig_list, rare_cls, num_aft):
     f_txt = open(os.path.join(save_dir, 'RC{}_size.txt'.format(rare_cls)), 'w')
     for ix, ssig in enumerate(ssig_list):
         diag = np.diag([ssig, ssig])
-        # gs = generate_normal(mu[0], ssig, size=200)
         gs = np.random.multivariate_normal(mu, diag, num_aft)
         # plt.hist(gs, 30)
         # plt.show()
@@ -89,11 +88,11 @@ if __name__ == '__main__':
     ## rc1
     # base_ix = 43
     # size_range = [x for x in range(-1, 7)]
-    num_aft = 450*6*3
-    rare_cls = 1
-    mu = [13, 7]
-    ssig_list = [0, 0.03, 0.06, 0.09, 0.12]
-    gaussian_disribution_of_size(mu, ssig_list, rare_cls, num_aft)
+    # num_aft = 450*6*3
+    # rare_cls = 1
+    # mu = [13, 7]
+    # ssig_list = [0, 0.03, 0.06, 0.09, 0.12]
+    # gaussian_disribution_of_size(mu, ssig_list, rare_cls, num_aft)
 
     #
     # ## rc2
@@ -139,3 +138,9 @@ if __name__ == '__main__':
     # gaussian_disribution_of_size(mu, ssig_list, rare_cls, num_aft)
 
 
+    mu = 13
+    ssig = 13*0.03
+    gs = generate_normal(mu, ssig, size=450*24)
+    print('gs ', len(gs), np.mean(gs), np.std(gs))
+    # plt.hist(np.array(gs), bins=10, density=True)
+    # plt.show()

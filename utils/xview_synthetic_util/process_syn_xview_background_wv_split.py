@@ -696,39 +696,39 @@ if __name__ == '__main__':
     #         base_pxwhrs = base_pxwhrs.format(seed)
     #         split_syn_xview_background_trn_val(seed, cmt, pxwhr, base_pxwhrs)
 
-    for color_pro in range(11):
-
-       # if color_pro == 0:
-       #     cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_scatter_gauss_40_bias0_model5_v1_color'
-       #     model_cmt = 'xbw_xcolor_xbkg_unif_shdw_scatter_gauss_40_bias0_model5_v1'
-       # else:
-       #     cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_scatter_gauss_40_color_bias{}_model5_v{}_color'.format(color_pro*25.5, color_pro+1)
-       #     model_cmt = 'xbw_xcolor_xbkg_unif_shdw_scatter_gauss_40_color_bias{}_model5_v{}'.format(color_pro*25.5, color_pro+1)
-       #  pxwhr = 'px23whr3'
-
-       # if color_pro == 0:
-       #     cmt = 'syn_xview_bkg_px23whr3_xbsw_xwing_scatter_gauss_30_bias0_model1_v1_color'
-       #     model_cmt = 'xbsw_xwing_scatter_gauss_30_bias0_model1_v1'
-       # else:
-       #     cmt = 'syn_xview_bkg_px23whr3_xbsw_xwing_scatter_gauss_30_color_bias{}_model1_v{}_color'.format(color_pro*25.5, color_pro+1)
-       #     model_cmt = 'xbsw_xwing_scatter_gauss_30_color_bias{}_model1_v{}'.format(color_pro*25.5, color_pro+1)
-       # pxwhr = 'px23whr3'
-
-        if color_pro == 0:
-            cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_rnd_color_bias0_model4_v21_color'
-            model_cmt = 'xbw_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_rnd_color_bias0_model4_v21'
-        else:
-            cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_rnd_color_bias{}_model4_v{}_color'.format(color_pro*25.5, color_pro+21)
-            model_cmt = 'xbw_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_rnd_color_bias{}_model4_v{}'.format(color_pro*25.5, color_pro+21)
-        px_thres = 15
-        pxwhr = 'px15whr3'
-
-        sd = 17
-        base_pxwhrs = 'px23whr3_seed{}'
-        syn_args = get_syn_args(model_cmt)
-
-        base_pxwhrs = base_pxwhrs.format(sd)
-        split_syn_xview_background_trn_val(sd, cmt, pxwhr, base_pxwhrs)
+    # for color_pro in range(11):
+    #
+    #    # if color_pro == 0:
+    #    #     cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_scatter_gauss_40_bias0_model5_v1_color'
+    #    #     model_cmt = 'xbw_xcolor_xbkg_unif_shdw_scatter_gauss_40_bias0_model5_v1'
+    #    # else:
+    #    #     cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_scatter_gauss_40_color_bias{}_model5_v{}_color'.format(color_pro*25.5, color_pro+1)
+    #    #     model_cmt = 'xbw_xcolor_xbkg_unif_shdw_scatter_gauss_40_color_bias{}_model5_v{}'.format(color_pro*25.5, color_pro+1)
+    #    #  pxwhr = 'px23whr3'
+    #
+    #    # if color_pro == 0:
+    #    #     cmt = 'syn_xview_bkg_px23whr3_xbsw_xwing_scatter_gauss_30_bias0_model1_v1_color'
+    #    #     model_cmt = 'xbsw_xwing_scatter_gauss_30_bias0_model1_v1'
+    #    # else:
+    #    #     cmt = 'syn_xview_bkg_px23whr3_xbsw_xwing_scatter_gauss_30_color_bias{}_model1_v{}_color'.format(color_pro*25.5, color_pro+1)
+    #    #     model_cmt = 'xbsw_xwing_scatter_gauss_30_color_bias{}_model1_v{}'.format(color_pro*25.5, color_pro+1)
+    #    # pxwhr = 'px23whr3'
+    #
+    #     if color_pro == 0:
+    #         cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_rnd_color_bias0_model4_v21_color'
+    #         model_cmt = 'xbw_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_rnd_color_bias0_model4_v21'
+    #     else:
+    #         cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_rnd_color_bias{}_model4_v{}_color'.format(color_pro*25.5, color_pro+21)
+    #         model_cmt = 'xbw_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_rnd_color_bias{}_model4_v{}'.format(color_pro*25.5, color_pro+21)
+    #     px_thres = 15
+    #     pxwhr = 'px15whr3'
+    #
+    #     sd = 17
+    #     base_pxwhrs = 'px23whr3_seed{}'
+    #     syn_args = get_syn_args(model_cmt)
+    #
+    #     base_pxwhrs = base_pxwhrs.format(sd)
+    #     split_syn_xview_background_trn_val(sd, cmt, pxwhr, base_pxwhrs)
 
 
     # pxwhr = 'px15whr3'
@@ -923,44 +923,44 @@ if __name__ == '__main__':
     #     for cmt in comments:
     #         create_syn_data(cmt, sd, base_pxwhrs, val_xview=False)
 
-    for color_pro in range(11):
-        # if color_pro == 0:
-        #    cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_scatter_gauss_40_bias0_model5_v1_color'
-        #    model_cmt = 'xbw_xcolor_xbkg_unif_shdw_scatter_gauss_40_bias0_model5_v1'
-        # else:
-        #    cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_scatter_gauss_40_color_bias{}_model5_v{}_color'.format(color_pro*25.5, color_pro+1)
-        #    model_cmt = 'xbw_xcolor_xbkg_unif_shdw_scatter_gauss_40_color_bias{}_model5_v{}'.format(color_pro*25.5, color_pro+1)
-        # label_id = 5
-        # miss_id = 5
-        # pxwhr = 'px23whr3'
-
-        # if color_pro == 0:
-        #    cmt = 'syn_xview_bkg_px23whr3_xbsw_xwing_scatter_gauss_30_bias0_model1_v1_color'
-        #    model_cmt = 'xbsw_xwing_scatter_gauss_30_bias0_model1_v1'
-        # else:
-        #    cmt = 'syn_xview_bkg_px23whr3_xbsw_xwing_scatter_gauss_30_color_bias{}_model1_v{}_color'.format(color_pro*25.5, color_pro+1)
-        #    model_cmt = 'xbsw_xwing_scatter_gauss_30_color_bias{}_model1_v{}'.format(color_pro*25.5, color_pro+1)
-        # label_id = 1
-        # miss_id = 1
-        # pxwhr = 'px23whr3'
-
-        if color_pro == 0:
-            cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_rnd_color_bias0_model4_v21_color'
-            model_cmt = 'xbw_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_rnd_color_bias0_model4_v21'
-        else:
-            cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_rnd_color_bias{}_model4_v{}_color'.format(color_pro*25.5, color_pro+21)
-            model_cmt = 'xbw_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_rnd_color_bias{}_model4_v{}'.format(color_pro*25.5, color_pro+21)
-        px_thres = 15
-        label_id = 4
-        miss_id = 4
-        pxwhr = 'px15whr3'
-
-        base_pxwhrs = 'px23whr3_seed{}'
-        syn_args = get_syn_args(model_cmt)
-        sd = 17
-
-        base_pxwhrs = base_pxwhrs.format(sd)
-        create_syn_data(cmt, sd, base_pxwhrs, val_xview=False)
+    # for color_pro in range(11):
+    #     # if color_pro == 0:
+    #     #    cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_scatter_gauss_40_bias0_model5_v1_color'
+    #     #    model_cmt = 'xbw_xcolor_xbkg_unif_shdw_scatter_gauss_40_bias0_model5_v1'
+    #     # else:
+    #     #    cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_scatter_gauss_40_color_bias{}_model5_v{}_color'.format(color_pro*25.5, color_pro+1)
+    #     #    model_cmt = 'xbw_xcolor_xbkg_unif_shdw_scatter_gauss_40_color_bias{}_model5_v{}'.format(color_pro*25.5, color_pro+1)
+    #     # label_id = 5
+    #     # miss_id = 5
+    #     # pxwhr = 'px23whr3'
+    #
+    #     # if color_pro == 0:
+    #     #    cmt = 'syn_xview_bkg_px23whr3_xbsw_xwing_scatter_gauss_30_bias0_model1_v1_color'
+    #     #    model_cmt = 'xbsw_xwing_scatter_gauss_30_bias0_model1_v1'
+    #     # else:
+    #     #    cmt = 'syn_xview_bkg_px23whr3_xbsw_xwing_scatter_gauss_30_color_bias{}_model1_v{}_color'.format(color_pro*25.5, color_pro+1)
+    #     #    model_cmt = 'xbsw_xwing_scatter_gauss_30_color_bias{}_model1_v{}'.format(color_pro*25.5, color_pro+1)
+    #     # label_id = 1
+    #     # miss_id = 1
+    #     # pxwhr = 'px23whr3'
+    #
+    #     if color_pro == 0:
+    #         cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_rnd_color_bias0_model4_v21_color'
+    #         model_cmt = 'xbw_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_rnd_color_bias0_model4_v21'
+    #     else:
+    #         cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_rnd_color_bias{}_model4_v{}_color'.format(color_pro*25.5, color_pro+21)
+    #         model_cmt = 'xbw_xbkg_unif_mig21_shdw_scatter_uniform_50_angle_rnd_color_bias{}_model4_v{}'.format(color_pro*25.5, color_pro+21)
+    #     px_thres = 15
+    #     label_id = 4
+    #     miss_id = 4
+    #     pxwhr = 'px15whr3'
+    #
+    #     base_pxwhrs = 'px23whr3_seed{}'
+    #     syn_args = get_syn_args(model_cmt)
+    #     sd = 17
+    #
+    #     base_pxwhrs = base_pxwhrs.format(sd)
+    #     create_syn_data(cmt, sd, base_pxwhrs, val_xview=False)
        # record_all_syn_xview_background(cmt, sd, pxwhr)
 
     # seed = 17
@@ -1211,4 +1211,4 @@ if __name__ == '__main__':
     #     for sd in seeds:
     #         base_cmt = 'px23whr3_seed{}'.format(sd)
     #         create_xview_syn_data_with_model(cmt, sd, base_cmt)
-    #         # create_xview_syn_data_with_model(cmt, sd, base_cmt, ratio=1)
+            # create_xview_syn_data_with_model(cmt, sd, base_cmt, ratio=1)

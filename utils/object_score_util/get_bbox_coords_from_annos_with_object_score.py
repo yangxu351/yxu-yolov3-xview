@@ -68,7 +68,7 @@ def get_object_bbox_after_group(label_path, save_path, class_label=0, min_region
         f_txt.close()
 
 
-def plot_img_with_bbx(img_file, lbl_file, save_path, label_index=False, Model_id=False):
+def plot_img_with_bbx(img_file, lbl_file, save_path, label_index=False, rare_id=False):
     if not is_non_zero_file(lbl_file):
         # print(is_non_zero_file(lbl_file))
         return
@@ -98,7 +98,7 @@ def plot_img_with_bbx(img_file, lbl_file, save_path, label_index=False, Model_id
         pl = ''
         if label_index:
             pl = '{}'.format(ix)
-        elif Model_id:
+        elif rare_id:
             mid = int(df_lbl[ix, 5])
             pl = '{}'.format(mid)
         else:

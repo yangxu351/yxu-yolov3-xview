@@ -432,8 +432,8 @@ def train(opt):
                                       data,
                                       batch_size=batch_size * 2,
                                       img_size=opt.img_size,
-                                      conf_thres= 0.1, # 0.001 if final_epoch else 0.1,  # 0.1 for speed
-                                      iou_thres=0.5, # 0.6 if final_epoch and is_xview else 0.5,
+                                      conf_thres= opt.conf_thres, # 0.1, # 0.001 if final_epoch else 0.1,  # 0.1 for speed
+                                      nms_iou_thres= opt.nms_iou_thres, # 0.5, # 0.6 if final_epoch and is_xview else 0.5,
                                       save_json=True,  # final_epoch and is_xview, #fixme
                                       model=model,#fixme
                                       # model=ema.ema,
@@ -492,8 +492,8 @@ def train(opt):
                 torch.save(best_5_ckpt, best)
             # Save backup every 10 epochs (optional)
             #fixme
-            # if (epoch > 0 and epoch % 10 == 0):
-            if (epoch > 0 and epoch % 50 == 0) or (epoch > epochs*0.8 and epoch%20==0):
+            # if (epoch > 0 and epoch % 10 == 0):or (epoch > epochs*0.8 and epoch%20==0)
+            if (epoch > 0 and epoch % 50 == 0):
                 torch.save(chkpt, opt.weights_dir + 'backup%g.pt' % epoch)
 
             # Delete checkpoint
@@ -513,18 +513,19 @@ def train(opt):
 
 def get_opt():
     parser = argparse.ArgumentParser()
+    parser.add_argument('--seed', type=int, default=17, help='seed')
     parser.add_argument('--cfg_dict', type=str, default='',
                         help='train_cfg/train_1cls_xview+syn.json')
-    parser.add_argument('--device', default='1', help='device id (i.e. 0 or 0,1 or cpu)')
-    parser.add_argument('--seed', type=int, default=17, help='seed')
-    parser.add_argument('--epochs', type=int, default=220)  # 180 250  500200 batches at bs 16, 117263 images = 273 epochs
+    parser.add_argument('--data', type=str, default='', help='*.data path')
+    parser.add_argument('--epochs', type=int, default=220)  # 220 180 250  500200 batches at bs 16, 117263 images = 273 epochs
     parser.add_argument('--batch-size', type=int, default=8)  # effective bs = batch_size * accumulate = 16 * 4 = 64
-    parser.add_argument('--syn-batch-size', type=int, default=3, help='3 syn batch size ')
+    parser.add_argument('--syn-batch-size', type=int, default=4, help='4 syn batch size ')
+
+    parser.add_argument('--device', default='0', help='device id (i.e. 0 or 0,1 or cpu)')
     parser.add_argument('--img_size', type=int, default=608, help='inference size (pixels)')  # 416 608
     parser.add_argument('--class_num', type=int, default=1, help='class number')  # 60 6 1
+    parser.add_argument('--model_id', type=int, default=None, help='model id')
 
-
-    parser.add_argument('--data', type=str, default='', help='*.data path')
     parser.add_argument('--cfg', type=str, default='cfg/yolov3-spp-{}cls_syn.cfg', help='*.cfg path')
     parser.add_argument('--writer_dir', type=str, default='writer_output/{}_cls/{}_seed{}/{}/', help='*events* path')
     parser.add_argument('--weights_dir', type=str, default='weights/{}_cls/{}_seed{}/{}/', help='to save weights path')
@@ -532,11 +533,13 @@ def get_opt():
     parser.add_argument('--base_dir', type=str, default='data_xview/{}_cls/{}/', help='without syn data path')
     parser.add_argument('--name', default='', help='renames results.txt to results_name.txt if supplied')
 
-    parser.add_argument('--conf-thres', type=float, default=0.001, help='0.001 object confidence threshold')
-    parser.add_argument('--iou-thres', type=float, default=0.5, help='IOU threshold for NMS')
+    parser.add_argument('--accumulate', type=int, default=4, help='batches to accumulate before optimizing')
+    parser.add_argument('--multi_scale', action='store_true', help='adjust (67% - 150%) img_size every 10 batches')
+    parser.add_argument('--conf_thres', type=float, default=0.01, help='0.001 object confidence threshold')
+    parser.add_argument('--nms_iou_thres', type=float, default=0.5, help='IOU threshold for NMS')
     parser.add_argument('--save_json', action='store_true', help='save a cocoapi-compatible JSON results file')
     parser.add_argument('--task', default='', help="'test', 'study', 'benchmark'")
-    parser.add_argument('--multi_scale', action='store_true', help='adjust (67% - 150%) img_size every 10 batches')
+
     parser.add_argument('--rect', default=False, action='store_true', help='rectangular training')
     parser.add_argument('--resume', default=False, action='store_true', help='resume training from last.pt')
     parser.add_argument('--nosave', action='store_true', help='only save final checkpoint')
@@ -551,112 +554,13 @@ def get_opt():
     parser.add_argument('--var', type=float, help='debug variable')
     opt = parser.parse_args()
 
-    if 'pw' not in opt.arc:  # remove BCELoss positive weights
-        hyp['cls_pw'] = 1.
-        hyp['obj_pw'] = 1.
+    # if 'pw' not in opt.arc:  # remove BCELoss positive weights
+    #     hyp['cls_pw'] = 1.
+    #     hyp['obj_pw'] = 1.
     return opt
 
 
 if __name__ == '__main__':
-    # main()
-    # seeds = [17]#, 5, 9, 1024, 3] #   5, 9, 1024,
-    # comments = ['syn_xview_background_color', 'syn_xview_background_mixed']
-    # comments = ['xview_syn_xview_bkg_texture', 'xview_syn_xview_bkg_color', 'xview_syn_xview_bkg_mixed']
-    # syn_ratios = [1, 2]
-    # comments = ['px6whr4_ng0']
-    # syn_ratios = [0]
-    # comments = ['px23whr4']
-    # syn_ratios = [0]
-    # comments = ['syn_xview_bkg_certain_models_texture', 'syn_xview_bkg_certain_models_color', 'syn_xview_bkg_certain_models_mixed']
-    # syn_ratios = [None]
-    # comments = ['xview_syn_xview_bkg_certain_models_texture', 'xview_syn_xview_bkg_certain_models_color', 'xview_syn_xview_bkg_certain_models_mixed']
-    # syn_ratios = [2]
-    # comments = ['syn_xview_bkg_px20whr4_certain_models_texture', 'syn_xview_bkg_px20whr4_certain_models_color', 'syn_xview_bkg_px20whr4_certain_models_mixed']
-    # syn_ratios = [None]
-    # comments = ['xview_syn_xview_bkg_px20whr4_certain_models_texture', 'xview_syn_xview_bkg_px20whr4_certain_models_color', 'xview_syn_xview_bkg_px20whr4_certain_models_mixed']
-    # syn_ratios = [1]
-    # comments = ['syn_xview_bkg_px23whr4_scale_models_texture', 'syn_xview_bkg_px23whr4_scale_models_color', 'syn_xview_bkg_px23whr4_scale_models_mixed']
-    # syn_ratios = [None]
-    # comments = ['xview_syn_xview_bkg_px23whr4_scale_models_texture', 'xview_syn_xview_bkg_px23whr4_scale_models_color', 'xview_syn_xview_bkg_px23whr4_scale_models_mixed']
-    # syn_ratios = [1]
-    # comments = ['xview_syn_xview_bkg_px23whr4_small_models_color', 'xview_syn_xview_bkg_px23whr4_small_models_mixed']
-    # syn_ratios = [1]
-    # comments = ['syn_xview_bkg_px23whr4_small_models_color', 'syn_xview_bkg_px23whr4_small_models_mixed']
-    # syn_ratios = [None]
-    # comments = ['syn_xview_bkg_px23whr4_small_fw_models_color', 'syn_xview_bkg_px23whr4_small_fw_models_mixed']
-    # syn_ratios = [None]
-    # comments = ['px23whr3']
-    # syn_ratios = [0]
-    # comments = ['px23whr3']
-    # syn_ratios = [0]
-    # comments = ['syn_xview_bkg_px23whr3_small_models_color', 'syn_xview_bkg_px23whr3_small_models_mixed']
-    # syn_ratios = [None]
-    # comments = ['xview_syn_xview_bkg_px23whr3_small_models_color', 'xview_syn_xview_bkg_px23whr3_small_models_mixed']
-    # syn_ratios = [1]
-    # comments = ['syn_xview_bkg_px23whr3_6groups_models_color', 'syn_xview_bkg_px23whr3_6groups_models_mixed'] #
-    # syn_ratios = [None, None]
-    # comments = ['syn_xview_bkg_px23whr3_rnd_bwratio_models_color', 'syn_xview_bkg_px23whr3_rnd_bwratio_models_mixed'] #
-    # syn_ratios = [None, None]
-    # comments = ['xview_syn_xview_bkg_px23whr3_small_models_color', 'xview_syn_xview_bkg_px23whr3_small_models_mixed', 'px23whr3']
-    # comments = ['xview_syn_xview_bkg_px23whr3_6groups_models_color','xview_syn_xview_bkg_px23whr3_6groups_models_mixed']
-    # syn_ratios = [ 1, 1]
-    # comments = ['px23whr3']
-    # syn_ratios = [0]
-    # comments = ['xview_syn_xview_bkg_px23whr3_rnd_bwratio_models_color','xview_syn_xview_bkg_px23whr3_rnd_bwratio_models_mixed']
-    # syn_ratios = [1, 1]
-    # comments = ['xview_syn_xview_bkg_px23whr3_rnd_bwratio_models_color','xview_syn_xview_bkg_px23whr3_rnd_bwratio_models_mixed',
-    #             'syn_xview_bkg_px23whr3_rnd_bwratio_models_color', 'syn_xview_bkg_px23whr3_rnd_bwratio_models_mixed']
-    # syn_ratios = [1, 1, None, None]
-    # comments = ['syn_xview_bkg_px23whr3_rnd_bwratio_models_mixed']
-    # syn_ratios = [None]
-    # comments = ['xview_syn_xview_bkg_px23whr3_rnd_bwratio_flat0.8_models_color','xview_syn_xview_bkg_px23whr3_rnd_bwratio_flat0.8_models_mixed',
-    #             'syn_xview_bkg_px23whr3_rnd_bwratio_flat0.8_models_color', 'syn_xview_bkg_px23whr3_rnd_bwratio_flat0.8_models_mixed']
-    # syn_ratios = [1, 1, None, None]
-    # comments = ['px23whr3', 'xview_syn_xview_bkg_px23whr3_6groups_models_color', 'xview_syn_xview_bkg_px23whr3_6groups_models_mixed']
-    # syn_ratios = [0, 1, 1]
-    # comments = ['xview_syn_xview_bkg_px23whr3_rnd_bwratio_asx_models_color', 'xview_syn_xview_bkg_px23whr3_rnd_bwratio_asx_models_mixed',
-    #             'syn_xview_bkg_px23whr3_rnd_bwratio_asx_models_color', 'syn_xview_bkg_px23whr3_rnd_bwratio_asx_models_mixed']
-    # syn_ratios = [1, 1, None, None]
-    # comments = ['xview_syn_xview_bkg_px23whr3_xratio_xcolor_models_color', 'xview_syn_xview_bkg_px23whr3_xratio_xcolor_models_mixed',
-    #             'syn_xview_bkg_px23whr3_xratio_xcolor_models_color', 'syn_xview_bkg_px23whr3_xratio_xcolor_models_mixed']
-    # syn_ratios = [1, 1, None, None]
-    # comments = ['xview_syn_xview_bkg_px23whr3_sbwratio_xratio_xcolor_models_color', 'xview_syn_xview_bkg_px23whr3_sbwratio_xratio_xcolor_models_mixed',
-    #             'syn_xview_bkg_px23whr3_sbwratio_xratio_xcolor_models_color', 'syn_xview_bkg_px23whr3_sbwratio_xratio_xcolor_models_mixed']
-    # syn_ratios = [1, 1, None, None]
-    # comments = ['syn_xview_bkg_px23whr3_sbwratio_xratio_xcolor_models_color', 'syn_xview_bkg_px23whr3_sbwratio_xratio_xcolor_models_mixed']
-    # syn_ratios = [None, None]
-    # comments = ['xview_syn_xview_bkg_px23whr3_sbwratio_xratio_xcolor_dark_models_color', 'xview_syn_xview_bkg_px23whr3_sbwratio_xratio_xcolor_dark_models_mixed']
-    # syn_ratios = [1, 1]
-    # comments = ['xview_syn_xview_bkg_px23whr3_sbwratio_new_xratio_xcolor_models_color', 'xview_syn_xview_bkg_px23whr3_sbwratio_new_xratio_xcolor_models_mixed']
-    # syn_ratios = [1, 1]
-    # comments = ['xview_syn_xview_bkg_px23whr3_xbw_xcolor_model0_color', 'xview_syn_xview_bkg_px23whr3_xbw_xcolor_model0_mixed']
-    # val_syn=False
-    # comments = ['syn_xview_bkg_px23whr3_sbwratio_xratio_xcolor_dark_models_color', 'syn_xview_bkg_px23whr3_sbwratio_xratio_xcolor_dark_models_mixed']
-    # syn_ratios = [None, None]
-    # comments = ['xview_syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_models_color',
-    #             'xview_syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_models_mixed']
-    # comments = ['xview_syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_models_mixed']
-    # comments = ['xview_syn_xview_bkg_px23whr3_xbw_xcolor_model1_color', 'xview_syn_xview_bkg_px15whr3_xbw_xcolor_model4_color']
-    # comments = ['xview_syn_xview_bkg_px23whr3_xbw_xcolor_model1_mixed', 'xview_syn_xview_bkg_px15whr3_xbw_xcolor_model4_mixed']
-    # comments = ['xview_syn_xview_bkg_px15whr3_xbw_xcolor_model4_v1_color', 'xview_syn_xview_bkg_px15whr3_xbw_xcolor_model4_v1_mixed']
-    # comments = ['xview_syn_xview_bkg_px15whr3_xbw_xcolor_model4_v2_color', 'xview_syn_xview_bkg_px15whr3_xbw_xcolor_model4_v2_mixed']
-    # comments = ['xview_syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_gauss_models_color', 'xview_syn_xview_bkg_px23whr3_xbw_xrxc_spr_sml_gauss_models_mixed']
-    # comments = ['xview_syn_xview_bkg_px23whr3_xbw_xrxc_model1_gauss_color', 'xview_syn_xview_bkg_px23whr3_xbw_xrxc_model1_gauss_mixed']
-    # comments = ['xview_syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_gauss_model1_v2_color', 'xview_syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_gauss_model1_v2_mixed']
-    # comments = ['xview_syn_xview_bkg_px23whr3_xbsw_xcolor_xbkg_gauss_model1_v4_color', 'xview_syn_xview_bkg_px23whr3_xbsw_xcolor_xbkg_gauss_model1_v4_mixed']
-
-    # syn_batch_sizes = [3] # [3] # [1, 2, 3] # 1,
-    # pxwhrsd = 'px23whr3_seed{}'
-    # prefix = 'xview + syn'
-
-    # pxwhrsd = 'px23whr4_seed{}'
-    # hyp_cmt = 'hgiou1_fitness'
-    # hyp_cmt = 'hgiou1_mean_best'
-    # hyp_cmt = 'hgiou1_x7s1'
-    # hyp_cmt = 'hgiou1_x{}s{}'
-    # hyp_cmt = 'hgiou1_x5s3' # syn-batch-size
-    # hyp_cmt = 'hgiou0.8_mean_best'
-    # hyp_cmt = 'hgiou1'
     opt = get_opt()
 
     Configure_file = opt.cfg_dict
@@ -676,19 +580,9 @@ if __name__ == '__main__':
 
     pxwhrsd = cfg_dict['pxwhrsd']
     hyp_cmt = cfg_dict['hyp_cmt']
-    syn_only = cfg_dict['syn_only']
-    xbkgonly = cfg_dict['xbkgonly']
-    model_id = cfg_dict['model_id']
 
     for cx, cmt in enumerate(comments):
         hyp_cmt = hyp_cmt.format(opt.batch_size - opt.syn_batch_size, opt.syn_batch_size)
-
-        # cinx = cmt.find('model') # first letter index
-        # endstr = cmt[cinx:]
-        # rcinx = endstr.rfind('_')
-        # fstr = endstr[rcinx:] # '_' is included
-        # sstr = endstr[:rcinx]
-        # suffix = fstr + '_' + sstr
         cinx = cmt.find('_RC')
         if cinx >= 0:
             endstr = cmt[cinx:]
@@ -699,15 +593,7 @@ if __name__ == '__main__':
         opt.name = prefix + sstr
 
         opt.base_dir = opt.base_dir.format(opt.class_num, pxwhrsd.format(opt.seed))
-        if syn_only:
-            # opt.data = 'data_xview/{}_{}_cls/{}_seed{}/{}_seed{}.data'.format(cmt, opt.class_num, cmt, seed, cmt, seed)
-            opt.data = 'data_xview/{}_{}_cls/{}_seed{}/{}_seed{}_xview_val.data'.format(cmt, opt.class_num, cmt, opt.seed, cmt, opt.seed)
-        elif xbkgonly and model_id < 0:
-            opt.data = 'data_xview/{}_cls/{}_seed{}/{}_seed{}_xbkgonly.data'.format(opt.class_num, cmt, opt.seed, cmt, opt.seed)
-        elif xbkgonly and model_id>=0:
-            opt.data = 'data_xview/{}_cls/{}_seed{}/{}_seed{}_xbkgonly_m{}_only.data'.format(opt.class_num, cmt, opt.seed, cmt, opt.seed, model_id)
-        else:
-            opt.data = 'data_xview/{}_cls/{}_seed{}/{}_{}_seed{}.data'.format(opt.class_num, cmt, opt.seed, prefix, cmt, opt.seed)
+        opt.data = 'data_xview/{}_cls/{}_seed{}/{}_seed{}.data'.format(opt.class_num, cmt, opt.seed, cmt, opt.seed)
 
         time_marker = time.strftime('%Y-%m-%d_%H.%M', time.localtime())
         opt.weights_dir = opt.weights_dir.format(opt.class_num, cmt, opt.seed, '{}_{}_seed{}'.format(time_marker, hyp_cmt, opt.seed))

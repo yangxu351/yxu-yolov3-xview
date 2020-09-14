@@ -575,7 +575,8 @@ if __name__ == '__main__':
     pxwhrsd = cfg_dict['pxwhrsd'].format(opt.seed)
     hyp_cmt = cfg_dict['hyp_cmt']
     hyp = cfg_dict['hyp']
-    opt.data = 'data_xview/{}_cls/{}/xview_rc_nrcbkg_{}.data'.format(opt.class_num, pxwhrsd, pxwhrsd)
+    # opt.data = 'data_xview/{}_cls/{}/xview_rc_nrcbkg_{}.data'.format(opt.class_num, pxwhrsd, pxwhrsd)
+    opt.data = 'data_xview/{}_cls/{}/xview_ori_nrcbkg_aug_rc_{}.data'.format(opt.class_num, pxwhrsd, pxwhrsd)
     for rbs in rbs_list:
         opt.rc_batch_size = rbs
         hyp_cmt = hyp_cmt.format(opt.batch_size - opt.rc_batch_size, opt.rc_batch_size)

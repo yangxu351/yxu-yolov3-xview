@@ -2567,11 +2567,6 @@ if __name__ == "__main__":
     # split_trn_val_with_tifs()
 
     '''
-    create xview.data includes cls_num, trn, val, ...
-    '''
-    # create_xview_data()
-
-    '''
     categories count for all label files
     and plot category count
     '''

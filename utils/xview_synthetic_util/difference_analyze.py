@@ -614,7 +614,7 @@ if __name__ == "__main__":
     # compare_images_separate_cities(two)
 
     # two = True
-    # compare_images_after_combine(two)
+    compare_images_after_combine(two)
 
     # compare_first_second_dataset()
 
@@ -644,7 +644,7 @@ if __name__ == "__main__":
     model hash
     '''
 #    check_model_hash()
-    check_model_hash_before_val_after()
+#     check_model_hash_before_val_after()
 
     '''
     check test file names
