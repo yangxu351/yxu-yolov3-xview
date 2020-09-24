@@ -434,6 +434,40 @@ def create_val_aug_rc_hard_easy_txt_list_data(model_id, rare_id, pxwhrs='px23whr
         data_txt.close()
 
 
+def create_val_aug_rc_nrcbkg_easy_txt_data(pxwhrs='px23whr3_seed17'):
+    '''
+    create easy validation dataset of all augrc nrcbkg
+    all rare classes are classified as one category
+    '''
+    easy_aug_lbl_dir = args.annos_save_dir[:-1] + '_rc_val_new_ori_multi_modelid_aug'
+
+    nrcbkg_lbl_path = args.annos_save_dir[:-1] + '_val_nrcbkg_lbl_with_modelid'
+    nrcbkg_lbl_files = glob.glob(os.path.join(nrcbkg_lbl_path, '*.txt'))
+    nrcbkg_img_path = args.images_save_dir[:-1] +'_val_nrcbkg_img'
+    base_dir = os.path.join(args.data_save_dir, pxwhrs)
+    eht = 'easy'
+    test_lbl_txt = open(os.path.join(base_dir, 'xview_ori_nrcbkg_aug_rc_test_lbl_{}_all_{}.txt'.format(pxwhrs, eht)), 'w')
+    test_img_txt = open(os.path.join(base_dir, 'xview_ori_nrcbkg_aug_rc_test_img_{}_all_{}.txt'.format(pxwhrs, eht)), 'w')
+    aug_rc_img_path = args.images_save_dir[:-1] + '_rc_val_new_ori_multi_aug'
+    aug_rc_lbls = np.sort(glob.glob(os.path.join(easy_aug_lbl_dir, '*.txt')))
+    for f in aug_rc_lbls:
+        test_lbl_txt.write('%s\n' % f)
+        name = os.path.basename(f).replace('.txt', '.jpg')
+        test_img_txt.write('%s\n' % os.path.join(aug_rc_img_path, name))
+    for f in nrcbkg_lbl_files:
+        test_lbl_txt.write('%s\n' % f)
+        name = os.path.basename(f).replace('.txt', '.jpg')
+        test_img_txt.write('%s\n' % os.path.join(nrcbkg_img_path, name))
+    test_img_txt.close()
+    test_lbl_txt.close()
+
+    data_txt = open(os.path.join(base_dir, 'xview_ori_nrcbkg_aug_rc_test_{}_all_{}.data'.format(pxwhrs,  eht)), 'w')
+    data_txt.write('classes=%s\n' % str(args.class_num))
+    data_txt.write('test=./data_xview/{}_cls/{}/xview_ori_nrcbkg_aug_rc_test_img_{}_all_{}.txt\n'.format(args.class_num, pxwhrs,  pxwhrs, eht))
+    data_txt.write('test_label=./data_xview/{}_cls/{}/xview_ori_nrcbkg_aug_rc_test_lbl_{}_all_{}.txt\n'.format(args.class_num, pxwhrs,  pxwhrs, eht))
+    data_txt.write('names=./data_xview/{}_cls/xview.names\n'.format(args.class_num))
+    data_txt.close()
+
 
 def create_aug_only_rc_testset_txt_list(pxwhrs='px23whr3_seed17'):
     lbl_dir = args.annos_save_dir[:-1] + '_rc_val_new_ori_multi_modelid_aug'
@@ -449,8 +483,6 @@ def create_aug_only_rc_testset_txt_list(pxwhrs='px23whr3_seed17'):
         test_lbl_txt.write('%s\n' % os.path.join(lbl_dir, os.path.basename(f).replace('.jpg', '.txt')))
     test_img_txt.close()
     test_lbl_txt.close()
-
-
 
 
 def get_args(px_thres=None, whr_thres=None): #
@@ -607,6 +639,14 @@ if __name__ == '__main__':
     # for ix, rare_id in enumerate(rare_ids):
     #     model_id = model_ids[ix]
     #     create_val_aug_rc_hard_easy_txt_list_data(model_id, rare_id, pxwhrs='px23whr3_seed17')
+
+    '''
+    creat nrcbkg, aug rc test*.txt easy 
+    create .data easy
+    easy: keep other labels
+    '''
+    create_val_aug_rc_nrcbkg_easy_txt_data(pxwhrs='px23whr3_seed17')
+
 
     '''
     cheke bbox on images

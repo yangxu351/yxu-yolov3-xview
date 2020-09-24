@@ -337,7 +337,7 @@ def ap_per_class(tp, conf, pred_cls, target_cls, ntp=None, pr_path='', pr_name='
         unique_classes = np.array([rare_class])
     else:
         unique_classes = np.unique(target_cls)
-    # print('target_cls', target_cls)
+    print('unique_classes', unique_classes)
 
     # Create Precision-Recall curve and compute AP for each class
     #fixme
@@ -423,7 +423,8 @@ def plot_roc_easy_hard(tp, conf, pred_cls, target_cls, ntp, pr_path='', pr_name=
     # Sort by objectness
     i = np.argsort(-conf) # 175
     tp, conf, pred_cls, ntp = tp[i], conf[i], pred_cls[i], ntp[i]
-
+    if rare_class is None:
+        rare_class = 0
     n_gt = (target_cls == rare_class).sum()
     print('n_gt', n_gt)
     far_list = []

@@ -390,6 +390,92 @@ def create_xview_rc_nrcbkg_data(px_thres=23, whr_thres=3, seed=17, val_aug=True)
     data_txt.close()
 
 
+def split_syn_xview_background_trn_val(seed=17, comment='syn_RC*_v*', rare_id=1, pxwhr=''):
+    args = get_args(px_thres, whr_thres)
+    data_xview_dir = os.path.join(args.data_xview_dir.format(args.class_num), comment)
+
+    display_type = 'color'
+    step = args.tile_size * args.resolution
+    syn_data_dir  = os.path.join(args.syn_save_dir, comment)
+    all_files = np.sort(glob.glob(os.path.join(syn_data_dir, '{}_all_images_step{}'.format(display_type, step), '*.png')))
+    syn_annos_dir = os.path.join(args.syn_save_dir, comment + '_txt_xcycwh')
+    lbl_dir = os.path.join(syn_annos_dir, 'minr{}_linkr{}_{}_{}_all_annos_txt_step{}'.format(args.min_region, args.link_r, pxwhr, display_type, step))
+
+    trn_img_txt = open(os.path.join(data_xview_dir, 'syn_best_size_color_rc{}_train_img_seed{}.txt'.format(rare_id, comment, seed)), 'w')
+    trn_lbl_txt = open(os.path.join(data_xview_dir, 'syn_best_size_color_rc{}_train_lbl_seed{}.txt'.format(rare_id, comment, seed)), 'w')
+    val_img_txt = open(os.path.join(data_xview_dir, 'syn_best_size_color_rc{}_val_img_seed{}.txt'.format(rare_id, comment, seed)), 'w')
+    val_lbl_txt = open(os.path.join(data_xview_dir, 'syn_best_size_color_rc{}_val_lbl_seed{}.txt'.format(rare_id, comment, seed)), 'w')
+#    print(os.path.join(syn_args.syn_data_dir.format(display_type), '{}_all_images_step{}'.format(display_type, step), '*' + IMG_FORMAT))
+    num_files = len(all_files)
+    print('num_files', num_files)
+
+    #fixme---yang.xu
+    num_val = int(num_files*args.val_percent)
+    num_trn = num_files - num_val
+
+    np.random.seed(seed)
+    all_indices = np.random.permutation(num_files)
+    print('num_trn', num_trn)
+    for j in all_indices[: num_trn]:
+        trn_img_txt.write('%s\n' % all_files[j])
+        trn_lbl_txt.write('%s\n' % os.path.join(lbl_dir, os.path.basename(all_files[j]).replace('.png', '.txt')))
+    trn_img_txt.close()
+    trn_lbl_txt.close()
+    for i in all_indices[num_trn:num_trn+num_val ]:
+        val_img_txt.write('%s\n' % all_files[i])
+        val_lbl_txt.write('%s\n' % os.path.join(lbl_dir, os.path.basename(all_files[i]).replace('.png', '.txt')))
+    val_img_txt.close()
+    val_lbl_txt.close()
+
+
+def create_syn_xview_rc_nrcbkg_data(rare_id, px_thres=23, whr_thres=3, seed=17, val_aug=True):
+    args = get_args(px_thres, whr_thres)
+
+    base_cmt = 'px{}whr{}_seed{}'.format(px_thres, whr_thres, seed)
+    data_save_dir = args.data_save_dir
+    print('data_save_dir', data_save_dir)
+    if val_aug:
+        data_txt = open(os.path.join(data_save_dir, base_cmt, 'syn+xview_ori_nrcbkg_aug_rc_{}.data'.format(base_cmt)), 'w')
+    else:
+        data_txt = open(os.path.join(data_save_dir, base_cmt, 'syn+xview_rc_nrcbkg_{}.data'.format(base_cmt)), 'w')
+    data_txt.write(
+        'xview_nrcbkg_train={}\n'.format(os.path.join(data_save_dir, base_cmt, 'xview_nrcbkg_train_img_{}.txt'.format(base_cmt))))
+    data_txt.write(
+        'xview_nrcbkgn_train_label={}\n'.format(os.path.join(data_save_dir, base_cmt, 'xview_nrcbkg_train_lbl_{}.txt'.format(base_cmt))))
+
+    data_txt.write(
+        'xview_rc_train={}\n'.format(os.path.join(data_save_dir, base_cmt,  'only_rc_train_img_{}.txt'.format(base_cmt))))
+    data_txt.write(
+        'xview_rc_train_label={}\n'.format(os.path.join(data_save_dir,  base_cmt, 'only_rc_train_lbl_{}.txt'.format(base_cmt))))
+
+    data_txt.write(
+        'syn_train={}\n'.format(os.path.join(data_save_dir, base_cmt,  'syn_best_size_color_rc{}_train_img_{}.txt'.format(rare_id, base_cmt))))
+    data_txt.write(
+        'syn_train_label={}\n'.format(os.path.join(data_save_dir,  base_cmt, 'syn_best_size_color_rc{}_train_lbl_{}.txt'.format(rare_id, base_cmt))))
+
+    if val_aug:
+        data_txt.write(
+            'valid={}\n'.format(os.path.join(data_save_dir, base_cmt, 'xview_ori_nrcbkg_aug_rc_val_img_{}.txt'.format(base_cmt))))
+        data_txt.write(
+            'valid_label={}\n'.format(os.path.join(data_save_dir, base_cmt, 'xview_ori_nrcbkg_aug_rc_val_lbl_{}.txt'.format(base_cmt))))
+    else:
+        data_txt.write(
+            'valid={}\n'.format(os.path.join(data_save_dir, base_cmt, 'xview_rc_nrcbkg_val_img_{}.txt'.format(base_cmt))))
+        data_txt.write(
+            'valid_label={}\n'.format(os.path.join(data_save_dir, base_cmt, 'xview_rc_nrcbkg_val_lbl_{}.txt'.format(base_cmt))))
+
+    df_trn_nrcbkg = pd.read_csv(os.path.join(data_save_dir, base_cmt, 'xview_nrcbkg_train_img_{}.txt'.format(base_cmt)), header=None)
+    df_trn_rc = pd.read_csv(os.path.join(data_save_dir, base_cmt,  'only_rc_train_img_{}.txt'.format(base_cmt)), header=None)
+    xview_trn_num = df_trn_nrcbkg.shape[0] + df_trn_rc.shape[0]
+
+    data_txt.write('syn_0_xview_number={}\n'.format(xview_trn_num))
+    data_txt.write('classes=%s\n' % str(args.class_num))
+    data_txt.write('names=./data_xview/{}_cls/xview.names\n'.format(args.class_num))
+    data_txt.write('backup=backup/\n')
+    data_txt.write('eval=color\n')
+    data_txt.close()
+
+
 def get_args(px_thres=None, whr_thres=None):
     parser = argparse.ArgumentParser()
     parser.add_argument("--image_folder", type=str,
@@ -404,6 +490,9 @@ def get_args(px_thres=None, whr_thres=None):
 
     parser.add_argument("--images_save_dir", type=str, help="to save chip trn val images files",
                         default='/media/lab/Yang/data/xView_YOLO/images/')
+
+    parser.add_argument("--syn_save_dir", type=str, help="",
+                        default='/media/lab/Yang/data/synthetic_data/')
 
     parser.add_argument("--txt_save_dir", type=str, help="to save  related label files",
                         default='/media/lab/Yang/data/xView_YOLO/labels/')
@@ -458,13 +547,29 @@ def get_args(px_thres=None, whr_thres=None):
     return args
 
 if __name__ == '__main__':
-    #fixme
+
+    '''
     # split train val only nrc and bkg,
     # split rc separately
-    px_thres = 23
-    whr_thres = 3
-    seed = 17
-    comments = '_px{}whr{}_seed{}'.format(px_thres, whr_thres, seed)
-    # data_name = 'xview_nrcbkg'
+    '''
+    #fixme
+    # px_thres = 23
+    # whr_thres = 3
+    # seed = 17
+    # comments = '_px{}whr{}_seed{}'.format(px_thres, whr_thres, seed)
+    # # data_name = 'xview_nrcbkg'
     # split_trn_val_nrc_bkg_with_rc_sep_step_by_step(data_name, comments, seed, px_thres, whr_thres)
-    create_xview_rc_nrcbkg_data(px_thres, whr_thres, seed, val_aug=True)
+    # create_xview_rc_nrcbkg_data(px_thres, whr_thres, seed, val_aug=True)
+
+
+    '''
+    split syn best size color data
+    '''
+    # px_thres = 23
+    # whr_thres = 3
+    # pxwhr = 'px{}whr{}'.format(px_thres, whr_thres)
+    # seed = 17
+    # comment = 'syn_xview_bkg_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_ssig0.03_bxmuller_color_bias20_RC1_v15'
+    # rare_id = 1
+    # split_syn_xview_background_trn_val(seed, comment, rare_id, pxwhr=pxwhr)
+    # create_syn_xview_rc_nrcbkg_data(rare_id, px_thres=23, whr_thres=3, seed=17, val_aug=True)

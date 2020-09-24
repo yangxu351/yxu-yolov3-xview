@@ -25,6 +25,7 @@ def get_object_bbox_after_group(label_path, save_path, class_label=0, min_region
     :param whr_thres:
     :return: (catid, xcenter, ycenter, w, h) the bbox is propotional to the image size
     '''
+    print('lable_path', label_path)
     lbl_files = np.sort(glob.glob(os.path.join(label_path, '*.{}'.format(IMG_FORMAT))))
 
     lbl_files = [os.path.join(label_path, f) for f in lbl_files if os.path.isfile(os.path.join(label_path, f))]
