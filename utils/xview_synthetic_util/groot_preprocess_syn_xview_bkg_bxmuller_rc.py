@@ -348,24 +348,27 @@ if __name__ == '__main__':
 #        cmt = 'xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_bxmuller_promu_size_bias{}_RC5_v{}'.format(ssig, ix+21)
 #        px_thres = 23
 
-#    color_sigma = [0, 5, 10, 15, 20]
-#    for ix,ssig in enumerate(color_sigma):
+    color_sigma = [0, 5, 10, 15, 20]
+    for ix,ssig in enumerate(color_sigma):
 #        cmt = 'xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_ssig0.03_bxmuller_color_bias{}_RC1_v{}'.format(ssig, ix+11)
 #        px_thres = 15 
 #        cmt = 'xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_ssig0.12_bxmuller_color_bias{}_RC2_v{}'.format(ssig, ix+11)
+#        cmt = 'xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_ssig0.03_bxmuller_color_bias{}_RC2_v{}'.format(ssig, ix+31)
 #        px_thres = 23
 #        cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0_bxmuller_color_bias{}_RC3_v{}'.format(ssig, ix+11)
 #        px_thres = 23
 #        cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.09_bxmuller_color_bias{}_RC4_v{}'.format(ssig, ix+11)
+#        cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.06_bxmuller_color_bias{}_RC4_v{}'.format(ssig, ix+31)
 #        px_thres = 23
 #        cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.06_bxmuller_color_bias{}_RC5_v{}'.format(ssig, ix+11)
-#        px_thres = 23
+        cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.03_bxmuller_color_bias{}_RC5_v{}'.format(ssig, ix+31)
+        px_thres = 23
 
-#        whr_thres = 3
-#        dt = 'color'
-#        syn_args = get_args(cmt)
-#        group_object_annotation_and_draw_bbox(dt, px_thres, whr_thres)
-#        draw_bbx_on_rgb_images(dt, px_thres, whr_thres)
+        whr_thres = 3
+        dt = 'color'
+        syn_args = get_args(cmt)
+        group_object_annotation_and_draw_bbox(dt, px_thres, whr_thres)
+        draw_bbx_on_rgb_images(dt, px_thres, whr_thres)
 
     #cmt = 'xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_fixedsolar_ssig0.03_csig20_RC1_v30'
     #px_thres = 15
@@ -375,14 +378,14 @@ if __name__ == '__main__':
     #px_thres = 23
     #cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_fixedsolar_ssig0.09_csig0_RC4_v30'
     #px_thres = 23
-    cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_fixedsolar_ssig0.06_csig10_RC5_v30'
-    px_thres = 23    
+    #cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_fixedsolar_ssig0.06_csig10_RC5_v30'
+    #px_thres = 23    
     
-    whr_thres = 3
-    dt = 'color'
-    syn_args = get_args(cmt)
-    group_object_annotation_and_draw_bbox(dt, px_thres, whr_thres)
-    draw_bbx_on_rgb_images(dt, px_thres, whr_thres)
+#    whr_thres = 3
+#    dt = 'color'
+#    syn_args = get_args(cmt)
+#    group_object_annotation_and_draw_bbox(dt, px_thres, whr_thres)
+#    draw_bbx_on_rgb_images(dt, px_thres, whr_thres)
 
 
 
