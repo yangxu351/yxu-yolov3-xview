@@ -415,16 +415,13 @@ def main():
     base_cmt = "px23whr3_seed{}"
     # hyp_cmt = "hgiou1_1gpu"
 
-    hyp_cmt = "hgiou1_1gpu_val_syn"
-#    hyp_cmt = "hgiou1_1gpu_39.5obj_val_syn"
-#    apN = 20
-##    apN = 40
-##    apN = 50
+#    hyp_cmt = "hgiou1_1gpu_val_syn"
+#    hyp_cmt = "hgiou1_1gpu_half_hsv_val_syn"
+#    hyp_cmt = "hgiou1_1gpu_point1_hsv_val_syn"
+    hyp_cmt = "hgiou1_1gpu_square_val_syn"
+
     prefix = 'syn'
-#    prefix = "syn_iou{}".format(apN)
-#    prefix = "syn_backup100"
-#    prefix = "syn_backup200"
-#    prefix = "syn_px30"
+
 
     px_thres = 23
     whr_thres = 3 # 4
@@ -433,7 +430,7 @@ def main():
     rare_classes = [1, 2, 3, 4, 5]
 #    ap_list = [20, 40, 50] #
     apN = 50 
-    eh_types = ["hard", "easy"]
+    eh_types = ["easy"]# , "hard"
     far_thres = 3
     for typ in eh_types:  
 #        df_pr_ap_far = pd.DataFrame(columns=["Version","Seen", "NT", "AP{}".format(ap_list[0]), "AP{}".format(ap_list[1]), "AP{}".format(ap_list[2])])
@@ -442,25 +439,17 @@ def main():
             VN = ix + base_version
             base_cmt = base_cmt.format(sd)
             opt = get_opt(comments=cmt)
-            opt.device = "3"
+            opt.device = "2"
             opt.apN = apN
-
-#            cinx = cmt.find("model") # first letter index
-#            endstr = cmt[cinx:]
-#            rcinx = endstr.rfind("_")
-#            fstr = endstr[rcinx:] # "_" is included
-#            sstr = endstr[:rcinx]
-#            suffix = fstr + "_" + sstr
-#            if cinx < 0:
-#                suffix = ''
-#            opt.name = prefix + suffix
 
             cinx = cmt.find('_RC') # first letter index
             endstr = cmt[cinx:]
             rcinx = endstr.rfind('_') # _RC*_v*
             sstr = endstr[:rcinx]
             if cinx >= 0:
-                medix = cmt.find('_bxmuller')
+                medix = cmt.find('_ssig')
+                #medix = cmt.find('_promu')
+                #medix = cmt.find('_bxmuller')
                 #medix = cmt.find('_dyn')
                 mstr =  cmt[medix:cinx] # _dyn*_color_bias*
                 suffix = sstr + '_AP{}'.format(apN)
@@ -470,7 +459,6 @@ def main():
     
             opt.legend = prefix + suffix
             opt.name = prefix + mstr + suffix # 'syn_RC*_v*_dyn*_color_bias*_AP*
-
             
             ''' for specified model id '''
             opt.batch_size = 8
@@ -484,66 +472,32 @@ def main():
 #            opt.type = "easy"
 #            opt.type = "hard"
             opt.type = typ
-#            opt.rare_class = 1
-#            opt.rare_class = 2
-#            opt.rare_class = 3
-#            opt.rare_class = 4 
-#            opt.rare_class = 5
-            #opt.rare_class = rare_cls
-            
-#            opt.name += "_{}".format(opt.type)
-#            opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, "test_on_xview_{}_upscale_m{}_rc{}_{}".format(hyp_cmt, opt.model_id, opt.rare_class, opt.type))
-#            opt.data = "data_xview/{}_cls/{}/xviewtest_{}_upscale_m{}_rc{}_{}.data".format(opt.class_num, base_cmt, base_cmt, opt.model_id, opt.rare_class, opt.type)
 
             opt.name += "_{}".format(opt.type)
-
+            ############# ori test dataset
 #            opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, "test_on_xview_{}_m{}_rc{}_ap{}_{}".format(hyp_cmt, opt.model_id, opt.rare_class, apN, opt.type))
 #            opt.data = "data_xview/{}_cls/{}/xview_rc_test_{}_m{}_rc{}_{}.data".format(opt.class_num, base_cmt, base_cmt, opt.model_id, opt.rare_class, opt.type)
 
-            opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_ori_nrcbkg_aug_rc_{}_m{}_rc{}_{}_iou{}'.format(hyp_cmt, opt.model_id, opt.rare_class, opt.type, apN))
+            ############# aug rc test dataset
+#            opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_ori_nrcbkg_aug_rc_{}_m{}_rc{}_{}_iou{}'.format(hyp_cmt, opt.model_id, opt.rare_class, opt.type, apN))
+#            opt.data = 'data_xview/{}_cls/{}/xview_ori_nrcbkg_aug_rc_test_{}_m{}_rc{}_{}.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id, opt.rare_class, opt.type)
+
+            ############# model with different seeds
+            opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_ori_nrcbkg_aug_rc_{}_m{}_rc{}_{}_iou{}_seed{}'.format(hyp_cmt, opt.model_id, opt.rare_class, opt.type, apN, seed))
             opt.data = 'data_xview/{}_cls/{}/xview_ori_nrcbkg_aug_rc_test_{}_m{}_rc{}_{}.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id, opt.rare_class, opt.type)
-
-#            opt.name += "_{}_aug".format(opt.type)
-#            opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, "test_on_xview_{}_m{}_rc{}_{}_aug".format(hyp_cmt, opt.model_id, opt.rare_class, opt.type))
-#            opt.data = "data_xview/{}_cls/{}/xviewtest_{}_m{}_rc{}_{}_aug.data".format(opt.class_num, base_cmt, base_cmt, opt.model_id, opt.rare_class, opt.type)
-
-#            opt.name += "_{}".format(opt.type)
-#            opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, "test_on_xview_{}_m{}_rc{}_{}".format(hyp_cmt, opt.model_id, opt.rare_class, opt.type))
-#            opt.data = "data_xview/{}_cls/{}/xviewtest_{}_m{}_rc{}_{}.data".format(opt.class_num, base_cmt, base_cmt, opt.model_id, opt.rare_class, opt.type)
-
-#            opt.name += "_{}_aug".format(opt.type)
-#            opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, "test_on_xview_{}_m{}_rc{}_{}_aug".format(hyp_cmt, opt.model_id, opt.rare_class, opt.type))
-#            opt.data = "data_xview/{}_cls/{}/xviewtest_{}_m{}_rc{}_{}_aug.data".format(opt.class_num, base_cmt, base_cmt, opt.model_id, opt.rare_class, opt.type)
-
-
-#            opt.grids_dir = opt.grids_dir.format(opt.class_num, cmt, sd)
-#            if not os.path.exists(opt.grids_dir):
-#                os.makedirs(opt.grids_dir)
-            ############ all 2315 patches 171
-#            tif_name = "2315"
-#            opt.batch_size = 8
-#            opt.rare_class = 1
-#            opt.type = "hard"
-#            opt.name += "_{}_{}".format(tif_name, opt.type)
-#            opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, "test_on_xview_with_model_{}_{}_{}".format(hyp_cmt, tif_name, opt.type))
-#            opt.data = "data_xview/{}_cls/{}/xviewtest_{}_m{}_rc{}_{}.data".format(opt.class_num, base_cmt, base_cmt, opt.model_id, opt.rare_class, tif_name)
-
-            ''' for whole validation dataset '''
-            # opt.conf_thres = 0.1
-            # opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd , "{}_{}_seed{}".format("test_on_xview_with_model", hyp_cmt, sd))
-            # opt.data = "data_xview/{}_cls/{}/{}_seed{}_with_model.data".format(opt.class_num, "px{}whr{}_seed{}".format(px_thres, whr_thres, sd), "xview_px{}whr{}".format(px_thres, whr_thres), sd)
 
             if not os.path.exists(opt.result_dir):
                 os.makedirs(opt.result_dir)
 #            print(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd), "*_{}_seed{}".format(hyp_cmt, sd), "best_seed{}.pt".format(sd)))
 #            print(glob.glob(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd), "*_{}_seed{}".format(hyp_cmt, sd), "best_seed{}.pt".format(sd))))
-            all_weights = glob.glob(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd), "*_{}_seed{}".format(hyp_cmt, sd), "best_*seed{}.pt".format(sd)))
+#            all_weights = glob.glob(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd), "*_{}_seed{}".format(hyp_cmt, sd), "best_*seed{}.pt".format(sd)))
+            all_weights = glob.glob(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd), "*_{}_seed{}".format(hyp_cmt, seed), "best_*seed{}.pt".format(seed)))
+            print('all_weights', os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd), "*_{}_seed{}".format(hyp_cmt, seed), "best_*seed{}.pt".format(seed)))
             all_weights.sort()
             opt.weights = all_weights[-1]
 
             print(opt.weights)
-            print(opt.data)
-            
+            print(opt.data)           
             
             seen, nt, mp, mr, mapv, mf1 = test(opt.cfg,
                  opt.data,
@@ -599,22 +553,71 @@ def main():
             df_pr_ap_far.at[ix, "Pd(FAR=1)"] = pd_1
             
         #sinx = cmt.find('dyn')
-        sinx = cmt.find('bxmuller')
+        #sinx = cmt.find('bxmuller')
+        #sinx = cmt.find('promu')
+        sinx = cmt.find('ssig')
         einx = cmt.find('bias')+4
         dynstr = cmt[sinx:einx]
         
-        csv_dir = "result_output/{}_cls/{}/".format(opt.class_num, cmt[:einx] + '_RC' + str(opt.rare_class))
+        #csv_dir = "result_output/{}_cls/{}/".format(opt.class_num, cmt[:einx] + '_RC' + str(opt.rare_class))
+        csv_dir = "result_output/{}_cls/{}/{}".format(opt.class_num, cmt[:einx] + '_RC' + str(opt.rare_class), hyp_cmt)
+        
         if not os.path.exists(csv_dir):
-            os.mkdir(csv_dir)
+            os.makedirs(csv_dir)
 #        csv_name =  "{}_{}_RC{}_AP{}_{}.xls".format(prefix, dynstr, opt.rare_class, apN, opt.type)      
 #        df_pr_ap_far.to_excel(os.path.join(csv_dir, csv_name), index=False)
 
 
-        csv_name =  "{}_{}_RC{}_{}.xlsx".format(prefix, dynstr, opt.rare_class, opt.type)         
-#        csv_name =  "{}_{}_RC{}_{}.xlsx".format(prefix, 'old_testset_size', opt.rare_class, opt.type)         
+        csv_name =  "{}_{}_RC{}_{}_seed{}.xlsx".format(prefix, dynstr, opt.rare_class, opt.type, seed)         
+#        csv_name =  "{}_{}_RC{}_{}.xlsx".format(prefix, dynstr, opt.rare_class, opt.type)         
         mode = 'w'
         with pd.ExcelWriter(os.path.join(csv_dir, csv_name), mode=mode) as writer:
             df_pr_ap_far.to_excel(writer, sheet_name='RC{}_{}'.format(opt.rare_class, opt.type), index=False) # 
+
+
+def computer_avg_all_seeds(seeds):
+    prefix = 'syn'
+    model_ids = [4, 1, 5, 5, 5]
+    rare_classes = [1, 2, 3, 4, 5]
+    eht = 'easy'
+    apN = 50
+    hyp_cmt = "hgiou1_1gpu_val_syn"
+#    hyp_cmt = "hgiou1_1gpu_half_hsv_val_syn"
+#    hyp_cmt = "hgiou1_1gpu_point1_hsv_val_syn"
+
+    for cmt in comments:
+        cinx = cmt.find('_RC')
+        rare_class = int(cmt[cinx+3])
+        model_id = model_ids[rare_classes.index(rare_class)]
+        csv_dir = "result_output/1_cls/{}/{}".format(cmt[:cmt.find("bias")+4] + '_RC' + str(rare_class), hyp_cmt)
+        #csv_dir = "result_output/1_cls/{}/".format(cmt[:cmt.find("bias")+4] + '_RC' + str(rare_class))
+        #sinx = cmt.find('bxmuller')
+        #sinx = cmt.find('promu')
+        sinx = cmt.find('ssig')
+        einx = cmt.find('bias')+4
+        dynstr = cmt[sinx:einx]
+        cmb = []
+        for seed in seeds:
+            
+            csv_name =  "{}_{}_RC{}_{}_seed{}.xlsx".format(prefix, dynstr, rare_class, eht, seed)
+            # "AP{}".format(apN), "Pd(FAR=0.25)",  "Pd(FAR=0.5)", "Pd(FAR=1)"
+            df = pd.read_excel(os.path.join(csv_dir, csv_name))
+            cmb.append(df.to_numpy())
+            ver_list = df.loc[:, 'Version']
+            imgnum_list = df.loc[:, 'Seen']
+            rcnum_list = df.loc[:, 'NT']
+
+        cmb = np.array(cmb)
+        avg_cmb = np.mean(cmb[:, :, 3:7], axis=0)
+        df_avg = pd.DataFrame(columns=["Version", "Seen", "NT", "AP{}".format(apN), "Pd(FAR=0.25)",  "Pd(FAR=0.5)", "Pd(FAR=1)"])
+        df_avg['Version'] = ver_list
+        df_avg['Seen'] = imgnum_list
+        df_avg['NT'] = rcnum_list
+        df_avg.loc[:, 3:7] = avg_cmb
+        save_name =  "{}_{}_RC{}_{}_avg_all_seeds.xlsx".format(prefix, dynstr, rare_class, eht)
+        with pd.ExcelWriter(os.path.join(csv_dir, save_name), mode='w') as writer:
+            df_avg.to_excel(writer, sheet_name='RC{}_{}_avg'.format(rare_class, eht), index=False) #
+
 
 
 
@@ -741,28 +744,68 @@ if __name__ == "__main__":
 #    main()
 #                             
     ###########################################    
+#    comments = []
+#    base_version = 1
+#    color_sigma = [0, 5, 10, 15, 20] # 0, 
+#    for ix,ssig in enumerate(color_sigma):
+#
+#        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_ssig0.03_bxmuller_color_bias{}_RC1_v{}'.format(ssig, ix+11)
+#        px_thres = 15
+#        
+##        cmt = 'syn_xview_bkg_px23whr3_xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_ssig0.12_bxmuller_color_bias{}_RC2_v{}'.format(ssig, ix+11)
+##        cmt = 'syn_xview_bkg_px23whr3_xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_ssig0.03_bxmuller_color_bias{}_RC2_v{}'.format(ssig, ix+31)
+##        px_thres = 23
+#        
+##        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0_bxmuller_color_bias{}_RC3_v{}'.format(ssig, ix+11)
+##        px_thres = 23
+#        
+##        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.09_bxmuller_color_bias{}_RC4_v{}'.format(ssig, ix+11)
+##        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.06_bxmuller_color_bias{}_RC4_v{}'.format(ssig, ix+31)
+##        px_thres = 23
+#        
+##        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.06_bxmuller_color_bias{}_RC5_v{}'.format(ssig, ix+11)
+##        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.03_bxmuller_color_bias{}_RC5_v{}'.format(ssig, ix+31)
+##        px_thres = 23
+#
+#        comments.append(cmt)
+
+    ###########################################    
     comments = []
     base_version = 1
-    color_sigma = [0, 5, 10, 15, 20] # 0, 
-    for ix,ssig in enumerate(color_sigma):
+    color_sigma = [5, 10, 15, 20]
+#    color_sigma = [15, 30, 45, 60] # 0, 15, 30, 45, 60
+#    for ix,ssig in enumerate(color_sigma):
 
-#        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_ssig0.03_bxmuller_color_bias{}_RC1_v{}'.format(ssig, ix+11)
+#        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_ssig0_color_bias{}_RC1_v{}'.format(ssig, ix+50)
 #        px_thres = 15
         
 #        cmt = 'syn_xview_bkg_px23whr3_xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_ssig0.12_bxmuller_color_bias{}_RC2_v{}'.format(ssig, ix+11)
+#        cmt = 'syn_xview_bkg_px23whr3_xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_ssig0_color_bias{}_RC2_v{}'.format(ssig, ix+50)
 #        px_thres = 23
         
 #        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0_bxmuller_color_bias{}_RC3_v{}'.format(ssig, ix+11)
+#        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.09_color_bias{}_RC3_v{}'.format(ssig, ix+50)
 #        px_thres = 23
         
 #        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.09_bxmuller_color_bias{}_RC4_v{}'.format(ssig, ix+11)
+#        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.09_color_bias{}_RC4_v{}'.format(ssig, ix+50)
+#        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.09_color_square_bias{}_RC4_v{}'.format(ssig, ix+71)
 #        px_thres = 23
         
-        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.06_bxmuller_color_bias{}_RC5_v{}'.format(ssig, ix+11)
-        px_thres = 23
+#        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.06_bxmuller_color_bias{}_RC5_v{}'.format(ssig, ix+11)
+#        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.03_color_bias{}_RC5_v{}'.format(ssig, ix+50)
+#        px_thres = 23
 
-        comments.append(cmt)
-    main()
+#        comments.append(cmt)
 
-
+    comments = ['syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_ssig0_texture_RC1_v80',
+                'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.09_texture_RC4_v80',
+                'syn_xview_bkg_px23whr3_xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_ssig0_texture_RC2_v80']
+    
+    seed_list = [0]# 0, 1, 2
+    for seed in seed_list:
+      main()  
+       
+#    seeds = [0, 1, 2] #, 2
+#    computer_avg_all_seeds(seeds)
 

@@ -415,8 +415,8 @@ def main():
     base_cmt = "px23whr3_seed{}"
     # hyp_cmt = "hgiou1_1gpu"
 
-    hyp_cmt = "hgiou1_1gpu_val_syn"
-#    hyp_cmt = "hgiou1_1gpu_39.5obj_val_syn"
+    hyp_cmt = "hgiou1_1gpu_5every_val_syn"
+#    hyp_cmt = "hgiou1_1gpu_val_syn"
 #    apN = 20
 ##    apN = 40
 ##    apN = 50
@@ -437,7 +437,7 @@ def main():
     far_thres = 3
     for typ in eh_types:  
 #        df_pr_ap_far = pd.DataFrame(columns=["Version","Seen", "NT", "AP{}".format(ap_list[0]), "AP{}".format(ap_list[1]), "AP{}".format(ap_list[2])])
-        df_pr_ap_far = pd.DataFrame(columns=["Version", "Seen", "NT", "AP{}".format(apN), "Pd(FAR=0.25)", "Pd(FAR=0.5)", "Pd(FAR=1)", "Precision", "Recall" , "F1"]) #, "Precision", "Recall" , "F1"
+        df_pr_ap_far = pd.DataFrame(columns=["Version", "Seen", "NT", "AP{}".format(apN), "Pd(FAR=0.5)", "Pd(FAR=1)", "Precision", "Recall" , "F1"]) #, "Precision", "Recall" , "F1"
         for ix, cmt in enumerate(comments):    
             VN = ix + base_version
             base_cmt = base_cmt.format(sd)
@@ -445,23 +445,12 @@ def main():
             opt.device = "3"
             opt.apN = apN
 
-#            cinx = cmt.find("model") # first letter index
-#            endstr = cmt[cinx:]
-#            rcinx = endstr.rfind("_")
-#            fstr = endstr[rcinx:] # "_" is included
-#            sstr = endstr[:rcinx]
-#            suffix = fstr + "_" + sstr
-#            if cinx < 0:
-#                suffix = ''
-#            opt.name = prefix + suffix
-
             cinx = cmt.find('_RC') # first letter index
             endstr = cmt[cinx:]
             rcinx = endstr.rfind('_') # _RC*_v*
             sstr = endstr[:rcinx]
             if cinx >= 0:
-                medix = cmt.find('_bxmuller')
-                #medix = cmt.find('_dyn')
+                medix = cmt.find('_dyn')
                 mstr =  cmt[medix:cinx] # _dyn*_color_bias*
                 suffix = sstr + '_AP{}'.format(apN)
             else:
@@ -496,46 +485,15 @@ def main():
 #            opt.data = "data_xview/{}_cls/{}/xviewtest_{}_upscale_m{}_rc{}_{}.data".format(opt.class_num, base_cmt, base_cmt, opt.model_id, opt.rare_class, opt.type)
 
             opt.name += "_{}".format(opt.type)
-
-#            opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, "test_on_xview_{}_m{}_rc{}_ap{}_{}".format(hyp_cmt, opt.model_id, opt.rare_class, apN, opt.type))
-#            opt.data = "data_xview/{}_cls/{}/xview_rc_test_{}_m{}_rc{}_{}.data".format(opt.class_num, base_cmt, base_cmt, opt.model_id, opt.rare_class, opt.type)
-
-            opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_ori_nrcbkg_aug_rc_{}_m{}_rc{}_{}_iou{}'.format(hyp_cmt, opt.model_id, opt.rare_class, opt.type, apN))
-            opt.data = 'data_xview/{}_cls/{}/xview_ori_nrcbkg_aug_rc_test_{}_m{}_rc{}_{}.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id, opt.rare_class, opt.type)
-
-#            opt.name += "_{}_aug".format(opt.type)
-#            opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, "test_on_xview_{}_m{}_rc{}_{}_aug".format(hyp_cmt, opt.model_id, opt.rare_class, opt.type))
-#            opt.data = "data_xview/{}_cls/{}/xviewtest_{}_m{}_rc{}_{}_aug.data".format(opt.class_num, base_cmt, base_cmt, opt.model_id, opt.rare_class, opt.type)
-
-#            opt.name += "_{}".format(opt.type)
 #            opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, "test_on_xview_{}_m{}_rc{}_{}".format(hyp_cmt, opt.model_id, opt.rare_class, opt.type))
+            opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, "test_on_xview_{}_m{}_rc{}_ap{}_{}_v1".format(hyp_cmt, opt.model_id, opt.rare_class, apN, opt.type))
 #            opt.data = "data_xview/{}_cls/{}/xviewtest_{}_m{}_rc{}_{}.data".format(opt.class_num, base_cmt, base_cmt, opt.model_id, opt.rare_class, opt.type)
+            opt.data = "data_xview/{}_cls/{}/xview_rc_test_{}_m{}_rc{}_{}.data".format(opt.class_num, base_cmt, base_cmt, opt.model_id, opt.rare_class, opt.type)
 
-#            opt.name += "_{}_aug".format(opt.type)
-#            opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, "test_on_xview_{}_m{}_rc{}_{}_aug".format(hyp_cmt, opt.model_id, opt.rare_class, opt.type))
-#            opt.data = "data_xview/{}_cls/{}/xviewtest_{}_m{}_rc{}_{}_aug.data".format(opt.class_num, base_cmt, base_cmt, opt.model_id, opt.rare_class, opt.type)
-
-
-#            opt.grids_dir = opt.grids_dir.format(opt.class_num, cmt, sd)
-#            if not os.path.exists(opt.grids_dir):
-#                os.makedirs(opt.grids_dir)
-            ############ all 2315 patches 171
-#            tif_name = "2315"
-#            opt.batch_size = 8
-#            opt.rare_class = 1
-#            opt.type = "hard"
-#            opt.name += "_{}_{}".format(tif_name, opt.type)
-#            opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, "test_on_xview_with_model_{}_{}_{}".format(hyp_cmt, tif_name, opt.type))
-#            opt.data = "data_xview/{}_cls/{}/xviewtest_{}_m{}_rc{}_{}.data".format(opt.class_num, base_cmt, base_cmt, opt.model_id, opt.rare_class, tif_name)
-
-            ''' for whole validation dataset '''
-            # opt.conf_thres = 0.1
-            # opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd , "{}_{}_seed{}".format("test_on_xview_with_model", hyp_cmt, sd))
-            # opt.data = "data_xview/{}_cls/{}/{}_seed{}_with_model.data".format(opt.class_num, "px{}whr{}_seed{}".format(px_thres, whr_thres, sd), "xview_px{}whr{}".format(px_thres, whr_thres), sd)
 
             if not os.path.exists(opt.result_dir):
                 os.makedirs(opt.result_dir)
-#            print(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd), "*_{}_seed{}".format(hyp_cmt, sd), "best_seed{}.pt".format(sd)))
+            print(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd), "*_{}_seed{}".format(hyp_cmt, sd), "best_seed{}.pt".format(sd)))
 #            print(glob.glob(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd), "*_{}_seed{}".format(hyp_cmt, sd), "best_seed{}.pt".format(sd))))
             all_weights = glob.glob(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd), "*_{}_seed{}".format(hyp_cmt, sd), "best_*seed{}.pt".format(sd)))
             all_weights.sort()
@@ -567,54 +525,30 @@ def main():
             df_far_thres = df_far[df_far<=far_thres]
             df_far_thres = df_far_thres.dropna()
             df_rec_thres = df_rec.loc[:df_far_thres.shape[0]-1]
-            idx25_mx = df_far[df_far>=0.25].dropna()
-#            print('idx25_mx.shape[0]', idx25_mx.shape[0])
-            if idx25_mx.shape[0] == 0:
-                idx25_mn = df_rec_thres.shape[0]-1
-            else:
-                idx25_mx = idx25_mx.idxmin()[0]
-#                print('idx25_mx', idx25_mx)
-                idx25_mn = idx25_mx # - 1
-#            print('idx25_mn', idx25_mn)
-            pd_25 = df_rec_thres.loc[idx25_mn, 0]
-            
             idx5_mx = df_far[df_far>=0.5].dropna()
-            if idx5_mx.shape[0] == 0:
-                idx5_mn = df_rec_thres.shape[0]-1
-            else:
-                idx5_mx = idx5_mx.idxmin()[0]
-                idx5_mn = idx5_mx #- 1
+            idx5_mx = idx5_mx.idxmin()[0]
+            idx5_mn = idx5_mx - 1
             pd_5 = df_rec_thres.loc[idx5_mn, 0]
-            
+            df_pr_ap_far.at[ix, "Pd(FAR=0.5)"] = pd_5
             idx1_mx = df_far[df_far>=1].dropna()
             if idx1_mx.shape[0] == 0:
                 idx1_mn = df_rec_thres.shape[0]-1
             else:
                 idx1_mx = idx1_mx.idxmin()[0]
-                idx1_mn = idx1_mx# - 1  
+                idx1_mn = idx1_mx - 1
             pd_1 = df_rec_thres.loc[idx1_mn, 0]
-            
-            df_pr_ap_far.at[ix, "Pd(FAR=0.25)"] = pd_25
-            df_pr_ap_far.at[ix, "Pd(FAR=0.5)"] = pd_5
             df_pr_ap_far.at[ix, "Pd(FAR=1)"] = pd_1
             
-        #sinx = cmt.find('dyn')
-        sinx = cmt.find('bxmuller')
+        sinx = cmt.find('dyn')
         einx = cmt.find('bias')+4
         dynstr = cmt[sinx:einx]
         
         csv_dir = "result_output/{}_cls/{}/".format(opt.class_num, cmt[:einx] + '_RC' + str(opt.rare_class))
         if not os.path.exists(csv_dir):
             os.mkdir(csv_dir)
-#        csv_name =  "{}_{}_RC{}_AP{}_{}.xls".format(prefix, dynstr, opt.rare_class, apN, opt.type)      
-#        df_pr_ap_far.to_excel(os.path.join(csv_dir, csv_name), index=False)
+        csv_name =  "{}_{}_RC{}_AP{}_{}_v1.xls".format(prefix, dynstr, opt.rare_class, apN, opt.type)      
+        df_pr_ap_far.to_excel(os.path.join(csv_dir, csv_name), index=False)
 
-
-        csv_name =  "{}_{}_RC{}_{}.xlsx".format(prefix, dynstr, opt.rare_class, opt.type)         
-#        csv_name =  "{}_{}_RC{}_{}.xlsx".format(prefix, 'old_testset_size', opt.rare_class, opt.type)         
-        mode = 'w'
-        with pd.ExcelWriter(os.path.join(csv_dir, csv_name), mode=mode) as writer:
-            df_pr_ap_far.to_excel(writer, sheet_name='RC{}_{}'.format(opt.rare_class, opt.type), index=False) # 
 
 
 
@@ -625,23 +559,19 @@ if __name__ == "__main__":
     '''
     # # 
 
-
-#    apN = 20
-#    apN = 40
-#    apN = 50
        
     ############### dynmu color
     '''RC1'''
 #    comments = [] 
 #    pros = [-2.5, -1.5, -0.5, 0.5, 1.5, 2.5]
-#    base_version = 50
-#    for ix, pro in enumerate(pros):
-#        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias{}_RC1_v{}_color'.format(pro, ix+ base_version)
-#        comments.append(cmt)
-##    base_version = 90
+##    base_version = 50
 ##    for ix, pro in enumerate(pros):
-##        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_fixedangle_dynmu_color_bias{}_RC1_v{}_color'.format(pro, ix+ base_version)
+##        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias{}_RC1_v{}_color'.format(pro, ix+ base_version)
 ##        comments.append(cmt)
+#    base_version = 90
+#    for ix, pro in enumerate(pros):
+#        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_fixedangle_dynmu_color_bias{}_RC1_v{}_color'.format(pro, ix+ base_version)
+#        comments.append(cmt)
 #    main()
 #    
 #    '''RC2''' 
@@ -664,23 +594,22 @@ if __name__ == "__main__":
 
     '''RC4'''
 #    comments = []       
-##    pros = [-1.5, -0.5, 0.5, 1.5, 2.5, 3.5]
-##    base_version = 30
-#    pros = [-0.5]
-#    base_version = 31
+#    pros = [-1.5, -0.5, 0.5, 1.5, 2.5, 3.5] 
+#    base_version = 30
 #    for ix, pro in enumerate(pros):
 #        cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias{}_RC4_v{}_color'.format(pro, ix+ base_version)
 #        comments.append(cmt)
 #    main()
     
     '''RC5''' 
-#    comments = []      
+    comments = []      
 #    pros = [-2.5, -1.5, -0.5, 0.5, 1.5, 2.5]
-#    base_version = 20
-#    for ix, pro in enumerate(pros):
-#        cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias{}_RC5_v{}_color'.format(pro, ix+ base_version)
-#        comments.append(cmt)       
-#    main()
+    pros = [-0.5]
+    base_version = 22
+    for ix, pro in enumerate(pros):
+        cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias{}_RC5_v{}_color'.format(pro, ix+ base_version)
+        comments.append(cmt)       
+    main()
     
     ###########################################    
 
@@ -689,15 +618,15 @@ if __name__ == "__main__":
     '''RC1'''
 #    comments = []   
 #    pros = [0, 0.2, 0.4, 0.6, 0.8]
-#    base_version = 60
-#    for ix, pro in enumerate(pros):
-#        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_dynsigma_color_bias{}_RC1_v{}_color'.format(pro, ix+ base_version)
-#        comments.append(cmt)
-#    base_version = 80
-#    for ix, pro in enumerate(pros):
-#        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_light_dynsigma_color_bias{}_RC1_v{}_color'.format(pro, ix+ base_version)
-#        comments.append(cmt)
-#    main()
+##    base_version = 60
+##    for ix, pro in enumerate(pros):
+##        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_dynsigma_color_bias{}_RC1_v{}_color'.format(pro, ix+ base_version)
+##        comments.append(cmt)
+##    base_version = 80
+##    for ix, pro in enumerate(pros):
+##        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_light_dynsigma_color_bias{}_RC1_v{}_color'.format(pro, ix+ base_version)
+##        comments.append(cmt)
+##    main()
 #    base_version = 100
 #    for ix, pro in enumerate(pros):
 #        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_fixedangle_dynsigma_color_bias{}_RC1_v{}_color'.format(pro, ix+ base_version)
@@ -739,30 +668,9 @@ if __name__ == "__main__":
 #        cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynsigma_color_bias{}_RC5_v{}_color'.format(pro, ix+ base_version)
 #        comments.append(cmt)
 #    main()
-#                             
+                             
     ###########################################    
-    comments = []
-    base_version = 1
-    color_sigma = [0, 5, 10, 15, 20] # 0, 
-    for ix,ssig in enumerate(color_sigma):
 
-#        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_ssig0.03_bxmuller_color_bias{}_RC1_v{}'.format(ssig, ix+11)
-#        px_thres = 15
-        
-#        cmt = 'syn_xview_bkg_px23whr3_xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_ssig0.12_bxmuller_color_bias{}_RC2_v{}'.format(ssig, ix+11)
-#        px_thres = 23
-        
-#        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0_bxmuller_color_bias{}_RC3_v{}'.format(ssig, ix+11)
-#        px_thres = 23
-        
-#        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.09_bxmuller_color_bias{}_RC4_v{}'.format(ssig, ix+11)
-#        px_thres = 23
-        
-        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.06_bxmuller_color_bias{}_RC5_v{}'.format(ssig, ix+11)
-        px_thres = 23
-
-        comments.append(cmt)
-    main()
-
+    
 
 
