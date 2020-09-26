@@ -576,16 +576,17 @@ if __name__ == "__main__":
     test for syn_xveiw_background_*_with_model
     '''
     # # 
+    
 #                             
-    ###########################################    
+    ############### best size and color with fixedsolar############################    
 
-    base_version = 30
+#    base_version = 30
 #    comments = ['syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_fixedsolar_ssig0.03_csig20_RC1_v30']
 #    comments = ['syn_xview_bkg_px23whr3_xbsw_xwing_xbkg_shdw_split_scatter_gauss_fixedsolar_ssig0.12_csig10_RC2_v30']
 #    comments = ['syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_fixedsolar_ssig0_csig0_RC3_v30']  
 #    comments = ['syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_fixedsolar_ssig0.09_csig0_RC4_v30']
-    comments = ['syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_fixedsolar_ssig0.06_csig10_RC5_v30']
-    main()
+#    comments = ['syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_fixedsolar_ssig0.06_csig10_RC5_v30']
+#    main()
 
     
 

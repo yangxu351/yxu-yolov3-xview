@@ -9,7 +9,6 @@ import torch.optim.lr_scheduler as lr_scheduler
 import test_xview as test  # import test.py to get mAP after each epoch
 from models_xview import *
 from utils.datasets_xview import *
-#from utils.datasets_xview_fixedseed import * # bxmuller results before 09/14/2020_16.34.pm are with fixed seed
 from utils.utils_xview import *
 from utils.torch_utils import *
 import warnings
@@ -88,7 +87,7 @@ def train(opt):
         return
 
     # Initialize
-    init_seeds(opt.initseed)
+    init_seeds()
     if opt.multi_scale:
         img_sz_min = round(img_size / 32 / 1.5)
         img_sz_max = round(img_size / 32 * 1.5)
@@ -431,7 +430,7 @@ def train(opt):
             # Save backup every 10 epochs (optional)
             #fixme
             # if (epoch > 0 and epoch % 10 == 0):
-            if (epoch > 0 and epoch % 50 == 0) or (epoch > 100 and epoch % 20 == 0) :
+            if (epoch > 0 and epoch % 50 == 0)  or (epoch > 100 and epoch % 20 == 0):
                 torch.save(chkpt, opt.weights_dir + 'backup%g.pt' % epoch)
 
             # Delete checkpoint
@@ -483,7 +482,7 @@ def get_opt():
     parser.add_argument('--task', default='', help="'test', 'study', 'benchmark'")
 
     parser.add_argument('--rect', default=False, action='store_true', help='rectangular training')
-    parser.add_argument('--resume', default=False, action='store_true', help='resume training from last.pt')
+    parser.add_argument('--resume', default=True, action='store_true', help='resume training from last.pt')
     parser.add_argument('--nosave', action='store_true', help='only save final checkpoint')
     parser.add_argument('--notest', action='store_true', help='only test final epoch')
     parser.add_argument('--evolve', action='store_true', help='evolve hyperparameters')
@@ -646,22 +645,15 @@ if __name__ == '__main__':
         hyp['obj_pw'] = 1.
     for cx, pro in enumerate(pros):
         cmt = comment.format(base_bias*pro, version_base+cx) 
-#        cinx = cmt.find('_RC') # first letter index
-#        endstr = cmt[cinx:]
-#        rcinx = endstr.rfind('_')
-#        sstr = endstr[:rcinx]
-#        if cinx >= 0:
-#            suffix = sstr
-#        else:
-#            suffix = ''
-
         cinx = cmt.find('_RC') # first letter index
-        endstr = cmt[cinx:] # _RC*_v*
+        endstr = cmt[cinx:]
+        rcinx = endstr.rfind('_')
+        sstr = endstr[:rcinx]
         if cinx >= 0:
-            suffix = endstr # _RC*_v*
+            suffix = sstr
         else:
             suffix = ''
-            
+
         opt.name = prefix + suffix
 
         opt.base_dir = opt.base_dir.format(opt.class_num, pxwhrsd.format(opt.seed))
@@ -669,12 +661,21 @@ if __name__ == '__main__':
             hyp_cmt_name = hyp_cmt + '_val_syn'
             opt.model_id = None
             opt.data = 'data_xview/{}_{}_cls/{}_seed{}/{}_seed{}.data'.format(cmt, opt.class_num, cmt, opt.seed, cmt, opt.seed)
+        elif val_labeled:
+            hyp_cmt_name = hyp_cmt + '_val_labeled'
+            opt.data = 'data_xview/{}_{}_cls/{}_seed{}/{}_seed{}_xview_val_labeled.data'.format(cmt, opt.class_num, cmt, opt.seed, cmt, opt.seed)
+        elif val_miss:
+            hyp_cmt_name = hyp_cmt + '_val_labeled_miss'
+            opt.data = 'data_xview/{}_{}_cls/{}_seed{}/{}_seed{}_xview_val_labeled_miss.data'.format(cmt, opt.class_num, cmt, opt.seed, cmt, opt.seed)
+        elif opt.model_id < 0:
+            hyp_cmt_name = hyp_cmt + 'xview_only'
+            opt.data = 'data_xview/{}_cls/{}_seed{}/xview_{}_seed{}.data'.format(opt.class_num, cmt, opt.seed, cmt, opt.seed)
         else:
             hyp_cmt_name = hyp_cmt + '_val_xview'
             opt.data = 'data_xview/{}_{}_cls/{}_seed{}/{}_seed{}_xview_val.data'.format(cmt, opt.class_num, cmt, opt.seed, cmt, opt.seed)
 
-        time_marker = time.strftime('%Y-%m-%d_%H.%M', time.localtime())
-#        time_marker = '2020-06-30_10.03'
+#        time_marker = time.strftime('%Y-%m-%d_%H.%M', time.localtime())
+        time_marker = '2020-08-30_15.57'
         opt.weights_dir = 'weights/{}_cls/{}_seed{}/{}/'.format(opt.class_num, cmt, opt.seed, '{}_{}_seed{}'.format(time_marker, hyp_cmt_name, opt.seed))
         opt.writer_dir = 'writer_output/{}_cls/{}_seed{}/{}/'.format(opt.class_num, cmt, opt.seed, '{}_{}_seed{}'.format(time_marker, hyp_cmt_name, opt.seed))
         opt.result_dir = 'result_output/{}_cls/{}_seed{}/{}/'.format(opt.class_num, cmt, opt.seed, '{}_{}_seed{}'.format(time_marker, hyp_cmt_name, opt.seed))

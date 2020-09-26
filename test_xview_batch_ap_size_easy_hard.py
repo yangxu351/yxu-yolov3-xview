@@ -419,7 +419,9 @@ def main():
     # hyp_cmt = "hgiou1_1gpu"
 
     hyp_cmt = "hgiou1_1gpu_val_syn"
+#    hyp_cmt = "hgiou1_1gpu_halfhsv_val_syn"
 
+    
 #    apN = 20
 ##    apN = 40
 ##    apN = 50
@@ -488,9 +490,11 @@ def main():
             opt.type = typ
 
             opt.name += "_{}".format(opt.type)
+            ############# ori test dataset
 #            opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, "test_on_xview_{}_m{}_rc{}_ap{}_{}".format(hyp_cmt, opt.model_id, opt.rare_class, apN, opt.type))
 #            opt.data = "data_xview/{}_cls/{}/xview_rc_test_{}_m{}_rc{}_{}.data".format(opt.class_num, base_cmt, base_cmt, opt.model_id, opt.rare_class, opt.type)
-
+            
+            ############# aug rc test dataset
             opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_ori_nrcbkg_aug_rc_{}_m{}_rc{}_{}_iou{}'.format(hyp_cmt, opt.model_id, opt.rare_class, opt.type, apN))
             opt.data = 'data_xview/{}_cls/{}/xview_ori_nrcbkg_aug_rc_test_{}_m{}_rc{}_{}.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id, opt.rare_class, opt.type)
 
@@ -569,7 +573,8 @@ def main():
         einx = cmt.find('bias')+4
         dynstr = cmt[sinx:einx]  
         
-        csv_name =  "{}_{}_RC{}_{}-v2.xlsx".format(prefix, dynstr, opt.rare_class, opt.type)          
+        csv_name =  "{}_{}_RC{}_{}.xlsx".format(prefix, dynstr, opt.rare_class, opt.type)          
+#        csv_name =  "{}_{}_RC{}_{}-v4.xlsx".format(prefix, dynstr, opt.rare_class, opt.type)          
 #        csv_name =  "{}_{}_RC{}_{}.xlsx".format(prefix, 'old_testset_size', opt.rare_class, opt.type)          
         mode = 'w'
         with pd.ExcelWriter(os.path.join(csv_dir, csv_name), mode=mode) as writer:
@@ -727,6 +732,7 @@ if __name__ == "__main__":
 #    main()
 
     ################  promu size 
+
     comments = []
     base_version = 1
     size_sigma = [0, 0.03, 0.06, 0.09, 0.12]
@@ -740,10 +746,10 @@ if __name__ == "__main__":
 #        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_bxmuller_promu_size_bias{}_RC3_v{}'.format(ssig, ix+21)
 #        px_thres = 23
 
-#        cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_bxmuller_promu_size_bias{}_RC4_v{}'.format(ssig, ix+21)
-#        px_thres = 23
-
-        cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_bxmuller_promu_size_bias{}_RC5_v{}'.format(ssig, ix+21)
+        cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_bxmuller_promu_size_bias{}_RC4_v{}'.format(ssig, ix+21)
         px_thres = 23
+
+#        cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_bxmuller_promu_size_bias{}_RC5_v{}'.format(ssig, ix+21)
+#        px_thres = 23
         comments.append(cmt)
-    main()   
+    main()  
