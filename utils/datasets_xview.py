@@ -265,7 +265,7 @@ class LoadStreams:  # multiple IP or RTSP cameras
 
 class LoadImagesAndLabels(Dataset):  # for training/testing
     def __init__(self, path, label_path, img_size=608, batch_size=8, class_num=60, augment=False, hyp=None, rect=False, image_weights=False,
-                 cache_labels=False, cache_images=False, with_modelid=False):
+                 cache_labels=False, cache_images=False, with_modelid=False, seed_aug=None):
         #fixme
         path = str(Path(path))  # os-agnostic
         assert os.path.isfile(path), 'File not found %s. See %s' % (path, help_url)
@@ -454,6 +454,10 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
                 except:
                     print('Corrupted image detected: %s' % file)
         # print('self.lables[0]', self.labels[0])
+        #fixme
+        if seed_aug is not None:
+            np.random.seed(seed_aug)
+            random.seed(seed_aug)
 
     def __len__(self):
         return len(self.img_files)
