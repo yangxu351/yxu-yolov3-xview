@@ -88,7 +88,11 @@ def plot_roc_of_dynamic_sigma_size(comments, base_range, pros, size_base, base_v
 #            idx1_mn = idx1_mx - 1
 #            pd_1 = df_rec_thres.loc[idx1_mn, 0]
 #            df_roc.at[ix, "Pd(FAR=0.5)"] = pd_5
+<<<<<<< HEAD
 #            df_roc.at[ix, "Pd(FAR=1)"] = pd_1               
+=======
+#            df_roc.at[ix, "Pd(FAR=1)"] = pd_1
+>>>>>>> master
 
         fig.legend(legends, prop=literal_eval(lgd_font), loc='upper right')
         yticks.append(1)
@@ -108,6 +112,14 @@ def plot_roc_of_dynamic_sigma_size(comments, base_range, pros, size_base, base_v
 #        with pd.ExcelWriter(os.path.join(save_dir, csv_name), mode=mode) as writer:
 #            df_roc.to_excel(writer, sheet_name='AP{}'.format(apN), index=False) # 
 
+#        csv_name = 'Pd_{}_RC{}_{}.xlsx'.format(cmt[dix:bix + 4], rare_id, ehtp)
+#        if os.path.exists(os.path.join(save_dir, csv_name)):
+#            mode = 'a'
+#        else:
+#            mode = 'w'
+#        with pd.ExcelWriter(os.path.join(save_dir, csv_name), mode=mode) as writer:
+#            df_roc.to_excel(writer, sheet_name='AP{}'.format(apN), index=False) #
+
 
 if __name__ == '__main__':
     '''
@@ -121,11 +133,69 @@ if __name__ == '__main__':
 #    for ix, pro in enumerate(pros):
 #       cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_scatter_gauss_2_7_rndsolar_dynsigma_size_bias{}_RC1_v{}_color'.format(pro, ix+ base_version)
 #       comments.append(cmt)
+<<<<<<< HEAD
 #    base_version = 120
 #    for ix, pro in enumerate(pros):
 #        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_fixedangle_dynsigma_size_bias{}_RC1_v{}_color'.format(pro*size_base, ix+ base_version)
 #        comments.append(cmt)
     base_version = 140
+=======
+    base_version = 120
+    for ix, pro in enumerate(pros):
+        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_fixedangle_dynsigma_size_bias{}_RC1_v{}_color'.format(pro*size_base, ix+ base_version)
+        comments.append(cmt)
+
+    plot_roc_of_dynamic_sigma_size(comments, base_range, pros, size_base, base_version)
+
+    '''
+    RC2 dynsigma size
+    '''
+    comments = []
+    base_range = [37, 40]
+    pros = [0, 0.2, 0.4, 0.6]
+    size_base = 1
+    base_version = 50
+    for ix, pro in enumerate(pros):
+       cmt = 'syn_xview_bkg_px23whr3_xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_dynsigma_size_bias{}_RC2_v{}_color'.format(pro, ix+ base_version)
+       comments.append(cmt)
+    plot_roc_of_dynamic_sigma_size(comments, base_range, pros, size_base, base_version)
+
+
+    '''
+    RC3 dynsigma size
+    '''
+    comments = []
+    base_range = [22, 28]
+    pros = [0, 0.2, 0.4, 0.6]
+    size_base = 1
+    base_version = 50
+    for ix, pro in enumerate(pros):
+       cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynsigma_size_bias{}_RC3_v{}_color'.format(pro, ix+ base_version)
+       comments.append(cmt)
+    plot_roc_of_dynamic_sigma_size(comments, base_range, pros, size_base, base_version)
+
+    '''
+    RC4 dynsigma size
+    '''
+    comments = []
+    base_range = [30, 32]
+    pros = [0, 0.2, 0.4, 0.6]
+    size_base = 1
+    base_version = 50
+    for ix, pro in enumerate(pros):
+       cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynsigma_size_bias{}_RC4_v{}_color'.format(pro, ix+ base_version)
+       comments.append(cmt)
+    plot_roc_of_dynamic_sigma_size(comments, base_range, pros, size_base, base_version)
+
+    '''
+    RC5 dynsigma size
+    '''
+    comments = []
+    base_range = [7.5, 10]
+    pros = [0, 0.05, 0.1, 0.15]
+    size_base = 1
+    base_version = 40
+>>>>>>> master
     for ix, pro in enumerate(pros):
         cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_dynsigma_size_bias{}_RC1_v{}_color'.format(pro*size_base, ix+ base_version)
         comments.append(cmt)

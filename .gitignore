@@ -20,6 +20,7 @@
 *.data
 *.json
 
+
 *.cfg
 !cfg/yolov3*.cfg
 *.sh
@@ -33,6 +34,7 @@ result_output/*
 weights/*
 data_xview/*
 *.swap
+*.sh
 
 !data/samples/zidane.jpg
 !data/samples/bus.jpg

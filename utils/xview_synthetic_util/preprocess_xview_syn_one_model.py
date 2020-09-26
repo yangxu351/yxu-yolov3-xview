@@ -9,8 +9,6 @@ sys.path.append('/data/users/yang/code/yxu-yolov3-xview')
 import utils.wv_util as wv
 from utils.utils_xview import coord_iou, compute_iou
 from utils.xview_synthetic_util import preprocess_xview_syn_data_distribution as pps
-from utils.xview_synthetic_util import process_syn_xview_background_wv_split as psx
-from utils.object_score_util import get_bbox_coords_from_annos_with_object_score as gbc
 import pandas as pd
 from ast import literal_eval
 import json
@@ -312,7 +310,7 @@ def get_image_list_contain_model_id(model_id):
     return image_list
 
 
-def create_model_rareclass_hard_easy_set_backup(val_m_rc_path, model_id, rare_id, non_rare_id=0, seed=199, pxwhr='px23whr3'):
+def create_model_rareclass_hard_easy_set_backup(val_m_rc_path, model_id, rare_id, non_rare_id=0, seed=17, pxwhr='px23whr3'):
     '''
     create hard easy validation dataset of model* rc*
     '''
@@ -595,11 +593,11 @@ def get_flipped_point(x, y, flip='tb'):
     w, h = 1, 1
     if flip == 'tb':
         new_y = h - y
-        new_x = x
-    elif flip == 'lr':
-        new_x = w - x
-        new_y = y
-    return new_x, new_y
+    new_x = x
+elif flip == 'lr':
+    new_x = w - x
+    new_y = y
+return new_x, new_y
 
 
 def flip_rotate_coordinates(img_name, angle=0, flip=''):
@@ -792,6 +790,9 @@ if __name__ == '__main__':
     # image_list = get_image_list_contain_model_id(model_id)
     # print(image_list)
 
+
+
+
     '''                                                                                                 
     create the validation set of model * that used for zero-learning (easy) and zero-learning (hard)
     hard------> val set : only rc* labeled, others empty
@@ -800,7 +801,6 @@ if __name__ == '__main__':
     seed = 199                                                                                          
     all models that are not belong to the rare object will be labeled as 0  
     '''
-
 #    seed = 17
 #    # seed = 199
 #    px_thres = 23
@@ -832,30 +832,22 @@ if __name__ == '__main__':
     seed = 17                                                                                           
     seed = 199                                                                                          
     '''
-    seed = 17
-    # seed = 199
-    px_thres = 23
-    whr_thres = 3
-    args = get_args(px_thres, whr_thres, seed)
-    pxwhrs = 'px{}whr{}_seed{}'.format(px_thres, whr_thres, seed)
-    # model_id = 4
-    # rare_id = 1
-    # model_id = 1
-    # rare_id = 2
-    # model_id = 5
-    # rare_id = 3
-    # model_id = 5
-    # rare_id = 4
-    non_rare_id = 0
-    types = ['hard', 'easy']
-    model_ids = [4, 1, 5, 5, 5]
-    rare_ids = [1, 2, 3, 4, 5]
-    # name = 'xview'
-    name = 'xview_rc'
-    for ix, model_id in enumerate(model_ids):
-        rare_id = rare_ids[ix]
-        for type in types:
-            create_test_dataset_of_m_rc(model_id, rare_id, type, seed, pxwhrs, name)
+    # seed = 17
+    # # seed = 199
+    # px_thres = 23
+    # whr_thres = 3
+    # args = get_args(px_thres, whr_thres, seed)
+    # pxwhrs = 'px{}whr{}_seed{}'.format(px_thres, whr_thres, seed)
+    # non_rare_id = 0
+    # types = ['hard', 'easy']
+    # model_ids = [4, 1, 5, 5, 5]
+    # rare_ids = [1, 2, 3, 4, 5]
+    # # name = 'xview'
+    # name = 'xview_rc'
+    # for ix, model_id in enumerate(model_ids):
+    #     rare_id = rare_ids[ix]
+    #     for type in types:
+    #         create_test_dataset_of_m_rc(model_id, rare_id, type, seed, pxwhrs, name)
 
 
     # import collections

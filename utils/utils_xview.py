@@ -338,7 +338,7 @@ def ap_per_class(tp, conf, pred_cls, target_cls, ntp=None, pr_path='', pr_name='
         unique_classes = np.array([rare_class])
     else:
         unique_classes = np.unique(target_cls)
-    # print('target_cls', target_cls)
+    print('unique_classes', unique_classes)
 
     # Create Precision-Recall curve and compute AP for each class
     #fixme
@@ -423,7 +423,6 @@ def plot_roc_easy_hard(tp, conf, pred_cls, target_cls, ntp, pr_path='', pr_name=
     # Returns
         The average precision as computed in py-faster-rcnn.
     """
-    # Sort by objectness
     i = np.argsort(-conf) # 175
     tp, conf, pred_cls, ntp = tp[i], conf[i], pred_cls[i], ntp[i]
 
@@ -471,6 +470,57 @@ def plot_roc_easy_hard(tp, conf, pred_cls, target_cls, ntp, pr_path='', pr_name=
         ax2.grid()
         fig2.savefig(os.path.join(pr_path, pr_name + '_ROC_curve.png'), dpi=300)
         plt.close(fig2)
+
+    #fixme
+    # Sort by objectness
+    # i = np.argsort(-conf) # 175
+    # tp, conf, pred_cls, ntp = tp[i], conf[i], pred_cls[i], ntp[i]
+    # if rare_class is None:
+    #     rare_class = 0
+    # n_gt = (target_cls == rare_class).sum()
+    # print('n_gt', n_gt)
+    # far_list = []
+    # rec_list = []
+    # n_t = 0
+    # n_f = 0
+    # for ix, t in enumerate(conf):
+    #     if tp[ix]: # and conf[ix] >= t:
+    #         n_t += 1
+    #     elif not tp[ix] and not ntp[ix]:
+    #         n_f += 1
+    #     far = n_f/area
+    #     rec = n_t/(n_gt + 1e-16)
+    #     far_list.append(far)
+    #     rec_list.append(rec)
+    # # print('far_list ', len(far_list))
+    # # print('rec_list ', len(rec_list))
+    # np.savetxt(os.path.join(pr_path, 'far_list.txt'), far_list)
+    # np.savetxt(os.path.join(pr_path, 'rec_list.txt'), rec_list)
+    # rec_arr = np.array(rec_list)
+    # far_arr = np.array(far_list)
+    # fx = np.where(far_arr[1:] != far_arr[:-1])[0]
+    # auc = np.sum((far_arr[fx + 1] - far_arr[fx]) * rec_arr[fx + 1])
+    # if rare_class is not None:
+    #     title = 'ROC of $T_{%s}^{%s}(rc{%d})$' % (title_data_name, ehtype, rare_class)
+    # else:
+    #     title = 'ROC of $T_{xview}$'
+    # if pr_path:
+    #     font_title = {'family': 'serif', 'weight': 'normal', 'size': 15}
+    #     font_label = {'family': 'serif', 'weight': 'normal', 'size': 12}
+    #
+    #     fig2, ax2= plt.subplots(1, figsize=(10, 8))
+    #     ax2.plot(far_list, rec_list, label=pr_legend + '  AUC: %.3f'%(auc))
+    #     ax2.legend()
+    #     ax2.set_title(title, font_title)
+    #     ax2.set_xlabel('FAR', font_label)
+    #     ax2.set_ylabel('Recall', font_label)
+    #     ax2.set_ylim(0, 1)
+    # #    ax2.set_xlim(0, 30)
+    # #    ax2.set_xlim(0, 35)
+    #     #ax2.set_xlim(0, 12)
+    #     ax2.grid()
+    #     fig2.savefig(os.path.join(pr_path, pr_name + '_ROC_curve.png'), dpi=300)
+    #     plt.close(fig2)
 
 
     # Find unique classes

@@ -581,26 +581,26 @@ if __name__ == "__main__":
 
     #fixme --yang.xu
     # ############## get the lbl files from previou record in lbl*.txt
-    seed = 17
-    px_thres = 23
-    whr_thres = 3
-    args = pwv.get_args(px_thres, whr_thres)
-    pxwhrs = 'px{}whr{}_seed{}'.format(px_thres, whr_thres, seed)
-    lbl_dir = os.path.join(args.data_list_save_dir, pxwhrs + '_val_lbl')
-    labeled_lbl_dir = os.path.join(args.data_list_save_dir, pxwhrs + '_val_lbl_with_modelid')
-    if not os.path.exists(lbl_dir):
-        os.mkdir(lbl_dir)
-    if not os.path.exists(labeled_lbl_dir):
-        os.mkdir(labeled_lbl_dir)
-    lbl_list_dir = os.path.join(args.data_list_save_dir, pxwhrs)
-    all_labeled_lbl_dir = args.annos_save_dir[:-1] + '_all_model'
-    # df_val_txt = pd.read_csv(os.path.join(lbl_list_dir, 'xviewval_lbl_{}.txt'.format(pxwhrs)), header=None)
-    df_val_txt = pd.read_csv(os.path.join(lbl_list_dir, 'xview_rcval_lbl_{}.txt'.format(pxwhrs)), header=None)
-    for vf in df_val_txt.loc[:, 0]:
-        lbl_name = os.path.basename(vf)
-        shutil.copy(vf, os.path.join(lbl_dir, lbl_name))
-        shutil.copy(os.path.join(all_labeled_lbl_dir, lbl_name),
-                    os.path.join(labeled_lbl_dir, lbl_name))
+    # seed = 17
+    # px_thres = 23
+    # whr_thres = 3
+    # args = pwv.get_args(px_thres, whr_thres)
+    # pxwhrs = 'px{}whr{}_seed{}'.format(px_thres, whr_thres, seed)
+    # lbl_dir = os.path.join(args.data_list_save_dir, pxwhrs + '_val_lbl')
+    # labeled_lbl_dir = os.path.join(args.data_list_save_dir, pxwhrs + '_val_lbl_with_modelid')
+    # if not os.path.exists(lbl_dir):
+    #     os.mkdir(lbl_dir)
+    # if not os.path.exists(labeled_lbl_dir):
+    #     os.mkdir(labeled_lbl_dir)
+    # lbl_list_dir = os.path.join(args.data_list_save_dir, pxwhrs)
+    # all_labeled_lbl_dir = args.annos_save_dir[:-1] + '_all_model'
+    # # df_val_txt = pd.read_csv(os.path.join(lbl_list_dir, 'xviewval_lbl_{}.txt'.format(pxwhrs)), header=None)
+    # df_val_txt = pd.read_csv(os.path.join(lbl_list_dir, 'xview_rcval_lbl_{}.txt'.format(pxwhrs)), header=None)
+    # for vf in df_val_txt.loc[:, 0]:
+    #     lbl_name = os.path.basename(vf)
+    #     shutil.copy(vf, os.path.join(lbl_dir, lbl_name))
+    #     shutil.copy(os.path.join(all_labeled_lbl_dir, lbl_name),
+    #                 os.path.join(labeled_lbl_dir, lbl_name))
 
 
 >>>>>>> master
@@ -618,8 +618,8 @@ if __name__ == "__main__":
 
     # name = 'xview'
     # name = 'xview_rc'
+    # name = 'xview_rc_nrcbkg'
     # seeds = [17]
-    # # seeds = [199]
     # for sd in seeds:
     #     comments = '_px23whr3_seed{}'.format(sd)
     #     create_xview_syn_data(comments=comments, seed=sd, name=name)

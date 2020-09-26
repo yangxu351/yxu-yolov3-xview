@@ -611,7 +611,6 @@ def augment_hsv(img, hgain=0.5, sgain=0.5, vgain=0.5):
 
 def load_mosaic(self, index):
     # loads images in a mosaic
-
     labels4 = []
     s = self.img_size
     xc, yc = [int(random.uniform(s * 0.5, s * 1.5)) for _ in range(2)]  # mosaic center x, y
@@ -715,7 +714,8 @@ def letterbox(img, new_shape=(416, 416), color=(128, 128, 128),
 def random_affine(img, targets=(), degrees=10, translate=.1, scale=.1, shear=10, border=0):
     # torchvision.transforms.RandomAffine(degrees=(-10, 10), translate=(.1, .1), scale=(.9, 1.1), shear=(-10, 10))
     # https://medium.com/uruvideo/dataset-augmentation-with-random-homographies-a8f4b44830d4
-
+    #fixme--yang.xu
+    # random.seed(0)
     if targets is None:  # targets = [cls, xyxy]
         targets = []
     height = img.shape[0] + border * 2

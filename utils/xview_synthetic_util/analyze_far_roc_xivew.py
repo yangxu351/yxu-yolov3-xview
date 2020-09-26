@@ -6,17 +6,20 @@ from ast import literal_eval
 if __name__ == '__main__':
     lgd_font = "{'family': 'serif', 'weight': 'normal', 'size': 8}"
     tlt_font = "{'family': 'serif', 'weight': 'normal', 'size': 13}"
+    ## baseline -- xview
+    save_dir = '../../result_output/1_cls/px23whr3_seed17/test_on_xview_hgiou1_1gpu_xview_only_rc_ap50/'
+    if not os.path.exists(save_dir):
+        os.mkdir(save_dir)
+
     sd = 17
-    apN = 40  # 20 # 50
+    # ap_list = [20, 40, 50]  # 20 #
+    apN = 50
     ehtypes = ['hard', 'easy']
     far_thres = 3
     model_ids = [4, 1, 5, 5, 5]
     rare_classes = [1, 2, 3, 4, 5]
-    marker_list = ['-o', '-^', '-v', '-<', '->']
-    ## baseline -- xview
-    save_dir = '/media/lab/Yang/code/results_groot/1_cls/xview_only_RC1-5_ROC/'
-    if not os.path.exists(save_dir):
-        os.mkdir(save_dir)
+    marker_list = ['-^', '-v', '-<', '->', '-o', '-*']
+    # for apN in ap_list:
     for ehtp in ehtypes:
         fig, ax_roc = plt.subplots(1, 1)
         legends = []

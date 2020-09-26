@@ -679,7 +679,7 @@ if __name__ == "__main__":
     # compare_images_separate_cities(two)
 
     # two = True
-    # compare_images_after_combine(two)
+    compare_images_after_combine(two)
 
     # compare_first_second_dataset()
 

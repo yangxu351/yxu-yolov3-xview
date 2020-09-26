@@ -105,6 +105,7 @@ def train(opt):
     syn_0_xview_number = data_dict['syn_0_xview_number']
     loop_count = int(syn_0_xview_number) // batch_size
 
+
     # Remove previous results
     for f in glob.glob('trn_patch_images/*_batch*.jpg') + glob.glob(results_file):
         os.remove(f)
@@ -299,7 +300,7 @@ def train(opt):
                     trn_names_dict[epoch].append(Path(paths[pi]).name)
 
             # Plot images with bounding boxes
-            if ni == 0:
+            if ni <=2:#== 0:
                 fname = 'trn_patch_images/train_batch%g.jpg' % i
                 plot_images(imgs=imgs, targets=targets, paths=paths, fname=fname)
                 if tb_writer:
@@ -430,7 +431,8 @@ def train(opt):
             # Save backup every 10 epochs (optional)
             #fixme
             # if (epoch > 0 and epoch % 10 == 0):
-            if (epoch > 0 and epoch % 50 == 0) :
+#            if (epoch > 0 and epoch % 50 == 0) :
+            if (epoch > 0 and epoch % 20 == 0) :
                 torch.save(chkpt, opt.weights_dir + 'backup%g.pt' % epoch)
 
             # Delete checkpoint
@@ -485,7 +487,7 @@ def get_opt():
     parser.add_argument('--resume', default=False, action='store_true', help='resume training from last.pt')
     parser.add_argument('--nosave', action='store_true', help='only save final checkpoint')
     parser.add_argument('--notest', action='store_true', help='only test final epoch')
-    parser.add_argument('--evolve', action='store_true', help='evolve hyperparameters')
+    parser.add_argument('--evolve', action='store_true', default=False, help='evolve hyperparameters')
     parser.add_argument('--bucket', type=str, default='', help='gsutil bucket')
     parser.add_argument('--cache_images', action='store_true', help='cache images for faster training')
     parser.add_argument('--weights', type=str, default='', help='initial weights')  # weights/ultralytics68.pt
@@ -626,6 +628,7 @@ if __name__ == '__main__':
     opt.model_id = cfg_dict['model_id']
     opt.conf_thres = cfg_dict['conf_thres']
     opt.nms_iou_thres = cfg_dict['nms_iou_thres']
+    opt.resume = cfg_dict['resume']
 
     comments = cfg_dict['comments']
     prefix = cfg_dict['prefix']
@@ -659,6 +662,8 @@ if __name__ == '__main__':
         opt.name = prefix + sstr
 
         opt.base_dir = opt.base_dir.format(opt.class_num, pxwhrsd.format(opt.seed))
+        # time_marker = time.strftime('%Y-%m-%d_%H.%M', time.localtime())
+
         if val_syn:
             hyp_cmt_name = hyp_cmt + '_val_syn'
             opt.model_id = None
@@ -677,7 +682,6 @@ if __name__ == '__main__':
             opt.data = 'data_xview/{}_{}_cls/{}_seed{}/{}_seed{}_xview_val.data'.format(cmt, opt.class_num, cmt, opt.seed, cmt, opt.seed)
 
         time_marker = time.strftime('%Y-%m-%d_%H.%M', time.localtime())
-#        time_marker = '2020-06-30_10.03'
         opt.weights_dir = 'weights/{}_cls/{}_seed{}/{}/'.format(opt.class_num, cmt, opt.seed, '{}_{}_seed{}'.format(time_marker, hyp_cmt_name, opt.seed))
         opt.writer_dir = 'writer_output/{}_cls/{}_seed{}/{}/'.format(opt.class_num, cmt, opt.seed, '{}_{}_seed{}'.format(time_marker, hyp_cmt_name, opt.seed))
         opt.result_dir = 'result_output/{}_cls/{}_seed{}/{}/'.format(opt.class_num, cmt, opt.seed, '{}_{}_seed{}'.format(time_marker, hyp_cmt_name, opt.seed))
@@ -710,38 +714,28 @@ if __name__ == '__main__':
 
             for _ in range(1):  # generations to evolve
                 if os.path.exists('evolve.txt'):  # if evolve.txt exists: select best hyps and mutate
-                    # Select parent(s)
+                    # Get best hyperparameters
                     x = np.loadtxt('evolve.txt', ndmin=2)
-                    parent = 'weighted'  # parent selection method: 'single' or 'weighted'
-                    if parent == 'single' or len(x) == 1:
-                        x = x[fitness(x).argmax()]
-                    elif parent == 'weighted':  # weighted combination
-                        n = min(10, x.shape[0])  # number to merge
-                        x = x[np.argsort(-fitness(x))][:n]  # top n mutations
-                        w = fitness(x) - fitness(x).min()  # weights
-                        x = (x[:n] * w.reshape(n, 1)).sum(0) / w.sum()  # new parent
+                    x = x[fitness(x).argmax()]  # select best fitness hyps
                     for i, k in enumerate(hyp.keys()):
-                        hyp[k] = x[i + 7]
+                        hyp[k] = x[i + 5]
 
                     # Mutate
-                    np.random.seed(int(time.time()))
-                    s = np.random.random() * 0.15  # sigma
-                    g = [1, 1, 1, 1, 1, 1, 1, 0, .1, 1, 1, 1, 1, 1, 1, 1, 1, 1]  # gains
+                    init_seeds(seed=int(time.time()))
+                    s = [.15, .15, .15, .15, .15, .15, .15, .15, .15, .00, .05, .20, .20, .20, .20, .20, .20, .20]  # sigmas
                     for i, k in enumerate(hyp.keys()):
-                        x = (np.random.randn() * s * g[i] + 1) ** 2.0  # plt.hist(x.ravel(), 300)
+                        x = (np.random.randn(1) * s[i] + 1) ** 2.0  # plt.hist(x.ravel(), 300)
                         hyp[k] *= float(x)  # vary by sigmas
 
                 # Clip to limits
-                keys = ['lr0', 'iou_t', 'momentum', 'weight_decay', 'hsv_s', 'hsv_v', 'translate', 'scale', 'fl_gamma']
-                limits = [(1e-5, 1e-2), (0.00, 0.70), (0.60, 0.98), (0, 0.001), (0, .9), (0, .9), (0, .9), (0, .9), (0, 3)]
+                keys = ['lr0', 'iou_t', 'momentum', 'weight_decay', 'hsv_s', 'hsv_v', 'translate', 'scale']
+                limits = [(1e-4, 1e-2), (0.00, 0.70), (0.60, 0.97), (0, 0.001), (0, .9), (0, .9), (0, .9), (0, .9)]
                 for k, v in zip(keys, limits):
                     hyp[k] = np.clip(hyp[k], v[0], v[1])
 
                 # Train mutation
-                # prebias()
-                results = train()
+                results = train(opt)
 
                 # Write mutation results
-                print_mutation(hyp, results, opt.bucket)
-
+                print_mutation(hyp, results)
 

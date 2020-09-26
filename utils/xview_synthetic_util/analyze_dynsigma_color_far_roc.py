@@ -134,6 +134,14 @@ def plot_roc_of_dynamic_sigma_color(comments, pros, hexes):
 #            with pd.ExcelWriter(os.path.join(save_dir, csv_name), mode=mode) as writer:
 #                df_roc.to_excel(writer, sheet_name='AP{}'.format(apN), index=False) # 
 
+#            csv_name = 'Pd_{}_RC{}_{}.xlsx'.format(cmt[dix:bix + 4], rare_id, ehtp)
+#            if apN > 20 and os.path.exists(os.path.join(save_dir, csv_name)):
+#                mode = 'a'
+#            else:
+#                mode = 'w'
+#            with pd.ExcelWriter(os.path.join(save_dir, csv_name), mode=mode) as writer:
+#                df_roc.to_excel(writer, sheet_name='AP{}'.format(apN), index=False) #
+
 
 if __name__ == '__main__':
 
@@ -142,9 +150,19 @@ if __name__ == '__main__':
     comments = []
     pros = [0, 0.2, 0.4, 0.6, 0.8]
     hexes = "#685C45;#786755;#897954;#8D7C6A;#7B6A59;#857861"
-    base_version = 60
+#    base_version = 60
+#    for ix, pro in enumerate(pros):
+#        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_dynsigma_color_bias{}_RC1_v{}_color'.format(
+#            pro, ix + base_version)
+#        comments.append(cmt)
+#    base_version = 80
+#    for ix, pro in enumerate(pros):
+#        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_light_dynsigma_color_bias{}_RC1_v{}_color'.format(
+#            pro, ix + base_version)
+#        comments.append(cmt)
+    base_version = 100
     for ix, pro in enumerate(pros):
-        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_dynsigma_color_bias{}_RC1_v{}_color'.format(
+        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_fixedangle_dynsigma_color_bias{}_RC1_v{}_color'.format(
             pro, ix + base_version)
         comments.append(cmt)
 #    base_version = 80

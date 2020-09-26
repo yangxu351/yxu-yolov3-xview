@@ -723,22 +723,13 @@ def split_trn_val_with_rc_step_by_step(data_name='xview', comments='', seed=17, 
     '''
     args = get_args(px_thres, whr_thres)
 
-    # import random
-    # random.seed(seed)
-
     data_save_dir = args.data_save_dir
     if comments:
         txt_save_dir = args.data_list_save_dir + comments[1:] # + '_bh'+ '/'
         if not os.path.exists(txt_save_dir):
-        #     shutil.rmtree(txt_save_dir)
-        #     os.makedirs(txt_save_dir)
-        # else:
             os.makedirs(txt_save_dir)
         data_save_dir = os.path.join(data_save_dir, comments[1:])
         if not os.path.exists(data_save_dir):
-        #     shutil.rmtree(data_save_dir)
-        #     os.makedirs(data_save_dir)
-        # else:
             os.makedirs(data_save_dir)
     else:
         txt_save_dir = args.data_list_save_dir
@@ -804,14 +795,13 @@ def split_trn_val_with_rc_step_by_step(data_name='xview', comments='', seed=17, 
 
     bkg_ixes = np.random.permutation(len(bkg_lbl_files))
     trn_non_bkg_num = len(trn_nrc_lbl_files) + len(trn_rc_lbl_files)
-    val_non_bkg_num = len(val_rc_lbl_files) + len(val_rc_lbl_files)
+    val_non_bkg_num = len(val_nrc_lbl_files) + len(val_rc_lbl_files)
     trn_bkg_lbl_files =[bkg_lbl_files[i] for i in bkg_ixes[:trn_non_bkg_num ]]
     val_bkg_lbl_files = [bkg_lbl_files[i] for i in bkg_ixes[ trn_non_bkg_num: val_non_bkg_num + trn_non_bkg_num]]
     trn_bkg_img_files = [bkg_img_files[i] for i in bkg_ixes[: trn_non_bkg_num]]
     val_bkg_img_files = [bkg_img_files[i] for i in bkg_ixes[trn_non_bkg_num: val_non_bkg_num + trn_non_bkg_num]]
     print('trn_bkg_lbl_files', len(trn_bkg_lbl_files), len(trn_bkg_img_files))
-
-    # exit(0)
+    print('val_bkg_lbl_files', len(val_bkg_lbl_files), len(val_bkg_img_files))
 
     trn_lbl_files = trn_bkg_lbl_files + trn_nrc_lbl_files + trn_rc_lbl_files
     val_lbl_files = val_bkg_lbl_files + val_nrc_lbl_files + val_rc_lbl_files
@@ -2550,9 +2540,7 @@ if __name__ == "__main__":
     split train:val randomly split chips
     default split
     '''
-    # comments = ''
-    # comments = '_px4whr3'
-    # comments = '_px6whr4_giou0'
+    #fixme
     # px_thres = 23
     # whr_thres = 3
     # seed = 17
@@ -2560,6 +2548,7 @@ if __name__ == "__main__":
     # data_name = 'xview_rc'
     # # split_trn_val_with_chips(data_name, comments, seed = 8, px_thres=px_thres, whr_thres=whr_thres)
     # split_trn_val_with_rc_step_by_step(data_name, comments, seed, px_thres=px_thres, whr_thres=whr_thres)
+
 
     '''
     create json for val according to all jsons 
@@ -2577,11 +2566,6 @@ if __name__ == "__main__":
     split train:val  randomly split tifs
     '''
     # split_trn_val_with_tifs()
-
-    '''
-    create xview.data includes cls_num, trn, val, ...
-    '''
-    # create_xview_data()
 
     '''
     categories count for all label files

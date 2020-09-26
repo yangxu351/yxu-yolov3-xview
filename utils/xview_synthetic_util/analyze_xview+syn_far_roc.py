@@ -70,7 +70,12 @@ def plot_roc(comments):
 
 if __name__ == '__main__':
     comments = ['xview_syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynsigma_size_bias0.15_RC5_v43_color']
+<<<<<<< HEAD
     plot_roc(comments)
+=======
+    for cmt in comments:
+        plot_roc(cmt)
+>>>>>>> master
 
 
 

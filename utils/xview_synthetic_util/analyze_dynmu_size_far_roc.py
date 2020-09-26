@@ -76,7 +76,11 @@ def plot_roc_of_dynamic_mu_size(comments, base_range, pros, size_base, base_vers
             # ax_roc.set_ylim(-0.05, 1.05)
             ax_roc.set_xlim(-0.05, 3.05)
             ax_roc.grid(True)
+<<<<<<< HEAD
             
+=======
+
+>>>>>>> master
 #                df_roc.at[ix, "Version"] = base_version + ix
 #                idx5_mx = df_far[df_far>=0.5].dropna()
 #                idx5_mx = idx5_mx.idxmin()[0]
@@ -88,7 +92,11 @@ def plot_roc_of_dynamic_mu_size(comments, base_range, pros, size_base, base_vers
 #                pd_1 = df_rec_thres.loc[idx1_mn, 0]
 #                df_roc.at[ix, "Pd(FAR=0.5)"] = pd_5
 #                df_roc.at[ix, "Pd(FAR=1)"] = pd_1
+<<<<<<< HEAD
             
+=======
+
+>>>>>>> master
         fig.legend(legends, prop=literal_eval(lgd_font), loc='upper right')
         yticks.append(1)
         yticks = list(dict.fromkeys(yticks))
@@ -106,6 +114,14 @@ def plot_roc_of_dynamic_mu_size(comments, base_range, pros, size_base, base_vers
 #                mode = 'w'
 #            with pd.ExcelWriter(os.path.join(save_dir, csv_name), mode=mode) as writer:
 #                df_roc.to_excel(writer, sheet_name='AP{}'.format(apN), index=False) # 
+
+#            csv_name = 'Pd_{}_RC{}_{}.xlsx'.format(cmt[dix:bix + 4], rare_id, ehtp)
+#            if os.path.exists(os.path.join(save_dir, csv_name)):
+#                mode = 'a'
+#            else:
+#                mode = 'w'
+#            with pd.ExcelWriter(os.path.join(save_dir, csv_name), mode=mode) as writer:
+#                df_roc.to_excel(writer, sheet_name='AP{}'.format(apN), index=False) #
 
 
 if __name__ == '__main__':

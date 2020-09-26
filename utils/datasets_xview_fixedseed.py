@@ -266,7 +266,7 @@ class LoadStreams:  # multiple IP or RTSP cameras
 class LoadImagesAndLabels(Dataset):  # for training/testing
     def __init__(self, path, label_path, img_size=608, batch_size=8, class_num=60, augment=False, hyp=None, rect=False, image_weights=False,
                  cache_labels=False, cache_images=False, with_modelid=False, seed_aug=None):
-        #fixme
+#fixme
         path = str(Path(path))  # os-agnostic
         assert os.path.isfile(path), 'File not found %s. See %s' % (path, help_url)
         with open(path, 'r') as f:
@@ -431,6 +431,7 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
                     # os.system("rm '%s' '%s'" % (self.img_files[i], self.label_files[i]))  # remove
                 pbar.desc = 'Caching labels (%g found, %g missing, %g empty, %g duplicate, for %g images)' % (
                     nf, nm, ne, nd, n)
+<<<<<<< HEAD
 
             #fixme --yang.xu
             # assert nf > 0, 'No labels found. See %s' % help_url
@@ -611,7 +612,6 @@ def augment_hsv(img, hgain=0.5, sgain=0.5, vgain=0.5):
 
 def load_mosaic(self, index):
     # loads images in a mosaic
-
     labels4 = []
     s = self.img_size
     xc, yc = [int(random.uniform(s * 0.5, s * 1.5)) for _ in range(2)]  # mosaic center x, y
@@ -715,7 +715,6 @@ def letterbox(img, new_shape=(416, 416), color=(128, 128, 128),
 def random_affine(img, targets=(), degrees=10, translate=.1, scale=.1, shear=10, border=0):
     # torchvision.transforms.RandomAffine(degrees=(-10, 10), translate=(.1, .1), scale=(.9, 1.1), shear=(-10, 10))
     # https://medium.com/uruvideo/dataset-augmentation-with-random-homographies-a8f4b44830d4
-
     if targets is None:  # targets = [cls, xyxy]
         targets = []
     height = img.shape[0] + border * 2

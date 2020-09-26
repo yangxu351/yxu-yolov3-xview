@@ -178,7 +178,7 @@ def test(cfg,
                 sum_labels += nl
                 #fixme ---yang.xu
                 # tcls = labels[:, 0].tolist() if nl else []  # target class
-                tcls = labels[:, -1].tolist() if nl else []
+                tcls = labels[:, 0].tolist() if nl else []
                 # print('tcls ', len(tcls))
                 # exit(0)
 
@@ -240,7 +240,7 @@ def test(cfg,
                     # ti = (cls == tcls_tensor).nonzero().view(-1)  # target indices
                     # pi = (cls == pred[:, 5]).nonzero().view(-1)  # prediction indices
                     #fixme --yang.xu
-                    ti = (opt.rare_class == tcls_tensor).nonzero().view(-1) # target indices
+                    ti = (tcls_tensor > 0).nonzero().view(-1) # target indices
                     pi = (0 == pred[:, 5]).nonzero().view(-1)  # prediction indices
 #                    if len(ti):
 #                        print('\nti ', len(ti), ti)
@@ -248,20 +248,9 @@ def test(cfg,
                     if opt.type == 'easy':
                         neu_cls = 0
                         ni = (neu_cls == tcls_tensor).nonzero().view(-1) # target neutral indices
-#                        print('ni ', len(ni), ni)
+                        print('ni ', len(ni))
                     else:
                         ni = torch.tensor([])
-
-                    # if len(pi):
-                    #     ious, i = box_iou(pred[pi, :4], tbox[ti]).max(1)  # best ious, indices
-                    #     # Append detections
-                    #     for j in (ious > iouv[0]).nonzero():
-                    #         d = ti[i[j]]  # detected target
-                    #         if d not in detected:
-                    #             detected.append(d)
-                    #             correct[pi[j]] = ious[j] > iouv  # iou_thres is 1xn
-                    #             if len(detected) == nl:  # all targets already located in image
-                    #                 break
 
                     # Search for detections
                     if len(pi) and len(ti) and not len(ni):
@@ -308,10 +297,6 @@ def test(cfg,
                 # Append statistics (correct, conf, pcls, tcls, neu_correct)
                 # pred (x1, y1, x2, y2, object_conf, conf, class)
                 stats.append((correct, pred[:, 4].cpu(), pred[:, 5].cpu(), tcls, neu_correct))
-#                if len(tcls) and len(correct):
-#                    print('\n correct: {}  pred[:,4]:{}  pred[:, 5]:{} tcls:{}'.format(correct, pred[:, 4].cpu(), pred[:, 5].cpu(), tcls))
-                # if len(tcls) and len(neu_correct):
-#                    print('\n neu_correct: {}  pred[:,4]:{}  pred[:, 5]:{} tcls:{}'.format(neu_correct, pred[:, 4].cpu(), pred[:, 5].cpu(), tcls))
 
         print('sum all labels', sum_labels)
         # Compute statistics
@@ -320,13 +305,13 @@ def test(cfg,
             pr_name= opt.name # + ' @IoU: {:.2f} '.format(iouv[0]) + ' conf_thres: {} '.format(conf_thres)
             pr_legend = opt.legend
             # print('*stats', *stats)
-            p, r, ap, f1, ap_class = ap_per_class(*stats, pr_path=opt.result_dir, pr_name= pr_name, pr_legend=pr_legend, rare_class=opt.rare_class, apN=apN)
+            p, r, ap, f1, ap_class = ap_per_class(*stats, pr_path=opt.result_dir, pr_name= pr_name, pr_legend=pr_legend, apN=apN)
 
             print('dataset.batch ', dataset.batch.shape)
             # exit(0)
             area = (img_size*opt.res)*(img_size*opt.res)*dataset.batch.shape[0]*1e-6
 
-            plot_roc_easy_hard(*stats, pr_path=opt.result_dir, pr_name= pr_name, pr_legend=pr_legend, rare_class=opt.rare_class, area=area, ehtype=opt.type, title_data_name=tif_name)
+            plot_roc_easy_hard(*stats, pr_path=opt.result_dir, pr_name= pr_name, pr_legend=pr_legend, area=area, ehtype=opt.type, title_data_name=tif_name)
             # if niou > 1:
             #       p, r, ap, f1 = p[:, 0], r[:, 0], ap[:, 0], ap.mean(1)  # average across ious
             #fixme --yang.xu
@@ -334,9 +319,7 @@ def test(cfg,
                 p, r, ap, f1 = p[:, 0], r[:, 0], ap.mean(1), ap[:, 0]  # [P, R, AP@0.5:0.95, AP@0.5]
             mp, mr, map, mf1 = p.mean(), r.mean(), ap.mean(), f1.mean()
             #fixme --yang.xu compute before
-            # nt = np.bincount(stats[3].astype(np.int64), minlength=nc)  # number of targets per class
-            st3 = stats[3][stats[3] == opt.rare_class]
-            nt = np.bincount(st3.astype(np.int64), minlength=nc)  # number of targets per class
+            nt = np.bincount(stats[3].astype(np.int64), minlength=nc)  # number of targets per class
         else:
             nt = torch.zeros(1)
 
@@ -411,6 +394,43 @@ def get_opt(dt=None, sr=None, comments=''):
     opt.cfg = opt.cfg.format(opt.class_num)
 
     return opt
+
+def computer_avg_all_seeds():
+    prefix = 'syn'
+    model_ids = [4, 1, 5, 5, 5]
+    rare_classes = [1, 2, 3, 4, 5]
+    eht = 'easy'
+    apN = 50
+    for cmt in comments:
+        cinx = cmt.find('_RC')
+        rare_class = int(cmt[cinx+3])
+        model_id = model_ids[rare_classes.index(rare_class)]
+        csv_dir = "result_output/1_cls/{}/".format(cmt[:cmt.find("bias")+4] + '_RC' + str(rare_class))
+        sinx = cmt.find('bxmuller')
+        einx = cmt.find('bias')+4
+        dynstr = cmt[sinx:einx]
+        cmb = []
+        for seed in seeds:
+            if seed == 0:
+                seed = 17
+            csv_name =  "{}_{}_RC{}_{}-seed{}.xlsx".format(prefix, dynstr, rare_class, eht, seed)
+            # "AP{}".format(apN), "Pd(FAR=0.25)",  "Pd(FAR=0.5)", "Pd(FAR=1)"
+            df = pd.read_excel(os.path.join(csv_dir, csv_name), sep=' ')
+            cmb.append(df.to_numpy())
+            ver_list = df.loc[:, 'Version']
+            imgnum_list = df.loc[:, 'Seen']
+            rcnum_list = df.loc[:, 'NT']
+
+        cmb = np.array(cmb)
+        avg_cmb = np.mean(cmb[:, :, 3:7], axis=0)
+        df_avg = pd.DataFrame(columns=["Version", "Seen", "NT", "AP{}".format(apN), "Pd(FAR=0.25)",  "Pd(FAR=0.5)", "Pd(FAR=1)"])
+        df_avg['Version'] = ver_list
+        df_avg['Seen'] = imgnum_list
+        df_avg['NT'] = rcnum_list
+        df_avg.loc[:, 3:7] = avg_cmb
+        save_name =  "{}_{}_RC{}_{}_avg_all_seeds.xlsx".format(prefix, dynstr, rare_class, eht)
+        with pd.ExcelWriter(os.path.join(csv_dir, save_name), mode='w') as writer:
+            df_avg.to_excel(writer, sheet_name='RC{}_{}_avg'.format(rare_class, eht), index=False) #
 
 
 if __name__ == "__main__":
@@ -500,101 +520,54 @@ if __name__ == "__main__":
     xview
     '''
     cmt = 'px23whr3'
-    # hyp_cmt = 'hgiou1_1gpu_xview_only'
-    # hyp_cmt = 'hgiou1_39.5obj_1e-3lrxview_only'
-    # hyp_cmt = 'hgiou1_39.5objxview_only'
-    # hyp_cmt = 'hgiou1_29.5objxview_only'
-
-
     base_cmt = "px23whr3_seed{}"
-    # hyp_cmt = "hgiou1_1gpu"
-    # hyp_cmt = "hgiou1_1gpu_val_syn"
-    # hyp_cmt = "hgiou1_29.5obj_x6rc2"
-    # hyp_cmt = "hgiou1_29.5obj_x5rc3"
-    # hyp_cmt = "hgiou1_29.5obj_x4rc4"
-    # hyp_cmt = "hgiou1_29.5obj_x3rc5"
-    hyp_cmt = "hgiou1_29.5obj_x2rc6"
-
-    # apN = 20
-    # apN = 40
     apN = 50
-    # ap_list = [20, 40, 50]
-    # prefix = 'syn'
     prefix = 'xview'
-#    prefix = "syn_iou{}".format(apN)
-#    prefix = "syn_backup100"
-#    prefix = "syn_backup200"
-#    prefix = "syn_px30"
-    starttime = time.time()
     px_thres = 23
     whr_thres = 3 # 4
-    sd = 17
-    model_ids = [4, 1, 5, 5, 5]
-    rare_classes = [1, 2, 3, 4, 5]
+    dataseed = 17
     far_thres = 3
     rc_ratios = [2,3,4,5,6]
-    eh_types = ["hard", "easy"]
-    # for apN in ap_list:
-    for typ in eh_types:
-        df_pr_ap_far = pd.DataFrame(columns=["RC", "Seen", "NT", "AP{}".format(apN), "Pd(FAR=0.25)", "Pd(FAR=0.5)", "Pd(FAR=1)", "Precision", "Recall" , "F1"]) #, "Precision", "Recall" , "F1"
-        for ix, rare_id in enumerate(rare_classes):
-            base_cmt = base_cmt.format(sd)
+    seeds = [1, 2]
+    typ = "easy"
+    for sd in seeds:
+        df_pr_ap_far = pd.DataFrame(columns=["RC_ratio", "Seen", "NT", "AP{}".format(apN), "Pd(FAR=0.25)", "Pd(FAR=0.5)", "Pd(FAR=1)", "Precision", "Recall" , "F1"]) #, "Precision", "Recall" , "F1"
+        for ix, rcs in enumerate(rc_ratios):
+            base_cmt = base_cmt.format(dataseed)
             opt = get_opt(comments=cmt)
             opt.device = "0"
+            # hyp_cmt = "hgiou1_x{}rc{}_seed{}".format(opt.batch_size-rcs, rcs, sd)
+            hyp_cmt = "hgiou1_1gpu_val_syn_seed{}".format(sd)
 
-            opt.rare_class = rare_id
-            opt.model_id = model_ids[ix]
-
-            cinx = cmt.find('_RC') # first letter index
-            endstr = cmt[cinx:]
-            rcinx = endstr.rfind('_') # _RC*_v*
-            sstr = endstr[:rcinx]
-            if cinx >= 0:
-                medix = cmt.find('_dyn')
-                mstr =  cmt[medix:cinx] # _dyn*_color_bias*
-                suffix = sstr + '_AP{}'.format(apN)
-            else:
-                mstr = ''
-                suffix = '_AP{}'.format(apN)
+            suffix = '_AP{}'.format(apN)
 
             opt.legend = prefix + suffix
-            opt.name = prefix + mstr + suffix
+            opt.name = prefix + suffix
 
             ''' for specified model id '''
             opt.batch_size = 8
-            # opt.rare_class = int(cmt[cinx+3])
-            # opt.model_id = model_ids[rare_classes.index(opt.rare_class)]
-            print("opt.model_id", opt.model_id, 'opt.rare_class ', opt.rare_class)
 
             opt.conf_thres = 0.01
             tif_name = "xview"
-            ############# 2 images test set
-#            opt.type = "easy"
-#            opt.type = "hard"
             opt.type = typ
-
-#            opt.name += "_{}".format(opt.type)
-#            opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, "test_on_xview_{}_upscale_m{}_rc{}_{}".format(hyp_cmt, opt.model_id, opt.rare_class, opt.type))
-#            opt.data = "data_xview/{}_cls/{}/xviewtest_{}_upscale_m{}_rc{}_{}.data".format(opt.class_num, base_cmt, base_cmt, opt.model_id, opt.rare_class, opt.type)
-
             opt.name += "_{}".format(opt.type)
-            # opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, "test_on_xview_{}_m{}_rc{}_ap{}_{}".format(hyp_cmt, opt.model_id, opt.rare_class, apN, opt.type))
-#             opt.data = "data_xview/{}_cls/{}/xview_rc_test_{}_m{}_rc{}_{}.data".format(opt.class_num, base_cmt, base_cmt, opt.model_id, opt.rare_class, opt.type)
-            opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, "test_on_ori_nrcbkg_aug_rc_{}_m{}_rc{}_ap{}_{}".format(hyp_cmt, opt.model_id, opt.rare_class, apN, opt.type))
-            opt.data = "data_xview/{}_cls/{}/xview_ori_nrcbkg_aug_rc_test_{}_m{}_rc{}_{}.data".format(opt.class_num, base_cmt, base_cmt, opt.model_id, opt.rare_class, opt.type)
-
+            # opt.result_dir = opt.result_dir.format(opt.class_num, cmt, dataseed, "test_on_xview_ori_nrcbkg_aug_rc_{}_all_ap{}_{}".format(hyp_cmt, apN, opt.type))
+            # opt.data = "data_xview/{}_cls/{}/xview_ori_nrcbkg_aug_rc_test_{}_all_{}.data".format(opt.class_num, base_cmt, base_cmt, opt.type)
+            # opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, "test_on_xview_ori_nrcbkg_aug_rc_{}_all_ap{}_{}".format(hyp_cmt, apN, opt.type))
+            # opt.data = "data_xview/{}_cls/{}/xview_ori_nrcbkg_aug_rc_test_{}_all_{}.data".format(opt.class_num, base_cmt, base_cmt, opt.type)
+            opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_{}_m{}_rc{}_{}'.format(hyp_cmt, opt.model_id, opt.rare_class, opt.type))
+            opt.data = 'data_xview/{}_cls/{}/xviewtest_{}_m{}_rc{}_{}.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id, opt.rare_class, opt.type)
 
             if not os.path.exists(opt.result_dir):
                 os.makedirs(opt.result_dir)
-            # print(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd), "*_{}_seed{}".format(hyp_cmt, sd), "best_seed{}.pt".format(sd)))
-            print(glob.glob(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd), "*_{}_seed{}".format(hyp_cmt, sd), "best_seed{}.pt".format(sd))))
-            all_weights = glob.glob(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd), "*_{}_seed{}".format(hyp_cmt, sd), "best_*seed{}.pt".format(sd)))
+    #            print(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd), "*_{}_seed{}".format(hyp_cmt, sd), "best_seed{}.pt".format(sd)))
+            print(glob.glob(os.path.join(opt.weights_dir.format(opt.class_num, cmt, dataseed), "*_{}".format(hyp_cmt), "best_seed{}.pt".format(sd))))
+            all_weights = glob.glob(os.path.join(opt.weights_dir.format(opt.class_num, cmt, dataseed), "*_{}".format(hyp_cmt), "best_*seed{}.pt".format(sd)))
             all_weights.sort()
             opt.weights = all_weights[-1]
 
             print(opt.weights)
             print(opt.data)
-
 
             seen, nt, mp, mr, mapv, mf1 = test(opt.cfg,
                  opt.data,
@@ -605,7 +578,7 @@ if __name__ == "__main__":
                  opt.nms_iou_thres,
                  opt.save_json, opt=opt)
 
-            df_pr_ap_far.at[ix, "RC"] = opt.rare_class
+            df_pr_ap_far.at[ix, "RC_ratio"] = rcs
             df_pr_ap_far.at[ix, "Seen"] = seen
             df_pr_ap_far.at[ix, "NT"] = nt
             df_pr_ap_far.at[ix, "AP{}".format(apN)] = mapv
@@ -618,32 +591,38 @@ if __name__ == "__main__":
             df_far_thres = df_far_thres.dropna()
             df_rec_thres = df_rec.loc[:df_far_thres.shape[0]-1]
             idx25_mx = df_far[df_far>=0.25].dropna()
-            idx25_mx = idx25_mx.idxmin()[0]
-            idx25_mn = idx25_mx - 1
+            if idx25_mx.shape[0] == 0:
+                idx25_mn = df_rec_thres.shape[0]-1
+            else:
+                idx25_mx = idx25_mx.idxmin()[0]
+                idx25_mn = idx25_mx # - 1
             pd_25 = df_rec_thres.loc[idx25_mn, 0]
+
             idx5_mx = df_far[df_far>=0.5].dropna()
-            idx5_mx = idx5_mx.idxmin()[0]
-            idx5_mn = idx5_mx - 1
+            if idx5_mx.shape[0] == 0:
+                idx5_mn = df_rec_thres.shape[0]-1
+            else:
+                idx5_mx = idx5_mx.idxmin()[0]
+                idx5_mn = idx5_mx #- 1
             pd_5 = df_rec_thres.loc[idx5_mn, 0]
+
             idx1_mx = df_far[df_far>=1].dropna()
-            idx1_mx = idx1_mx.idxmin()[0]
-            idx1_mn = idx1_mx - 1
+            if idx1_mx.shape[0] == 0:
+                idx1_mn = df_rec_thres.shape[0]-1
+            else:
+                idx1_mx = idx1_mx.idxmin()[0]
+                idx1_mn = idx1_mx# - 1
             pd_1 = df_rec_thres.loc[idx1_mn, 0]
+
             df_pr_ap_far.at[ix, "Pd(FAR=0.25)"] = pd_25
             df_pr_ap_far.at[ix, "Pd(FAR=0.5)"] = pd_5
             df_pr_ap_far.at[ix, "Pd(FAR=1)"] = pd_1
 
-#        csv_name =  "{}_rc{}_ap{}_{}.xls".format(cmt[cmt.find("xb"):cmt.find("bias")+4], opt.rare_class, apN, typ)
-#        csv_dir = "result_output/{}_cls/{}/".format(opt.class_num, cmt[:cmt.find("bias")+4] + cmt[cmt.find("_model"):cmt.find("_v")])
-
-        csv_name =  "{}_RC_AP{}_{}.xls".format(tif_name, apN, opt.type)
-        # csv_dir = "result_output/{}_cls/{}/".format(opt.class_num, cmt[:cmt.find("bias")+4] + '_RC' + str(opt.rare_class))
-        # csv_dir = "result_output/{}_cls/{}_seed{}/{}/".format(opt.class_num, cmt, sd, "test_on_xview_{}_rc_ap{}".format(hyp_cmt, apN))
-        csv_dir = "result_output/{}_cls/{}_seed{}/{}/".format(opt.class_num, cmt, sd, "test_on_ori_nrcbkg_aug_rc_{}_ap{}".format(hyp_cmt, apN))
+        csv_name =  "{}_ori_nrcbkg_aug_rc_AP{}_{}_seed{}.xls".format(tif_name, apN, opt.type, sd)
+        csv_dir = "result_output/{}_cls/{}_seed{}/{}/".format(opt.class_num, cmt, dataseed, "test_on_xview_ori_nrcbkg_aug_rc_all_ratios_ap{}".format(apN))
         if not os.path.exists(csv_dir):
             os.mkdir(csv_dir)
-        mode = 'w'
-        with pd.ExcelWriter(os.path.join(csv_dir, csv_name), mode=mode) as writer:
-            df_pr_ap_far.to_excel(writer, sheet_name='RC{}_{}'.format(opt.rare_class, opt.type), index=False)
+        with pd.ExcelWriter(os.path.join(csv_dir, csv_name), mode='w') as writer:
+            df_pr_ap_far.to_excel(writer, sheet_name='rc{}_ratios'.format(opt.rare_class), index=False)
 
-    print('total time ', (time.time() - starttime) / 60)
+
