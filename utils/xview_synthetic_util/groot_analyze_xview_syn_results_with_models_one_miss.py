@@ -260,15 +260,29 @@ if __name__ == "__main__":
 #    comments = ['syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_bxmuller_size_bias0_RC5_v1']
 #    model_id = 5
 #    rare_class = 5
-    comments = ['syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_bxmuller_size_bias0.12_RC4_v5']
-    model_id = 5
-    rare_class = 4   
+#    comments = ['syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_bxmuller_size_bias0.12_RC4_v5']
+#    model_id = 5
+#    rare_class = 4   
+#    comments = ['syn_xview_bkg_px23whr3_xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_ssig0.03_bxmuller_color_bias0_RC2_v31']
+#    model_id = 1
+#    rare_class = 2 
+#    sd ='seed2' 
+#    comments = ['syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0_bxmuller_color_bias0_RC3_v11']
+#    model_id = 5
+#    rare_class = 3
+#    sd ='seed0' 
+    comments = ['syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_ssig0.03_bxmuller_color_bias20_RC1_v15']
+    model_id = 4
+    rare_class = 1
+    sd ='seed2'
+    
     apN = 50
     prefix = 'results_syn_iou{}'.format(apN)
     eht = 'easy'
 
     hyp_cmt = 'hgiou1_1gpu_val_syn'
-    res_folder = 'test_on_ori_nrcbkg_aug_rc_{}_m{}_rc{}_{}_iou{}_epochs'
+#    res_folder = 'test_on_ori_nrcbkg_aug_rc_{}_m{}_rc{}_{}_iou{}'
+    res_folder = 'test_on_ori_nrcbkg_aug_rc_{}_m{}_rc{}_{}_iou{}_{}'
     data_file = 'xview_ori_nrcbkg_aug_rc_test_{}_m{}_rc{}_{}.data'
 ##
     base_pxwhrs = 'px23whr3_seed17'
@@ -286,8 +300,8 @@ if __name__ == "__main__":
 
 #    data_file = 'xviewtest_{}_m{}_rc{}_2315.data'.format(base_pxwhrs, model_id, rare_class)
 #    res_folder = 'test_on_xview_with_model_{}_2315_hard'.format(hyp_cmt)
-    for eh in ['hard', 'easy']:
+    for eh in ['easy']: # 'hard', 
         d_file = data_file.format(base_pxwhrs, model_id, rare_class, eh)
-        r_folder = res_folder.format(hyp_cmt, model_id, rare_class, eh, apN)
+        r_folder = res_folder.format(hyp_cmt, model_id, rare_class, eh, apN, sd)
         for cmt in comments:
             check_prd_gt_iou_xview_syn(d_file, model_id, rare_class, cmt, prefix, r_folder, base_pxwhrs=base_pxwhrs, hyp_cmt=hyp_cmt, seed=seed, iou_thres=iou_thres)
