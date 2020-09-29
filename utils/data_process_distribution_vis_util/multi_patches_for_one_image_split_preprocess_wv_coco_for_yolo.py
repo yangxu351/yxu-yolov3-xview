@@ -158,15 +158,15 @@ def combine_ori_multi_img_lbl(px_thres=23, whr_thres=3):
         name = os.path.basename(f)
         shutil.copy(f, os.path.join(new_val_img_dir, name))
 
-    all_ori_lbl_model_dir = args.annos_save_dir[:-1] + '_all_model'
-    ori_lbl_model_dir = args.annos_save_dir[:-1] + '_rc_val_ori_modelid'
+    nrc_rc_ori_lbl_model_dir = args.annos_save_dir[:-1] + '_with_rcid'
+    ori_lbl_model_dir = args.annos_save_dir[:-1] + '_rc_val_ori_rcid'
     if not os.path.exists(ori_lbl_model_dir):
         os.mkdir(ori_lbl_model_dir)
         for vi in ori_val_img_files:
             lbl_name = os.path.basename(vi).replace('.jpg', '.txt')
-            shutil.copy(os.path.join(all_ori_lbl_model_dir, lbl_name), os.path.join(ori_lbl_model_dir, lbl_name))
-    multi_lbl_model_dir = args.annos_save_dir[:-1] + '_rc_val_multi_with_modelid'
-    new_val_lbl_model_dir = args.annos_save_dir[:-1] + '_rc_val_new_ori_multi_modelid'
+            shutil.copy(os.path.join(nrc_rc_ori_lbl_model_dir, lbl_name), os.path.join(ori_lbl_model_dir, lbl_name))
+    multi_lbl_model_dir = args.annos_save_dir[:-1] + '_rc_val_multi_with_rcid'
+    new_val_lbl_model_dir = args.annos_save_dir[:-1] + '_rc_val_new_ori_multi_rcid'
     if not os.path.exists(new_val_lbl_model_dir):
         os.mkdir(new_val_lbl_model_dir)
 
@@ -207,7 +207,6 @@ def split_trn_val_with_aug_rc_nrcbkg_step_by_step(data_name='xview', comments=''
     ######################  set(l) will change the order of list
                            list(dict.fromkeys(l)) doesn't change the order of list
     '''
-
     data_save_dir = args.data_save_dir
     if comments:
         txt_save_dir = args.data_list_save_dir + comments[1:] # + '_bh'+ '/'
@@ -219,7 +218,8 @@ def split_trn_val_with_aug_rc_nrcbkg_step_by_step(data_name='xview', comments=''
     else:
         txt_save_dir = args.data_list_save_dir
 
-    lbl_path = args.annos_save_dir[:-1]
+    lbl_model_path = args.annos_save_dir[:-1] + '_with_rcid'
+    print('lbl_path', lbl_model_path)
     bkg_lbl_dir = args.annos_save_dir[:-1] + '_bkg'
 
     images_save_dir = args.images_save_dir
@@ -239,31 +239,31 @@ def split_trn_val_with_aug_rc_nrcbkg_step_by_step(data_name='xview', comments=''
     val_rc_img_files = [f for f in glob.glob(os.path.join(val_rc_img_dir, '*.jpg'))]
     print('trn_rc_img_files', len(trn_rc_img_files))
     print('val_rc_img_files', len(val_rc_img_files))
-    trn_rc_lbl_files = [os.path.join(lbl_path, os.path.basename(f).replace('.jpg', '.txt')) for f in trn_rc_img_files]
-    val_rc_lbl_files = [os.path.join(lbl_path, os.path.basename(f).replace('.jpg', '.txt')) for f in val_rc_img_files]
+    trn_rc_lbl_files = [os.path.join(lbl_model_path, os.path.basename(f).replace('.jpg', '.txt')) for f in trn_rc_img_files]
+    val_rc_lbl_files = [os.path.join(lbl_model_path, os.path.basename(f).replace('.jpg', '.txt')) for f in val_rc_img_files]
 
     val_aug_rc_img_dir =  args.images_save_dir[:-1] + '_rc_val_new_ori_multi_aug'
-    val_aug_rc_lbl_dir = args.annos_save_dir[:-1] + '_rc_val_new_ori_multi_modelid_aug'
+    val_aug_rc_lbl_dir = args.annos_save_dir[:-1] + '_rc_val_new_ori_multi_rcid_aug'
 
     val_aug_rc_img_files = glob.glob(os.path.join(val_aug_rc_img_dir, '*.jpg'))
-    val_aug_rc_lbl_files = glob.glob(os.path.join(val_aug_rc_lbl_dir, '*.txt'))
+    val_aug_rc_lbl_files = [os.path.join(val_aug_rc_lbl_dir, os.path.basename(f).replace('.jpg', '.txt')) for f in val_aug_rc_img_files]
 
     # print('trn_rc_lbl_files', trn_rc_lbl_files)
-
     ##### images that contain aircrafts
-    airplane_lbl_files = [f for f in glob.glob(os.path.join(lbl_path, '*.txt')) if pps.is_non_zero_file(f)]
+    airplane_lbl_files = [f for f in glob.glob(os.path.join(lbl_model_path, '*.txt')) if pps.is_non_zero_file(f)]
     airplane_lbl_files.sort()
     num_air_files = len(airplane_lbl_files)
-    print('num_air_files', num_air_files)
+    print('totally 441 images, num_air_files', num_air_files)
 
     ##### images that contain no aircrafts (drop out by rules)
-    airplane_ept_lbl_files = [os.path.join(lbl_path, os.path.basename(f)) for f in glob.glob(os.path.join(lbl_path, '*.txt')) if not pps.is_non_zero_file(f)]
+    airplane_ept_lbl_files = [os.path.join(lbl_model_path, os.path.basename(f)) for f in glob.glob(os.path.join(lbl_model_path, '*.txt')) if not pps.is_non_zero_file(f)]
     airplane_ept_img_files = [os.path.join(images_save_dir, os.path.basename(f).replace('.txt', '.jpg')) for f in airplane_ept_lbl_files]
     print('airplane_ept_img_files', len(airplane_ept_img_files))
 
     ##### images that contain no aircrafts-- BKG
     bkg_lbl_files = glob.glob(os.path.join(bkg_lbl_dir, '*.txt'))
     bkg_lbl_files.sort()
+    print('bkg_lbl_files', len(bkg_lbl_files))
     bkg_img_files = [os.path.join(bkg_img_dir, os.path.basename(f).replace('.txt', '.jpg')) for f in bkg_lbl_files]
     bkg_lbl_files = bkg_lbl_files + airplane_ept_lbl_files
     bkg_img_files = bkg_img_files + airplane_ept_img_files
@@ -297,20 +297,22 @@ def split_trn_val_with_aug_rc_nrcbkg_step_by_step(data_name='xview', comments=''
     val_nrcbkg_img_dir = args.images_save_dir[:-1] + '_val_nrcbkg_img'
     if not os.path.exists(val_nrcbkg_img_dir):
         os.mkdir(val_nrcbkg_img_dir)
-    val_nrcbkg_lbl_dir = args.annos_save_dir[:-1] + '_val_nrcbkg_lbl_with_modelid'
+    val_nrcbkg_lbl_dir = args.annos_save_dir[:-1] + '_val_nrcbkg_lbl_with_rcid'
     if not os.path.exists(val_nrcbkg_lbl_dir):
         os.mkdir(val_nrcbkg_lbl_dir)
-    lbl_model_path = args.annos_save_dir[:-1] + '_all_model'
+    lbl_bkg_path = args.annos_save_dir[:-1] + '_bkg'
     for f in nrc_bkg_img_files:
         img_name = os.path.basename(f)
         shutil.copy(f, os.path.join(val_nrcbkg_img_dir, img_name))
         lbl_name = img_name.replace('.jpg', '.txt')
-        shutil.copy(os.path.join(lbl_model_path, lbl_name), os.path.join(val_nrcbkg_lbl_dir, lbl_name))
+        if '_bkg' in lbl_name:
+            shutil.copy(os.path.join(lbl_bkg_path, lbl_name), os.path.join(val_nrcbkg_lbl_dir, lbl_name))
+        else:
+            shutil.copy(os.path.join(lbl_model_path, lbl_name), os.path.join(val_nrcbkg_lbl_dir, lbl_name))
 
-
-    trn_lbl_files = trn_bkg_lbl_files + trn_nrc_lbl_files + trn_rc_lbl_files
+    trn_lbl_files = trn_bkg_lbl_files + trn_nrc_lbl_files # + trn_rc_lbl_files
     val_lbl_files = val_bkg_lbl_files + val_nrc_lbl_files + val_aug_rc_lbl_files
-    trn_img_files = trn_bkg_img_files + trn_nrc_img_files + trn_rc_img_files
+    trn_img_files = trn_bkg_img_files + trn_nrc_img_files # + trn_rc_img_files
     val_img_files = val_bkg_img_files + val_nrc_img_files + val_aug_rc_img_files
 
     print('trn_num ', len(trn_lbl_files), len(trn_img_files))
@@ -336,6 +338,7 @@ def split_trn_val_with_aug_rc_nrcbkg_step_by_step(data_name='xview', comments=''
 
     for i in range(len(trn_lbl_files)):
         trn_lbl_txt.write("%s\n" % trn_lbl_files[i])
+        # print('trn_lbl_files', trn_lbl_files[i])
         lbl_name = os.path.basename(trn_lbl_files[i])
         trn_img_txt.write("%s\n" % trn_img_files[i])
         shutil.copy(trn_lbl_files[i], os.path.join(trn_lbl_dir, lbl_name))
@@ -346,6 +349,7 @@ def split_trn_val_with_aug_rc_nrcbkg_step_by_step(data_name='xview', comments=''
         # print('val_lbl_files ', j, val_lbl_files[j])
         val_lbl_txt.write("%s\n" % val_lbl_files[j])
         lbl_name = os.path.basename(val_lbl_files[j])
+        # print('val_img_files ', j, val_img_files[j])
         val_img_txt.write("%s\n" % val_img_files[j])
         shutil.copy(val_lbl_files[j], os.path.join(val_lbl_dir, lbl_name))
         # exit(0)
@@ -361,9 +365,34 @@ def split_trn_val_with_aug_rc_nrcbkg_step_by_step(data_name='xview', comments=''
     shutil.copyfile(os.path.join(txt_save_dir, 'xview_ori_nrcbkg_aug_rc_val_lbl{}.txt'.format(comments)),
                     os.path.join(data_save_dir, 'xview_ori_nrcbkg_aug_rc_val_lbl{}.txt'.format(comments)))
 
+    data_txt = open(os.path.join(data_save_dir, '{}_aug_rc{}.data'.format(data_name, comments)), 'w')
+    data_txt.write(
+        'xview_train={}\n'.format(os.path.join(data_save_dir, '{}_train_img{}.txt'.format(data_name, comments))))
+    data_txt.write(
+        'xview_train_label={}\n'.format(os.path.join(data_save_dir, '{}_train_lbl{}.txt'.format(data_name, comments))))
+
+    data_txt.write(
+    'rc_train={}\n'.format(os.path.join(data_save_dir, 'only_rc_train_img{}.txt'.format(comments))))
+    data_txt.write(
+        'rc_train_label={}\n'.format(os.path.join(data_save_dir, 'only_rc_train_lbl{}.txt'.format(comments))))
+
+    data_txt.write(
+        'valid={}\n'.format(os.path.join(data_save_dir, 'xview_ori_nrcbkg_aug_rc_val_img{}.txt'.format(comments))))
+    data_txt.write(
+        'valid_label={}\n'.format(os.path.join(data_save_dir, 'xview_ori_nrcbkg_aug_rc_val_lbl{}.txt'.format(comments))))
+
+    xview_nrcbkg_img_txt = pd.read_csv(open(os.path.join(data_save_dir, '{}_train_img{}.txt'.format(data_name, comments))), header=None).to_numpy()
+    xview_rc_img_txt = pd.read_csv(open(os.path.join(data_save_dir, 'only_rc_train_img{}.txt'.format(comments))), header=None).to_numpy()
+    xview_trn_num = xview_nrcbkg_img_txt.shape[0] + xview_rc_img_txt.shape[0]
+    data_txt.write('syn_0_xview_number={}\n'.format(xview_trn_num))
+    data_txt.write('classes=%s\n' % str(args.class_num))
+    data_txt.write('names=./data_xview/{}_cls/xview.names\n'.format(args.class_num))
+    data_txt.write('backup=backup/\n')
+    data_txt.write('eval=color\n')
+    data_txt.close()
 
 def label_m_val_model_with_other_label(rare_class, model_id=1, other_label=0):
-    hard_easy_aug_dir = args.annos_save_dir[:-1] + '_rc_val_new_ori_multi_modelid_aug_easy_hard'
+    hard_easy_aug_dir = args.annos_save_dir[:-1] + '_rc_val_new_ori_multi_rcid_aug_easy_hard'
     if not os.path.exists(hard_easy_aug_dir):
         os.mkdir(hard_easy_aug_dir)
     des_easy_dir = os.path.join(hard_easy_aug_dir, 'val_aug_m{}_rc{}_easy'.format(model_id, rare_class))
@@ -372,7 +401,7 @@ def label_m_val_model_with_other_label(rare_class, model_id=1, other_label=0):
     des_hard_dir = os.path.join(hard_easy_aug_dir, 'val_aug_m{}_rc{}_hard'.format(model_id, rare_class))
     if not os.path.exists(des_hard_dir):
         os.mkdir(des_hard_dir)
-    val_labeled_dir = args.annos_save_dir[:-1] + '_rc_val_new_ori_multi_modelid_aug'
+    val_labeled_dir = args.annos_save_dir[:-1] + '_rc_val_new_ori_multi_rcid_aug'
     m_model_files = glob.glob(os.path.join(val_labeled_dir, '*.txt'))
 
     for f in m_model_files:
@@ -390,13 +419,20 @@ def label_m_val_model_with_other_label(rare_class, model_id=1, other_label=0):
                 df_hard_txt = df_hard_txt.drop(t) # drop index
         df_hard_txt.to_csv(os.path.join(des_hard_dir, lbl_name), sep=' ', header=False, index=False)
 
+    nrcbkg_lbl_path = args.annos_save_dir[:-1] + '_val_nrcbkg_lbl_with_rcid'
+    nrcbkg_lbl_files = glob.glob(os.path.join(nrcbkg_lbl_path, '*.txt'))
+    for f in nrcbkg_lbl_files:
+        if pps.is_non_zero_file(f):
+            df_nrcbkg = pd.read_csv(f, header=None, sep=' ')
+            df_nrcbkg.loc[:, 5] = other_label
+            df_nrcbkg.to_csv(f, sep=' ', header=False, index=False)
 
 
-def create_val_aug_rc_hard_easy_txt_list_data(model_id, rare_id, pxwhrs='px23whr3_seed17'):
+def create_val_aug_rc_hard_easy_txt_list_data(model_id, rare_id, pxwhrs='px23whr3_seed17', eh_types=['easy']):
     '''
     create hard easy validation dataset of model* rc*
     '''
-    hard_easy_aug_dir = args.annos_save_dir[:-1] + '_rc_val_new_ori_multi_modelid_aug_easy_hard'
+    hard_easy_aug_dir = args.annos_save_dir[:-1] + '_rc_val_new_ori_multi_rcid_aug_easy_hard'
     if not os.path.exists(hard_easy_aug_dir):
         os.mkdir(hard_easy_aug_dir)
 
@@ -404,11 +440,12 @@ def create_val_aug_rc_hard_easy_txt_list_data(model_id, rare_id, pxwhrs='px23whr
     # if not os.path.exists(val_labeled_m_rc_hard):
     #     os.mkdir(val_labeled_m_rc_hard)
 
-    nrcbkg_lbl_path = args.annos_save_dir[:-1] + '_val_nrcbkg_lbl_with_modelid'
+    nrcbkg_lbl_path = args.annos_save_dir[:-1] + '_val_nrcbkg_lbl_with_rcid'
     nrcbkg_lbl_files = glob.glob(os.path.join(nrcbkg_lbl_path, '*.txt'))
     nrcbkg_img_path = args.images_save_dir[:-1] +'_val_nrcbkg_img'
-    base_dir = os.path.join(args.data_save_dir, pxwhrs)
-    eh_types = ['easy', 'hard']
+    base_dir = os.path.join(args.data_save_dir, pxwhrs, 'RC')
+    if not os.path.exists(base_dir):
+        os.mkdir(base_dir)
     for eht in eh_types:
         test_lbl_txt = open(os.path.join(base_dir, 'xview_ori_nrcbkg_aug_rc_test_lbl_{}_m{}_rc{}_{}.txt'.format(pxwhrs, model_id, rare_id, eht)), 'w')
         test_img_txt = open(os.path.join(base_dir, 'xview_ori_nrcbkg_aug_rc_test_img_{}_m{}_rc{}_{}.txt'.format(pxwhrs, model_id, rare_id, eht)), 'w')
@@ -439,12 +476,12 @@ def create_val_aug_rc_nrcbkg_easy_txt_data(pxwhrs='px23whr3_seed17'):
     create easy validation dataset of all augrc nrcbkg
     all rare classes are classified as one category
     '''
-    easy_aug_lbl_dir = args.annos_save_dir[:-1] + '_rc_val_new_ori_multi_modelid_aug'
+    easy_aug_lbl_dir = args.annos_save_dir[:-1] + '_rc_val_new_ori_multi_rcid_aug'
 
-    nrcbkg_lbl_path = args.annos_save_dir[:-1] + '_val_nrcbkg_lbl_with_modelid'
+    nrcbkg_lbl_path = args.annos_save_dir[:-1] + '_val_nrcbkg_lbl_with_rcid'
     nrcbkg_lbl_files = glob.glob(os.path.join(nrcbkg_lbl_path, '*.txt'))
     nrcbkg_img_path = args.images_save_dir[:-1] +'_val_nrcbkg_img'
-    base_dir = os.path.join(args.data_save_dir, pxwhrs)
+    base_dir = os.path.join(args.data_save_dir, pxwhrs, 'RC')
     eht = 'easy'
     test_lbl_txt = open(os.path.join(base_dir, 'xview_ori_nrcbkg_aug_rc_test_lbl_{}_all_{}.txt'.format(pxwhrs, eht)), 'w')
     test_img_txt = open(os.path.join(base_dir, 'xview_ori_nrcbkg_aug_rc_test_img_{}_all_{}.txt'.format(pxwhrs, eht)), 'w')
@@ -470,11 +507,11 @@ def create_val_aug_rc_nrcbkg_easy_txt_data(pxwhrs='px23whr3_seed17'):
 
 
 def create_aug_only_rc_testset_txt_list(pxwhrs='px23whr3_seed17'):
-    lbl_dir = args.annos_save_dir[:-1] + '_rc_val_new_ori_multi_modelid_aug'
+    lbl_dir = args.annos_save_dir[:-1] + '_rc_val_new_ori_multi_rcid_aug'
     img_dir = args.images_save_dir[:-1] + '_rc_val_new_ori_multi_aug'
     img_files = glob.glob(os.path.join(img_dir, '*.jpg'))
     img_files.sort()
-    base_dir = os.path.join(args.data_save_dir, pxwhrs)
+    base_dir = os.path.join(args.data_save_dir, pxwhrs, 'RC')
     test_lbl_txt = open(os.path.join(base_dir, 'aug_only_rc_test_lbl_{}.txt'.format(pxwhrs)), 'w')
     test_img_txt = open(os.path.join(base_dir, 'aug_only_rc_test_img_{}.txt'.format(pxwhrs)), 'w')
 
@@ -483,6 +520,42 @@ def create_aug_only_rc_testset_txt_list(pxwhrs='px23whr3_seed17'):
         test_lbl_txt.write('%s\n' % os.path.join(lbl_dir, os.path.basename(f).replace('.jpg', '.txt')))
     test_img_txt.close()
     test_lbl_txt.close()
+
+
+def create_train_data_aug_rc_by_rcid(data_name, mid, rcid, comments):
+    data_save_dir = os.path.join(args.data_save_dir, comments[1:])
+    data_txt = open(os.path.join(data_save_dir, '{}_aug_rc{}{}.data'.format(data_name, rcid, comments)), 'w')
+    data_txt.write(
+        'xview_train={}\n'.format(os.path.join(data_save_dir, '{}_train_img{}.txt'.format(data_name, comments))))
+    data_txt.write(
+        'xview_train_label={}\n'.format(os.path.join(data_save_dir, '{}_train_lbl{}.txt'.format(data_name, comments))))
+    if rcid:
+        data_txt.write(
+            'rc_train={}\n'.format(os.path.join(data_save_dir, 'RC', 'only_rc{}_train_img{}.txt'.format(rcid, comments))))
+        data_txt.write(
+            'rc_train_label={}\n'.format(os.path.join(data_save_dir, 'RC', 'only_rc{}_train_lbl{}.txt'.format(rcid, comments))))
+    else:
+        data_txt.write(
+            'rc_train={}\n'.format(os.path.join(data_save_dir, 'only_rc_train_img{}.txt'.format(comments))))
+        data_txt.write(
+            'rc_train_label={}\n'.format(os.path.join(data_save_dir, 'only_rc_train_lbl{}.txt'.format(comments))))
+    data_txt.write(
+        'valid={}\n'.format(os.path.join(data_save_dir, 'RC', '{}_aug_rc_test_img{}_m{}_rc{}_easy.txt'.format(data_name, comments, mid, rcid))))
+    data_txt.write(
+        'valid_label={}\n'.format(os.path.join(data_save_dir, 'RC', '{}_aug_rc_test_lbl{}_m{}_rc{}_easy.txt'.format(data_name, comments, mid, rcid))))
+
+    xview_nrcbkg_img_txt = pd.read_csv(open(os.path.join(data_save_dir, '{}_train_img{}.txt'.format(data_name, comments))), header=None).to_numpy()
+    if rcid:
+        xview_rc_img_txt = pd.read_csv(open(os.path.join(data_save_dir, 'RC', 'only_rc{}_train_img{}.txt'.format(rcid, comments))), header=None).to_numpy()
+    else:
+        xview_rc_img_txt = pd.read_csv(open(os.path.join(data_save_dir, 'only_rc_train_img{}.txt'.format(comments))), header=None).to_numpy()
+    xview_trn_num = xview_nrcbkg_img_txt.shape[0] + xview_rc_img_txt.shape[0]
+    data_txt.write('syn_0_xview_number={}\n'.format(xview_trn_num))
+    data_txt.write('classes=%s\n' % str(args.class_num))
+    data_txt.write('names=./data_xview/{}_cls/xview.names\n'.format(args.class_num))
+    data_txt.write('backup=backup/\n')
+    data_txt.write('eval=color\n')
+    data_txt.close()
 
 
 def get_args(px_thres=None, whr_thres=None): #
@@ -519,7 +592,7 @@ def get_args(px_thres=None, whr_thres=None): #
 
     parser.add_argument("--cat_sample_dir", type=str, help="to save figures",
                         default='/media/lab/Yang/data/xView_YOLO/cat_samples/')
-    parser.add_argument("--val_percent", type=float, default=0.21,
+    parser.add_argument("--val_percent", type=float, default=0.2,
                         help="0.24 0.2 Percent to split into validation (ie .25 = val set is 25% total)")
     parser.add_argument("--class_num", type=int, default=1, help="Number of Total Categories")  # 60  6
     parser.add_argument("--input_size", type=int, default=608, help="Number of Total Categories")
@@ -569,7 +642,7 @@ if __name__ == '__main__':
     manually select desired patches 
     get txt labels for these patches
     group all cropped patches together
-    manually label the with modelid !!!!!
+    manually label the with rcid !!!!!
     '''
     # tif_list = ['86.tif', '88.tif', '311.tif', '546.tif', '1052.tif', '1076.tif', '1114.tif', '2160.tif', '2315.tif']
     # tif_list = ['1114.tif']
@@ -600,7 +673,7 @@ if __name__ == '__main__':
     modify nrcbkg labels 
     change the last column --> 0
     '''
-    # annos_dir = args.annos_save_dir[:-1] + '_val_nrcbkg_lbl_with_modelid/'
+    # annos_dir = args.annos_save_dir[:-1] + '_val_nrcbkg_lbl_with_rcid/'
     # nrc_files = glob.glob(os.path.join(annos_dir, '*.txt'))
     # for f in nrc_files:
     #     if not pps.is_non_zero_file(f):
@@ -621,12 +694,12 @@ if __name__ == '__main__':
     #     label_m_val_model_with_other_label(rare_class, model_id, other_label=0)
 
     '''
-    split train val 4 with augmented val rc data
+    split train val with augmented val rc data
     nrc + bkg + augmented rc
     # '''
     # seed = 17
     # comments = '_px23whr3_seed{}'.format(seed)
-    # split_trn_val_with_aug_rc_nrcbkg_step_by_step(data_name='xview', comments=comments, seed=seed)
+    # split_trn_val_with_aug_rc_nrcbkg_step_by_step(data_name='xview_ori_nrcbkg', comments=comments, seed=seed)
 
     '''
     creat m*_rc* test*.txt easy hard
@@ -634,19 +707,33 @@ if __name__ == '__main__':
     easy: keep other labels
     hard except rc*, drop others
     '''
-    # model_ids = [4, 1, 5, 5, 5]
-    # rare_ids = [1, 2, 3, 4, 5]
-    # for ix, rare_id in enumerate(rare_ids):
-    #     model_id = model_ids[ix]
-    #     create_val_aug_rc_hard_easy_txt_list_data(model_id, rare_id, pxwhrs='px23whr3_seed17')
+    model_ids = [4, 1, 5, 5, 5]
+    rare_ids = [1, 2, 3, 4, 5]
+    eh_types = ['easy'] # , 'hard'
+    for ix, rare_id in enumerate(rare_ids):
+        model_id = model_ids[ix]
+        create_val_aug_rc_hard_easy_txt_list_data(model_id, rare_id, pxwhrs='px23whr3_seed17')
+
+    '''
+    create *.data train on xview_rc, nrcbkg, test on  aug rc with rcid easy
+    '''
+    seed = 17
+    comments = '_px23whr3_seed{}'.format(seed)
+    data_name='xview_ori_nrcbkg'
+    model_ids = [4, 1, 5, 5, 5]
+    rare_ids = [1, 2, 3, 4, 5]
+    for ix, rare_id in enumerate(rare_ids):
+        model_id = model_ids[ix]
+        create_train_data_aug_rc_by_rcid(data_name, model_id, rare_id, comments)
 
     '''
     creat nrcbkg, aug rc test*.txt easy 
     create .data easy
     easy: keep other labels
     '''
-    create_val_aug_rc_nrcbkg_easy_txt_data(pxwhrs='px23whr3_seed17')
+    # create_val_aug_rc_nrcbkg_easy_txt_data(pxwhrs='px23whr3_seed17')
 
+    # create_aug_only_rc_testset_txt_list(pxwhrs='px23whr3_seed17')
 
     '''
     cheke bbox on images
@@ -655,7 +742,7 @@ if __name__ == '__main__':
     # if not os.path.exists(save_path):
     #     os.makedirs(save_path)
     # images_dir = args.images_save_dir[:-1] + '_rc_val_new_ori_multi/' # 282
-    # annos_dir = args.annos_save_dir[:-1] + '_rc_val_new_ori_multi_modelid/'
+    # annos_dir = args.annos_save_dir[:-1] + '_rc_val_new_ori_multi_rcid/'
     # print('images_dir', images_dir)
     # print('annos_dir', annos_dir)
     # img_list = np.sort(glob.glob(os.path.join(images_dir, '*.jpg')))
@@ -668,7 +755,7 @@ if __name__ == '__main__':
 
     # model_ids = [4, 1, 5, 5, 5]
     # rare_ids = [1, 2, 3, 4, 5]
-    # aug_rc_annos_dir = args.annos_save_dir[:-1] + '_rc_val_new_ori_multi_modelid_aug_easy_hard/val_aug_m{}_rc{}_hard/'
+    # aug_rc_annos_dir = args.annos_save_dir[:-1] + '_rc_val_new_ori_multi_rcid_aug_easy_hard/val_aug_m{}_rc{}_hard/'
     # images_dir = args.images_save_dir[:-1] + '_rc_val_new_ori_multi_aug/' # 282
     # print('images_dir', images_dir)
     # img_list = np.sort(glob.glob(os.path.join(images_dir, '*.jpg')))

@@ -11,6 +11,42 @@ def is_non_zero_file(fpath):
     return os.path.isfile(fpath) and os.path.getsize(fpath) > 0
 
 
+def backup_trn_rc_lbl(px_thres=23, whr_thres=3):
+    args = get_args(px_thres, whr_thres)
+    trn_rc_img_dir = args.images_save_dir[:-1] + '_rc_train'
+    trn_rc_lbl_path = args.annos_save_dir[:-1] + '_rc_trn_rcid'
+    lbl_model_path = args.annos_save_dir[:-1] + '_with_rcid'
+
+    trn_imgs = glob.glob(os.path.join(trn_rc_img_dir, '*.jpg'))
+    for f in trn_imgs:
+        lbl_name = os.path.basename(f).replace('.jpg', '.txt')
+        shutil.copy(os.path.join(lbl_model_path, lbl_name), os.path.join(trn_rc_lbl_path, lbl_name))
+
+
+def label_all_ori_lbl_with_other_label(other_label=0, px_thres=23, whr_thres=3):
+    args = get_args(px_thres, whr_thres)
+    lbl_model_path = args.annos_save_dir[:-1] + '_with_rcid'
+
+    all_ori_lbl_files = glob.glob(os.path.join(lbl_model_path, '*.txt'))
+    for f in all_ori_lbl_files:
+        if not is_non_zero_file(f):
+            continue
+        df_ori = pd.read_csv(f, header=None, sep=' ')
+        df_ori.loc[:, 5] = other_label
+        df_ori.to_csv(f, header=False, index=False, sep=' ')
+
+    lbl_trn_rc_path = args.annos_save_dir[:-1] + '_rc_trn_rcid'
+    trn_rc_files = glob.glob(os.path.join(lbl_trn_rc_path, '*.txt'))
+    for f in trn_rc_files:
+        shutil.copy(f, os.path.join(lbl_model_path, os.path.basename(f)))
+
+    lbl_val_rc_path = args.annos_save_dir[:-1] + '_rc_val_ori_rcid'
+    val_rc_files = glob.glob(os.path.join(lbl_val_rc_path, '*.txt'))
+    for f in val_rc_files:
+        shutil.copy(f, os.path.join(lbl_model_path, os.path.basename(f)))
+
+
+
 def split_trn_val_with_rc_step_by_step(data_name='xview', comments='', seed=17, px_thres=None, whr_thres=None):
     '''
     first step: split data contains aircrafts but no rc images
@@ -194,7 +230,7 @@ def split_trn_val_nrc_bkg_with_rc_sep_step_by_step(data_name='xview_nrcbkg', com
     else:
         txt_save_dir = args.data_list_save_dir
 
-    lbl_path = args.annos_save_dir
+    lbl_model_path = args.annos_save_dir[:-1] + '_with_rcid'
     bkg_lbl_dir = args.annos_save_dir[:-1] + '_bkg'
 
     images_save_dir = args.images_save_dir
@@ -207,7 +243,6 @@ def split_trn_val_nrc_bkg_with_rc_sep_step_by_step(data_name='xview_nrcbkg', com
     all_rc_imgs = glob.glob(os.path.join(trn_rc_img_dir, '*.jpg')) + glob.glob(os.path.join(val_rc_img_dir, '*.jpg'))
     all_rc_img_names = [os.path.basename(f) for f in all_rc_imgs]
     all_rc_lbl_names = [f.replace('.jpg', '.txt') for f in all_rc_img_names]
-    # print('lbl_path', lbl_path)
     print('all_rc_img_names', len(all_rc_img_names))
 
     # print('trn_rc_lbl_files', trn_rc_lbl_files)
@@ -215,14 +250,14 @@ def split_trn_val_nrc_bkg_with_rc_sep_step_by_step(data_name='xview_nrcbkg', com
     val_rc_img_files = [f for f in glob.glob(os.path.join(val_rc_img_dir, '*.jpg'))]
     print('trn_rc_img_files', len(trn_rc_img_files))
     print('val_rc_img_files', len(val_rc_img_files))
-    trn_rc_lbl_files = [os.path.join(lbl_path, os.path.basename(f).replace('.jpg', '.txt')) for f in trn_rc_img_files]
-    val_rc_lbl_files = [os.path.join(lbl_path, os.path.basename(f).replace('.jpg', '.txt')) for f in val_rc_img_files]
+    trn_rc_lbl_files = [os.path.join(lbl_model_path, os.path.basename(f).replace('.jpg', '.txt')) for f in trn_rc_img_files]
+    val_rc_lbl_files = [os.path.join(lbl_model_path, os.path.basename(f).replace('.jpg', '.txt')) for f in val_rc_img_files]
 
     trn_rc_img_txt = open(os.path.join(txt_save_dir, 'only_rc_train_img{}.txt'.format(comments)), 'w')
     trn_rc_lbl_txt = open(os.path.join(txt_save_dir, 'only_rc_train_lbl{}.txt'.format(comments)), 'w')
     for rf in trn_rc_img_files:
         trn_rc_img_txt.write('%s\n' % rf)
-        trn_rc_lbl_txt.write('%s\n' % os.path.join(lbl_path, os.path.basename(rf).replace('.jpg', '.txt')))
+        trn_rc_lbl_txt.write('%s\n' % os.path.join(lbl_model_path, os.path.basename(rf).replace('.jpg', '.txt')))
     trn_rc_img_txt.close()
     trn_rc_lbl_txt.close()
 
@@ -230,7 +265,7 @@ def split_trn_val_nrc_bkg_with_rc_sep_step_by_step(data_name='xview_nrcbkg', com
     val_rc_lbl_txt = open(os.path.join(txt_save_dir, 'only_rc_val_lbl{}.txt'.format(comments)), 'w')
     for rf in val_rc_img_files:
         val_rc_img_txt.write('%s\n' % rf)
-        val_rc_lbl_txt.write('%s\n' % os.path.join(lbl_path, os.path.basename(rf).replace('.jpg', '.txt')))
+        val_rc_lbl_txt.write('%s\n' % os.path.join(lbl_model_path, os.path.basename(rf).replace('.jpg', '.txt')))
     val_rc_img_txt.close()
     val_rc_lbl_txt.close()
     # print('trn_rc_lbl_files', trn_rc_lbl_files)
@@ -244,18 +279,19 @@ def split_trn_val_nrc_bkg_with_rc_sep_step_by_step(data_name='xview_nrcbkg', com
                     os.path.join(data_save_dir, 'only_rc_val_lbl{}.txt'.format(comments)))
 
     ##### images that contain aircrafts (rc included)
-    airplane_lbl_files = [f for f in glob.glob(os.path.join(lbl_path, '*.txt')) if is_non_zero_file(f)]
+    airplane_lbl_files = [f for f in glob.glob(os.path.join(lbl_model_path, '*.txt')) if is_non_zero_file(f)]
     airplane_lbl_files.sort()
     num_air_files = len(airplane_lbl_files)
     print('num_air_files', num_air_files)
 
     ##### images that contain no aircrafts (drop out by rules)
-    airplane_ept_lbl_files = [os.path.join(lbl_path, os.path.basename(f)) for f in glob.glob(os.path.join(lbl_path, '*.txt')) if not is_non_zero_file(f)]
+    airplane_ept_lbl_files = [os.path.join(lbl_model_path, os.path.basename(f)) for f in glob.glob(os.path.join(lbl_model_path, '*.txt')) if not is_non_zero_file(f)]
     airplane_ept_img_files = [os.path.join(images_save_dir, os.path.basename(f).replace('.txt', '.jpg')) for f in airplane_ept_lbl_files]
     print('airplane_ept_img_files', len(airplane_ept_img_files))
 
     ##### images that contain no aircrafts-- BKG
     bkg_lbl_files = glob.glob(os.path.join(bkg_lbl_dir, '*.txt'))
+    print('bkg_lbl_files', len(bkg_lbl_files))
     bkg_lbl_files.sort()
     bkg_img_files = [os.path.join(bkg_img_dir, os.path.basename(f).replace('.txt', '.jpg')) for f in bkg_lbl_files]
     bkg_lbl_files = bkg_lbl_files + airplane_ept_lbl_files
@@ -272,31 +308,30 @@ def split_trn_val_nrc_bkg_with_rc_sep_step_by_step(data_name='xview_nrcbkg', com
     val_nrc_img_files = [nrc_img_files[i] for i in nrc_ixes[:nrc_val_num]]
     trn_nrc_lbl_files = [nrc_lbl_files[i] for i in nrc_ixes[nrc_val_num:]]
     trn_nrc_img_files = [nrc_img_files[i] for i in nrc_ixes[nrc_val_num:]]
-
     print('trn_nrc_img, trn_nrc_lbl', len(trn_nrc_img_files), len(trn_nrc_lbl_files))
 
     bkg_ixes = np.random.permutation(len(bkg_lbl_files))
-    trn_non_bkg_num = len(trn_nrc_lbl_files)
-    val_non_bkg_num = len(val_nrc_lbl_files)
+    trn_non_bkg_num = len(trn_nrc_lbl_files) + len(trn_rc_lbl_files)
+    val_non_bkg_num = len(val_nrc_lbl_files) + len(val_rc_lbl_files)
     trn_bkg_lbl_files =[bkg_lbl_files[i] for i in bkg_ixes[:trn_non_bkg_num ]]
     val_bkg_lbl_files = [bkg_lbl_files[i] for i in bkg_ixes[ trn_non_bkg_num: val_non_bkg_num + trn_non_bkg_num]]
     trn_bkg_img_files = [bkg_img_files[i] for i in bkg_ixes[: trn_non_bkg_num]]
     val_bkg_img_files = [bkg_img_files[i] for i in bkg_ixes[trn_non_bkg_num: val_non_bkg_num + trn_non_bkg_num]]
     print('trn_bkg_lbl_files', len(trn_bkg_lbl_files), len(trn_bkg_img_files))
+    print('val_bkg_img_files', len(val_bkg_lbl_files), len(val_bkg_img_files))
 
-    # exit(0)
-
-    trn_lbl_files = trn_bkg_lbl_files + trn_nrc_lbl_files
-    val_lbl_files = val_bkg_lbl_files + val_nrc_lbl_files
-    trn_img_files = trn_bkg_img_files + trn_nrc_img_files
-    val_img_files = val_bkg_img_files + val_nrc_img_files
+    trn_lbl_files = trn_bkg_lbl_files + trn_nrc_lbl_files # + trn_rc_lbl_files
+    val_lbl_files = val_bkg_lbl_files + val_nrc_lbl_files + val_rc_lbl_files
+    trn_img_files = trn_bkg_img_files + trn_nrc_img_files # + trn_rc_img_files
+    val_img_files = val_bkg_img_files + val_nrc_img_files + val_rc_img_files
 
     print('trn_num ', len(trn_lbl_files), len(trn_img_files))
     print('val_num ', len(val_lbl_files), len(val_img_files))
-
+    ###### train mixed batch of xview_rc + xview_nrc_bkg
     trn_img_txt = open(os.path.join(txt_save_dir, '{}_train_img{}.txt'.format(data_name, comments)), 'w')
     trn_lbl_txt = open(os.path.join(txt_save_dir, '{}_train_lbl{}.txt'.format(data_name, comments)), 'w')
 
+    ###### validate xview_rc_nrc_bkg
     val_img_txt = open(os.path.join(txt_save_dir, 'xview_rc_nrcbkg_val_img{}.txt'.format(comments)), 'w')
     val_lbl_txt = open(os.path.join(txt_save_dir, 'xview_rc_nrcbkg_val_lbl{}.txt'.format(comments)), 'w')
 
@@ -332,7 +367,7 @@ def split_trn_val_nrc_bkg_with_rc_sep_step_by_step(data_name='xview_nrcbkg', com
         val_lbl_txt.write("%s\n" % val_rc_lbl_files[j])
         lbl_name = os.path.basename(val_rc_lbl_files[j])
         val_img_txt.write("%s\n" % val_rc_img_files[j])
-        shutil.copy(val_lbl_files[j], os.path.join(val_lbl_dir, lbl_name))
+        shutil.copy(val_rc_lbl_files[j], os.path.join(val_lbl_dir, lbl_name))
     val_img_txt.close()
     val_lbl_txt.close()
 
@@ -348,20 +383,45 @@ def split_trn_val_nrc_bkg_with_rc_sep_step_by_step(data_name='xview_nrcbkg', com
                     os.path.join(data_save_dir, 'xview_rc_nrcbkg_val_lbl{}.txt'.format(comments)))
 
 
-def create_xview_rc_nrcbkg_data(px_thres=23, whr_thres=3, seed=17, val_aug=True):
+def create_only_rc_txt_list_by_rc(rcid, px_thres=23, whr_thres=3, seed=17):
+    args = get_args(px_thres, whr_thres)
+    base_cmt = 'px{}whr{}_seed{}'.format(px_thres, whr_thres, seed)
+    data_save_dir = os.path.join(args.data_save_dir, base_cmt)
+    all_rc_lbl_files = pd.read_csv(os.path.join(data_save_dir, 'only_rc_train_lbl_{}.txt'.format(base_cmt)), header=None)
+    all_rc_img_files = pd.read_csv(os.path.join(data_save_dir, 'only_rc_train_img_{}.txt'.format(base_cmt)), header=None)
+
+    trn_rc_img_txt = open(os.path.join(data_save_dir, 'RC', 'only_rc{}_train_img_{}.txt'.format(rcid, base_cmt)), 'w')
+    trn_rc_lbl_txt = open(os.path.join(data_save_dir, 'RC', 'only_rc{}_train_lbl_{}.txt'.format(rcid, base_cmt)), 'w')
+    print('all_rc_lbl_files', all_rc_lbl_files)
+    img_files = []
+    lbl_files = []
+    for ix, f in enumerate(all_rc_lbl_files.loc[:, 0]):
+        print('f', f)
+        df_rc = pd.read_csv(f, header=None, sep=' ')
+        if np.any(df_rc.loc[:, 5] == rcid):
+            img_files.append(f)
+            lbl_files.append(all_rc_img_files.loc[ix, 0])
+    while len(img_files) < 4:
+        img_files.extend(img_files)
+        lbl_files.extend(lbl_files)
+    for ix, f in enumerate(img_files):
+        trn_rc_lbl_txt.write('%s\n' % f)
+        trn_rc_img_txt.write('%s\n' % lbl_files[ix])
+    trn_rc_lbl_txt.close()
+    trn_rc_img_txt.close()
+
+
+def create_xview_rc_nrcbkg_data_by_rcid(rc=0, px_thres=23, whr_thres=3, seed=17, val_aug=False):
     args = get_args(px_thres, whr_thres)
 
     base_cmt = 'px{}whr{}_seed{}'.format(px_thres, whr_thres, seed)
     data_save_dir = args.data_save_dir
     print('data_save_dir', data_save_dir)
-    if val_aug:
-        data_txt = open(os.path.join(data_save_dir, base_cmt, 'xview_ori_nrcbkg_aug_rc_{}.data'.format(base_cmt)), 'w')
-    else:
-        data_txt = open(os.path.join(data_save_dir, base_cmt, 'xview_rc_nrcbkg_{}.data'.format(base_cmt)), 'w')
+    data_txt = open(os.path.join(data_save_dir, base_cmt, 'xview_rc_nrcbkg_{}.data'.format(base_cmt)), 'w')
     data_txt.write(
-        'xview_train={}\n'.format(os.path.join(data_save_dir, base_cmt, 'xview_nrcbkg_train_img_{}.txt'.format(base_cmt))))
+        'xview_train={}\n'.format(os.path.join(data_save_dir, base_cmt, 'xview_ori_nrcbkg_train_img_{}.txt'.format(base_cmt))))
     data_txt.write(
-        'xview_train_label={}\n'.format(os.path.join(data_save_dir, base_cmt, 'xview_nrcbkg_train_lbl_{}.txt'.format(base_cmt))))
+        'xview_train_label={}\n'.format(os.path.join(data_save_dir, base_cmt, 'xview_ori_nrcbkg_train_lbl_{}.txt'.format(base_cmt))))
 
     data_txt.write(
         'rc_train={}\n'.format(os.path.join(data_save_dir, base_cmt,  'only_rc_train_img_{}.txt'.format(base_cmt))))
@@ -378,7 +438,7 @@ def create_xview_rc_nrcbkg_data(px_thres=23, whr_thres=3, seed=17, val_aug=True)
         data_txt.write(
             'valid_label={}\n'.format(os.path.join(data_save_dir, base_cmt, 'xview_rc_nrcbkg_val_lbl_{}.txt'.format(base_cmt))))
 
-    df_trn_nrcbkg = pd.read_csv(os.path.join(data_save_dir, base_cmt, 'xview_nrcbkg_train_img_{}.txt'.format(base_cmt)), header=None)
+    df_trn_nrcbkg = pd.read_csv(os.path.join(data_save_dir, base_cmt, 'xview_ori_nrcbkg_train_img_{}.txt'.format(base_cmt)), header=None)
     df_trn_rc = pd.read_csv(os.path.join(data_save_dir, base_cmt,  'only_rc_train_img_{}.txt'.format(base_cmt)), header=None)
     xview_trn_num = df_trn_nrcbkg.shape[0] + df_trn_rc.shape[0]
 
@@ -549,6 +609,28 @@ def get_args(px_thres=None, whr_thres=None):
 if __name__ == '__main__':
 
     '''
+    backup train_rc labels
+    then plot bbox with indice id 
+    then manually change modelid to rcid!!!!!!!!!!!!
+    '''
+    # backup_trn_rc_lbl()
+    # pxwhrs= 'px23whr3_seed17'
+    # px_thres=23
+    # whr_thres=3
+    # typestr='train'
+    # from utils.xview_synthetic_util.preprocess_xview_syn_data_distribution import draw_bbx_on_rgb_images_with_indices_for_train_val
+    # draw_bbx_on_rgb_images_with_indices_for_train_val(typestr, pxwhrs, px_thres, whr_thres)
+
+    '''
+    label train other lbl as 0
+    '''
+    # px_thres = 23
+    # whr_thres = 3
+    # other_label = 0
+    # label_all_ori_lbl_with_other_label(other_label, px_thres, whr_thres)
+
+
+    '''
     # split train val only nrc and bkg,
     # split rc separately
     '''
@@ -557,10 +639,16 @@ if __name__ == '__main__':
     # whr_thres = 3
     # seed = 17
     # comments = '_px{}whr{}_seed{}'.format(px_thres, whr_thres, seed)
-    # # data_name = 'xview_nrcbkg'
+    # data_name = 'xview_ori_nrcbkg'
     # split_trn_val_nrc_bkg_with_rc_sep_step_by_step(data_name, comments, seed, px_thres, whr_thres)
     # create_xview_rc_nrcbkg_data(px_thres, whr_thres, seed, val_aug=True)
 
+    '''
+    create training rc* txt list
+    '''
+    rc_list = [1, 2, 3, 4, 5]
+    for rcid in rc_list:
+        create_only_rc_txt_list_by_rc(rcid, px_thres=23, whr_thres=3, seed=17)
 
     '''
     split syn best size color data

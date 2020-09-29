@@ -15,61 +15,6 @@ import warnings
 
 warnings.filterwarnings("ignore")
 
-#fixme --yang.xu Apr 23 2020
-# Hyperparameters https://github.com/ultralytics/yolov3/issues/310
-# hyp = {'giou': 1.0,  # giou loss gain  3.54
-#        'cls': 37.4,  # cls loss gain
-#        'cls_pw': 1.0,  # cls BCELoss positive_weight
-#        'obj': 64.3,  # obj loss gain (*=img_size/320 if img_size != 320)
-#        'obj_pw': 1.0,  # obj BCELoss positive_weight
-#        'iou_t': 0.20,  # iou training threshold
-#        'lr0': 0.01,  # initial learning rate (SGD=5E-3, Adam=5E-4)
-#        'lrf': 0.0005,  # final learning rate (with cos scheduler)
-#        'momentum': 0.937,  # SGD momentum
-#        'weight_decay': 0.000484,  # optimizer weight decay
-#        'fl_gamma': 0.0,  # focal loss gamma (efficientDet default is gamma=1.5)
-#        'hsv_h': 0.0138,  # image HSV-Hue augmentation (fraction)
-#        'hsv_s': 0.678,  # image HSV-Saturation augmentation (fraction)
-#        'hsv_v': 0.36,  # image HSV-Value augmentation (fraction)
-#        'degrees': 1.98 * 0,  # image rotation (+/- deg)
-#        'translate': 0.05 * 0,  # image translation (+/- fraction)
-#        'scale': 0.05 * 0,  # image scale (+/- gain)
-#        'shear': 0.641 * 0}  # image shear (+/- deg)
-
-# Overwrite hyp with hyp*.txt (optional)
-# f = glob.glob('hyp*.txt')
-# if f:
-#     print('Using %s' % f[0])
-#     for k, v in zip(hyp.keys(), np.loadtxt(f[0])):
-#         hyp[k] = v
-#
-# # Print focal loss if gamma > 0
-# if hyp['fl_gamma']:
-#     print('Using FocalLoss(gamma=%g)' % hyp['fl_gamma'])
-
-# GPU="0, 1"
-# os.environ["CUDA_VISIBLE_DEVICES"] = GPU
-# Hyperparameters (results68: 59.2 mAP@0.5 yolov3-spp-416) https://github.com/ultralytics/yolov3/issues/310
-
-#fixme before git pull at April 23
-# hyp = {'giou': 1.0, #1.0,  1.5# giou loss gain
-#        'cls': 37.4,  # cls loss gain
-#        'cls_pw': 1.0,  # cls BCELoss positive_weight
-#        'obj': 49.5,  # obj loss gain (*=img_size/320 if img_size != 320)
-#        'obj_pw': 1.0,  # obj BCELoss positive_weight
-#        'iou_t': 0.225,  # iou training threshold
-#        'lr0': 0.00579,  # initial learning rate (SGD=1E-3, Adam=9E-5)
-#        'lrf': -4.,  # final LambdaLR learning rate = lr0 * (10 ** lrf)
-#        'momentum': 0.937,  # SGD momentum
-#        'weight_decay': 0.000484,  # optimizer weight decay
-#        'fl_gamma': 0.5,  # focal loss gamma
-#        'hsv_h': 0.0138,  # image HSV-Hue augmentation (fraction)
-#        'hsv_s': 0.678,  # image HSV-Saturation augmentation (fraction)
-#        'hsv_v': 0.36,  # image HSV-Value augmentation (fraction)
-#        'degrees': 1.98,  # image rotation (+/- deg)
-#        'translate': 0.05,  # image translation (+/- fraction)
-#        'scale': 0.05,  # image scale (+/- gain)
-#        'shear': 0.641}  # image shear (+/- deg)
 
 def infi_loop(dl):
     while True:
@@ -107,8 +52,7 @@ def train(opt):
 
     # Initialize
     #fixme
-    # init_seeds(opt.seed)
-    init_seeds()
+    init_seeds(opt.yoloseed)
     if opt.multi_scale:
         img_sz_min = round(img_size / 32 / 1.5)
         img_sz_max = round(img_size / 32 * 1.5)
@@ -425,13 +369,6 @@ def train(opt):
         if opt.prebias:
             print_model_biases(model)
         elif not opt.notest or final_epoch:  # Calculate mAP
-            #fixme
-            # if not syn_only:
-            #     is_xview = any([x in data for x in [
-            #         '{}_seed{}.data'.format(opt.cmt, opt.seed)]]) and model.nc == opt.class_num
-            # else:
-            # is_xview = any([x in data for x in [
-            #     '{}_seed{}.data'.format(opt.cmt, opt.seed)]]) and model.nc == opt.class_num
 
             results, maps = test.test(cfg,
                                       data,
@@ -518,6 +455,7 @@ def train(opt):
 def get_opt():
     parser = argparse.ArgumentParser()
     parser.add_argument('--seed', type=int, default=17, help='seed')
+    parser.add_argument('--yoloseed', type=int, default=0, help='seed')
     parser.add_argument('--cfg_dict', type=str, default='',
                         help='train_cfg/train_1cls_syn_only_mean_best_gpu0.json')
     parser.add_argument('--data', type=str, default='', help='*.data path')
@@ -563,6 +501,7 @@ if __name__ == '__main__':
     cfg_dict = json.load(open(Configure_file))
     opt.device = cfg_dict['device']
     opt.seed = cfg_dict['seed']
+    opt.yoloseed = cfg_dict['yoloseed']
     opt.epochs = cfg_dict['epochs']
     opt.batch_size = cfg_dict['batch_size']
     rbs_list = cfg_dict['rc_batch_size_list']
@@ -586,9 +525,9 @@ if __name__ == '__main__':
         opt.base_dir = opt.base_dir.format(opt.class_num, pxwhrsd)
 
         time_marker = time.strftime('%Y-%m-%d_%H.%M', time.localtime())
-        opt.weights_dir = 'weights/{}_cls/{}/{}/'.format(opt.class_num, pxwhrsd, '{}_{}_seed{}'.format(time_marker, hyp_cmt, opt.seed))
-        opt.writer_dir = 'writer_output/{}_cls/{}/{}/'.format(opt.class_num, pxwhrsd, '{}_{}_seed{}'.format(time_marker, hyp_cmt, opt.seed))
-        opt.result_dir = 'result_output/{}_cls/{}/{}/'.format(opt.class_num, pxwhrsd, '{}_{}_seed{}'.format(time_marker, hyp_cmt, opt.seed))
+        opt.weights_dir = 'weights/{}_cls/{}/{}/'.format(opt.class_num, pxwhrsd, '{}_{}_seed{}'.format(time_marker, hyp_cmt, opt.yoloseed))
+        opt.writer_dir = 'writer_output/{}_cls/{}/{}/'.format(opt.class_num, pxwhrsd, '{}_{}_seed{}'.format(time_marker, hyp_cmt, opt.yoloseed))
+        opt.result_dir = 'result_output/{}_cls/{}/{}/'.format(opt.class_num, pxwhrsd, '{}_{}_seed{}'.format(time_marker, hyp_cmt, opt.yoloseed))
 
         if not os.path.exists(opt.weights_dir):
             os.makedirs(opt.weights_dir)
@@ -598,9 +537,9 @@ if __name__ == '__main__':
 
         if not os.path.exists(opt.result_dir):
             os.makedirs(opt.result_dir)
-        results_file = os.path.join(opt.result_dir, 'results_seed{}.txt'.format(opt.seed))
-        last = os.path.join(opt.weights_dir, 'last_seed{}.pt'.format(opt.seed))
-        best = os.path.join(opt.weights_dir, 'best_seed{}.pt'.format(opt.seed))
+        results_file = os.path.join(opt.result_dir, 'results_seed{}.txt'.format(opt.yoloseed))
+        last = os.path.join(opt.weights_dir, 'last_seed{}.pt'.format(opt.yoloseed))
+        best = os.path.join(opt.weights_dir, 'best_seed{}.pt'.format(opt.yoloseed))
         opt.weights = last if opt.resume else opt.weights
         print(opt)
 
