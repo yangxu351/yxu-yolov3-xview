@@ -297,8 +297,14 @@ def split_trn_val_with_aug_rc_nrcbkg_step_by_step(data_name='xview', comments=''
     val_nrcbkg_img_dir = args.images_save_dir[:-1] + '_val_nrcbkg_img'
     if not os.path.exists(val_nrcbkg_img_dir):
         os.mkdir(val_nrcbkg_img_dir)
+    else:
+        shutil.rmtree(val_nrcbkg_img_dir)
+        os.mkdir(val_nrcbkg_img_dir)
     val_nrcbkg_lbl_dir = args.annos_save_dir[:-1] + '_val_nrcbkg_lbl_with_rcid'
     if not os.path.exists(val_nrcbkg_lbl_dir):
+        os.mkdir(val_nrcbkg_lbl_dir)
+    else:
+        shutil.rmtree(val_nrcbkg_lbl_dir)
         os.mkdir(val_nrcbkg_lbl_dir)
     lbl_bkg_path = args.annos_save_dir[:-1] + '_bkg'
     for f in nrc_bkg_img_files:
@@ -395,11 +401,18 @@ def label_m_val_model_with_other_label(rare_class, model_id=1, other_label=0):
     hard_easy_aug_dir = args.annos_save_dir[:-1] + '_rc_val_new_ori_multi_rcid_aug_easy_hard'
     if not os.path.exists(hard_easy_aug_dir):
         os.mkdir(hard_easy_aug_dir)
+
     des_easy_dir = os.path.join(hard_easy_aug_dir, 'val_aug_m{}_rc{}_easy'.format(model_id, rare_class))
     if not os.path.exists(des_easy_dir):
         os.mkdir(des_easy_dir)
+    else:
+        shutil.rmtree(des_easy_dir)
+        os.mkdir(des_easy_dir)
     des_hard_dir = os.path.join(hard_easy_aug_dir, 'val_aug_m{}_rc{}_hard'.format(model_id, rare_class))
     if not os.path.exists(des_hard_dir):
+        os.mkdir(des_hard_dir)
+    else:
+        shutil.rmtree(des_hard_dir)
         os.mkdir(des_hard_dir)
     val_labeled_dir = args.annos_save_dir[:-1] + '_rc_val_new_ori_multi_rcid_aug'
     m_model_files = glob.glob(os.path.join(val_labeled_dir, '*.txt'))
@@ -699,9 +712,9 @@ if __name__ == '__main__':
     split train val with augmented val rc data
     nrc + bkg + augmented rc
     # '''
-    # seed = 17
-    # comments = '_px23whr3_seed{}'.format(seed)
-    # split_trn_val_with_aug_rc_nrcbkg_step_by_step(data_name='xview_ori_nrcbkg', comments=comments, seed=seed)
+    seed = 17
+    comments = '_px23whr3_seed{}'.format(seed)
+    split_trn_val_with_aug_rc_nrcbkg_step_by_step(data_name='xview_ori_nrcbkg', comments=comments, seed=seed)
 
     '''
     creat m*_rc* test*.txt easy hard

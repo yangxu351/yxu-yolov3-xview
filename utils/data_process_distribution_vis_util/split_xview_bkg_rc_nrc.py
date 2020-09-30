@@ -411,7 +411,7 @@ def create_only_ori_rc_txt_list_by_rc(rcid, px_thres=23, whr_thres=3, seed=17):
     trn_rc_img_txt.close()
 
 
-def create_xview_rc_nrcbkg_data_by_rcid(rc=0, px_thres=23, whr_thres=3, seed=17, val_aug=False):
+def create_xview_rc_nrcbkg_data(px_thres=23, whr_thres=3, seed=17, val_aug=False):
     args = get_args(px_thres, whr_thres)
 
     base_cmt = 'px{}whr{}_seed{}'.format(px_thres, whr_thres, seed)

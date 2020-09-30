@@ -408,6 +408,33 @@ def compute_all_ratios(rc_ratios):
         df_avg.to_excel(writer, sheet_name='RC_avg', index=False) #
 
 
+def collect_all_rc_of_the_same_ratio():
+    eht = 'easy'
+    apN = 50
+    cmt = 'px23whr3'
+    opt = get_opt(comments=cmt)
+    sd = 17
+    base_cmt = "px23whr3_seed{}".format(sd)
+    all_rcs = [1,2,3,4,5]
+    rc_size = 4
+    df_all = pd.DataFrame(columns=["RC", "Seen", "NT", "AP{}".format(apN), "Pd(FAR=0.25)",  "Pd(FAR=0.5)", "Pd(FAR=1)"])
+    for rc in all_rcs:
+        # hyp_cmt = "hgiou1_29.5obj_rc{}x{}".format(rcs, opt.batch_size-rcs)
+        rc_ratio = 'rc{}x{}'.format(rc_size, opt.batch_size-rc_size)
+        hyp_cmt = "hgiou1_29.5obj_{}_rcls{}".format(rc_ratio, rc)
+        csv_dir = "result_output/{}_cls/{}/{}/".format(opt.class_num, base_cmt, "test_on_xview_ori_nrcbkg_aug_rc_{}_ap{}".format(hyp_cmt, apN))
+        csv_name =  "xview_RC_AP50_easy_seed0.xls"
+        df = pd.read_excel(os.path.join(csv_dir, csv_name))
+        df_all = df_all.append(df.loc[0, :])
+
+    save_name =  "xview_all_rc_{}_AP{}_RC_{}.xlsx".format(rc_ratio, apN, eht)
+    save_dir = 'result_output/{}_cls/{}/test_on_xview_ori_nrcbkg_aug_rc_{}_ap{}/'.format(opt.class_num, base_cmt, hyp_cmt[:hyp_cmt.rfind('rcls')+4], apN)
+    if not os.path.exists(save_dir):
+        os.mkdir(save_dir)
+    with pd.ExcelWriter(os.path.join(save_dir, save_name), mode='w') as writer:
+        df_all.to_excel(writer, sheet_name='RC_{}'.format(rc_ratio), index=False)
+
+
 def get_opt(dt=None, sr=None, comments=''):
     parser = argparse.ArgumentParser() # prog="test.py"
 
@@ -552,7 +579,7 @@ if __name__ == "__main__":
     whr_thres = 3 # 4
     sd = 17
     model_ids = [5] #4, 1, 5, 5, 5
-    rare_classes = [5] # 1, 2, 3, 4, 5
+    rare_classes = [3] # 1, 2, 3, 4, 5
     far_thres = 3
     rc_ratios = [4]  # 1, 2,3,4,5,6
     seeds = [0]# , 1, 2
@@ -601,7 +628,7 @@ if __name__ == "__main__":
     #            opt.data = "data_xview/{}_cls/{}/xviewtest_{}_m{}_rc{}_{}.data".format(opt.class_num, base_cmt, base_cmt, opt.model_id, opt.rare_class, opt.type)
     #             opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, "test_on_xview_{}_m{}_rc{}_ap{}_{}".format(hyp_cmt, opt.model_id, opt.rare_class, apN, opt.type))
     #             opt.data = "data_xview/{}_cls/{}/xview_rc_test_{}_m{}_rc{}_{}.data".format(opt.class_num, base_cmt, base_cmt, opt.model_id, opt.rare_class, opt.type)
-                opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_ori_nrcbkg_aug_rc_{}_m{}_rc{}_{}_iou{}_seed{}'.format(hyp_cmt, opt.model_id, opt.rare_class, opt.type, apN, seed))
+                opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'xview_only', 'test_on_xview_ori_nrcbkg_aug_rc_{}_m{}_rc{}_{}_iou{}_seed{}'.format(hyp_cmt, opt.model_id, opt.rare_class, opt.type, apN, seed))
                 opt.data = 'data_xview/{}_cls/{}/RC/xview_ori_nrcbkg_aug_rc_test_{}_m{}_rc{}_{}.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id, opt.rare_class, opt.type)
 
 
@@ -613,8 +640,8 @@ if __name__ == "__main__":
                 if not os.path.exists(opt.result_dir):
                     os.makedirs(opt.result_dir)
     #            print(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd), "*_{}_seed{}".format(hyp_cmt, sd), "best_seed{}.pt".format(sd)))
-                print(glob.glob(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd), "*_{}_seed{}".format(hyp_cmt, seed), "best_seed{}.pt".format(seed))))
-                all_weights = glob.glob(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd), "*_{}_seed{}".format(hyp_cmt, seed), "best_*seed{}.pt".format(seed)))
+                print(glob.glob(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd), 'xview_only', "*_{}_seed{}".format(hyp_cmt, seed), "best_seed{}.pt".format(seed))))
+                all_weights = glob.glob(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd), 'xview_only', "*_{}_seed{}".format(hyp_cmt, seed), "best_*seed{}.pt".format(seed)))
                 all_weights.sort()
                 opt.weights = all_weights[-1]
 
@@ -682,4 +709,5 @@ if __name__ == "__main__":
             mode = 'w'
             with pd.ExcelWriter(os.path.join(csv_dir, csv_name), mode=mode) as writer:
                 df_pr_ap_far.to_excel(writer, sheet_name='RC{}_{}'.format(opt.rare_class, opt.type), index=False)
-    compute_all_ratios(rc_ratios)
+    # # compute_all_ratios(rc_ratios)
+    collect_all_rc_of_the_same_ratio()
