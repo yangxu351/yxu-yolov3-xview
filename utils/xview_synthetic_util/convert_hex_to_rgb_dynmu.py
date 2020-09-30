@@ -14,8 +14,9 @@ def gaussian_disribution_of_color(body_mu, ssig_list, rare_cls, num_aft, wing_mu
         wing_txt = open(os.path.join(save_dir, 'RC{}_wing_color.txt'.format(rare_cls)), 'w')
     body_txt = open(os.path.join(save_dir, 'RC{}_body_color.txt'.format(rare_cls)), 'w')
     for ix, ssig in enumerate(ssig_list):
-        diag_body = ssig * np.diag([1, 1, 1])
-        body_gs = np.random.multivariate_normal(body_mu, diag_body, num_aft)
+        diag_body = ssig**2 * np.diag([1, 1, 1])
+        # diag_body = ssig * np.diag([1, 1, 1])
+        body_gs = np.random.multivariate_normal(body_mu, diag_body, num_aft) # convoriance
         # plt.hist(body_gs, 30)
         # plt.show()
         body_b = ''
@@ -100,8 +101,8 @@ if __name__ == '__main__':
     body_mu = [226, 222, 223]
     wing_mu = [174, 171, 170]
     num_aft = int(450*7*3)
-    ssig_list = [0, 15, 30, 45, 60]
-    # ssig_list = [0, 5, 10, 15, 20]
+    # ssig_list = [0, 15, 30, 45, 60]
+    ssig_list = [0, 5, 10, 15, 20]
     gaussian_disribution_of_color(body_mu, ssig_list, rare_cls, num_aft, wing_mu)
 
     ########## RC3

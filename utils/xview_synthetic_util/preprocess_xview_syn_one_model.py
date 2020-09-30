@@ -791,6 +791,10 @@ if __name__ == '__main__':
     # print(image_list)
 
 
+    '''
+    train set: rc* labeled as rc, others labeled as non-rc(0)
+    val set: rc* labeled as rc, others labeled as non-rc(0)
+    '''
 
 
     '''                                                                                                 

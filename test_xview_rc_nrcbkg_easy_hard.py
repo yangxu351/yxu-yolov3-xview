@@ -374,6 +374,40 @@ def test(cfg,
     print(pf % ('all', seen, nt.sum(), mp_arr.mean(), mr_arr.mean(), map_arr.mean(), mf1_arr.mean()))
     return seen, nt.sum(), mp_arr.mean(), mr_arr.mean(), map_arr.mean(), mf1_arr.mean()
 
+
+def compute_all_ratios(rc_ratios):
+    eht = 'easy'
+    apN = 50
+    cmt = 'px23whr3'
+    opt = get_opt(comments=cmt)
+    sd = 17
+    base_cmt = "px23whr3_seed{}".format(sd)
+    all_res = []
+    for rcs in rc_ratios:
+        hyp_cmt = "hgiou1_29.5obj_rc{}x{}".format(rcs, opt.batch_size-rcs)
+        csv_dir = "result_output/{}_cls/{}/{}/".format(opt.class_num, base_cmt, "test_on_xview_ori_nrcbkg_aug_rc_{}_ap{}".format(hyp_cmt, apN))
+        csv_name =  "xview_RC_AP50_easy_seed0.xls"
+        df = pd.read_excel(os.path.join(csv_dir, csv_name))
+        all_res.append(df.to_numpy())
+        rc_list = df.loc[:, 'RC']
+        imgnum_list = df.loc[:, 'Seen']
+        rcnum_list = df.loc[:, 'NT']
+
+    all_res = np.array(all_res)
+    avg_res = np.mean(all_res[:, :, 3:7], axis=0)
+    df_avg = pd.DataFrame(columns=["RC", "Seen", "NT", "AP{}".format(apN), "Pd(FAR=0.25)",  "Pd(FAR=0.5)", "Pd(FAR=1)"])
+    df_avg['RC'] = rc_list
+    df_avg['Seen'] = imgnum_list
+    df_avg['NT'] = rcnum_list
+    df_avg.loc[:, 3:7] = avg_res
+    save_name =  "xview_avg_all_ratios_AP{}_RC_{}_all_seeds.xlsx".format(apN, eht)
+    save_dir = 'result_output/{}_cls/{}/test_on_xview_ori_nrcbkg_aug_rc_all_ratios/'.format(opt.class_num, base_cmt)
+    if not os.path.exists(save_dir):
+        os.mkdir(save_dir)
+    with pd.ExcelWriter(os.path.join(save_dir, save_name), mode='w') as writer:
+        df_avg.to_excel(writer, sheet_name='RC_avg', index=False) #
+
+
 def get_opt(dt=None, sr=None, comments=''):
     parser = argparse.ArgumentParser() # prog="test.py"
 
@@ -509,22 +543,21 @@ if __name__ == "__main__":
     px_thres = 23
     whr_thres = 3 # 4
     sd = 17
-    seeds = [0] # ,1,2
-    model_ids = [4, 1, 5, 5, 5]
-    rare_classes = [1, 2, 3, 4, 5]
+    model_ids = [5] #4, 1, 5, 5, 5
+    rare_classes = [5] # 1, 2, 3, 4, 5
     far_thres = 3
-    
-    rc_ratios = [1, 2, 3, 4] #1, 2,3, 4
-    typ = "easy" # "hard", 
+    rc_ratios = [4]  # 1, 2,3,4,5,6
+    seeds = [0]# , 1, 2
+    typ = "easy" # "hard",
     for rcs in rc_ratios:
         for seed in seeds:
             df_pr_ap_far = pd.DataFrame(columns=["RC", "Seen", "NT", "AP{}".format(apN), "Pd(FAR=0.25)", "Pd(FAR=0.5)", "Pd(FAR=1)", "Precision", "Recall" , "F1"]) #, "Precision", "Recall" , "F1"
             for ix, rare_id in enumerate(rare_classes):
                 base_cmt = base_cmt.format(sd)
                 opt = get_opt(comments=cmt)
-                opt.device = "3"
-                #hyp_cmt = "hgiou1_x{}rc{}".format(opt.batch_size-rcs, rcs)
-                hyp_cmt = "hgiou1_29.5obj_rc{}syn{}".format(rcs, opt.batch_size-rcs)
+                opt.device = "1"
+                # hyp_cmt = "hgiou1_29.5obj_rc{}x{}".format(rcs, opt.batch_size-rcs)
+                hyp_cmt = "hgiou1_29.5obj_rc{}x{}_rcls{}".format(rcs, opt.batch_size-rcs, rare_id)
                 opt.rare_class = rare_id
                 opt.model_id = model_ids[ix]
 
@@ -558,10 +591,10 @@ if __name__ == "__main__":
                 opt.name += "_{}".format(opt.type)
     #            opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, "test_on_xview_{}_m{}_rc{}_{}".format(hyp_cmt, opt.model_id, opt.rare_class, opt.type))
     #            opt.data = "data_xview/{}_cls/{}/xviewtest_{}_m{}_rc{}_{}.data".format(opt.class_num, base_cmt, base_cmt, opt.model_id, opt.rare_class, opt.type)
-#                opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, "test_on_xview_{}_m{}_rc{}_ap{}_{}".format(hyp_cmt, opt.model_id, opt.rare_class, apN, opt.type))
-#                opt.data = "data_xview/{}_cls/{}/xview_rc_test_{}_m{}_rc{}_{}.data".format(opt.class_num, base_cmt, base_cmt, opt.model_id, opt.rare_class, opt.type)
-                opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_ori_nrcbkg_aug_rc_{}_m{}_rc{}_{}_iou{}_seed{}'.format(hyp_cmt, opt.model_id, opt.rare_class, opt.type, apN, seed))
-                opt.data = 'data_xview/{}_cls/{}/xview_ori_nrcbkg_aug_rc_test_{}_m{}_rc{}_{}.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id, opt.rare_class, opt.type)
+    #             opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, "test_on_xview_{}_m{}_rc{}_ap{}_{}".format(hyp_cmt, opt.model_id, opt.rare_class, apN, opt.type))
+    #             opt.data = "data_xview/{}_cls/{}/xview_rc_test_{}_m{}_rc{}_{}.data".format(opt.class_num, base_cmt, base_cmt, opt.model_id, opt.rare_class, opt.type)
+                opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_ori_nrcbkg_aug_rc_{}_m{}_rc{}_{}_iou{}_seed{}'.format(hyp_cmt, opt.model_id, opt.rare_class, opt.type, apN, seed))
+                opt.data = 'data_xview/{}_cls/{}/RC/xview_ori_nrcbkg_aug_rc_test_{}_m{}_rc{}_{}.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id, opt.rare_class, opt.type)
 
 
                 ''' for whole validation dataset '''
@@ -571,7 +604,7 @@ if __name__ == "__main__":
 
                 if not os.path.exists(opt.result_dir):
                     os.makedirs(opt.result_dir)
-                print(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd), "*_{}_seed{}".format(hyp_cmt, seed), "best_seed{}.pt".format(seed)))
+    #            print(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd), "*_{}_seed{}".format(hyp_cmt, sd), "best_seed{}.pt".format(sd)))
                 print(glob.glob(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd), "*_{}_seed{}".format(hyp_cmt, seed), "best_seed{}.pt".format(seed))))
                 all_weights = glob.glob(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd), "*_{}_seed{}".format(hyp_cmt, seed), "best_*seed{}.pt".format(seed)))
                 all_weights.sort()
@@ -641,4 +674,4 @@ if __name__ == "__main__":
             mode = 'w'
             with pd.ExcelWriter(os.path.join(csv_dir, csv_name), mode=mode) as writer:
                 df_pr_ap_far.to_excel(writer, sheet_name='RC{}_{}'.format(opt.rare_class, opt.type), index=False)
-
+    compute_all_ratios(rc_ratios)

@@ -571,7 +571,7 @@ def main():
             df_pr_ap_far.to_excel(writer, sheet_name='RC{}_{}'.format(opt.rare_class, opt.type), index=False) #
 
 
-def computer_avg_all_seeds(seeds):
+def compute_avg_all_seeds(seeds):
     prefix = 'syn'
     model_ids = [4, 1, 5, 5, 5]
     rare_classes = [1, 2, 3, 4, 5]
@@ -665,8 +665,14 @@ if __name__ == "__main__":
 #         px_thres = 23
 
        # cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.06_bxmuller_color_bias{}_RC5_v{}'.format(ssig, ix+11)
-#        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.03_color_bias{}_RC5_v{}'.format(ssig, ix+51)
-#        px_thres = 23
+       #  cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.03_color_bias{}_RC5_v{}'.format(ssig, ix+51)
+       #  px_thres = 23
+       #
+       #  comments.append(cmt)
+    cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.03_color_bias30_RC5_v52'
+    px_thres = 23
+
+    comments.append(cmt)
 
 #        comments.append(cmt)
     
@@ -676,6 +682,6 @@ if __name__ == "__main__":
     for seed in seed_list:
       main()
 
-    seeds = [0]# , 1
-    computer_avg_all_seeds(seeds)
+    # seeds = [0, 1]
+    # compute_avg_all_seeds(seeds)
 
