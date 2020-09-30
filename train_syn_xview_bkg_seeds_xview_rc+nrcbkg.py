@@ -6,6 +6,7 @@ import torch.distributed as dist
 import torch.optim as optim
 import torch.optim.lr_scheduler as lr_scheduler
 
+# import test_xview_neutral as test
 import test_xview as test  # import test.py to get mAP after each epoch
 from models_xview import *
 from utils.datasets_xview import *
@@ -76,8 +77,8 @@ def train(opt):
 
     # Remove previous results
     # Remove previous results
-    for f in glob.glob('trn_patch_images/*_batch*.jpg') + glob.glob(results_file):
-        os.remove(f)
+    # for f in glob.glob('trn_patch_images/*_batch*.jpg') + glob.glob(results_file):
+    #     os.remove(f)
 
     # Initialize model
     model = Darknet(cfg, arc=opt.arc).to(device)
@@ -206,7 +207,7 @@ def train(opt):
                                 hyp=hyp,
                                 rect=True,
                                 cache_labels=True,
-                                cache_images=opt.cache_images),
+                                cache_images=opt.cache_images, with_modelid=True),
             batch_size=batch_size * 2,
             num_workers=nw,
             pin_memory=True,
@@ -311,7 +312,10 @@ def train(opt):
 
             # Plot images with bounding boxes
             if ni <= 2:# == 0:
-                fname = 'trn_patch_images/train_batch%g.jpg' % i
+                if opt.rare_class:
+                    fname = 'trn_patch_images/train_batch_rc%gx%g_rc%g_x_%g.jpg' % (opt.rc_batch_size, opt.batch_size-opt.rc_batch_size, opt.rare_class, i)
+                else:
+                    fname = 'trn_patch_images/train_batch%g.jpg' % i
                 # print(imgs.shape, targets.shape, len(paths))
                 # print(imgs[0])
                 # print(targets)
@@ -461,10 +465,12 @@ def get_opt():
     parser.add_argument('--data', type=str, default='', help='*.data path')
     parser.add_argument('--epochs', type=int, default=220)  # 220 180 250  500200 batches at bs 16, 117263 images = 273 epochs
     parser.add_argument('--batch-size', type=int, default=8)  # effective bs = batch_size * accumulate = 16 * 4 = 64
+    parser.add_argument('--rare_class', type=int, default=None)
     parser.add_argument('--rc-batch-size', type=int, default=2, help='3 rc batch size ')
     parser.add_argument('--device', default='0', help='device id (i.e. 0 or 0,1 or cpu)')
     parser.add_argument('--img_size', type=int, default=608, help='inference size (pixels)')  # 416 608
     parser.add_argument('--class_num', type=int, default=1, help='class number')  # 60 6 1
+    parser.add_argument('--apN', type=int, default=50, help='average precision @apN')  # 60 6 1
 
     parser.add_argument('--cfg', type=str, default='cfg/yolov3-spp-{}cls_syn.cfg', help='*.cfg path')
     parser.add_argument('--writer_dir', type=str, default='', help='*events* path')
@@ -505,8 +511,10 @@ if __name__ == '__main__':
     opt.epochs = cfg_dict['epochs']
     opt.batch_size = cfg_dict['batch_size']
     rbs_list = cfg_dict['rc_batch_size_list']
+    opt.rare_class = cfg_dict['rare_class']
     opt.image_size = cfg_dict['image_size']
     opt.class_num = cfg_dict['class_num']
+    opt.apN = cfg_dict['apN']
     opt.cfg = opt.cfg.format(opt.class_num)
 
     prefix = cfg_dict['prefix']
@@ -515,10 +523,11 @@ if __name__ == '__main__':
     hyp_cmt = cfg_dict['hyp_cmt']
     hyp = cfg_dict['hyp']
     # opt.data = 'data_xview/{}_cls/{}/xview_rc_nrcbkg_{}.data'.format(opt.class_num, pxwhrsd, pxwhrsd)
-    opt.data = 'data_xview/{}_cls/{}/xview_ori_nrcbkg_aug_rc_{}.data'.format(opt.class_num, pxwhrsd, pxwhrsd)
+    # opt.data = 'data_xview/{}_cls/{}/xview_ori_nrcbkg_{}.data'.format(opt.class_num, pxwhrsd, pxwhrsd)
+    opt.data = 'data_xview/{}_cls/{}/xview_ori_nrcbkg_aug_rc{}_{}.data'.format(opt.class_num, pxwhrsd, opt.rare_class, pxwhrsd)
     for rbs in rbs_list:
         opt.rc_batch_size = rbs
-        hyp_cmt = hyp_cmt.format(opt.batch_size - opt.rc_batch_size, opt.rc_batch_size)
+        hyp_cmt = hyp_cmt.format(opt.rc_batch_size, opt.batch_size - opt.rc_batch_size, opt.rare_class)
 
         opt.name = prefix
 
