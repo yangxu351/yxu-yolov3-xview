@@ -415,10 +415,10 @@ def main():
     base_cmt = "px23whr3_seed{}"
     # hyp_cmt = "hgiou1_1gpu"
 
-#    hyp_cmt = "hgiou1_1gpu_val_syn"
+    hyp_cmt = "hgiou1_1gpu_val_syn"
 #    hyp_cmt = "hgiou1_1gpu_half_hsv_val_syn"
 #    hyp_cmt = "hgiou1_1gpu_point1_hsv_val_syn"
-    hyp_cmt = "hgiou1_1gpu_square_val_syn"
+#    hyp_cmt = "hgiou1_1gpu_square_val_syn"
 
     prefix = 'syn'
 
@@ -436,7 +436,9 @@ def main():
 #        df_pr_ap_far = pd.DataFrame(columns=["Version","Seen", "NT", "AP{}".format(ap_list[0]), "AP{}".format(ap_list[1]), "AP{}".format(ap_list[2])])
         df_pr_ap_far = pd.DataFrame(columns=["Version", "Seen", "NT", "AP{}".format(apN), "Pd(FAR=0.25)", "Pd(FAR=0.5)", "Pd(FAR=1)", "Precision", "Recall" , "F1"]) #, "Precision", "Recall" , "F1"
         for ix, cmt in enumerate(comments):    
-            VN = ix + base_version
+            #VN = ix + base_version
+            vx = cmt.split('_')[-1]
+            VN = vx[1:]
             base_cmt = base_cmt.format(sd)
             opt = get_opt(comments=cmt)
             opt.device = "2"
@@ -575,7 +577,7 @@ def main():
             df_pr_ap_far.to_excel(writer, sheet_name='RC{}_{}'.format(opt.rare_class, opt.type), index=False) # 
 
 
-def computer_avg_all_seeds(seeds):
+def compute_avg_all_seeds(seeds):
     prefix = 'syn'
     model_ids = [4, 1, 5, 5, 5]
     rare_classes = [1, 2, 3, 4, 5]
@@ -770,10 +772,10 @@ if __name__ == "__main__":
 #        comments.append(cmt)
 
     ###########################################    
-    comments = []
-    base_version = 1
-    color_sigma = [5, 10, 15, 20]
-#    color_sigma = [15, 30, 45, 60] # 0, 15, 30, 45, 60
+#    comments = []
+#    base_version = 1
+##    color_sigma = [5, 10, 15, 20]
+#    color_sigma = [0] # 0, 15, 30, 45, 60
 #    for ix,ssig in enumerate(color_sigma):
 
 #        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_ssig0_color_bias{}_RC1_v{}'.format(ssig, ix+50)
@@ -786,7 +788,8 @@ if __name__ == "__main__":
 #        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0_bxmuller_color_bias{}_RC3_v{}'.format(ssig, ix+11)
 #        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.09_color_bias{}_RC3_v{}'.format(ssig, ix+50)
 #        px_thres = 23
-        
+#        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.09_color_bias{}_RC3_v{}'.format(ssig, ix+50)
+#        px_thres = 23        
 #        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.09_bxmuller_color_bias{}_RC4_v{}'.format(ssig, ix+11)
 #        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.09_color_bias{}_RC4_v{}'.format(ssig, ix+50)
 #        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.09_color_square_bias{}_RC4_v{}'.format(ssig, ix+71)
@@ -798,14 +801,20 @@ if __name__ == "__main__":
 
 #        comments.append(cmt)
 
-    comments = ['syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_ssig0_texture_RC1_v80',
-                'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.09_texture_RC4_v80',
-                'syn_xview_bkg_px23whr3_xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_ssig0_texture_RC2_v80']
+#    comments = ['syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_ssig0_texture_RC1_v80',
+#                'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.09_texture_RC4_v80',
+#                'syn_xview_bkg_px23whr3_xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_ssig0_texture_RC2_v80']
     
-    seed_list = [0]# 0, 1, 2
+    comments = [#'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_promu_size_bias0_RC1_v40',
+#    'syn_xview_bkg_px23whr3_xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_ssig0_color_bias0_RC2_v50',
+#    'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.09_color_bias15_RC3_v51',
+#    'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_promu_size_bias0.09_RC4_v43',
+#    'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.03_color_bias0_RC5_v50']
+
+    seed_list = [0, 1, 2]# 0, 1, 2
     for seed in seed_list:
       main()  
        
-#    seeds = [0, 1, 2] #, 2
-#    computer_avg_all_seeds(seeds)
+    seeds = [0, 1, 2] #, 2
+    compute_avg_all_seeds(seeds)
 

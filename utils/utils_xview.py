@@ -345,16 +345,10 @@ def ap_per_class(tp, conf, pred_cls, target_cls, ntp=None, pr_path='', pr_name='
     s = [len(unique_classes), tp.shape[1]]  # number class, number iou thresholds (i.e. 10 for mAP0.5...0.95)
     ap, p, r = np.zeros(s), np.zeros(s), np.zeros(s)
     for ci, c in enumerate(unique_classes):
-        if rare_class is not None:
-            i = pred_cls == 0
-            n_gt = (target_cls == rare_class).sum()
-            n_p = i.sum()
-            # print('n_gt', n_gt, 'n_p', n_p)
-        else:
-            i = pred_cls == c
-            n_gt = (target_cls == c).sum()  # Number of ground truth objects
-            n_p = i.sum()  # Number of predicted objects
-
+        i = pred_cls == c
+        n_gt = (target_cls == c).sum()  # Number of ground truth objects
+        n_p = i.sum()  # Number of predicted objects
+        # print('n_gt', n_gt, 'n_p', n_p)
         if n_p == 0 or n_gt == 0:
             r[ci] = 0
             p[ci] = 0

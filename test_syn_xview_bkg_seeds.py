@@ -73,6 +73,7 @@ def test(cfg,
     # fixme--yang.xu
     path = data['test']  # path to test images
     lbl_path = data['test_label']
+    print('lbl_path', lbl_path)
     names = load_classes(data['names'])  # class names
 #    m_key = 215
 #    for ix, mk in enumerate([m_key]):
@@ -413,7 +414,11 @@ def get_opt(dt=None, sr=None, comments=''):
 
 def main():
     base_cmt = "px23whr3_seed{}"
-    hyp_cmt = "hgiou1_1gpu_val_syn"
+#    hyp_cmt = "hgiou1_1gpu_val_syn"
+    hyp_cmt = "hgiou1_29.5obj_rc1syn7"
+#    hyp_cmt = "hgiou1_29.5obj_rc2syn6"
+#    hyp_cmt = "hgiou1_29.5obj_rc3syn5"
+#    hyp_cmt = "hgiou1_29.5obj_rc4syn4"
     prefix = 'syn'
 
 
@@ -433,7 +438,7 @@ def main():
             VN = ix + base_version
             base_cmt = base_cmt.format(sd)
             opt = get_opt(comments=cmt)
-            opt.device = "1"
+            opt.device = "3"
             opt.apN = apN
 
             cinx = cmt.find('_RC') # first letter index
@@ -441,7 +446,8 @@ def main():
             rcinx = endstr.rfind('_') # _RC*_v*
             sstr = endstr[:rcinx]
             if cinx >= 0:
-                medix = cmt.find('_promu')
+                medix = cmt.find('ssig')
+                #medix = cmt.find('_promu')
                 #medix = cmt.find('_bxmuller')
                 #medix = cmt.find('_dyn')
                 mstr =  cmt[medix:cinx] # _dyn*_color_bias*
@@ -577,7 +583,8 @@ def computer_avg_all_seeds(seeds):
         model_id = model_ids[rare_classes.index(rare_class)]
         csv_dir = "result_output/1_cls/{}/".format(cmt[:cmt.find("bias")+4] + '_RC' + str(rare_class))
         #sinx = cmt.find('bxmuller')
-        sinx = cmt.find('promu')
+        #sinx = cmt.find('promu')
+        sinx = cmt.find('ssig')
         einx = cmt.find('bias')+4
         dynstr = cmt[sinx:einx]
         cmb = []
@@ -637,10 +644,10 @@ if __name__ == "__main__":
 #        comments.append(cmt)
 
     ###########################################
-    comments = []
-    base_version = 1
-    color_sigma = [15, 30, 45, 60] #
-    for ix,ssig in enumerate(color_sigma):
+#    comments = []
+#    base_version = 1
+#    color_sigma = [0] #0, 15, 30, 45, 60
+#    for ix,ssig in enumerate(color_sigma):
 
 #        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_ssig0_color_bias{}_RC1_v{}'.format(ssig, ix+51)
 #        px_thres = 15
@@ -650,6 +657,7 @@ if __name__ == "__main__":
 #        px_thres = 23
 
 #        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0_bxmuller_color_bias{}_RC3_v{}'.format(ssig, ix+11)
+#        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.09_color_bias{}_RC3_v{}'.format(ssig, ix+50)
 #        px_thres = 23
 
 #        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.09_bxmuller_color_bias{}_RC4_v{}'.format(ssig, ix+11)
@@ -657,16 +665,17 @@ if __name__ == "__main__":
 #         px_thres = 23
 
        # cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.06_bxmuller_color_bias{}_RC5_v{}'.format(ssig, ix+11)
-        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.03_color_bias{}_RC5_v{}'.format(ssig, ix+51)
-        px_thres = 23
+#        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.03_color_bias{}_RC5_v{}'.format(ssig, ix+51)
+#        px_thres = 23
 
-        comments.append(cmt)
+#        comments.append(cmt)
+    
+    comments = ['px23whr3_seed17']
 
-
-    seed_list = [0, 1]
+    seed_list = [0]#, 1
     for seed in seed_list:
       main()
 
-    seeds = [0, 1]
+    seeds = [0]# , 1
     computer_avg_all_seeds(seeds)
 

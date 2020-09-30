@@ -118,8 +118,7 @@ def group_object_annotation_and_draw_bbox(dt, px_thresh=20, whr_thres=4, upscale
         shutil.rmtree(save_txt_path)
         os.makedirs(save_txt_path)
     gt_files = np.sort(glob.glob(os.path.join(lbl_path, '*.png')))
-    for gf in gt_files:
-        os.rename(gf, gf.replace('color', 'texture'))
+
 
     gbc.get_object_bbox_after_group(lbl_path, save_txt_path, class_label=0, min_region=syn_args.min_region, link_r=syn_args.link_r, px_thresh=px_thresh, whr_thres=whr_thres)
     gt_files = np.sort(glob.glob(os.path.join(lbl_path, '*.png')))
@@ -351,24 +350,24 @@ if __name__ == '__main__':
 ##        cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.03_color_bias{}_RC5_v{}'.format(ssig, ix+31)
 ##        px_thres = 23
 
-#    color_sigma = [15, 30, 45, 60] # 0, 15, 30, 45, 60
-#    for ix,ssig in enumerate(color_sigma):
+    color_sigma = [0] # 0, 15, 30, 45, 60
+    for ix,ssig in enumerate(color_sigma):
 #        cmt = 'xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_ssig0_color_bias{}_RC1_v{}'.format(ssig, ix+51)
 #        px_thres = 15 
 #        cmt = 'xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_ssig0_color_bias{}_RC2_v{}'.format(ssig, ix+50)
 #        px_thres = 23
-#        cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.09_color_bias{}_RC3_v{}'.format(ssig, ix+50)
-#        px_thres = 23
+        cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.09_color_bias{}_RC3_v{}'.format(ssig, ix+50)
+        px_thres = 23
 #        cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.09_color_bias{}_RC4_v{}'.format(ssig, ix+50)
 #        px_thres = 23
 #        cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.03_color_bias{}_RC5_v{}'.format(ssig, ix+50)
 #        px_thres = 23
 
-#        whr_thres = 3
-#        dt = 'color'
-#        syn_args = get_args(cmt)
-#        group_object_annotation_and_draw_bbox(dt, px_thres, whr_thres)
-#        draw_bbx_on_rgb_images(dt, px_thres, whr_thres)
+        whr_thres = 3
+        dt = 'color'
+        syn_args = get_args(cmt)
+        group_object_annotation_and_draw_bbox(dt, px_thres, whr_thres)
+        draw_bbx_on_rgb_images(dt, px_thres, whr_thres)
     
     
 #    cmt = 'xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_ssig0_texture_RC1_v80'
@@ -377,15 +376,15 @@ if __name__ == '__main__':
 #    cmt = 'xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_ssig0_texture_RC2_v80'
 #    px_thres = 23
     
-    cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.09_texture_RC4_v80'
-    px_thres = 23
-    
-    whr_thres = 3
-#        dt = 'color'
-    dt = 'texture'
-    syn_args = get_args(cmt)
-    group_object_annotation_and_draw_bbox(dt, px_thres, whr_thres)
-    draw_bbx_on_rgb_images(dt, px_thres, whr_thres)
+#    cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.09_texture_RC4_v80'
+#    px_thres = 23
+#    
+#    whr_thres = 3
+##        dt = 'color'
+#    dt = 'texture'
+#    syn_args = get_args(cmt)
+#    group_object_annotation_and_draw_bbox(dt, px_thres, whr_thres)
+#    draw_bbx_on_rgb_images(dt, px_thres, whr_thres)
 
 
     #cmt = 'xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_fixedsolar_ssig0.03_csig20_RC1_v30'

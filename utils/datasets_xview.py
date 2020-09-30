@@ -571,6 +571,7 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
         else:
             labels_out = torch.zeros((nL, 6))
         if nL:
+            #print('labels', labels)
             labels_out[:, 1:] = torch.from_numpy(labels)
 
         # Convert
