@@ -104,6 +104,9 @@ def group_object_annotation_and_draw_bbox(dt, px_thresh=20, whr_thres=4):
     else:
         shutil.rmtree(save_txt_path)
         os.makedirs(save_txt_path)
+    gt_files = np.sort(glob.glob(os.path.join(lbl_path, '*{}'.format(IMG_FORMAT))))
+    for gf in gt_files:
+        os.rename(gf, gf.replace('color', 'texture'))
 
     gbc.get_object_bbox_after_group(lbl_path, save_txt_path, class_label=0, min_region=syn_args.min_region,
                                     link_r=syn_args.link_r, px_thresh=px_thresh, whr_thres=whr_thres)
@@ -116,11 +119,11 @@ def group_object_annotation_and_draw_bbox(dt, px_thresh=20, whr_thres=4):
     else:
         shutil.rmtree(save_bbx_path)
         os.makedirs(save_bbx_path)
-    for g in gt_files:
-        gt_name = g.split('/')[-1]
-        txt_name = gt_name.replace(IMG_FORMAT, TXT_FORMAT)
-        txt_file = os.path.join(save_txt_path, txt_name)
-        gbc.plot_img_with_bbx(g, txt_file, save_bbx_path)
+    # for g in gt_files:
+    #     gt_name = g.split('/')[-1]
+    #     txt_name = gt_name.replace(IMG_FORMAT, TXT_FORMAT)
+    #     txt_file = os.path.join(save_txt_path, txt_name)
+    #     gbc.plot_img_with_bbx(g, txt_file, save_bbx_path)
 
 
 def draw_bbx_on_rgb_images(dt, px_thresh=20, whr_thres=4):
@@ -195,9 +198,12 @@ def get_args(cmt=''):
 
     #fixme
     if cmt: # certain_models, scale_models
+        # parser.add_argument("--syn_data_dir", type=str,
+        #                 help="Path to folder containing synthetic images and annos ",
+        #                 default='/media/lab/Yang/data/synthetic_data/syn_xview_bkg_{}'.format(cmt)+'_{}/')
         parser.add_argument("--syn_data_dir", type=str,
                         help="Path to folder containing synthetic images and annos ",
-                        default='/media/lab/Yang/data/synthetic_data/syn_xview_bkg_{}'.format(cmt)+'_{}/')
+                        default='/media/lab/Yang/data/synthetic_data/syn_xview_bkg_{}'.format(cmt))
         parser.add_argument("--syn_annos_dir", type=str, default='/media/lab/Yang/data/synthetic_data/syn_xview_bkg_{}_txt_xcycwh/'.format(cmt),
                             help="syn xview txt")
         parser.add_argument("--syn_txt_dir", type=str, default='/media/lab/Yang/data/synthetic_data/syn_xview_bkg_{}_gt_bbox/'.format(cmt),
@@ -376,15 +382,19 @@ if __name__ == '__main__':
     #     syn_args = get_args(cmt)
     #     for dt in display_types:
     #         group_object_annotation_and_draw_bbox(dt, px_thres, whr_thres)
+    color_sigma = [15, 30, 45, 60] # 0,
+    for ix,ssig in enumerate(color_sigma):
+        cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.03_color_bias{}_RC5_v{}'.format(ssig, ix+51)
+        px_thres = 23
 
-
-#    px_thres = 23
-#    whr_thres=3
-#    display_types = ['color']#, 'mixed']# 'color',
-#    syn_args = get_args(cmt)
-#    for dt in display_types:
-#        group_object_annotation_and_draw_bbox(dt, px_thres, whr_thres)
-##        group_object_annotation_and_draw_bbox(dt, px_thres, whr_thres, upscale=True)
+       # px_thres = 23
+        whr_thres=3
+        dt = 'color'#, 'mixed']# 'color',
+        syn_args = get_args(cmt)
+        group_object_annotation_and_draw_bbox(dt, px_thres, whr_thres)
+        draw_bbx_on_rgb_images(dt, px_thres, whr_thres)
+        # print('jfkdls')
+        #        group_object_annotation_and_draw_bbox(dt, px_thres, whr_thres, upscale=True)
 
     '''
     draw bbox on rgb images for syn_xveiw_background data

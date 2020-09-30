@@ -16,7 +16,7 @@ def combine_xview_syn(comment='', name='xview_rc', seed=17):
     syn_trn_num = syn_img_txt.shape[0]
 
     base_cmt = 'px23whr3_seed{}'.format(seed)
-    data_xview_dir = args.data_xview_dir.format(args.class_num)
+    data_xview_dir =  os.path.join(args.data_xview_dir, '{}_cls'.format(args.class_num))
     xview_img_txt = pd.read_csv(open(os.path.join(data_xview_dir, base_cmt, '{}train_img_{}.txt'.format(name, base_cmt))), header=None).to_numpy()
     xview_lbl_txt = pd.read_csv(open(os.path.join(data_xview_dir, base_cmt, '{}train_lbl_{}.txt'.format(name, base_cmt))), header=None).to_numpy()
     xview_trn_num = xview_img_txt.shape[0]
@@ -45,7 +45,7 @@ def create_xview_syn_data(comment='', name='xview_rc', seed=17):
     syn_data_dir = args.syn_data_dir.format(comment, args.class_num)
 
     base_cmt = 'px23whr3_seed{}'.format(seed)
-    data_xview_dir = args.data_xview_dir.format(args.class_num)
+    data_xview_dir = os.path.join(args.data_xview_dir, '{}_cls'.format(args.class_num))
     xview_img_txt = pd.read_csv(open(os.path.join(data_xview_dir, base_cmt, '{}train_img_{}.txt'.format(name, base_cmt))), header=None).to_numpy()
     xview_trn_num = xview_img_txt.shape[0]
 
@@ -75,13 +75,64 @@ def create_xview_syn_data(comment='', name='xview_rc', seed=17):
     data_txt.write('eval=color\n')
     data_txt.close()
 
+def combine_all_RC_of_best_size_color(comments):
+    new_folder = 'all_trn_syn_rc_of_best_size_color'
+    save_dir = os.path.join(args.data_xview_dir, new_folder)
+    if not os.path.exists(save_dir):
+        os.mkdir(save_dir)
+    df_all_best_rc_img = pd.DataFrame()
+    df_all_best_rc_lbl = pd.DataFrame()
+    for ix, cmt in enumerate(comments):
+        src_dir = os.path.join(args.data_xview_dir, '{}_1_cls'.format(cmt), '{}_seed17'.format(cmt))
+        src_img_file = os.path.join(src_dir, '{}_train_img_seed17.txt'.format(cmt))
+        src_lbl_file = os.path.join(src_dir, '{}_train_lbl_seed17.txt'.format(cmt))
+        df_src_img = pd.read_csv(src_img_file, header=None)
+        df_src_lbl = pd.read_csv(src_lbl_file, header=None)
+        df_all_best_rc_img = df_all_best_rc_img.append(df_src_img)
+        df_all_best_rc_lbl = df_all_best_rc_lbl.append(df_src_lbl)
+    df_all_best_rc_img.to_csv(os.path.join(save_dir, 'all_syn_rc_of_best_color_size_train_img_seed17.txt'), header=False, index=False)
+    df_all_best_rc_lbl.to_csv(os.path.join(save_dir, 'all_syn_rc_of_best_color_size_train_lbl_seed17.txt'), header=False, index=False)
+
+
+def create_data_all_syn_xview_rc(seed=17):
+    all_syn_dir = os.path.join(args.data_xview_dir, 'all_trn_syn_rc_of_best_size_color')
+    base_pxwhrs = 'px23whr3_seed{}'.format(seed)
+    xview_dir = os.path.join(args.data_xview_dir, '1_cls', base_pxwhrs)
+
+    save_dir = os.path.join(xview_dir, 'xview_rc_all_syn_of_best_size_color')
+    if not os.path.exists(save_dir):
+        os.mkdir(save_dir)
+    data_txt = open(os.path.join(save_dir, 'xview_rc_all_syn_of_best_size_color_seed{}.data'.format(seed), 'w'))
+    data_txt.write(
+        'xview_rc_train={}\n'.format(os.path.join(xview_dir, 'only_rc_train_img_{}.txt'.format(base_pxwhrs))))
+    data_txt.write(
+        'xview_rc_train_label={}\n'.format(os.path.join(xview_dir,'only_rc_train_lbl_{}.txt'.format(base_pxwhrs))))
+
+    data_txt.write(
+        'syn_train={}\n'.format(os.path.join(all_syn_dir, 'all_syn_rc_of_best_color_size_train_lbl_seed{}.txt'.format(seed))))
+    data_txt.write(
+        'syn_train_label={}\n'.format(os.path.join(all_syn_dir, 'all_syn_rc_of_best_color_size_train_lbl_seed{}.txt'.format(seed))))
+
+    data_txt.write(
+        'valid={}\n'.format(os.path.join(xview_dir, 'xview_ori_nrcbkg_aug_rc_val_img_{}.txt'.format(base_pxwhrs))))
+    data_txt.write(
+        'valid_label={}\n'.format(os.path.join(xview_dir, 'xview_ori_nrcbkg_aug_rc_val_lbl_{}.txt'.format(base_pxwhrs))))
+
+    xview_img_txt = pd.read_csv(open(os.path.join(xview_dir, 'xview_ori_nrcbkg_train_img_{}.txt'.format(base_pxwhrs))), header=None).to_numpy()
+    xview_trn_num = xview_img_txt.shape[0]
+    data_txt.write('syn_0_xview_number={}\n'.format(xview_trn_num))
+    data_txt.write('classes=%s\n' % str(args.class_num))
+    data_txt.write('names=./data_xview/{}_cls/xview.names\n'.format(args.class_num))
+    data_txt.write('backup=backup/\n')
+    data_txt.write('eval=color\n')
+    data_txt.close()
 
 
 def get_args():
     parser = argparse.ArgumentParser()
 
     parser.add_argument("--data_xview_dir", type=str, help="to save data files",
-                        default='/media/lab/Yang/code/yolov3/data_xview/{}_cls/{}/')
+                        default='/media/lab/Yang/code/yolov3/data_xview/')
                         # default='/data/users/yang/code/yxu-yolov3-xview/data_xview/{}_cls/')
 
     parser.add_argument("--syn_data_dir", type=str, help="to syn data list files",
@@ -106,11 +157,19 @@ def get_args():
     parser.add_argument("--resolution", type=float, default=0.3, help="resolution of synthetic data")
 
     args = parser.parse_args()
+    args.data_xview_dir = args.data_xview_dir.format(args.class_num)
     return args
 
 
 if __name__ == '__main__':
+    args = get_args()
 
-    comments = []
-    for cmt in comments:
-        create_xview_syn_data(cmt, name='xview_rc', seed=17)
+    # comments = []
+    # for cmt in comments:
+    #     create_xview_syn_data(cmt, name='xview_rc', seed=17)
+
+    '''
+    combine all RC* synthetic dataset with best size and color 
+    '''
+    comments = ['']
+    combine_all_RC_of_best_size_color(comments)

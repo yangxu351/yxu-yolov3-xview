@@ -211,7 +211,7 @@ def train(opt):
                                   rect=opt.rect,  # rectangular training
                                   image_weights=False,
                                   cache_labels=epochs > 10,
-                                  cache_images=opt.cache_images and not opt.prebias)
+                                  cache_images=opt.cache_images and not opt.prebias, seed_aug=opt.seed)
 
     # Dataloader
     batch_size = min(batch_size, len(dataset))
@@ -303,8 +303,8 @@ def train(opt):
                     trn_names_dict[epoch].append(Path(paths[pi]).name)
 
             # Plot images with bounding boxes
-            if ni == 0:
-                fname = 'trn_patch_images/train_batch%s_%g.jpg' % (opt.name, i)
+            if ni <= 1:
+                fname = 'trn_patch_images/train_batch%s_seed%g_%g.jpg' % (opt.name, opt.seed, i)
                 plot_images(imgs=imgs, targets=targets, paths=paths, fname=fname)
                 if tb_writer:
                     tb_writer.add_image(fname, cv2.imread(fname)[:, :, ::-1], dataformats='HWC')

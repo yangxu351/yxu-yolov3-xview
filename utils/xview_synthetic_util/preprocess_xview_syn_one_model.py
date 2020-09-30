@@ -692,6 +692,10 @@ if __name__ == '__main__':
     # print(image_list)
 
 
+    '''
+    train set: rc* labeled as rc, others labeled as non-rc(0)
+    val set: rc* labeled as rc, others labeled as non-rc(0)
+    '''
 
 
     '''                                                                                                 
@@ -722,7 +726,7 @@ if __name__ == '__main__':
     #
     # other_label = 0
     # val_m_rc_path = args.annos_save_dir[:-1] + '_val_m{}_to_rc{}'.format(model_id, rare_id)
-    # create_model_rareclass_hard_easy_set_backup(val_m_rc_path, model_id, rare_id, non_rare_id, seed, pxwhr)
+    create_model_rareclass_hard_easy_set_backup(val_m_rc_path, model_id, rare_id, non_rare_id, seed, pxwhr)
 
 
     '''                                                                                                 

@@ -15,61 +15,6 @@ import warnings
 
 warnings.filterwarnings("ignore")
 
-#fixme --yang.xu Apr 23 2020
-# Hyperparameters https://github.com/ultralytics/yolov3/issues/310
-# hyp = {'giou': 1.0,  # giou loss gain  3.54
-#        'cls': 37.4,  # cls loss gain
-#        'cls_pw': 1.0,  # cls BCELoss positive_weight
-#        'obj': 64.3,  # obj loss gain (*=img_size/320 if img_size != 320)
-#        'obj_pw': 1.0,  # obj BCELoss positive_weight
-#        'iou_t': 0.20,  # iou training threshold
-#        'lr0': 0.01,  # initial learning rate (SGD=5E-3, Adam=5E-4)
-#        'lrf': 0.0005,  # final learning rate (with cos scheduler)
-#        'momentum': 0.937,  # SGD momentum
-#        'weight_decay': 0.000484,  # optimizer weight decay
-#        'fl_gamma': 0.0,  # focal loss gamma (efficientDet default is gamma=1.5)
-#        'hsv_h': 0.0138,  # image HSV-Hue augmentation (fraction)
-#        'hsv_s': 0.678,  # image HSV-Saturation augmentation (fraction)
-#        'hsv_v': 0.36,  # image HSV-Value augmentation (fraction)
-#        'degrees': 1.98 * 0,  # image rotation (+/- deg)
-#        'translate': 0.05 * 0,  # image translation (+/- fraction)
-#        'scale': 0.05 * 0,  # image scale (+/- gain)
-#        'shear': 0.641 * 0}  # image shear (+/- deg)
-
-# Overwrite hyp with hyp*.txt (optional)
-# f = glob.glob('hyp*.txt')
-# if f:
-#     print('Using %s' % f[0])
-#     for k, v in zip(hyp.keys(), np.loadtxt(f[0])):
-#         hyp[k] = v
-#
-# # Print focal loss if gamma > 0
-# if hyp['fl_gamma']:
-#     print('Using FocalLoss(gamma=%g)' % hyp['fl_gamma'])
-
-# GPU="0, 1"
-# os.environ["CUDA_VISIBLE_DEVICES"] = GPU
-# Hyperparameters (results68: 59.2 mAP@0.5 yolov3-spp-416) https://github.com/ultralytics/yolov3/issues/310
-
-#fixme before git pull at April 23
-# hyp = {'giou': 1.0, #1.0,  1.5# giou loss gain
-#        'cls': 37.4,  # cls loss gain
-#        'cls_pw': 1.0,  # cls BCELoss positive_weight
-#        'obj': 49.5,  # obj loss gain (*=img_size/320 if img_size != 320)
-#        'obj_pw': 1.0,  # obj BCELoss positive_weight
-#        'iou_t': 0.225,  # iou training threshold
-#        'lr0': 0.00579,  # initial learning rate (SGD=1E-3, Adam=9E-5)
-#        'lrf': -4.,  # final LambdaLR learning rate = lr0 * (10 ** lrf)
-#        'momentum': 0.937,  # SGD momentum
-#        'weight_decay': 0.000484,  # optimizer weight decay
-#        'fl_gamma': 0.5,  # focal loss gamma
-#        'hsv_h': 0.0138,  # image HSV-Hue augmentation (fraction)
-#        'hsv_s': 0.678,  # image HSV-Saturation augmentation (fraction)
-#        'hsv_v': 0.36,  # image HSV-Value augmentation (fraction)
-#        'degrees': 1.98,  # image rotation (+/- deg)
-#        'translate': 0.05,  # image translation (+/- fraction)
-#        'scale': 0.05,  # image scale (+/- gain)
-#        'shear': 0.641}  # image shear (+/- deg)
 
 def infi_loop(dl):
     while True:
@@ -107,8 +52,7 @@ def train(opt):
 
     # Initialize
     #fixme
-    # init_seeds(opt.seed)
-    init_seeds()
+    init_seeds(opt.yoloseed)
     if opt.multi_scale:
         img_sz_min = round(img_size / 32 / 1.5)
         img_sz_max = round(img_size / 32 * 1.5)
@@ -118,8 +62,8 @@ def train(opt):
 
     # Configure run
     data_dict = parse_data_cfg(data)
-    train_path = data_dict['xview_train']
-    train_label_path = data_dict['xview_train_label']
+    syn_train_path = data_dict['syn_train']
+    syn_train_label_path = data_dict['syn_train_label']
     rc_train_path = data_dict['rc_train']
     rc_label_path = data_dict['rc_train_label']
     test_path = data_dict['valid']
@@ -132,8 +76,8 @@ def train(opt):
 
     # Remove previous results
     # Remove previous results
-    for f in glob.glob('trn_patch_images/*_batch*.jpg') + glob.glob(results_file):
-        os.remove(f)
+    # for f in glob.glob('trn_patch_images/*_batch*.jpg') + glob.glob(results_file):
+    #     os.remove(f)
 
     # Initialize model
     model = Darknet(cfg, arc=opt.arc).to(device)
@@ -223,7 +167,7 @@ def train(opt):
 
     # Dataset
         # fixme
-    dataset = LoadImagesAndLabels(train_path, train_label_path, img_size, batch_size - rc_batch_size,
+    syn_dataset = LoadImagesAndLabels(syn_train_path, syn_train_label_path, img_size, batch_size - rc_batch_size,
                                       class_num=opt.class_num,
                                       augment=True,  # False, #True,
                                       hyp=hyp,  # augmentation hyperparameters
@@ -240,21 +184,21 @@ def train(opt):
                                   cache_labels=epochs > 10,
                                   cache_images=opt.cache_images and not opt.prebias)
     # Dataloader
-    batch_size = min(batch_size, len(dataset))
+    batch_size = min(batch_size, len(syn_dataset))
     nw = min([os.cpu_count(), batch_size if batch_size > 1 else 0, 8])  # number of workers
     
-    dataloader = torch.utils.data.DataLoader(dataset,
+    syn_dataloader = torch.utils.data.DataLoader(syn_dataset,
                                              batch_size=batch_size - rc_batch_size,
                                              num_workers=nw,
                                              shuffle=not opt.rect,  # Shuffle=True unless rectangular training is used
                                              pin_memory=True,
-                                             collate_fn=dataset.collate_fn)
+                                             collate_fn=syn_dataset.collate_fn)
     rc_dataloader = torch.utils.data.DataLoader(rc_dataset,
                                              batch_size=rc_batch_size,
                                              num_workers=nw,
                                              shuffle=not opt.rect,  # Shuffle=True unless rectangular training is used
                                              pin_memory=True,
-                                             collate_fn=dataset.collate_fn)
+                                             collate_fn=syn_dataset.collate_fn)
     # Test Dataloader
     if not opt.prebias:
         testloader = torch.utils.data.DataLoader(
@@ -266,7 +210,7 @@ def train(opt):
             batch_size=batch_size * 2,
             num_workers=nw,
             pin_memory=True,
-            collate_fn=dataset.collate_fn)
+            collate_fn=syn_dataset.collate_fn)
 
     # Start training
     # fixme
@@ -276,7 +220,7 @@ def train(opt):
     model.nc = nc  # attach number of classes to model
     model.arc = opt.arc  # attach yolo architecture
     model.hyp = hyp  # attach hyperparameters to model
-    model.class_weights = labels_to_class_weights(dataset.labels, nc).to(device)  # attach class weights
+    model.class_weights = labels_to_class_weights(syn_dataset.labels, nc).to(device)  # attach class weights
     maps = np.zeros(nc)  # mAP per class
 
     #fixme --yang.xu
@@ -299,10 +243,10 @@ def train(opt):
         print(('\n' + '%10s' * 8) % ('Epoch', 'gpu_mem', 'GIoU', 'obj', 'cls', 'total', 'targets', 'img_size'))
 
         # Update image weights (optional)
-        if dataset.image_weights:
+        if syn_dataset.image_weights:
             w = model.class_weights.cpu().numpy() * (1 - maps) ** 2  # class weights
-            image_weights = labels_to_image_weights(dataset.labels, nc=nc, class_weights=w)
-            dataset.indices = random.choices(range(dataset.n), weights=image_weights, k=dataset.n)  # rand weighted idx
+            image_weights = labels_to_image_weights(syn_dataset.labels, nc=nc, class_weights=w)
+            syn_dataset.indices = random.choices(range(syn_dataset.n), weights=image_weights, k=syn_dataset.n)  # rand weighted idx
 
         mloss = torch.zeros(4).to(device)  # mean losses
         #fixme
@@ -311,23 +255,23 @@ def train(opt):
 
         if rc_dataloader:
             gen_rc_data = infi_loop(rc_dataloader)
-        if dataloader:
-            gen_xview_data = infi_loop(dataloader)
+        if syn_dataloader:
+            gen_syn_data = infi_loop(syn_dataloader)
         for i in range(nb):
             #fixme -- yang.xu
-            if rc_dataloader and dataloader:
-                imgs_xview, targets_xview, paths_xview = next(gen_xview_data) 
+            if rc_dataloader and syn_dataloader:
+                imgs_syn, targets_syn, paths_syn = next(gen_syn_data)
                 imgs_rc, targets_rc, paths_rc = next(gen_rc_data)
                 #fixme -- yang.xu --************* important!!!!
                 # targets_syn[:, 0] = batch_size - rc_batch_size
-                xview_batch_size = batch_size - rc_batch_size
+                syn_batch_size = batch_size - rc_batch_size
                 # print('xview_batch_size', xview_batch_size)
                 # print('targets_syn_size', targets_syn.shape)
                 # print('targets_syn[:,0]', targets_syn[:,0])
                 #fixme -- yang.xu
                 # --************* important!!!! reverse order
                 for si in reversed(range(rc_batch_size)):
-                    targets_rc[targets_rc[:, 0] == si, 0] = xview_batch_size + si
+                    targets_rc[targets_rc[:, 0] == si, 0] = syn_batch_size + si
                 # print('targets_syn[:,0]----after----', targets_syn[:,0])
                 # print(imgs_xview.shape, targets_xview[:,0], len(paths_xview))
                 # print(imgs_syn.shape, targets_syn[:, 0], len(paths_syn))
@@ -337,19 +281,19 @@ def train(opt):
                 # print('targets_syn.shape ', targets_syn.shape)
                 # exit(0)
 
-                imgs = torch.cat([imgs_xview, imgs_rc], dim=0)
-                targets = torch.cat([targets_xview, targets_rc], dim=0)
-                paths =  paths_xview + paths_rc
+                imgs = torch.cat([imgs_syn, imgs_rc], dim=0)
+                targets = torch.cat([targets_syn, targets_rc], dim=0)
+                paths =  paths_syn + paths_rc
                 # print('imgs.shape ', imgs.shape)
                 # print('targets.shape ', targets.shape)
                 # print('len(paths) ', len(paths))
                 # print('targets ', targets)
                 # exit(0)
 
-            elif rc_dataloader and not dataloader:
+            elif rc_dataloader and not syn_dataloader:
                 imgs, targets, paths = next(gen_rc_data)
             else:
-                imgs, targets, paths = next(gen_xview_data)
+                imgs, targets, paths = next(gen_syn_data)
 
             # print(imgs.shape, len(paths)) # torch.Size([8, 3, 608, 608]) 8
 
@@ -367,7 +311,7 @@ def train(opt):
 
             # Plot images with bounding boxes
             if ni <= 2:# == 0:
-                fname = 'trn_patch_images/train_batch%g.jpg' % i
+                fname = 'trn_patch_images/train_batch%s_%g.jpg' % (hyp_cmt, i)
                 # print(imgs.shape, targets.shape, len(paths))
                 # print(imgs[0])
                 # print(targets)
@@ -425,13 +369,6 @@ def train(opt):
         if opt.prebias:
             print_model_biases(model)
         elif not opt.notest or final_epoch:  # Calculate mAP
-            #fixme
-            # if not syn_only:
-            #     is_xview = any([x in data for x in [
-            #         '{}_seed{}.data'.format(opt.cmt, opt.seed)]]) and model.nc == opt.class_num
-            # else:
-            # is_xview = any([x in data for x in [
-            #     '{}_seed{}.data'.format(opt.cmt, opt.seed)]]) and model.nc == opt.class_num
 
             results, maps = test.test(cfg,
                                       data,
@@ -518,6 +455,7 @@ def train(opt):
 def get_opt():
     parser = argparse.ArgumentParser()
     parser.add_argument('--seed', type=int, default=17, help='seed')
+    parser.add_argument('--yoloseed', type=int, default=0, help='seed')
     parser.add_argument('--cfg_dict', type=str, default='',
                         help='train_cfg/train_1cls_syn_only_mean_best_gpu0.json')
     parser.add_argument('--data', type=str, default='', help='*.data path')
@@ -563,6 +501,7 @@ if __name__ == '__main__':
     cfg_dict = json.load(open(Configure_file))
     opt.device = cfg_dict['device']
     opt.seed = cfg_dict['seed']
+    opt.yoloseed = cfg_dict['yoloseed']
     opt.epochs = cfg_dict['epochs']
     opt.batch_size = cfg_dict['batch_size']
     rbs_list = cfg_dict['rc_batch_size_list']
@@ -576,7 +515,7 @@ if __name__ == '__main__':
     hyp_cmt = cfg_dict['hyp_cmt']
     hyp = cfg_dict['hyp']
     # opt.data = 'data_xview/{}_cls/{}/xview_rc_nrcbkg_{}.data'.format(opt.class_num, pxwhrsd, pxwhrsd)
-    opt.data = 'data_xview/{}_cls/{}/xview_ori_nrcbkg_aug_rc_{}.data'.format(opt.class_num, pxwhrsd, pxwhrsd)
+    opt.data = 'data_xview/{}_cls/{}/{}/xview_ori_nrcbkg_{}.data'.format(opt.class_num, pxwhrsd, 'xview_rc_all_syn_of_best_size_color', pxwhrsd)
     for rbs in rbs_list:
         opt.rc_batch_size = rbs
         hyp_cmt = hyp_cmt.format(opt.batch_size - opt.rc_batch_size, opt.rc_batch_size)
@@ -586,9 +525,9 @@ if __name__ == '__main__':
         opt.base_dir = opt.base_dir.format(opt.class_num, pxwhrsd)
 
         time_marker = time.strftime('%Y-%m-%d_%H.%M', time.localtime())
-        opt.weights_dir = 'weights/{}_cls/{}/{}/'.format(opt.class_num, pxwhrsd, '{}_{}_seed{}'.format(time_marker, hyp_cmt, opt.seed))
-        opt.writer_dir = 'writer_output/{}_cls/{}/{}/'.format(opt.class_num, pxwhrsd, '{}_{}_seed{}'.format(time_marker, hyp_cmt, opt.seed))
-        opt.result_dir = 'result_output/{}_cls/{}/{}/'.format(opt.class_num, pxwhrsd, '{}_{}_seed{}'.format(time_marker, hyp_cmt, opt.seed))
+        opt.weights_dir = 'weights/{}_cls/{}/{}/'.format(opt.class_num, pxwhrsd, '{}_{}_seed{}'.format(time_marker, hyp_cmt, opt.yoloseed))
+        opt.writer_dir = 'writer_output/{}_cls/{}/{}/'.format(opt.class_num, pxwhrsd, '{}_{}_seed{}'.format(time_marker, hyp_cmt, opt.yoloseed))
+        opt.result_dir = 'result_output/{}_cls/{}/{}/'.format(opt.class_num, pxwhrsd, '{}_{}_seed{}'.format(time_marker, hyp_cmt, opt.yoloseed))
 
         if not os.path.exists(opt.weights_dir):
             os.makedirs(opt.weights_dir)
@@ -598,9 +537,9 @@ if __name__ == '__main__':
 
         if not os.path.exists(opt.result_dir):
             os.makedirs(opt.result_dir)
-        results_file = os.path.join(opt.result_dir, 'results_seed{}.txt'.format(opt.seed))
-        last = os.path.join(opt.weights_dir, 'last_seed{}.pt'.format(opt.seed))
-        best = os.path.join(opt.weights_dir, 'best_seed{}.pt'.format(opt.seed))
+        results_file = os.path.join(opt.result_dir, 'results_seed{}.txt'.format(opt.yoloseed))
+        last = os.path.join(opt.weights_dir, 'last_seed{}.pt'.format(opt.yoloseed))
+        best = os.path.join(opt.weights_dir, 'best_seed{}.pt'.format(opt.yoloseed))
         opt.weights = last if opt.resume else opt.weights
         print(opt)
 

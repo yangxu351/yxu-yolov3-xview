@@ -640,7 +640,7 @@ if __name__ == "__main__":
     comments = []
     base_version = 1
     color_sigma = [15, 30, 45, 60] #
-    for ix,ssig in enumerate(color_sigma):
+    # for ix,ssig in enumerate(color_sigma):
 
 #        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_ssig0_color_bias{}_RC1_v{}'.format(ssig, ix+51)
 #        px_thres = 15
@@ -657,16 +657,20 @@ if __name__ == "__main__":
 #         px_thres = 23
 
        # cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.06_bxmuller_color_bias{}_RC5_v{}'.format(ssig, ix+11)
-        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.03_color_bias{}_RC5_v{}'.format(ssig, ix+51)
-        px_thres = 23
+       #  cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.03_color_bias{}_RC5_v{}'.format(ssig, ix+51)
+       #  px_thres = 23
+       #
+       #  comments.append(cmt)
+    cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.03_color_bias30_RC5_v52'
+    px_thres = 23
 
-        comments.append(cmt)
+    comments.append(cmt)
 
 
-    seed_list = [0, 1]
+    seed_list = [1]
     for seed in seed_list:
       main()
 
-    seeds = [0, 1]
-    computer_avg_all_seeds(seeds)
+    # seeds = [0, 1]
+    # computer_avg_all_seeds(seeds)
 
