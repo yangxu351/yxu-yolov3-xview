@@ -383,7 +383,7 @@ def split_trn_val_nrc_bkg_with_rc_sep_step_by_step(data_name='xview_nrcbkg', com
                     os.path.join(data_save_dir, 'xview_rc_nrcbkg_val_lbl{}.txt'.format(comments)))
 
 
-def create_only_rc_txt_list_by_rc(rcid, px_thres=23, whr_thres=3, seed=17):
+def create_only_ori_rc_txt_list_by_rc(rcid, px_thres=23, whr_thres=3, seed=17):
     args = get_args(px_thres, whr_thres)
     base_cmt = 'px{}whr{}_seed{}'.format(px_thres, whr_thres, seed)
     data_save_dir = os.path.join(args.data_save_dir, base_cmt)
@@ -396,7 +396,7 @@ def create_only_rc_txt_list_by_rc(rcid, px_thres=23, whr_thres=3, seed=17):
     img_files = []
     lbl_files = []
     for ix, f in enumerate(all_rc_lbl_files.loc[:, 0]):
-        print('f', f)
+        # print('f', f)
         df_rc = pd.read_csv(f, header=None, sep=' ')
         if np.any(df_rc.loc[:, 5] == rcid):
             img_files.append(f)
@@ -648,7 +648,7 @@ if __name__ == '__main__':
     '''
     rc_list = [1, 2, 3, 4, 5]
     for rcid in rc_list:
-        create_only_rc_txt_list_by_rc(rcid, px_thres=23, whr_thres=3, seed=17)
+        create_only_ori_rc_txt_list_by_rc(rcid, px_thres=23, whr_thres=3, seed=17)
 
     '''
     split syn best size color data

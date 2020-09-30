@@ -428,7 +428,7 @@ def label_m_val_model_with_other_label(rare_class, model_id=1, other_label=0):
             df_nrcbkg.to_csv(f, sep=' ', header=False, index=False)
 
 
-def create_val_aug_rc_hard_easy_txt_list_data(model_id, rare_id, pxwhrs='px23whr3_seed17', eh_types=['easy']):
+def create_val_aug_rc_hard_easy_txt_list_data_by_rc(model_id, rare_id, pxwhrs='px23whr3_seed17', eh_types=['easy']):
     '''
     create hard easy validation dataset of model* rc*
     '''
@@ -465,13 +465,67 @@ def create_val_aug_rc_hard_easy_txt_list_data(model_id, rare_id, pxwhrs='px23whr
 
         data_txt = open(os.path.join(base_dir, 'xview_ori_nrcbkg_aug_rc_test_{}_m{}_rc{}_{}.data'.format(pxwhrs, model_id, rare_id, eht)), 'w')
         data_txt.write('classes=%s\n' % str(args.class_num))
-        data_txt.write('test=./data_xview/{}_cls/{}/xview_ori_nrcbkg_aug_rc_test_img_{}_m{}_rc{}_{}.txt\n'.format(args.class_num, pxwhrs,  pxwhrs, model_id, rare_id, eht))
-        data_txt.write('test_label=./data_xview/{}_cls/{}/xview_ori_nrcbkg_aug_rc_test_lbl_{}_m{}_rc{}_{}.txt\n'.format(args.class_num, pxwhrs,  pxwhrs, model_id, rare_id, eht))
+        data_txt.write('test=./data_xview/{}_cls/{}/RC/xview_ori_nrcbkg_aug_rc_test_img_{}_m{}_rc{}_{}.txt\n'.format(args.class_num, pxwhrs,  pxwhrs, model_id, rare_id, eht))
+        data_txt.write('test_label=./data_xview/{}_cls/{}/RC/xview_ori_nrcbkg_aug_rc_test_lbl_{}_m{}_rc{}_{}.txt\n'.format(args.class_num, pxwhrs,  pxwhrs, model_id, rare_id, eht))
         data_txt.write('names=./data_xview/{}_cls/xview.names\n'.format(args.class_num))
         data_txt.close()
 
 
-def create_val_aug_rc_nrcbkg_easy_txt_data(pxwhrs='px23whr3_seed17'):
+def create_aug_only_rc_testset_txt_list(pxwhrs='px23whr3_seed17'):
+    lbl_dir = args.annos_save_dir[:-1] + '_rc_val_new_ori_multi_rcid_aug'
+    img_dir = args.images_save_dir[:-1] + '_rc_val_new_ori_multi_aug'
+    img_files = glob.glob(os.path.join(img_dir, '*.jpg'))
+    img_files.sort()
+    base_dir = os.path.join(args.data_save_dir, pxwhrs, 'RC')
+    test_lbl_txt = open(os.path.join(base_dir, 'aug_only_rc_test_lbl_{}.txt'.format(pxwhrs)), 'w')
+    test_img_txt = open(os.path.join(base_dir, 'aug_only_rc_test_img_{}.txt'.format(pxwhrs)), 'w')
+
+    for f in img_files:
+        test_img_txt.write('%s\n' % f)
+        test_lbl_txt.write('%s\n' % os.path.join(lbl_dir, os.path.basename(f).replace('.jpg', '.txt')))
+    test_img_txt.close()
+    test_lbl_txt.close()
+
+
+def create_data_train_on_nrcbkg_plus_one_rc_test_aug_rc_by_rcid(data_name, mid, rcid, comments):
+    data_save_dir = os.path.join(args.data_save_dir, comments[1:])
+    data_txt = open(os.path.join(data_save_dir, '{}_aug_rc{}{}.data'.format(data_name, rcid, comments)), 'w')
+    data_txt.write(
+        'xview_train={}\n'.format(os.path.join(data_save_dir, '{}_train_img{}.txt'.format(data_name, comments))))
+    data_txt.write(
+        'xview_train_label={}\n'.format(os.path.join(data_save_dir, '{}_train_lbl{}.txt'.format(data_name, comments))))
+    if rcid:
+        ### only_rc*.txt generated from split_xview_bkg_rc_nrc.py
+        data_txt.write(
+            'rc_train={}\n'.format(os.path.join(data_save_dir, 'RC', 'only_rc{}_train_img{}.txt'.format(rcid, comments))))
+        data_txt.write(
+            'rc_train_label={}\n'.format(os.path.join(data_save_dir, 'RC', 'only_rc{}_train_lbl{}.txt'.format(rcid, comments))))
+    else:
+        ### only_rc*.txt generated from split_xview_bkg_rc_nrc.py
+        data_txt.write(
+            'rc_train={}\n'.format(os.path.join(data_save_dir, 'only_rc_train_img{}.txt'.format(comments))))
+        data_txt.write(
+            'rc_train_label={}\n'.format(os.path.join(data_save_dir, 'only_rc_train_lbl{}.txt'.format(comments))))
+    data_txt.write(
+        'valid={}\n'.format(os.path.join(data_save_dir, 'RC', '{}_aug_rc_test_img{}_m{}_rc{}_easy.txt'.format(data_name, comments, mid, rcid))))
+    data_txt.write(
+        'valid_label={}\n'.format(os.path.join(data_save_dir, 'RC', '{}_aug_rc_test_lbl{}_m{}_rc{}_easy.txt'.format(data_name, comments, mid, rcid))))
+
+    xview_nrcbkg_img_txt = pd.read_csv(open(os.path.join(data_save_dir, '{}_train_img{}.txt'.format(data_name, comments))), header=None).to_numpy()
+    if rcid:
+        xview_rc_img_txt = pd.read_csv(open(os.path.join(data_save_dir, 'RC', 'only_rc{}_train_img{}.txt'.format(rcid, comments))), header=None).to_numpy()
+    else:
+        xview_rc_img_txt = pd.read_csv(open(os.path.join(data_save_dir, 'only_rc_train_img{}.txt'.format(comments))), header=None).to_numpy()
+    xview_trn_num = xview_nrcbkg_img_txt.shape[0] + xview_rc_img_txt.shape[0]
+    data_txt.write('syn_0_xview_number={}\n'.format(xview_trn_num))
+    data_txt.write('classes=%s\n' % str(args.class_num))
+    data_txt.write('names=./data_xview/{}_cls/xview.names\n'.format(args.class_num))
+    data_txt.write('backup=backup/\n')
+    data_txt.write('eval=color\n')
+    data_txt.close()
+
+
+def create_val_all_aug_rc_nrcbkg_easy_txt_data(pxwhrs='px23whr3_seed17'):
     '''
     create easy validation dataset of all augrc nrcbkg
     all rare classes are classified as one category
@@ -500,61 +554,9 @@ def create_val_aug_rc_nrcbkg_easy_txt_data(pxwhrs='px23whr3_seed17'):
 
     data_txt = open(os.path.join(base_dir, 'xview_ori_nrcbkg_aug_rc_test_{}_all_{}.data'.format(pxwhrs,  eht)), 'w')
     data_txt.write('classes=%s\n' % str(args.class_num))
-    data_txt.write('test=./data_xview/{}_cls/{}/xview_ori_nrcbkg_aug_rc_test_img_{}_all_{}.txt\n'.format(args.class_num, pxwhrs,  pxwhrs, eht))
-    data_txt.write('test_label=./data_xview/{}_cls/{}/xview_ori_nrcbkg_aug_rc_test_lbl_{}_all_{}.txt\n'.format(args.class_num, pxwhrs,  pxwhrs, eht))
+    data_txt.write('test=./data_xview/{}_cls/{}/RC/xview_ori_nrcbkg_aug_rc_test_img_{}_all_{}.txt\n'.format(args.class_num, pxwhrs,  pxwhrs, eht))
+    data_txt.write('test_label=./data_xview/{}_cls/{}/RC/xview_ori_nrcbkg_aug_rc_test_lbl_{}_all_{}.txt\n'.format(args.class_num, pxwhrs,  pxwhrs, eht))
     data_txt.write('names=./data_xview/{}_cls/xview.names\n'.format(args.class_num))
-    data_txt.close()
-
-
-def create_aug_only_rc_testset_txt_list(pxwhrs='px23whr3_seed17'):
-    lbl_dir = args.annos_save_dir[:-1] + '_rc_val_new_ori_multi_rcid_aug'
-    img_dir = args.images_save_dir[:-1] + '_rc_val_new_ori_multi_aug'
-    img_files = glob.glob(os.path.join(img_dir, '*.jpg'))
-    img_files.sort()
-    base_dir = os.path.join(args.data_save_dir, pxwhrs, 'RC')
-    test_lbl_txt = open(os.path.join(base_dir, 'aug_only_rc_test_lbl_{}.txt'.format(pxwhrs)), 'w')
-    test_img_txt = open(os.path.join(base_dir, 'aug_only_rc_test_img_{}.txt'.format(pxwhrs)), 'w')
-
-    for f in img_files:
-        test_img_txt.write('%s\n' % f)
-        test_lbl_txt.write('%s\n' % os.path.join(lbl_dir, os.path.basename(f).replace('.jpg', '.txt')))
-    test_img_txt.close()
-    test_lbl_txt.close()
-
-
-def create_train_data_aug_rc_by_rcid(data_name, mid, rcid, comments):
-    data_save_dir = os.path.join(args.data_save_dir, comments[1:])
-    data_txt = open(os.path.join(data_save_dir, '{}_aug_rc{}{}.data'.format(data_name, rcid, comments)), 'w')
-    data_txt.write(
-        'xview_train={}\n'.format(os.path.join(data_save_dir, '{}_train_img{}.txt'.format(data_name, comments))))
-    data_txt.write(
-        'xview_train_label={}\n'.format(os.path.join(data_save_dir, '{}_train_lbl{}.txt'.format(data_name, comments))))
-    if rcid:
-        data_txt.write(
-            'rc_train={}\n'.format(os.path.join(data_save_dir, 'RC', 'only_rc{}_train_img{}.txt'.format(rcid, comments))))
-        data_txt.write(
-            'rc_train_label={}\n'.format(os.path.join(data_save_dir, 'RC', 'only_rc{}_train_lbl{}.txt'.format(rcid, comments))))
-    else:
-        data_txt.write(
-            'rc_train={}\n'.format(os.path.join(data_save_dir, 'only_rc_train_img{}.txt'.format(comments))))
-        data_txt.write(
-            'rc_train_label={}\n'.format(os.path.join(data_save_dir, 'only_rc_train_lbl{}.txt'.format(comments))))
-    data_txt.write(
-        'valid={}\n'.format(os.path.join(data_save_dir, 'RC', '{}_aug_rc_test_img{}_m{}_rc{}_easy.txt'.format(data_name, comments, mid, rcid))))
-    data_txt.write(
-        'valid_label={}\n'.format(os.path.join(data_save_dir, 'RC', '{}_aug_rc_test_lbl{}_m{}_rc{}_easy.txt'.format(data_name, comments, mid, rcid))))
-
-    xview_nrcbkg_img_txt = pd.read_csv(open(os.path.join(data_save_dir, '{}_train_img{}.txt'.format(data_name, comments))), header=None).to_numpy()
-    if rcid:
-        xview_rc_img_txt = pd.read_csv(open(os.path.join(data_save_dir, 'RC', 'only_rc{}_train_img{}.txt'.format(rcid, comments))), header=None).to_numpy()
-    else:
-        xview_rc_img_txt = pd.read_csv(open(os.path.join(data_save_dir, 'only_rc_train_img{}.txt'.format(comments))), header=None).to_numpy()
-    xview_trn_num = xview_nrcbkg_img_txt.shape[0] + xview_rc_img_txt.shape[0]
-    data_txt.write('syn_0_xview_number={}\n'.format(xview_trn_num))
-    data_txt.write('classes=%s\n' % str(args.class_num))
-    data_txt.write('names=./data_xview/{}_cls/xview.names\n'.format(args.class_num))
-    data_txt.write('backup=backup/\n')
-    data_txt.write('eval=color\n')
     data_txt.close()
 
 
@@ -703,7 +705,7 @@ if __name__ == '__main__':
 
     '''
     creat m*_rc* test*.txt easy hard
-    create .data easy hard
+    create m*_rc*_*.data easy hard
     easy: keep other labels
     hard except rc*, drop others
     '''
@@ -712,10 +714,10 @@ if __name__ == '__main__':
     eh_types = ['easy'] # , 'hard'
     for ix, rare_id in enumerate(rare_ids):
         model_id = model_ids[ix]
-        create_val_aug_rc_hard_easy_txt_list_data(model_id, rare_id, pxwhrs='px23whr3_seed17')
+        create_val_aug_rc_hard_easy_txt_list_data_by_rc(model_id, rare_id, pxwhrs='px23whr3_seed17')
 
     '''
-    create *.data train on xview_rc, nrcbkg, test on  aug rc with rcid easy
+    create *.data train on one specific xview_rc, nrcbkg, test on  aug rc with rcid easy
     '''
     seed = 17
     comments = '_px23whr3_seed{}'.format(seed)
@@ -724,15 +726,20 @@ if __name__ == '__main__':
     rare_ids = [1, 2, 3, 4, 5]
     for ix, rare_id in enumerate(rare_ids):
         model_id = model_ids[ix]
-        create_train_data_aug_rc_by_rcid(data_name, model_id, rare_id, comments)
+        create_data_train_on_nrcbkg_plus_one_rc_test_aug_rc_by_rcid(data_name, model_id, rare_id, comments)
 
     '''
     creat nrcbkg, aug rc test*.txt easy 
-    create .data easy
+    create test on all aug rc .data easy
     easy: keep other labels
     '''
-    # create_val_aug_rc_nrcbkg_easy_txt_data(pxwhrs='px23whr3_seed17')
+    # create_val_all_aug_rc_nrcbkg_easy_txt_data(pxwhrs='px23whr3_seed17')
 
+    '''
+    creat aug rc test*.txt easy 
+    create test data contains only aug rc*.data easy
+    easy: keep other labels
+    '''
     # create_aug_only_rc_testset_txt_list(pxwhrs='px23whr3_seed17')
 
     '''
