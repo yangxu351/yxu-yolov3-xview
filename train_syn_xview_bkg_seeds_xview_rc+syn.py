@@ -62,8 +62,8 @@ def train(opt):
 
     # Configure run
     data_dict = parse_data_cfg(data)
-    train_path = data_dict['xview_train']
-    train_label_path = data_dict['xview_train_label']
+    syn_train_path = data_dict['syn_train']
+    syn_train_label_path = data_dict['syn_train_label']
     rc_train_path = data_dict['rc_train']
     rc_label_path = data_dict['rc_train_label']
     test_path = data_dict['valid']
@@ -76,8 +76,8 @@ def train(opt):
 
     # Remove previous results
     # Remove previous results
-    for f in glob.glob('trn_patch_images/*_batch*.jpg') + glob.glob(results_file):
-        os.remove(f)
+    # for f in glob.glob('trn_patch_images/*_batch*.jpg') + glob.glob(results_file):
+    #     os.remove(f)
 
     # Initialize model
     model = Darknet(cfg, arc=opt.arc).to(device)
@@ -167,7 +167,7 @@ def train(opt):
 
     # Dataset
         # fixme
-    dataset = LoadImagesAndLabels(train_path, train_label_path, img_size, batch_size - rc_batch_size,
+    syn_dataset = LoadImagesAndLabels(syn_train_path, syn_train_label_path, img_size, batch_size - rc_batch_size,
                                       class_num=opt.class_num,
                                       augment=True,  # False, #True,
                                       hyp=hyp,  # augmentation hyperparameters
@@ -184,21 +184,21 @@ def train(opt):
                                   cache_labels=epochs > 10,
                                   cache_images=opt.cache_images and not opt.prebias)
     # Dataloader
-    batch_size = min(batch_size, len(dataset))
+    batch_size = min(batch_size, len(syn_dataset))
     nw = min([os.cpu_count(), batch_size if batch_size > 1 else 0, 8])  # number of workers
     
-    dataloader = torch.utils.data.DataLoader(dataset,
+    syn_dataloader = torch.utils.data.DataLoader(syn_dataset,
                                              batch_size=batch_size - rc_batch_size,
                                              num_workers=nw,
                                              shuffle=not opt.rect,  # Shuffle=True unless rectangular training is used
                                              pin_memory=True,
-                                             collate_fn=dataset.collate_fn)
+                                             collate_fn=syn_dataset.collate_fn)
     rc_dataloader = torch.utils.data.DataLoader(rc_dataset,
                                              batch_size=rc_batch_size,
                                              num_workers=nw,
                                              shuffle=not opt.rect,  # Shuffle=True unless rectangular training is used
                                              pin_memory=True,
-                                             collate_fn=dataset.collate_fn)
+                                             collate_fn=syn_dataset.collate_fn)
     # Test Dataloader
     if not opt.prebias:
         testloader = torch.utils.data.DataLoader(
@@ -210,7 +210,7 @@ def train(opt):
             batch_size=batch_size * 2,
             num_workers=nw,
             pin_memory=True,
-            collate_fn=dataset.collate_fn)
+            collate_fn=syn_dataset.collate_fn)
 
     # Start training
     # fixme
@@ -220,7 +220,7 @@ def train(opt):
     model.nc = nc  # attach number of classes to model
     model.arc = opt.arc  # attach yolo architecture
     model.hyp = hyp  # attach hyperparameters to model
-    model.class_weights = labels_to_class_weights(dataset.labels, nc).to(device)  # attach class weights
+    model.class_weights = labels_to_class_weights(syn_dataset.labels, nc).to(device)  # attach class weights
     maps = np.zeros(nc)  # mAP per class
 
     #fixme --yang.xu
@@ -243,10 +243,10 @@ def train(opt):
         print(('\n' + '%10s' * 8) % ('Epoch', 'gpu_mem', 'GIoU', 'obj', 'cls', 'total', 'targets', 'img_size'))
 
         # Update image weights (optional)
-        if dataset.image_weights:
+        if syn_dataset.image_weights:
             w = model.class_weights.cpu().numpy() * (1 - maps) ** 2  # class weights
-            image_weights = labels_to_image_weights(dataset.labels, nc=nc, class_weights=w)
-            dataset.indices = random.choices(range(dataset.n), weights=image_weights, k=dataset.n)  # rand weighted idx
+            image_weights = labels_to_image_weights(syn_dataset.labels, nc=nc, class_weights=w)
+            syn_dataset.indices = random.choices(range(syn_dataset.n), weights=image_weights, k=syn_dataset.n)  # rand weighted idx
 
         mloss = torch.zeros(4).to(device)  # mean losses
         #fixme
@@ -255,23 +255,23 @@ def train(opt):
 
         if rc_dataloader:
             gen_rc_data = infi_loop(rc_dataloader)
-        if dataloader:
-            gen_xview_data = infi_loop(dataloader)
+        if syn_dataloader:
+            gen_syn_data = infi_loop(syn_dataloader)
         for i in range(nb):
             #fixme -- yang.xu
-            if rc_dataloader and dataloader:
-                imgs_xview, targets_xview, paths_xview = next(gen_xview_data) 
+            if rc_dataloader and syn_dataloader:
+                imgs_syn, targets_syn, paths_syn = next(gen_syn_data)
                 imgs_rc, targets_rc, paths_rc = next(gen_rc_data)
                 #fixme -- yang.xu --************* important!!!!
                 # targets_syn[:, 0] = batch_size - rc_batch_size
-                xview_batch_size = batch_size - rc_batch_size
+                syn_batch_size = batch_size - rc_batch_size
                 # print('xview_batch_size', xview_batch_size)
                 # print('targets_syn_size', targets_syn.shape)
                 # print('targets_syn[:,0]', targets_syn[:,0])
                 #fixme -- yang.xu
                 # --************* important!!!! reverse order
                 for si in reversed(range(rc_batch_size)):
-                    targets_rc[targets_rc[:, 0] == si, 0] = xview_batch_size + si
+                    targets_rc[targets_rc[:, 0] == si, 0] = syn_batch_size + si
                 # print('targets_syn[:,0]----after----', targets_syn[:,0])
                 # print(imgs_xview.shape, targets_xview[:,0], len(paths_xview))
                 # print(imgs_syn.shape, targets_syn[:, 0], len(paths_syn))
@@ -281,19 +281,19 @@ def train(opt):
                 # print('targets_syn.shape ', targets_syn.shape)
                 # exit(0)
 
-                imgs = torch.cat([imgs_xview, imgs_rc], dim=0)
-                targets = torch.cat([targets_xview, targets_rc], dim=0)
-                paths =  paths_xview + paths_rc
+                imgs = torch.cat([imgs_syn, imgs_rc], dim=0)
+                targets = torch.cat([targets_syn, targets_rc], dim=0)
+                paths =  paths_syn + paths_rc
                 # print('imgs.shape ', imgs.shape)
                 # print('targets.shape ', targets.shape)
                 # print('len(paths) ', len(paths))
                 # print('targets ', targets)
                 # exit(0)
 
-            elif rc_dataloader and not dataloader:
+            elif rc_dataloader and not syn_dataloader:
                 imgs, targets, paths = next(gen_rc_data)
             else:
-                imgs, targets, paths = next(gen_xview_data)
+                imgs, targets, paths = next(gen_syn_data)
 
             # print(imgs.shape, len(paths)) # torch.Size([8, 3, 608, 608]) 8
 
@@ -311,7 +311,7 @@ def train(opt):
 
             # Plot images with bounding boxes
             if ni <= 2:# == 0:
-                fname = 'trn_patch_images/train_batch%g.jpg' % i
+                fname = 'trn_patch_images/train_batch%s_%g.jpg' % (hyp_cmt, i)
                 # print(imgs.shape, targets.shape, len(paths))
                 # print(imgs[0])
                 # print(targets)
@@ -515,7 +515,7 @@ if __name__ == '__main__':
     hyp_cmt = cfg_dict['hyp_cmt']
     hyp = cfg_dict['hyp']
     # opt.data = 'data_xview/{}_cls/{}/xview_rc_nrcbkg_{}.data'.format(opt.class_num, pxwhrsd, pxwhrsd)
-    opt.data = 'data_xview/{}_cls/{}/xview_ori_nrcbkg_aug_rc_{}.data'.format(opt.class_num, pxwhrsd, pxwhrsd)
+    opt.data = 'data_xview/{}_cls/{}/{}/xview_ori_nrcbkg_{}.data'.format(opt.class_num, pxwhrsd, 'xview_rc_all_syn_of_best_size_color', pxwhrsd)
     for rbs in rbs_list:
         opt.rc_batch_size = rbs
         hyp_cmt = hyp_cmt.format(opt.batch_size - opt.rc_batch_size, opt.rc_batch_size)

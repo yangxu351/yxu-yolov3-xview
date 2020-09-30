@@ -61,65 +61,109 @@ def split_all_angle_bias_train_val(model_cmt, seed=17, pxwhr='px15whr3', base_px
     val_lbl_txt.close()
 
 
-def split_syn_xview_background_trn_val(seed=17, comment='syn_xview_background_texture', pxwhr='',
-                                       base_pxwhrs='px23whr3_seed17'):
-    data_xview_dir = syn_args.data_xview_dir.format(syn_args.class_num)
-    df_trn = pd.read_csv(os.path.join(data_xview_dir, base_pxwhrs, 'xviewtrain_img_{}.txt'.format(base_pxwhrs)),
-                         header=None)
-    num_trn = df_trn.shape[0]
-    df_val = pd.read_csv(os.path.join(data_xview_dir, base_pxwhrs, 'xviewval_img_{}.txt'.format(base_pxwhrs)),
-                         header=None)
-    num_val = df_val.shape[0]
+# def split_syn_xview_background_trn_val(seed=17, comment='syn_xview_background_texture', pxwhr='',
+#                                        base_pxwhrs='px23whr3_seed17'):
+#     data_xview_dir = syn_args.data_xview_dir.format(syn_args.class_num)
+#     df_trn = pd.read_csv(os.path.join(data_xview_dir, base_pxwhrs, 'xviewtrain_img_{}.txt'.format(base_pxwhrs)),
+#                          header=None)
+#     num_trn = df_trn.shape[0]
+#     df_val = pd.read_csv(os.path.join(data_xview_dir, base_pxwhrs, 'xviewval_img_{}.txt'.format(base_pxwhrs)),
+#                          header=None)
+#     num_val = df_val.shape[0]
+#
+#     display_type = comment.split('_')[-1]
+#     step = syn_args.tile_size * syn_args.resolution
+#     all_files = np.sort(glob.glob(
+#         os.path.join(syn_args.syn_data_dir.format(display_type), '{}_all_images_step{}'.format(display_type, step),
+#                      '*.png')))
+#     num_files = len(all_files)
+#     print('num_files', num_files)
+#
+#     np.random.seed(seed)
+#     all_indices = np.random.permutation(num_files)
+#     data_dir = syn_args.syn_data_list_dir.format(comment, syn_args.class_num, comment, seed)
+#     if not os.path.exists(data_dir):
+#         os.makedirs(data_dir)
+#     print('data_dir ', data_dir)
+#
+#     trn_img_txt = open(os.path.join(data_dir, '{}_train_img_seed{}.txt'.format(comment, seed)), 'w')
+#     trn_lbl_txt = open(os.path.join(data_dir, '{}_train_lbl_seed{}.txt'.format(comment, seed)), 'w')
+#
+#     val_img_txt = open(os.path.join(data_dir, '{}_val_img_seed{}.txt'.format(comment, seed)), 'w')
+#     val_lbl_txt = open(os.path.join(data_dir, '{}_val_lbl_seed{}.txt'.format(comment, seed)), 'w')
+#
+#     lbl_dir = os.path.join(syn_args.syn_annos_dir,
+#                            'minr{}_linkr{}_{}_{}_all_annos_txt_step{}'.format(syn_args.min_region, syn_args.link_r,
+#                                                                               pxwhr, display_type, step))
+#
+#     # for i in all_indices[: num_val]:
+#     #     val_img_txt.write('%s\n' % all_files[i])
+#     #     val_lbl_txt.write('%s\n' % os.path.join(lbl_dir, os.path.basename(all_files[i]).replace(IMG_FORMAT, TXT_FORMAT)))
+#     # val_img_txt.close()
+#     # val_lbl_txt.close()
+#     # for j in all_indices[num_val: num_val + num_trn]:
+#     #     trn_img_txt.write('%s\n' % all_files[j])
+#     #     trn_lbl_txt.write('%s\n' % os.path.join(lbl_dir, os.path.basename(all_files[j]).replace(IMG_FORMAT, TXT_FORMAT)))
+#     # trn_img_txt.close()
+#     # trn_lbl_txt.close()
+#
+#     for j in all_indices[: num_trn]:
+#         trn_img_txt.write('%s\n' % all_files[j])
+#         trn_lbl_txt.write(
+#             '%s\n' % os.path.join(lbl_dir, os.path.basename(all_files[j]).replace(IMG_FORMAT, TXT_FORMAT)))
+#     trn_img_txt.close()
+#     trn_lbl_txt.close()
+#     for i in all_indices[num_trn: num_trn + num_val]:
+#         val_img_txt.write('%s\n' % all_files[i])
+#         val_lbl_txt.write(
+#             '%s\n' % os.path.join(lbl_dir, os.path.basename(all_files[i]).replace(IMG_FORMAT, TXT_FORMAT)))
+#     val_img_txt.close()
+#     val_lbl_txt.close()
 
-    display_type = comment.split('_')[-1]
-    step = syn_args.tile_size * syn_args.resolution
-    all_files = np.sort(glob.glob(
-        os.path.join(syn_args.syn_data_dir.format(display_type), '{}_all_images_step{}'.format(display_type, step),
-                     '*.png')))
-    num_files = len(all_files)
-    print('num_files', num_files)
+def split_syn_xview_background_trn_val(seed=17, comment='syn_xview_background_texture', pxwhr='', base_pxwhrs='px23whr3_seed17', upscale=False):
 
-    np.random.seed(seed)
-    all_indices = np.random.permutation(num_files)
+    data_xview_dir = syn_args.data_xview_dir.format( syn_args.class_num)
+
     data_dir = syn_args.syn_data_list_dir.format(comment, syn_args.class_num, comment, seed)
     if not os.path.exists(data_dir):
         os.makedirs(data_dir)
-    print('data_dir ', data_dir)
+    display_type = 'color'
+    step = syn_args.tile_size * syn_args.resolution
+    if upscale:
+        all_files = np.sort(glob.glob(os.path.join(syn_args.syn_data_dir, 'upscale_{}_all_images_step{}'.format(display_type, step), '*' + IMG_FORMAT)))
+        lbl_dir = os.path.join(syn_args.syn_annos_dir, 'minr{}_linkr{}_{}_upscale_{}_all_annos_txt_step{}'.format(syn_args.min_region, syn_args.link_r, pxwhr, display_type, step))
+
+    else:
+#        print('img dir', os.path.join(syn_args.syn_data_dir, '{}_all_images_step{}'.format(display_type, step)))
+        all_files = np.sort(glob.glob(os.path.join(syn_args.syn_data_dir, '{}_all_images_step{}'.format(display_type, step), '*' + IMG_FORMAT)))
+        lbl_dir = os.path.join(syn_args.syn_annos_dir, 'minr{}_linkr{}_{}_{}_all_annos_txt_step{}'.format(syn_args.min_region, syn_args.link_r, pxwhr, display_type, step))
 
     trn_img_txt = open(os.path.join(data_dir, '{}_train_img_seed{}.txt'.format(comment, seed)), 'w')
     trn_lbl_txt = open(os.path.join(data_dir, '{}_train_lbl_seed{}.txt'.format(comment, seed)), 'w')
-
     val_img_txt = open(os.path.join(data_dir, '{}_val_img_seed{}.txt'.format(comment, seed)), 'w')
     val_lbl_txt = open(os.path.join(data_dir, '{}_val_lbl_seed{}.txt'.format(comment, seed)), 'w')
+#    print(os.path.join(syn_args.syn_data_dir.format(display_type), '{}_all_images_step{}'.format(display_type, step), '*' + IMG_FORMAT))
+    num_files = len(all_files)
+    print('num_files', num_files)
 
-    lbl_dir = os.path.join(syn_args.syn_annos_dir,
-                           'minr{}_linkr{}_{}_{}_all_annos_txt_step{}'.format(syn_args.min_region, syn_args.link_r,
-                                                                              pxwhr, display_type, step))
+    #fixme---yang.xu
+    num_val = int(num_files*syn_args.val_percent)
+    num_trn = num_files - num_val
 
-    # for i in all_indices[: num_val]:
-    #     val_img_txt.write('%s\n' % all_files[i])
-    #     val_lbl_txt.write('%s\n' % os.path.join(lbl_dir, os.path.basename(all_files[i]).replace(IMG_FORMAT, TXT_FORMAT)))
-    # val_img_txt.close()
-    # val_lbl_txt.close()
-    # for j in all_indices[num_val: num_val + num_trn]:
-    #     trn_img_txt.write('%s\n' % all_files[j])
-    #     trn_lbl_txt.write('%s\n' % os.path.join(lbl_dir, os.path.basename(all_files[j]).replace(IMG_FORMAT, TXT_FORMAT)))
-    # trn_img_txt.close()
-    # trn_lbl_txt.close()
-
+    np.random.seed(seed)
+    all_indices = np.random.permutation(num_files)
+    print('num_trn', num_trn)
     for j in all_indices[: num_trn]:
+#        print('all_files[i]', all_files[j])
         trn_img_txt.write('%s\n' % all_files[j])
-        trn_lbl_txt.write(
-            '%s\n' % os.path.join(lbl_dir, os.path.basename(all_files[j]).replace(IMG_FORMAT, TXT_FORMAT)))
+        trn_lbl_txt.write('%s\n' % os.path.join(lbl_dir, os.path.basename(all_files[j]).replace(IMG_FORMAT, TXT_FORMAT)))
     trn_img_txt.close()
     trn_lbl_txt.close()
-    for i in all_indices[num_trn: num_trn + num_val]:
+    for i in all_indices[num_trn:num_trn+num_val ]:
         val_img_txt.write('%s\n' % all_files[i])
-        val_lbl_txt.write(
-            '%s\n' % os.path.join(lbl_dir, os.path.basename(all_files[i]).replace(IMG_FORMAT, TXT_FORMAT)))
+        val_lbl_txt.write('%s\n' % os.path.join(lbl_dir, os.path.basename(all_files[i]).replace(IMG_FORMAT, TXT_FORMAT)))
     val_img_txt.close()
     val_lbl_txt.close()
-
 
 def record_all_syn_xview_background(comment='syn_xview_background_texture', seed=1024, pxwhr=''):
     '''
@@ -553,8 +597,11 @@ def get_syn_args(cmt='certain_models'):
     parser = argparse.ArgumentParser()
 
     if cmt:
+        # parser.add_argument("--syn_data_dir", type=str,
+        #                     default='/media/lab/Yang/data/synthetic_data/syn_xview_bkg_{}'.format(cmt) + '_{}/',
+        #                     help="Path to folder containing synthetic images and annos ")
         parser.add_argument("--syn_data_dir", type=str,
-                            default='/media/lab/Yang/data/synthetic_data/syn_xview_bkg_{}'.format(cmt) + '_{}/',
+                            default='/media/lab/Yang/data/synthetic_data/syn_xview_bkg_{}'.format(cmt) ,
                             help="Path to folder containing synthetic images and annos ")
         parser.add_argument("--syn_annos_dir", type=str,
                             default='/media/lab/Yang/data/synthetic_data/syn_xview_bkg_{}_txt_xcycwh/'.format(cmt),
@@ -723,12 +770,18 @@ if __name__ == '__main__':
     #     px_thres = 15
     #     pxwhr = 'px15whr3'
     #
-    #     sd = 17
-    #     base_pxwhrs = 'px23whr3_seed{}'
-    #     syn_args = get_syn_args(model_cmt)
-    #
-    #     base_pxwhrs = base_pxwhrs.format(sd)
-    #     split_syn_xview_background_trn_val(sd, cmt, pxwhr, base_pxwhrs)
+    color_sigma = [15, 30, 45, 60]  #0,
+    for ix, ssig in enumerate(color_sigma):
+        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.03_color_bias{}_RC5_v{}'.format(ssig, ix+51)
+        model_cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.03_color_bias{}_RC5_v{}'.format(ssig, ix+51)
+        pxwhr = 'px23whr3'
+        sd = 17
+        base_pxwhrs = 'px23whr3_seed{}'
+        syn_args = get_syn_args(model_cmt)
+
+        base_pxwhrs = base_pxwhrs.format(sd)
+        split_syn_xview_background_trn_val(sd, cmt, pxwhr, base_pxwhrs)
+        create_syn_data(cmt, sd, base_pxwhrs, val_xview=False)
 
 
     # pxwhr = 'px15whr3'

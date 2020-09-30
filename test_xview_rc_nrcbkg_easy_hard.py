@@ -551,8 +551,8 @@ if __name__ == "__main__":
     px_thres = 23
     whr_thres = 3 # 4
     sd = 17
-    model_ids = [4] #4, 1, 5, 5, 5
-    rare_classes = [1] # 1, 2, 3, 4, 5
+    model_ids = [5] #4, 1, 5, 5, 5
+    rare_classes = [5] # 1, 2, 3, 4, 5
     far_thres = 3
     rc_ratios = [4]  # 1, 2,3,4,5,6
     seeds = [0]# , 1, 2
