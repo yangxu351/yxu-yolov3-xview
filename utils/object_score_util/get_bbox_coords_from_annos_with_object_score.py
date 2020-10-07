@@ -48,15 +48,13 @@ def get_object_bbox_after_group(label_path, save_path, class_label=0, min_region
             w = max_w - min_w
             h = max_h - min_h
             whr = np.maximum(w / (h + 1e-16), h / (w + 1e-16))
-            if whr > whr_thres:
+            if min_w <= 0 and (whr > whr_thres or w <= px_thresh or h <= px_thresh):
                 continue
-            elif min_w <= 0 and (w <= px_thresh or h <= px_thresh):
+            elif min_h <= 0 and (whr > whr_thres or w <= px_thresh or h <= px_thresh):
                 continue
-            elif min_h <= 0 and (w <= px_thresh or h <= px_thresh):
+            elif max_w >= lbl.shape[1] -1  and (whr > whr_thres or w <= px_thresh or h <= px_thresh):
                 continue
-            elif max_w >= lbl.shape[1] -1  and (w <= px_thresh or h <= px_thresh):
-                continue
-            elif max_h >= lbl.shape[0] -1  and (w <= px_thresh or h <= px_thresh):
+            elif max_h >= lbl.shape[0] -1  and (whr > whr_thres or w <= px_thresh or h <= px_thresh):
                 continue
             min_w = min_w / lbl.shape[1]
             min_h = min_h / lbl.shape[0]
