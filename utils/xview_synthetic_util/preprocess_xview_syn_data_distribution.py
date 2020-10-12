@@ -380,10 +380,10 @@ def draw_bbx_on_rgb_images_with_indices_for_train_val(typestr='val', pxwhrs='px2
 
         # data_img_file = os.path.join(args.data_save_dir, pxwhrs, 'xview{}_img_{}.txt'.format(typestr, pxwhrs))
         # data_lbl_file = os.path.join(args.data_save_dir, pxwhrs, 'xview{}_lbl_{}.txt'.format(typestr, pxwhrs))
-        # data_img_file = os.path.join(args.data_save_dir, pxwhrs, 'xview_ori_nrcbkg_aug_rc_val_img_px23whr3_seed17.txt')
-        # data_lbl_file = os.path.join(args.data_save_dir, pxwhrs, 'xview_ori_nrcbkg_aug_rc_val_lbl_px23whr3_seed17.txt')
-        data_img_file = os.path.join(args.data_save_dir, pxwhrs, 'only_rc_train_img_px23whr3_seed17.txt')
-        data_lbl_file = os.path.join(args.data_save_dir, pxwhrs, 'only_rc_train_lbl_px23whr3_seed17.txt')
+        data_img_file = os.path.join(args.data_save_dir, pxwhrs, 'xview_ori_nrcbkg_aug_rc_val_img_px23whr3_seed17.txt')
+        data_lbl_file = os.path.join(args.data_save_dir, pxwhrs, 'xview_ori_nrcbkg_aug_rc_val_lbl_px23whr3_seed17.txt')
+#        data_img_file = os.path.join(args.data_save_dir, pxwhrs, 'only_rc_train_img_px23whr3_seed17.txt')
+#        data_lbl_file = os.path.join(args.data_save_dir, pxwhrs, 'only_rc_train_lbl_px23whr3_seed17.txt')
         print('data_img_file', data_img_file)
         df_img = pd.read_csv(data_img_file, header=None)
         print('df_img len', df_img.shape)
@@ -713,10 +713,7 @@ def plot_aircraft_body_wing_hist_pdf(bw_ratio=False):
         fig, axs = plt.subplots(1, 2, figsize=(12, 8))
         bn, bbins, bpatches = axs[0].hist(body, num_bins, density=1, alpha=0.5, label='actual hist') # facecolor='blue'
         wn, wbins, wpatches = axs[1].hist(bw, num_bins, density=1, alpha=0.5, label='actual hist') # facecolor='blue'
-        #直方图函数，x为x轴的值，normed=1表示为概率密度，即和为一，绿色方块，色深参数0.5.返回n个概率，直方块左边线的x值，及各个方块对象
-        by = scs.norm.pdf(bbins, bmu, bsgm)#拟合一条最佳正态分布曲线y
-        axs[0].plot(bbins, by, color='c', label = 'actual data') #绘制y的曲线
-        bX = scs.norm.rvs(loc=bmu, scale=bsgm, size=sample_size).T
+        axs[0].plot(bbins, by, color='c', label = 'actual data') #     bX = scs.norm.rvs(loc=bmu, scale=bsgm, size=sample_size).T
         bX = bX[bX >= bmn]
         bX = bX[bX <= bmx]
         print('bX model {}'.format(i), bX.shape)
@@ -729,13 +726,10 @@ def plot_aircraft_body_wing_hist_pdf(bw_ratio=False):
         axs[0].hist(bX, bins=num_bins, facecolor='darkorange', density=1, label = 'gaussian sample hist', alpha=0.5)
         axs[0].legend()
         axs[0].grid()
-        axs[0].set_xlabel(bxlabel) #绘制x轴
-        axs[0].set_ylabel('Probability') #绘制y轴
-        axs[0].set_title(r'Model {} : $\mu={:.2f}$,$\sigma={:.2f}$'.format(i, bmu, bsgm))
+        axs[0].set_xlabel(bxlabel) 
 
-        wy = scs.norm.pdf(wbins, wmu, wsgm)#拟合一条最佳正态分布曲线y
-        axs[1].plot(wbins, wy, color='c', label = 'actual data') #绘制y的曲线
-
+        wy = scs.norm.pdf(wbins, wmu, wsgm)#
+        axs[1].plot(wbins, wy, color='c', label = 'actual data')
         wX = scs.norm.rvs(loc=wmu, scale=wsgm, size=sample_size).T
         wX = wX[wX >= wmn]
         wX = wX[wX <= wmx]
@@ -750,9 +744,7 @@ def plot_aircraft_body_wing_hist_pdf(bw_ratio=False):
         axs[1].hist(wX, bins=num_bins, facecolor='darkorange', density=1, label = 'gaussian sample hist', alpha=0.5)
         axs[1].legend()
         axs[1].grid()
-        axs[1].set_xlabel(wxlabel) #绘制x轴
-        axs[1].set_ylabel('Probability') #绘制y轴
-        axs[1].set_title(r'Model {} : $\mu={:.2f}$,$\sigma={:.2f}$'.format(i, wmu, wsgm))#中文标题 u'xxx'
+        axs[1].set_xlabel(wxlabel)
         png_name = 'hist_body_bwratio_model{}.png'.format(i)
         plt.savefig(os.path.join(save_path, png_name))
         # plt.show()

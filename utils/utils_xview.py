@@ -329,7 +329,7 @@ def ap_per_class(tp, conf, pred_cls, target_cls, ntp=None, pr_path='', pr_name='
     # Sort by objectness
     i = np.argsort(-conf)
     tp, conf, pred_cls = tp[i], conf[i], pred_cls[i]
-    #print('tp: {} conf:{} pred_cls:{}'.format(tp, conf, pred_cls))
+    # print('tp: {} conf:{} pred_cls:{}'.format(tp, conf, pred_cls))
 
     # Find unique classes
     #fixme
@@ -345,14 +345,19 @@ def ap_per_class(tp, conf, pred_cls, target_cls, ntp=None, pr_path='', pr_name='
     s = [len(unique_classes), tp.shape[1]]  # number class, number iou thresholds (i.e. 10 for mAP0.5...0.95)
     ap, p, r = np.zeros(s), np.zeros(s), np.zeros(s)
     for ci, c in enumerate(unique_classes):
-        i = pred_cls == c
-        n_gt = (target_cls == c).sum()  # Number of ground truth objects
-        n_p = i.sum()  # Number of predicted objects
-        # print('n_gt', n_gt, 'n_p', n_p)
+        if rare_class is not None:
+            i = pred_cls == 0
+            n_gt = (target_cls == rare_class).sum()
+            n_p = i.sum()
+            # print('n_gt', n_gt, 'n_p', n_p)
+        else:
+            i = pred_cls == c
+            n_gt = (target_cls == c).sum()  # Number of ground truth objects
+            n_p = i.sum()  # Number of predicted objects
+
         if n_p == 0 or n_gt == 0:
             r[ci] = 0
             p[ci] = 0
-
             # AP from recall-precision curve
             for j in range(tp.shape[1]):
                 ap[ci, j] = 0
@@ -385,8 +390,6 @@ def ap_per_class(tp, conf, pred_cls, target_cls, ntp=None, pr_path='', pr_name='
                 # ax.plot(np.concatenate(([0.], recall)), np.concatenate(([0.], precision)))
                 np.savetxt(os.path.join(pr_path, 'recall.txt'), recall)
                 np.savetxt(os.path.join(pr_path, 'precision.txt'), precision)
-                # print('ap[ci]', ap[ci])
-                # ax1.plot(recall, precision, label=pr_legend + '  AP$_%d$: %.3f' % (apN, ap[ci]))
                 ax1.plot(recall, precision, label=pr_legend + '  AP$_{%d}$: %.3f' % (apN, ap[ci]))
                 ax1.legend()
                 ax1.set_title('PR-Curve')
@@ -396,6 +399,7 @@ def ap_per_class(tp, conf, pred_cls, target_cls, ntp=None, pr_path='', pr_name='
                 ax1.grid()
                 fig1.savefig(os.path.join(pr_path, pr_name + '_PR_curve.png'), dpi=300)
                 plt.close(fig1)
+
 
     # Compute F1 score (harmonic mean of precision and recall)
     f1 = 2 * p * r / (p + r + 1e-16)
@@ -464,7 +468,6 @@ def plot_roc_easy_hard(tp, conf, pred_cls, target_cls, ntp, pr_path='', pr_name=
         ax2.grid()
         fig2.savefig(os.path.join(pr_path, pr_name + '_ROC_curve.png'), dpi=300)
         plt.close(fig2)
-
     #fixme
     # Sort by objectness
     # i = np.argsort(-conf) # 175

@@ -540,7 +540,7 @@ if __name__ == '__main__':
     for sx, sd in enumerate(seeds):
         opt.seed = sd
         cmt = comment.format(base_bias*pros[sx], version_base[sx]) 
-
+ 
         cinx = cmt.find('_RC') # first letter index
         endstr = cmt[cinx:] # _RC*_v*
         if cinx >= 0:

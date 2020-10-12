@@ -3,6 +3,9 @@ import numpy as np
 import argparse
 import os
 import pandas as pd
+import sys
+sys.path.append('/data/users/yang/code/yxu-yolov3-xview')
+from utils.parse_config_xview import *
 # from utils.data_process_distribution_vis_util import process_wv_coco_for_yolo_patches_no_trnval as pwv
 # from utils.xview_synthetic_util import preprocess_xview_syn_data_distribution as pps
 # from utils.object_score_util import get_bbox_coords_from_annos_with_object_score as gbc
@@ -184,17 +187,26 @@ def create_data_each_syn_rc_xview_rc(cmt, seed=17):
     base_pxwhrs = 'px23whr3_seed{}'.format(seed)
     xview_dir = os.path.join(args.data_xview_dir, '1_cls', base_pxwhrs)
 
-    save_dir = os.path.join(xview_dir, 'xview_rc_all_syn_of_best_size_color')
+    save_dir = os.path.join(xview_dir, 'xview_rc_each_syn_of_best_size_color')
     if not os.path.exists(save_dir):
         os.mkdir(save_dir)
         
     ix = cmt.find('RC')+2
     rc = cmt[ix:ix+1]
-    data_txt = open(os.path.join(save_dir, 'xview_rc_syn_rc{}_of_best_size_color_seed{}.data'.format(rc, seed)), 'w')
+    rix = rare_classes.index(int(rc))
+    modelid = model_ids[rix]
+    data_txt = open(os.path.join(save_dir, 'xview_rc{}_syn_rc{}_of_best_size_color_seed{}.data'.format(rc, rc, seed)), 'w')
+    #fixme --yang.xu 
+    ###### all xview_rc are considered as one category
+#    data_txt.write(
+#        'xview_rc_train={}\n'.format(os.path.join(xview_dir,'only_rc_train_img_{}.txt'.format(base_pxwhrs))))
+#    data_txt.write(
+#        'xview_rc_train_label={}\n'.format(os.path.join(xview_dir, 'only_rc_train_lbl_{}.txt'.format(base_pxwhrs))))
+    
     data_txt.write(
-        'xview_rc_train={}\n'.format(os.path.join(xview_dir,'only_rc_train_img_{}.txt'.format(base_pxwhrs))))
+        'xview_rc_train={}\n'.format(os.path.join(xview_dir, 'RC', 'only_rc{}_train_img_{}.txt'.format(rc, base_pxwhrs))))
     data_txt.write(
-        'xview_rc_train_label={}\n'.format(os.path.join(xview_dir, 'only_rc_train_lbl_{}.txt'.format(base_pxwhrs))))
+        'xview_rc_train_label={}\n'.format(os.path.join(xview_dir, 'RC', 'only_rc{}_train_lbl_{}.txt'.format(rc, base_pxwhrs))))
 
     syn_dir = os.path.join(args.data_xview_dir, '{}_1_cls'.format(cmt), '{}_seed17'.format(cmt))
     syn_img_file = os.path.join(syn_dir, '{}_train_img_seed17.txt'.format(cmt))
@@ -205,14 +217,21 @@ def create_data_each_syn_rc_xview_rc(cmt, seed=17):
     data_txt.write(
         'syn_train_label={}\n'.format(syn_lbl_file))
 
+#    data_txt.write(
+#        'valid={}\n'.format(os.path.join(xview_dir,'xview_ori_nrcbkg_aug_rc_val_img_{}.txt'.format(base_pxwhrs))))
+#    data_txt.write(
+#        'valid_label={}\n'.format(os.path.join(xview_dir, 'xview_ori_nrcbkg_aug_rc_val_lbl_{}.txt'.format(base_pxwhrs))))
     data_txt.write(
-        'valid={}\n'.format(os.path.join(xview_dir,'xview_ori_nrcbkg_aug_rc_val_img_{}.txt'.format(base_pxwhrs))))
+        'valid={}\n'.format(os.path.join(xview_dir, 'RC','xview_ori_nrcbkg_aug_rc_test_img_{}_m{}_rc{}_easy.txt'.format(base_pxwhrs, modelid, rc))))
     data_txt.write(
-        'valid_label={}\n'.format(os.path.join(xview_dir, 'xview_ori_nrcbkg_aug_rc_val_lbl_{}.txt'.format(base_pxwhrs))))
+        'valid_label={}\n'.format(os.path.join(xview_dir, 'RC', 'xview_ori_nrcbkg_aug_rc_test_lbl_{}_m{}_rc{}_easy.txt'.format(base_pxwhrs, modelid, rc))))
+    
+    
+    xview_data = os.path.join(xview_dir, 'xview_ori_nrcbkg_aug_rc{}_{}.data'.format(rc, base_pxwhrs))
+    data_dict = parse_data_cfg(xview_data)
+    syn_0_xview_number = data_dict['syn_0_xview_number']
 
-    xview_img_txt = pd.read_csv(open(os.path.join(xview_dir, 'xview_ori_nrcbkg_train_img_{}.txt'.format(base_pxwhrs))), header=None).to_numpy()
-    xview_trn_num = xview_img_txt.shape[0]
-    data_txt.write('syn_0_xview_number={}\n'.format(xview_trn_num))
+    data_txt.write('syn_0_xview_number={}\n'.format(syn_0_xview_number))
     data_txt.write('classes=%s\n' % str(args.class_num))
     data_txt.write('names=./data_xview/{}_cls/xview.names\n'.format(args.class_num))
     data_txt.write('backup=backup/\n')
@@ -220,15 +239,12 @@ def create_data_each_syn_rc_xview_rc(cmt, seed=17):
     data_txt.close()
 
 
-
-
-
 def get_args():
     parser = argparse.ArgumentParser()
 
     parser.add_argument("--data_xview_dir", type=str, help="to save data files",
-                        default='/media/lab/Yang/code/yolov3/data_xview/')
-                        # default='/data/users/yang/code/yxu-yolov3-xview/data_xview/{}_cls/')
+                        #default='/media/lab/Yang/code/yolov3/data_xview/')
+                        default='/data/users/yang/code/yxu-yolov3-xview/data_xview/')
 
     parser.add_argument("--syn_data_dir", type=str, help="to syn data list files",
                         #default='/media/lab/Yang/code/yolov3/data_xview/{}_{}_cls/')
@@ -257,7 +273,7 @@ def get_args():
     parser.add_argument("--streets", type=str, default="[200, 200, 200, 200, 200, 250, 130]",
                         help="the  #streets of synthetic  cities ")
     args = parser.parse_args()
-    args.data_xview_dir = args.data_xview_dir.format(args.class_num)
+    #args.data_xview_dir = args.data_xview_dir.format(args.class_num)
     return args
 
 
@@ -289,6 +305,9 @@ if __name__ == '__main__':
     'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.09_color_bias15_RC3_v51',
     'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_promu_size_bias0.09_RC4_v43',
     'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.03_color_bias0_RC5_v50']
-
+    
+    model_ids = [4, 1, 5, 5, 5] #4, 1, 5, 5, 5
+    rare_classes = [1, 2, 3, 4, 5] # 1, 2, 3, 4, 5
+    
     for cmt in comments:
         create_data_each_syn_rc_xview_rc(cmt)

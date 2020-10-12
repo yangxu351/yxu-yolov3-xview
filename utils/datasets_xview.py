@@ -277,7 +277,7 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
         with open(label_path, 'r') as f:
             self.lbl_files = [x.replace('/', os.sep) for x in f.read().splitlines()  # os-agnostic
                               if os.path.splitext(x)[-1].lower() in lbl_formats]
-
+        #print('label_path', label_path)
         self.label_files = self.lbl_files
         n = len(self.img_files)
         # print('self.img_files', self.img_files)
@@ -315,9 +315,10 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
             s = np.array(s, dtype=np.float64)
             ar = s[:, 1] / s[:, 0]  # aspect ratio
             i = ar.argsort()
+            #print('label_files', self.lbl_files)
             self.img_files = [self.img_files[i] for i in i]
             self.label_files = [self.lbl_files[i] for i in i]
-            # print('label_files', self.label_files)
+            
             self.shapes = s[i]
             ar = ar[i]
 

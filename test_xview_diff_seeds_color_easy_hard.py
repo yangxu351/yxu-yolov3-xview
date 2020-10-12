@@ -416,6 +416,9 @@ def main():
     # hyp_cmt = "hgiou1_1gpu"
 
     hyp_cmt = "hgiou1_1gpu_val_syn"
+#    hyp_cmt = "hgiou1_1gpu_square_val_syn"    
+#    hyp_cmt = "hgiou1_1gpu_square_hsv_point25_val_syn"    
+#    hyp_cmt = "hgiou1_1gpu_hsv_point25_val_syn"
 #    hyp_cmt = "hgiou1_1gpu_half_hsv_val_syn"
 #    hyp_cmt = "hgiou1_1gpu_point1_hsv_val_syn"
 #    hyp_cmt = "hgiou1_1gpu_square_val_syn"
@@ -441,7 +444,7 @@ def main():
             VN = vx[1:]
             base_cmt = base_cmt.format(sd)
             opt = get_opt(comments=cmt)
-            opt.device = "2"
+            opt.device = "1"
             opt.apN = apN
 
             cinx = cmt.find('_RC') # first letter index
@@ -486,7 +489,7 @@ def main():
 
             ############# model with different seeds
             opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_ori_nrcbkg_aug_rc_{}_m{}_rc{}_{}_iou{}_seed{}'.format(hyp_cmt, opt.model_id, opt.rare_class, opt.type, apN, seed))
-            opt.data = 'data_xview/{}_cls/{}/xview_ori_nrcbkg_aug_rc_test_{}_m{}_rc{}_{}.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id, opt.rare_class, opt.type)
+            opt.data = 'data_xview/{}_cls/{}/RC/xview_ori_nrcbkg_aug_rc_test_{}_m{}_rc{}_{}.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id, opt.rare_class, opt.type)
 
             if not os.path.exists(opt.result_dir):
                 os.makedirs(opt.result_dir)
@@ -584,6 +587,7 @@ def compute_avg_all_seeds(seeds):
     eht = 'easy'
     apN = 50
     hyp_cmt = "hgiou1_1gpu_val_syn"
+#    hyp_cmt = "hgiou1_1gpu_square_val_syn"
 #    hyp_cmt = "hgiou1_1gpu_half_hsv_val_syn"
 #    hyp_cmt = "hgiou1_1gpu_point1_hsv_val_syn"
 
@@ -772,49 +776,55 @@ if __name__ == "__main__":
 #        comments.append(cmt)
 
     ###########################################    
-#    comments = []
-#    base_version = 1
+    comments = []
+    base_version = 1
 ##    color_sigma = [5, 10, 15, 20]
-#    color_sigma = [0] # 0, 15, 30, 45, 60
-#    for ix,ssig in enumerate(color_sigma):
+#    color_sigma = [0, 15, 30, 45, 60] # 0, 15, 30, 45, 60
+    color_sigma = [0, 10, 20, 30, 40]
+#    color_sigma = [0]
+    for ix,ssig in enumerate(color_sigma):
 
 #        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_ssig0_color_bias{}_RC1_v{}'.format(ssig, ix+50)
+#        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_ssig0_color_square_bias{}_RC1_v{}'.format(ssig, ix+91)
 #        px_thres = 15
         
 #        cmt = 'syn_xview_bkg_px23whr3_xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_ssig0.12_bxmuller_color_bias{}_RC2_v{}'.format(ssig, ix+11)
 #        cmt = 'syn_xview_bkg_px23whr3_xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_ssig0_color_bias{}_RC2_v{}'.format(ssig, ix+50)
+#        cmt = 'syn_xview_bkg_px23whr3_xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_ssig0_color_square_bias{}_RC2_v{}'.format(ssig, ix+91)
 #        px_thres = 23
         
 #        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0_bxmuller_color_bias{}_RC3_v{}'.format(ssig, ix+11)
 #        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.09_color_bias{}_RC3_v{}'.format(ssig, ix+50)
 #        px_thres = 23
-#        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.09_color_bias{}_RC3_v{}'.format(ssig, ix+50)
+#        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.09_color_square_bias{}_RC3_v{}'.format(ssig, ix+91)
 #        px_thres = 23        
 #        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.09_bxmuller_color_bias{}_RC4_v{}'.format(ssig, ix+11)
 #        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.09_color_bias{}_RC4_v{}'.format(ssig, ix+50)
 #        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.09_color_square_bias{}_RC4_v{}'.format(ssig, ix+71)
-#        px_thres = 23
+        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.03_color_square_bias{}_RC4_v{}'.format(ssig, ix+95)
+        px_thres = 23
         
 #        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.06_bxmuller_color_bias{}_RC5_v{}'.format(ssig, ix+11)
 #        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.03_color_bias{}_RC5_v{}'.format(ssig, ix+50)
+#        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0_color_square_bias{}_RC5_v{}'.format(ssig, ix+91)
 #        px_thres = 23
 
-#        comments.append(cmt)
+        comments.append(cmt)
 
 #    comments = ['syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_ssig0_texture_RC1_v80',
 #                'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.09_texture_RC4_v80',
 #                'syn_xview_bkg_px23whr3_xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_ssig0_texture_RC2_v80']
     
-    comments = [#'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_promu_size_bias0_RC1_v40',
+#    comments = [#'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_promu_size_bias0_RC1_v40',
 #    'syn_xview_bkg_px23whr3_xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_ssig0_color_bias0_RC2_v50',
 #    'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.09_color_bias15_RC3_v51',
 #    'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_promu_size_bias0.09_RC4_v43',
 #    'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.03_color_bias0_RC5_v50']
 
-    seed_list = [0, 1, 2]# 0, 1, 2
+    seed_list = [ 0, 1, 2]# 0, 1, 2
     for seed in seed_list:
       main()  
        
-    seeds = [0, 1, 2] #, 2
+    seeds = [0, 1, 2] #, 0, 1, 2
     compute_avg_all_seeds(seeds)
 

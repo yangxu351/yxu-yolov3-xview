@@ -413,7 +413,7 @@ def get_opt(dt=None, sr=None, comments=''):
 
 
 
-def main():
+def main(seed):
 
     base_cmt = "px23whr3_seed{}"
     # hyp_cmt = "hgiou1_1gpu"
@@ -426,10 +426,6 @@ def main():
 ##    apN = 40
 ##    apN = 50
     prefix = 'syn'
-#    prefix = "syn_iou{}".format(apN)
-#    prefix = "syn_backup100"
-#    prefix = "syn_backup200"
-#    prefix = "syn_px30"
 
     px_thres = 23
     whr_thres = 3 # 4
@@ -482,6 +478,12 @@ def main():
             opt.rare_class = int(cmt[cinx+3])
             opt.model_id = model_ids[rare_classes.index(opt.rare_class)]
             print("opt.model_id", opt.model_id, 'opt.rare_class ', opt.rare_class)
+            #fixme--yang.xu
+#            if ix == 2 and seed == 0:
+#                seed = 3
+#                print('seed', seed)
+#            elif ix > 2 and seed == 3 :
+#                seed = 0
             
             opt.conf_thres = 0.01
             tif_name = "xview"
@@ -501,7 +503,7 @@ def main():
 
             ############# model with different seeds
             opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_ori_nrcbkg_aug_rc_{}_m{}_rc{}_{}_iou{}_seed{}'.format(hyp_cmt, opt.model_id, opt.rare_class, opt.type, apN, seed))
-            opt.data = 'data_xview/{}_cls/{}/xview_ori_nrcbkg_aug_rc_test_{}_m{}_rc{}_{}.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id, opt.rare_class, opt.type)
+            opt.data = 'data_xview/{}_cls/{}/RC/xview_ori_nrcbkg_aug_rc_test_{}_m{}_rc{}_{}.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id, opt.rare_class, opt.type)
 
             if not os.path.exists(opt.result_dir):
                 os.makedirs(opt.result_dir)
@@ -593,7 +595,7 @@ def computer_avg_all_seeds(seeds):
     rare_classes = [1, 2, 3, 4, 5]
     eht = 'easy'
     apN = 50
-    for cmt in comments:
+    for ix, cmt in enumerate(comments):
         cinx = cmt.find('_RC')
         rare_class = int(cmt[cinx+3])
         model_id = model_ids[rare_classes.index(rare_class)]
@@ -614,7 +616,10 @@ def computer_avg_all_seeds(seeds):
 #                csv_name =  "{}_{}_RC{}_{}-{}.xlsx".format(prefix, dynstr, rare_class, eht, vx)
 #            else:
 #                csv_name =  "{}_{}_RC{}_{}-seed{}.xlsx".format(prefix, dynstr, rare_class, eht, seed)
-
+#            if ix == 2 and seed == 0:
+#                seed = 3
+#            elif ix > 2 and seed == 3:
+#                seed = 0
             csv_name =  "{}_{}_RC{}_{}-seed{}.xlsx".format(prefix, dynstr, rare_class, eht, seed)
             # "AP{}".format(apN), "Pd(FAR=0.25)",  "Pd(FAR=0.5)", "Pd(FAR=1)"
             df = pd.read_excel(os.path.join(csv_dir, csv_name))
@@ -670,36 +675,41 @@ if __name__ == "__main__":
 
     comments = []
     base_version = 1
-    size_sigma = [0, 0.03, 0.06, 0.09, 0.12]
+    size_sigma = [0, 0.03, 0.06, 0.09, 0.12] # 0, 0.03, 0.06, 0.09, 0.12
     for ix,ssig in enumerate(size_sigma):
 #        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_bxmuller_promu_size_bias{}_RC1_v{}'.format(ssig, ix+21)
-#         cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_promu_size_bias{}_RC1_v{}'.format(ssig, ix+40)
-#         px_thres = 15
-#         comments.append(cmt) 
+#        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_promu_size_bias{}_RC1_v{}'.format(ssig, ix+40)
+#        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_promu_size_square_bias{}_RC1_v{}'.format(ssig, ix+100)
+#        px_thres = 15
+#        comments.append(cmt) 
 
 #        cmt = 'syn_xview_bkg_px23whr3_xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_bxmuller_promu_size_bias{}_RC2_v{}'.format(ssig, ix+21)
 #        cmt = 'syn_xview_bkg_px23whr3_xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_promu_size_bias{}_RC2_v{}'.format(ssig, ix+40)
+#        cmt = 'syn_xview_bkg_px23whr3_xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_promu_size_square_bias{}_RC2_v{}'.format(ssig, ix+100)
 #        px_thres = 23
 #        comments.append(cmt)
 
 #        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_bxmuller_promu_size_bias{}_RC3_v{}'.format(ssig, ix+21)
 #        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_promu_size_bias{}_RC3_v{}'.format(ssig, ix+40)
+#        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_promu_size_square_bias{}_RC3_v{}'.format(ssig, ix+100)
 #        px_thres = 23
 #        comments.append(cmt)
 
 #        cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_bxmuller_promu_size_bias{}_RC4_v{}'.format(ssig, ix+21)
-#        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_promu_size_bias{}_RC4_v{}'.format(ssig, ix+40)
+#        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_promu_size_bias{}_RC4_v{}'.format(ssig, ix+43)
+#        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_promu_size_square_bias{}_RC4_v{}'.format(ssig, ix+100)
 #        px_thres = 23
 #        comments.append(cmt)
 
 #        cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_bxmuller_promu_size_bias{}_RC5_v{}'.format(ssig, ix+21)
-        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_promu_size_bias{}_RC5_v{}'.format(ssig, ix+40)
+#        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_promu_size_bias{}_RC5_v{}'.format(ssig, ix+40)
+        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_promu_size_square_bias{}_RC5_v{}'.format(ssig, ix+100)
         px_thres = 23
         comments.append(cmt)  
     
-    seed_list = [0, 1, 2] # [1, 2]
+    seed_list = [0, 1, 2] # [1, 2] , 3, 4
     for seed in seed_list:
-      main()   
+      main(seed)   
       
-    seeds = [0, 1, 2]  
+    seeds = [0, 1, 2]  # , 3, 4
     computer_avg_all_seeds(seeds)

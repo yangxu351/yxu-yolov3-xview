@@ -323,17 +323,27 @@ if __name__ == '__main__':
     bbox annotation meet certain conditions: px_thres, whr_thres
     '''
 
-#    size_sigma = [0, 0.03, 0.06, 0.09, 0.12] # 0,
+#    size_sigma = [0, 0.03, 0.06, 0.09, 0.12] # 0, 0.03, 0.06, 0.09, 0.12
 #    for ix,ssig in enumerate(size_sigma):
-##        cmt = 'xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_promu_size_bias{}_RC1_v{}'.format(ssig, ix+40) 
-##        px_thres = 15
-##        cmt = 'xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_promu_size_bias{}_RC2_v{}'.format(ssig, ix+40)
-##        px_thres = 23
-##        cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_promu_size_bias{}_RC3_v{}'.format(ssig, ix+40)
-##        px_thres = 23
-##        cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_promu_size_bias{}_RC4_v{}'.format(ssig, ix+40)
-##        px_thres = 23
+#        cmt = 'xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_promu_size_bias{}_RC1_v{}'.format(ssig, ix+40) 
+#        px_thres = 15
+#        cmt = 'xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_promu_size_square_bias{}_RC1_v{}'.format(ssig, ix+100) 
+#        px_thres = 15
+#        cmt = 'xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_promu_size_bias{}_RC2_v{}'.format(ssig, ix+40)
+#        px_thres = 23
+#        cmt = 'xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_promu_size_square_bias{}_RC2_v{}'.format(ssig, ix+100)
+#        px_thres = 23
+#        cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_promu_size_bias{}_RC3_v{}'.format(ssig, ix+40)
+#        px_thres = 23
+#        cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_promu_size_square_bias{}_RC3_v{}'.format(ssig, ix+100)
+#        px_thres = 23
+#        cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_promu_size_bias{}_RC4_v{}'.format(ssig, ix+40)
+#        px_thres = 23
+#        cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_promu_size_square_bias{}_RC4_v{}'.format(ssig, ix+100)
+#        px_thres = 23
 #        cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_promu_size_bias{}_RC5_v{}'.format(ssig, ix+40)
+#        px_thres = 23
+#        cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_promu_size_square_bias{}_RC5_v{}'.format(ssig, ix+100)
 #        px_thres = 23
 
 #    color_sigma = [5, 10, 15, 20] # 0, 
@@ -350,17 +360,37 @@ if __name__ == '__main__':
 ##        cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.03_color_bias{}_RC5_v{}'.format(ssig, ix+31)
 ##        px_thres = 23
 
-    color_sigma = [0] # 0, 15, 30, 45, 60
-    for ix,ssig in enumerate(color_sigma):
+#    color_sigma = [0] # 0, 15, 30, 45, 60
+#    for ix,ssig in enumerate(color_sigma):
 #        cmt = 'xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_ssig0_color_bias{}_RC1_v{}'.format(ssig, ix+51)
 #        px_thres = 15 
 #        cmt = 'xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_ssig0_color_bias{}_RC2_v{}'.format(ssig, ix+50)
 #        px_thres = 23
-        cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.09_color_bias{}_RC3_v{}'.format(ssig, ix+50)
-        px_thres = 23
+#        cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.09_color_bias{}_RC3_v{}'.format(ssig, ix+50)
+#        px_thres = 23
 #        cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.09_color_bias{}_RC4_v{}'.format(ssig, ix+50)
 #        px_thres = 23
 #        cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.03_color_bias{}_RC5_v{}'.format(ssig, ix+50)
+#        px_thres = 23
+    
+#    color_sigma = [10, 20, 30, 40] # 10, 20, 30, 40
+    color_sigma = [0]
+    for ix,ssig in enumerate(color_sigma):
+#        cmt = 'xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_ssig0_color_square_bias{}_RC1_v{}'.format(ssig, ix+91)
+#        px_thres = 15 
+
+#        cmt = 'xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_ssig0_color_square_bias{}_RC2_v{}'.format(ssig, ix+91)
+#        px_thres = 23
+
+#        cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.09_color_square_bias{}_RC3_v{}'.format(ssig, ix+91)
+#        cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.09_color_square_bias{}_RC3_v{}'.format(ssig, ix+91)
+#        px_thres = 23
+
+#        cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.09_color_square_bias{}_RC4_v{}'.format(ssig, ix+91)
+        cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.03_color_square_bias{}_RC4_v{}'.format(ssig, ix+95)
+        px_thres = 23
+        
+#        cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0_color_square_bias{}_RC5_v{}'.format(ssig, ix+91)
 #        px_thres = 23
 
         whr_thres = 3

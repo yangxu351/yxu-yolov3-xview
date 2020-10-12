@@ -119,7 +119,7 @@ def get_part_syn_args():
 
 
 def check_prd_gt_iou_xview_syn(data_file, model_id, rare_class, cmt, prefix, res_folder, base_pxwhrs='px23whr3_seed17', hyp_cmt = 'hgiou1_1gpu', seed=17, iou_thres=0.5):
-    xview_dir = os.path.join(syn_args.data_xview_dir, base_pxwhrs)
+    xview_dir = os.path.join(syn_args.data_xview_dir, base_pxwhrs, 'RC')
     print('xview_dir', xview_dir)
     data = parse_data_cfg(os.path.join(xview_dir, data_file))
     # fixme--yang.xu
@@ -261,8 +261,16 @@ if __name__ == "__main__":
 #    model_id = 5
 #    rare_class = 5
 #    comments = ['syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_bxmuller_size_bias0.12_RC4_v5']
-#    model_id = 5
-#    rare_class = 4   
+#    comments = ['syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_promu_size_bias0.09_RC4_v43']
+#    sd = 'seed1' 
+#    comments = ['syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.09_color_bias0_RC4_v50']
+#    comments = ['syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.03_color_square_bias30_RC4_v98']
+    comments = ['syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_promu_size_square_bias0.12_RC4_v104']
+    
+    sd = 'seed0'
+    model_id = 5
+    rare_class = 4  
+     
 #    comments = ['syn_xview_bkg_px23whr3_xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_ssig0.03_bxmuller_color_bias0_RC2_v31']
 #    model_id = 1
 #    rare_class = 2 
@@ -271,10 +279,10 @@ if __name__ == "__main__":
 #    model_id = 5
 #    rare_class = 3
 #    sd ='seed0' 
-    comments = ['syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_ssig0.03_bxmuller_color_bias20_RC1_v15']
-    model_id = 4
-    rare_class = 1
-    sd ='seed2'
+#    comments = ['syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_ssig0.03_bxmuller_color_bias20_RC1_v15']
+#    model_id = 4
+#    rare_class = 1
+#    sd ='seed2'
     
     apN = 50
     prefix = 'results_syn_iou{}'.format(apN)

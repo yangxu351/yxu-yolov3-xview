@@ -559,7 +559,7 @@ if __name__ == '__main__':
             opt.data = 'data_xview/{}_{}_cls/{}_seed{}/{}_seed{}_xview_val.data'.format(cmt, opt.class_num, cmt, opt.dataseed, cmt, opt.dataseed)
 
         #time_marker = time.strftime('%Y-%m-%d_%H.%M', time.localtime())
-        time_marker = '2020-09-18_03.51'
+        time_marker = '2020-10-09_06.28'
         opt.weights_dir = 'weights/{}_cls/{}_seed{}/{}/'.format(opt.class_num, cmt, opt.dataseed, '{}_{}_seed{}'.format(time_marker, hyp_cmt_name, opt.seed))
         opt.writer_dir = 'writer_output/{}_cls/{}_seed{}/{}/'.format(opt.class_num, cmt, opt.dataseed, '{}_{}_seed{}'.format(time_marker, hyp_cmt_name, opt.seed))
         opt.result_dir = 'result_output/{}_cls/{}_seed{}/{}/'.format(opt.class_num, cmt, opt.dataseed, '{}_{}_seed{}'.format(time_marker, hyp_cmt_name, opt.seed))
