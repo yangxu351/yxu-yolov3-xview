@@ -483,7 +483,7 @@ def get_opt():
     parser.add_argument('--multi_scale', action='store_true', help='adjust (67% - 150%) img_size every 10 batches')
     parser.add_argument('--accumulate', type=int, default=4, help='batches to accumulate before optimizing')
     parser.add_argument('--rect', default=False, action='store_true', help='rectangular training')
-    parser.add_argument('--resume', default=False, action='store_true', help='resume training from last.pt')
+    parser.add_argument('--resume', default=True, action='store_true', help='resume training from last.pt')
     parser.add_argument('--nosave', action='store_true', help='only save final checkpoint')
     parser.add_argument('--notest', action='store_true', help='only test final epoch')
     parser.add_argument('--evolve', action='store_true', help='evolve hyperparameters')
@@ -533,7 +533,9 @@ if __name__ == '__main__':
     
             opt.base_dir = opt.base_dir.format(opt.class_num, pxwhrsd)
     
-            time_marker = time.strftime('%Y-%m-%d_%H.%M', time.localtime())
+            #time_marker = time.strftime('%Y-%m-%d_%H.%M', time.localtime())
+            #time_marker = '2020-10-01_16.54'
+            time_marker = '2020-10-01_16.57'
             opt.weights_dir = 'weights/{}_cls/{}/{}/'.format(opt.class_num, pxwhrsd, '{}_{}_seed{}'.format(time_marker, hyp_cmt, opt.yoloseed))
             opt.writer_dir = 'writer_output/{}_cls/{}/{}/'.format(opt.class_num, pxwhrsd, '{}_{}_seed{}'.format(time_marker, hyp_cmt, opt.yoloseed))
             opt.result_dir = 'result_output/{}_cls/{}/{}/'.format(opt.class_num, pxwhrsd, '{}_{}_seed{}'.format(time_marker, hyp_cmt, opt.yoloseed))

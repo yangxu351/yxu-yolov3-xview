@@ -416,14 +416,14 @@ def collect_all_rc_of_the_same_ratio():
     sd = 17
     base_cmt = "px23whr3_seed{}".format(sd)
     all_rcs = [1,2,3,4,5]
-    rc_size = 3
+    rc_size = 5
     df_all = pd.DataFrame(columns=["RC", "Seen", "NT", "AP{}".format(apN), "Pd(FAR=0.25)",  "Pd(FAR=0.5)", "Pd(FAR=1)"])
     for rc in all_rcs:
         # hyp_cmt = "hgiou1_29.5obj_rc{}x{}".format(rcs, opt.batch_size-rcs)
         rc_ratio = 'rc{}x{}'.format(rc_size, opt.batch_size-rc_size)
         #rc_ratio = 'rc{}syn{}'.format(rc_size, opt.batch_size-rc_size)
         hyp_cmt = "hgiou1_29.5obj_{}_rcls{}".format(rc_ratio, rc)
-        csv_dir = "result_output/{}_cls/{}/xview_only/{}/".format(opt.class_num, base_cmt, "test_on_xview_ori_nrcbkg_aug_rc_{}_ap{}".format(hyp_cmt[:hyp_cmt.rfind('rcls')+4], apN))
+        csv_dir = "result_output/{}_cls/{}/{}/".format(opt.class_num, base_cmt, "test_on_xview_ori_nrcbkg_aug_rc_{}_ap{}".format(hyp_cmt[:hyp_cmt.rfind('rcls')+4], apN))
         csv_name =  "xview_RC_AP50_easy_seed0.xls"
         df = pd.read_excel(os.path.join(csv_dir, csv_name))
         df_all = df_all.append(df.loc[0, :])
@@ -481,82 +481,6 @@ if __name__ == "__main__":
     test for syn_xveiw_background_*_with_model
     '''
 
-    comments = []
-    ################ dynmu color
-    '''RC1'''
-#    pros = [-2.5, -1.5, -0.5, 0.5, 1.5, 2.5]
-#    base_version = 50
-#    for ix, pro in enumerate(pros):
-#        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias{}_RC1_v{}_color'.format(pro, ix+ base_version)
-#        comments.append(cmt)
-
-    '''RC2'''    ####unfinished
-#    pros = [0.5, -0.5, -1.5, -2.5, -3.5, -4.5]
-#    base_version = 30
-#    for ix, pro in enumerate(pros):
-#        cmt = 'syn_xview_bkg_px23whr3_xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias{}_RC2_v{}_color'.format(pro, ix+ base_version)
-#        comments.append(cmt)
-
-    '''RC3'''
-#    pros = [0.5, -0.5, -1.5, -2.5, -3.5, -4.5]
-#    base_version = 30
-#    for ix, pro in enumerate(pros):
-#        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias{}_RC3_v{}_color'.format(pro, ix+ base_version)
-#        comments.append(cmt)
-
-#    '''RC4'''
-#    pros = [-1.5, -0.5, 0.5, 1.5, 2.5, 3.5]
-#    base_version = 30
-#    for ix, pro in enumerate(pros):
-#        cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias{}_RC4_v{}_color'.format(pro, ix+ base_version)
-#        comments.append(cmt)
-
-#    '''RC5'''
-#    pros = [-2.5, -1.5, -0.5, 0.5, 1.5, 2.5]
-#    base_version = 20
-#    for ix, pro in enumerate(pros):
-#        cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias{}_RC5_v{}_color'.format(pro, ix+ base_version)
-#        comments.append(cmt)
-
-    ###########################################
-
-    ################ dynsigma color
-
-    '''RC1'''
-#    pros = [0, 0.2, 0.4, 0.6, 0.8]
-#    base_version = 60
-#    for ix, pro in enumerate(pros):
-#        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_dynsigma_color_bias{}_RC1_v{}_color'.format(pro, ix+ base_version)
-#        comments.append(cmt)
-
-    '''RC2'''
-#    pros = [0, 0.2, 0.4, 0.6, 0.8]
-#    base_version =40
-#    for ix, pro in enumerate(pros):
-#        cmt = 'syn_xview_bkg_px23whr3_xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_dynsigma_color_bias{}_RC2_v{}_color'.format(pro, ix+ base_version)
-#        comments.append(cmt)
-
-    '''RC3'''
-#    pros = [0, 0.2, 0.4, 0.6, 0.8]
-#    base_version = 40
-#    for ix, pro in enumerate(pros):
-#        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynsigma_color_bias{}_RC3_v{}_color'.format(pro, ix+ base_version)
-#        comments.append(cmt)
-#
-#    '''RC4''' # unfinished 0.4, 0.6, 0.8
-#     pros = [0, 0.2, 0.4, 0.6, 0.8]
-#     base_version = 40
-#     for ix, pro in enumerate(pros):
-#         cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynsigma_color_bias{}_RC4_v{}_color'.format(pro, ix+ base_version)
-#         comments.append(cmt)
-
-#    '''RC5'''
-#    pros = [0, 0.2, 0.4, 0.6, 0.8]
-#    base_version = 30
-#    for ix, pro in enumerate(pros):
-#        cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynsigma_color_bias{}_RC5_v{}_color'.format(pro, ix+ base_version)
-#        comments.append(cmt)
-
     ###########################################
     '''
     xview
@@ -565,13 +489,7 @@ if __name__ == "__main__":
 
 
     base_cmt = "px23whr3_seed{}"
-    # hyp_cmt = "hgiou1_1gpu"
-    # hyp_cmt = "hgiou1_1gpu_val_syn"
-    # hyp_cmt = "hgiou1_x6rc2"
-    # hyp_cmt = "hgiou1_x5rc3"
-    # hyp_cmt = "hgiou1_x4rc4"
-    # hyp_cmt = "hgiou1_x3rc5"
-    # hyp_cmt = "hgiou1_x2rc6"
+
 
     apN = 50
     prefix = 'xview'
@@ -581,8 +499,8 @@ if __name__ == "__main__":
     sd = 17
     model_ids = [4, 1, 5, 5, 5] #4, 1, 5, 5, 5
     rare_classes = [1, 2, 3, 4, 5] # 1, 2, 3, 4, 5
-    far_thres = 3
-    rc_ratios = [6]  # 1, 2,3,4,5,6
+    far_thres =  3
+    rc_ratios = [5]  # 1, 2,3,4,5,6
     seeds = [0]# , 1, 2
     typ = "easy" # "hard",
     for rcs in rc_ratios:
@@ -591,9 +509,8 @@ if __name__ == "__main__":
             for ix, rare_id in enumerate(rare_classes):
                 base_cmt = base_cmt.format(sd)
                 opt = get_opt(comments=cmt)
-                opt.device = "1"
-                # hyp_cmt = "hgiou1_29.5obj_rc{}x{}".format(rcs, opt.batch_size-rcs)
-                hyp_cmt = "hgiou1_29.5obj_rc{}x{}_rcls{}".format(rcs, opt.batch_size-rcs, rare_id)
+                opt.device = "2"
+                hyp_cmt = "hgiou1_29.5obj_rc{}syn{}_rcls{}".format(rcs, opt.batch_size-rcs, rare_id)
                 opt.rare_class = rare_id
                 opt.model_id = model_ids[ix]
 
@@ -629,16 +546,16 @@ if __name__ == "__main__":
     #            opt.data = "data_xview/{}_cls/{}/xviewtest_{}_m{}_rc{}_{}.data".format(opt.class_num, base_cmt, base_cmt, opt.model_id, opt.rare_class, opt.type)
     #             opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, "test_on_xview_{}_m{}_rc{}_ap{}_{}".format(hyp_cmt, opt.model_id, opt.rare_class, apN, opt.type))
     #             opt.data = "data_xview/{}_cls/{}/xview_rc_test_{}_m{}_rc{}_{}.data".format(opt.class_num, base_cmt, base_cmt, opt.model_id, opt.rare_class, opt.type)
-                opt.result_dir = os.path.join(opt.result_dir.format(opt.class_num, cmt, sd), 'xview_only', 
+                opt.result_dir = os.path.join(opt.result_dir.format(opt.class_num, cmt, sd), 
                       'test_on_xview_ori_nrcbkg_aug_rc_{}_{}_iou{}_seed{}'.format(hyp_cmt, opt.type, apN, seed))
                 print('opt.result_dir', opt.result_dir)
                 opt.data = 'data_xview/{}_cls/{}/RC/xview_ori_nrcbkg_aug_rc_test_{}_m{}_rc{}_{}.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id, opt.rare_class, opt.type)
 
                 if not os.path.exists(opt.result_dir):
                     os.makedirs(opt.result_dir)
-                #print(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd), 'xview_only', "*_{}_seed{}".format(hyp_cmt, seed), "best_seed{}.pt".format(seed)))
-                #print(glob.glob(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd), 'xview_only', "*_{}_seed{}".format(hyp_cmt, seed), "best_seed{}.pt".format(seed))))
-                all_weights = glob.glob(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd), 'xview_only', "*_{}_seed{}".format(hyp_cmt, seed), "best_*seed{}.pt".format(seed)))
+                #print(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd), "*_{}_seed{}".format(hyp_cmt, seed), "best_seed{}.pt".format(seed)))
+                #print(glob.glob(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd),  "*_{}_seed{}".format(hyp_cmt, seed), "best_seed{}.pt".format(seed))))
+                all_weights = glob.glob(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd), "*_{}_seed{}".format(hyp_cmt, seed), "best_*seed{}.pt".format(seed)))
                 all_weights.sort()
                 opt.weights = all_weights[-1]
 
@@ -700,7 +617,7 @@ if __name__ == "__main__":
 
             csv_name =  "{}_RC_AP{}_{}_seed{}.xls".format(tif_name, apN, opt.type, seed)
 #            # csv_dir = "result_output/{}_cls/{}/".format(opt.class_num, cmt[:cmt.find("bias")+4] + '_RC' + str(opt.rare_class))
-            csv_dir = "result_output/{}_cls/{}/xview_only/{}/".format(opt.class_num, base_cmt, "test_on_xview_ori_nrcbkg_aug_rc_{}_ap{}".format(hyp_cmt[:hyp_cmt.rfind('rcls')+4], apN))
+            csv_dir = "result_output/{}_cls/{}/{}/".format(opt.class_num, base_cmt, "test_on_xview_ori_nrcbkg_aug_rc_{}_ap{}".format(hyp_cmt[:hyp_cmt.rfind('rcls')+4], apN))
             if not os.path.exists(csv_dir):
                 os.makedirs(csv_dir)
             mode = 'w'

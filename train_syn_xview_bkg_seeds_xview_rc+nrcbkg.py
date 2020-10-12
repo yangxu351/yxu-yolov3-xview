@@ -311,9 +311,9 @@ def train(opt):
                     imgs = F.interpolate(imgs, size=ns, mode='bilinear', align_corners=False)
 
             # Plot images with bounding boxes
-            if ni <= 2:# == 0:
+            if ni <= 1:# == 0:
                 if opt.rare_class:
-                    fname = 'trn_patch_images/train_batch_rc%gx%g_rc%g_x_%g.jpg' % (opt.rc_batch_size, opt.batch_size-opt.rc_batch_size, opt.rare_class, i)
+                    fname = 'trn_patch_images/train_batch_rc%gx%g_rcls%g_%g.jpg' % (opt.rc_batch_size, opt.batch_size-opt.rc_batch_size, opt.rare_class, i)
                 else:
                     fname = 'trn_patch_images/train_batch%g.jpg' % i
                 # print(imgs.shape, targets.shape, len(paths))
@@ -511,7 +511,7 @@ if __name__ == '__main__':
     opt.epochs = cfg_dict['epochs']
     opt.batch_size = cfg_dict['batch_size']
     rbs_list = cfg_dict['rc_batch_size_list']
-    opt.rare_class = cfg_dict['rare_class']
+    rare_class_list = cfg_dict['rare_class_list']
     opt.image_size = cfg_dict['image_size']
     opt.class_num = cfg_dict['class_num']
     opt.apN = cfg_dict['apN']
@@ -520,83 +520,85 @@ if __name__ == '__main__':
     prefix = cfg_dict['prefix']
 
     pxwhrsd = cfg_dict['pxwhrsd'].format(opt.seed)
-    hyp_cmt = cfg_dict['hyp_cmt']
+    hypstr = cfg_dict['hyp_cmt']
     hyp = cfg_dict['hyp']
     # opt.data = 'data_xview/{}_cls/{}/xview_rc_nrcbkg_{}.data'.format(opt.class_num, pxwhrsd, pxwhrsd)
     # opt.data = 'data_xview/{}_cls/{}/xview_ori_nrcbkg_{}.data'.format(opt.class_num, pxwhrsd, pxwhrsd)
-    opt.data = 'data_xview/{}_cls/{}/xview_ori_nrcbkg_aug_rc{}_{}.data'.format(opt.class_num, pxwhrsd, opt.rare_class, pxwhrsd)
-    for rbs in rbs_list:
-        opt.rc_batch_size = rbs
-        hyp_cmt = hyp_cmt.format(opt.rc_batch_size, opt.batch_size - opt.rc_batch_size, opt.rare_class)
-
-        opt.name = prefix
-
-        opt.base_dir = opt.base_dir.format(opt.class_num, pxwhrsd)
-
-        time_marker = time.strftime('%Y-%m-%d_%H.%M', time.localtime())
-        opt.weights_dir = 'weights/{}_cls/{}/{}/'.format(opt.class_num, pxwhrsd, '{}_{}_seed{}'.format(time_marker, hyp_cmt, opt.yoloseed))
-        opt.writer_dir = 'writer_output/{}_cls/{}/{}/'.format(opt.class_num, pxwhrsd, '{}_{}_seed{}'.format(time_marker, hyp_cmt, opt.yoloseed))
-        opt.result_dir = 'result_output/{}_cls/{}/{}/'.format(opt.class_num, pxwhrsd, '{}_{}_seed{}'.format(time_marker, hyp_cmt, opt.yoloseed))
-
-        if not os.path.exists(opt.weights_dir):
-            os.makedirs(opt.weights_dir)
-
-        if not os.path.exists(opt.writer_dir):
-            os.makedirs(opt.writer_dir)
-
-        if not os.path.exists(opt.result_dir):
-            os.makedirs(opt.result_dir)
-        results_file = os.path.join(opt.result_dir, 'results_seed{}.txt'.format(opt.yoloseed))
-        last = os.path.join(opt.weights_dir, 'last_seed{}.pt'.format(opt.yoloseed))
-        best = os.path.join(opt.weights_dir, 'best_seed{}.pt'.format(opt.yoloseed))
-        opt.weights = last if opt.resume else opt.weights
-        print(opt)
-
-        if not opt.evolve:  # Train normally
-            # prebias()  # optional
-            train(opt)  # train normally
-            # exit(0)
-            # plot_results(result_dir=opt.result_dir, png_name='results_{}_{}.png'.format(opt.syn_display_type, opt.syn_ratio))
-        else:  # Evolve hyperparameters (optional)
-            opt.notest = True  # only test final epoch
-            opt.nosave = True  # only save final checkpoint
-            if opt.bucket:
-                os.system('gsutil cp gs://%s/evolve.txt .' % opt.bucket)  # download evolve.txt if exists
-
-            for _ in range(1):  # generations to evolve
-                if os.path.exists('evolve.txt'):  # if evolve.txt exists: select best hyps and mutate
-                    # Select parent(s)
-                    x = np.loadtxt('evolve.txt', ndmin=2)
-                    parent = 'weighted'  # parent selection method: 'single' or 'weighted'
-                    if parent == 'single' or len(x) == 1:
-                        x = x[fitness(x).argmax()]
-                    elif parent == 'weighted':  # weighted combination
-                        n = min(10, x.shape[0])  # number to merge
-                        x = x[np.argsort(-fitness(x))][:n]  # top n mutations
-                        w = fitness(x) - fitness(x).min()  # weights
-                        x = (x[:n] * w.reshape(n, 1)).sum(0) / w.sum()  # new parent
-                    for i, k in enumerate(hyp.keys()):
-                        hyp[k] = x[i + 7]
-
-                    # Mutate
-                    np.random.seed(int(time.time()))
-                    s = np.random.random() * 0.15  # sigma
-                    g = [1, 1, 1, 1, 1, 1, 1, 0, .1, 1, 1, 1, 1, 1, 1, 1, 1, 1]  # gains
-                    for i, k in enumerate(hyp.keys()):
-                        x = (np.random.randn() * s * g[i] + 1) ** 2.0  # plt.hist(x.ravel(), 300)
-                        hyp[k] *= float(x)  # vary by sigmas
-
-                # Clip to limits
-                keys = ['lr0', 'iou_t', 'momentum', 'weight_decay', 'hsv_s', 'hsv_v', 'translate', 'scale', 'fl_gamma']
-                limits = [(1e-5, 1e-2), (0.00, 0.70), (0.60, 0.98), (0, 0.001), (0, .9), (0, .9), (0, .9), (0, .9), (0, 3)]
-                for k, v in zip(keys, limits):
-                    hyp[k] = np.clip(hyp[k], v[0], v[1])
-
-                # Train mutation
-                # prebias()
-                results = train()
-
-                # Write mutation results
-                print_mutation(hyp, results, opt.bucket)
+    for rcls in rare_class_list:
+        opt.rare_class = rcls
+        for rbs in rbs_list:
+            opt.rc_batch_size = rbs
+            opt.data = 'data_xview/{}_cls/{}/xview_ori_nrcbkg_aug_rc{}_{}.data'.format(opt.class_num, pxwhrsd, opt.rare_class, pxwhrsd)
+            hyp_cmt = hypstr.format(opt.rc_batch_size, opt.batch_size - opt.rc_batch_size, opt.rare_class)
+    
+            opt.name = prefix
+    
+            opt.base_dir = opt.base_dir.format(opt.class_num, pxwhrsd)
+    
+            time_marker = time.strftime('%Y-%m-%d_%H.%M', time.localtime())
+            opt.weights_dir = 'weights/{}_cls/{}/xview_only/{}/'.format(opt.class_num, pxwhrsd, '{}_{}_seed{}'.format(time_marker, hyp_cmt, opt.yoloseed))
+            opt.writer_dir = 'writer_output/{}_cls/{}/xview_only/{}/'.format(opt.class_num, pxwhrsd, '{}_{}_seed{}'.format(time_marker, hyp_cmt, opt.yoloseed))
+            opt.result_dir = 'result_output/{}_cls/{}/xview_only/{}/'.format(opt.class_num, pxwhrsd, '{}_{}_seed{}'.format(time_marker, hyp_cmt, opt.yoloseed))
+    
+            if not os.path.exists(opt.weights_dir):
+                os.makedirs(opt.weights_dir)
+    
+            if not os.path.exists(opt.writer_dir):
+                os.makedirs(opt.writer_dir)
+    
+            if not os.path.exists(opt.result_dir):
+                os.makedirs(opt.result_dir)
+            results_file = os.path.join(opt.result_dir, 'results_seed{}.txt'.format(opt.yoloseed))
+            last = os.path.join(opt.weights_dir, 'last_seed{}.pt'.format(opt.yoloseed))
+            best = os.path.join(opt.weights_dir, 'best_seed{}.pt'.format(opt.yoloseed))
+            opt.weights = last if opt.resume else opt.weights
+            print(opt)
+    
+            if not opt.evolve:  # Train normally
+                # prebias()  # optional
+                train(opt)  # train normally
+                # exit(0)
+                # plot_results(result_dir=opt.result_dir, png_name='results_{}_{}.png'.format(opt.syn_display_type, opt.syn_ratio))
+            else:  # Evolve hyperparameters (optional)
+                opt.notest = True  # only test final epoch
+                opt.nosave = True  # only save final checkpoint
+                if opt.bucket:
+                    os.system('gsutil cp gs://%s/evolve.txt .' % opt.bucket)  # download evolve.txt if exists
+    
+                for _ in range(1):  # generations to evolve
+                    if os.path.exists('evolve.txt'):  # if evolve.txt exists: select best hyps and mutate
+                        # Select parent(s)
+                        x = np.loadtxt('evolve.txt', ndmin=2)
+                        parent = 'weighted'  # parent selection method: 'single' or 'weighted'
+                        if parent == 'single' or len(x) == 1:
+                            x = x[fitness(x).argmax()]
+                        elif parent == 'weighted':  # weighted combination
+                            n = min(10, x.shape[0])  # number to merge
+                            x = x[np.argsort(-fitness(x))][:n]  # top n mutations
+                            w = fitness(x) - fitness(x).min()  # weights
+                            x = (x[:n] * w.reshape(n, 1)).sum(0) / w.sum()  # new parent
+                        for i, k in enumerate(hyp.keys()):
+                            hyp[k] = x[i + 7]
+    
+                        # Mutate
+                        np.random.seed(int(time.time()))
+                        s = np.random.random() * 0.15  # sigma
+                        g = [1, 1, 1, 1, 1, 1, 1, 0, .1, 1, 1, 1, 1, 1, 1, 1, 1, 1]  # gains
+                        for i, k in enumerate(hyp.keys()):
+                            x = (np.random.randn() * s * g[i] + 1) ** 2.0  # plt.hist(x.ravel(), 300)
+                            hyp[k] *= float(x)  # vary by sigmas
+    
+                    # Clip to limits
+                    keys = ['lr0', 'iou_t', 'momentum', 'weight_decay', 'hsv_s', 'hsv_v', 'translate', 'scale', 'fl_gamma']
+                    limits = [(1e-5, 1e-2), (0.00, 0.70), (0.60, 0.98), (0, 0.001), (0, .9), (0, .9), (0, .9), (0, .9), (0, 3)]
+                    for k, v in zip(keys, limits):
+                        hyp[k] = np.clip(hyp[k], v[0], v[1])
+    
+                    # Train mutation
+                    # prebias()
+                    results = train()
+    
+                    # Write mutation results
+                    print_mutation(hyp, results, opt.bucket)
 
 
