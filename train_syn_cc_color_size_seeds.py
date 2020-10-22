@@ -6,10 +6,10 @@ import torch.distributed as dist
 import torch.optim as optim
 import torch.optim.lr_scheduler as lr_scheduler
 
-# import test_xview_neutral as test
 import test_xview as test  # import test.py to get mAP after each epoch
 from models_xview import *
 from utils.datasets_xview import *
+#from utils.datasets_xview_fixedseed import * # bxmuller results before 09/14/2020_16.34.pm are with fixed seed
 from utils.utils_xview import *
 from utils.torch_utils import *
 import warnings
@@ -17,6 +17,38 @@ import warnings
 warnings.filterwarnings("ignore")
 
 
+
+#fixme before git pull at April 23
+# Hyperparameters https://github.com/ultralytics/yolov3/issues/310
+# hyp = {'giou': 1.0, #1.0,  1.5# giou loss gain 3.54
+#        'cls': 37.4,  # cls loss gain
+#        'cls_pw': 1.0,  # cls BCELoss positive_weight
+#        'obj': 49.5, # 49.5,  # obj loss gain (*=img_size/320 if img_size != 320)
+#        'obj_pw': 1.0,  # obj BCELoss positive_weight
+#        'iou_t': 0.225,  # iou training threshold
+#        'lr0': 0.00579,  # initial learning rate (SGD=1E-3, Adam=9E-5)
+#        'lrf': -4.,  # final LambdaLR learning rate = lr0 * (10 ** lrf)
+#        'momentum': 0.937,  # SGD momentum
+#        'weight_decay': 0.000484,  # optimizer weight decay
+#        'fl_gamma': 0.5,  # focal loss gamma
+#        'hsv_h': 0.0138,  # image HSV-Hue augmentation (fraction)
+#        'hsv_s': 0.678,  # image HSV-Saturation augmentation (fraction)
+#        'hsv_v': 0.36,  # image HSV-Value augmentation (fraction)
+#        'degrees': 1.98,  # image rotation (+/- deg)
+#        'translate': 0.05,  # image translation (+/- fraction)
+#        'scale': 0.05,  # image scale (+/- gain)
+#        'shear': 0.641}  # image shear (+/- deg)
+
+class MyEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):             
+            return obj.tolist()                          
+        else:
+            return super(MyEncoder, self).default(obj)           
 def infi_loop(dl):
     while True:
         for (imgs, targets, paths, _) in dl:
@@ -39,6 +71,10 @@ def train(opt):
     except:
         mixed_precision = False  # not installed
     device = torch_utils.select_device(opt.device, apex=mixed_precision, batch_size=opt.batch_size)
+    print('device ', device)
+    # exit(0)
+    print('hyp_cmt_name', hyp_cmt_name)
+
     if device.type == 'cpu':
         mixed_precision = False
 
@@ -48,12 +84,14 @@ def train(opt):
         from torch.utils.tensorboard import SummaryWriter
         tb_writer = SummaryWriter(log_dir=opt.writer_dir)
     except:
-        pass
-    # FIXME -------end
+        print('SummaryWriter error')
+        return
 
     # Initialize
-    #fixme
-    init_seeds(opt.yoloseed)
+    if opt.seed == 17:
+        init_seeds() 
+    else:  
+        init_seeds(opt.seed)
     if opt.multi_scale:
         img_sz_min = round(img_size / 32 / 1.5)
         img_sz_max = round(img_size / 32 * 1.5)
@@ -63,22 +101,17 @@ def train(opt):
 
     # Configure run
     data_dict = parse_data_cfg(data)
-    train_path = data_dict['xview_train']
-    train_label_path = data_dict['xview_train_label']
-    cc_train_path = data_dict['cc_train']
-    cc_label_path = data_dict['cc_train_label']
+    train_path = data_dict['train']
     test_path = data_dict['valid']
+    train_label_path = data_dict['train_label']
     test_label_path = data_dict['valid_label']
     nc = int(data_dict['classes'])  # number of classes
-    syn_0_xview_number = data_dict['xview_number']
+    syn_0_xview_number = data_dict['syn_0_xview_number']
     loop_count = int(syn_0_xview_number) // batch_size
 
-    cc_batch_size = opt.cc_batch_size
-
     # Remove previous results
-    # Remove previous results
-    # for f in glob.glob('trn_patch_images/*_batch*.jpg') + glob.glob(results_file):
-    #     os.remove(f)
+#    for f in glob.glob('trn_patch_images/*_batch*.jpg') + glob.glob(results_file):
+#        os.remove(f)
 
     # Initialize model
     model = Darknet(cfg, arc=opt.arc).to(device)
@@ -98,7 +131,6 @@ def train(opt):
         optimizer = optim.SGD(pg0, lr=hyp['lr0'], momentum=hyp['momentum'], nesterov=True)
     optimizer.add_param_group({'params': pg1, 'weight_decay': hyp['weight_decay']})  # add pg1 with weight_decay
     del pg0, pg1
-
 
     # https://github.com/alphadl/lookahead.pytorch
     # optimizer = torch_utils.Lookahead(optimizer, k=5, alpha=0.5)
@@ -157,45 +189,35 @@ def train(opt):
         model, optimizer = amp.initialize(model, optimizer, opt_level='O1', verbosity=0)
 
     # Initialize distributed training
+    #fixme --yang.xu Do not need distribution
     if device.type != 'cpu' and torch.cuda.device_count() > 1:
         dist.init_process_group(backend='nccl',  # 'distributed backend'
                                 init_method='tcp://127.0.0.1:9999',  # distributed training init method
                                 world_size=1,  # number of nodes for distributed training
                                 rank=0)  # distributed training node rank
-        # fixme
         model = torch.nn.parallel.DistributedDataParallel(model, find_unused_parameters=True)
         model.yolo_layers = model.module.yolo_layers  # move yolo layer indices to top level
 
+    # if device.type != 'cpu' and torch.cuda.device_count() > 1:
+    #     # model = nn.DataParallel(model)
+    #     model = nn.parallel.DataParallel(model, device_ids=[0, 1])
+    #     model.yolo_layers = model.module.yolo_layers  # move yolo layer indices to top level
+
     # Dataset
-        # fixme
-    dataset = LoadImagesAndLabels(train_path, train_label_path, img_size, batch_size - cc_batch_size,
-                                      class_num=opt.class_num,
-                                      augment=True,  # False, #True,
-                                      hyp=hyp,  # augmentation hyperparameters
-                                      rect=opt.rect,  # rectangular training
-                                      image_weights=False,
-                                      cache_labels=epochs > 10,
-                                      cache_images=opt.cache_images and not opt.prebias)
-    rc_dataset = LoadImagesAndLabels(cc_train_path, cc_label_path, img_size, cc_batch_size,
+    dataset = LoadImagesAndLabels(train_path, train_label_path, img_size, batch_size,
                                   class_num=opt.class_num,
-                                  augment=True, #True,  # False, #True,
+                                  augment=True,  # False, #True,
                                   hyp=hyp,  # augmentation hyperparameters
                                   rect=opt.rect,  # rectangular training
                                   image_weights=False,
                                   cache_labels=epochs > 10,
-                                  cache_images=opt.cache_images and not opt.prebias)
+                                  cache_images=opt.cache_images and not opt.prebias, seed_aug=opt.seed)
+
     # Dataloader
     batch_size = min(batch_size, len(dataset))
     nw = min([os.cpu_count(), batch_size if batch_size > 1 else 0, 8])  # number of workers
-    
     dataloader = torch.utils.data.DataLoader(dataset,
-                                             batch_size=batch_size - cc_batch_size,
-                                             num_workers=nw,
-                                             shuffle=not opt.rect,  # Shuffle=True unless rectangular training is used
-                                             pin_memory=True,
-                                             collate_fn=dataset.collate_fn)
-    rc_dataloader = torch.utils.data.DataLoader(rc_dataset,
-                                             batch_size=cc_batch_size,
+                                             batch_size=batch_size,
                                              num_workers=nw,
                                              shuffle=not opt.rect,  # Shuffle=True unless rectangular training is used
                                              pin_memory=True,
@@ -207,7 +229,7 @@ def train(opt):
                                 hyp=hyp,
                                 rect=True,
                                 cache_labels=True,
-                                cache_images=opt.cache_images, with_modelid=True),
+                                cache_images=opt.cache_images, with_modelid=False),
             batch_size=batch_size * 2,
             num_workers=nw,
             pin_memory=True,
@@ -239,7 +261,10 @@ def train(opt):
 
     print('Using %g dataloader workers' % nw)
     print('Starting %s for %g epochs...' % ('prebias' if opt.prebias else 'training', epochs))
+    trn_names_dict = {}
     for epoch in range(start_epoch, epochs):  # epoch ------------------------------------------------------------------
+        # if epoch == epochs-1:
+        #     return
         model.train()
         print(('\n' + '%10s' * 8) % ('Epoch', 'gpu_mem', 'GIoU', 'obj', 'cls', 'total', 'targets', 'img_size'))
 
@@ -253,54 +278,16 @@ def train(opt):
         #fixme
         # pbar = tqdm(enumerate(dataloader), total=nb)  # progress bar
         # for i, (imgs, targets, paths, _) in pbar:
-
-        if rc_dataloader:
-            gen_rc_data = infi_loop(rc_dataloader)
-        if dataloader:
-            gen_xview_data = infi_loop(dataloader)
+        if epoch < 20:
+            trn_names_dict[epoch] = []
+        gen_data = infi_loop(dataloader)
         for i in range(nb):
-            #fixme -- yang.xu
-            if rc_dataloader and dataloader:
-                imgs_xview, targets_xview, paths_xview = next(gen_xview_data) 
-                imgs_rc, targets_rc, paths_rc = next(gen_rc_data)
-                #fixme -- yang.xu --************* important!!!!
-                # targets_syn[:, 0] = batch_size - cc_batch_size
-                xview_batch_size = batch_size - cc_batch_size
-                # print('xview_batch_size', xview_batch_size)
-                # print('targets_syn_size', targets_syn.shape)
-                # print('targets_syn[:,0]', targets_syn[:,0])
-                #fixme -- yang.xu
-                # --************* important!!!! reverse order
-                for si in reversed(range(cc_batch_size)):
-                    targets_rc[targets_rc[:, 0] == si, 0] = xview_batch_size + si
-                # print('targets_syn[:,0]----after----', targets_syn[:,0])
-                # print(imgs_xview.shape, targets_xview[:,0], len(paths_xview))
-                # print(imgs_syn.shape, targets_syn[:, 0], len(paths_syn))
-                # print('imgs_xview.shape ', imgs_xview.shape)
-                # print('targets_xview.shape ', targets_xview.shape)
-                # print('imgs_syn.shape ', imgs_syn.shape)
-                # print('targets_syn.shape ', targets_syn.shape)
-                # exit(0)
-
-                imgs = torch.cat([imgs_xview, imgs_rc], dim=0)
-                targets = torch.cat([targets_xview, targets_rc], dim=0)
-                paths =  paths_xview + paths_rc
-                # print('imgs.shape ', imgs.shape)
-                # print('targets.shape ', targets.shape)
-                # print('len(paths) ', len(paths))
-                # print('targets ', targets)
-                # exit(0)
-
-            elif rc_dataloader and not dataloader:
-                imgs, targets, paths = next(gen_rc_data)
-            else:
-                imgs, targets, paths = next(gen_xview_data)
-
-            # print(imgs.shape, len(paths)) # torch.Size([8, 3, 608, 608]) 8
-
+            imgs, targets, paths = next(gen_data)
             ni = i + nb * epoch  # number integrated batches (since train start)
             imgs = imgs.to(device).float() / 255.0  # uint8 to float32, 0 - 255 to 0.0 - 1.0
             targets = targets.to(device)
+            # print('targets ', targets.shape, targets)
+
             # Multi-Scale training
             if opt.multi_scale:
                 if ni / accumulate % 10 == 0:  #  adjust (67% - 150%) every 10 batches
@@ -309,19 +296,16 @@ def train(opt):
                 if sf != 1:
                     ns = [math.ceil(x * sf / 32.) * 32 for x in imgs.shape[2:]]  # new shape (stretched to 32-multiple)
                     imgs = F.interpolate(imgs, size=ns, mode='bilinear', align_corners=False)
+            
+            if epoch < 20:
+                # print('i', i, 'epoch', epoch)
+                for pi in range(batch_size):
+                    trn_names_dict[epoch].append(Path(paths[pi]).name)
 
             # Plot images with bounding boxes
-            if ni <= 2:# == 0:
-                if opt.ccid:
-                    fname = 'trn_patch_images/train_batch_rc%gx%g_rc%g_x_%g.jpg' % (opt.cc_batch_size, opt.batch_size-opt.cc_batch_size, opt.ccid, i)
-                else:
-                    fname = 'trn_patch_images/train_batch%g.jpg' % i
-                # print(imgs.shape, targets.shape, len(paths))
-                # print(imgs[0])
-                # print(targets)
-                # print(paths)
+            if ni == 0:
+                fname = 'trn_patch_images/train_batch%s_seed%g_%g.jpg' % (opt.name, opt.seed, i)
                 plot_images(imgs=imgs, targets=targets, paths=paths, fname=fname)
-                # plot_images(imgs=imgs[-1:], targets=targets[-4:,:], paths=paths[-1:], fname=fname)
                 if tb_writer:
                     tb_writer.add_image(fname, cv2.imread(fname)[:, :, ::-1], dataformats='HWC')
             # Run model
@@ -365,14 +349,25 @@ def train(opt):
         # #fixme ---
         if tb_writer:
             tb_writer.add_scalar('lr', np.array(scheduler.get_lr())[0], epoch)
-
+            # tb_writer.add_graph(model,imgs)
         #fixme ---yang.xu
         # ema.update_attr(model)
+        
+        chkpt = {'epoch': epoch,
+                   #fixme --yang.xu
+                   'model': model.module.state_dict() if type(
+                       model) is nn.parallel.DistributedDataParallel else model.state_dict()}
+
+        # Save last checkpoint
+        # last_before = last.replace('.pt', '_before.pt')
+        # torch.save(chkpt, last_before)
+        
         # Process epoch results
         final_epoch = epoch + 1 == epochs
         if opt.prebias:
             print_model_biases(model)
         elif not opt.notest or final_epoch:  # Calculate mAP
+            #fixme
 
             results, maps = test.test(cfg,
                                       data,
@@ -439,52 +434,58 @@ def train(opt):
             # Save backup every 10 epochs (optional)
             #fixme
             # if (epoch > 0 and epoch % 10 == 0):
-            if (epoch > 0 and epoch % 50 == 0) or (epoch > epochs*0.8 and epoch%20==0):
+            if (epoch > 0 and epoch % 50 == 0) or (epoch > 100 and epoch % 20 == 0) :
                 torch.save(chkpt, opt.weights_dir + 'backup%g.pt' % epoch)
 
             # Delete checkpoint
             del chkpt
 
         # end epoch ----------------------------------------------------------------------------------------------------
-
+    json.dump(trn_names_dict, open('input_trn_files/{}_{}_trn_names_of_20_epochs.json'.format(opt.name, hyp_cmt_name), 'w'), ensure_ascii=False, indent=2, cls=MyEncoder) 
     # png_name = 'results_{}_{}.png'.format(opt.syn_display_type, opt.syn_ratio)
+    if tb_writer:
+        tb_writer.close()
     png_name = 'results_{}.png'.format(opt.name)
     plot_results(result_dir=opt.result_dir, png_name=png_name, class_num=opt.class_num, title=opt.name)  # save as results.png
     print('%g epochs completed in %.3f hours.\n' % (epoch - start_epoch + 1, (time.time() - t0) / 3600))
+    #fixme --yang.xu
+    print('dist destroy --begin')
     dist.destroy_process_group() if torch.cuda.device_count() > 1 else None
+    print('dist destroy --end')
     torch.cuda.empty_cache()
 
     return results
 
+
 def get_opt():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--seed', type=int, default=17, help='seed')
-    parser.add_argument('--yoloseed', type=int, default=0, help='seed')
+    parser.add_argument('--dataseed', type=int, default=17, help='dataseed')
+    parser.add_argument('--seed', type=int, default=0, help='seed')
     parser.add_argument('--cfg_dict', type=str, default='',
                         help='train_cfg/train_1cls_syn_only_mean_best_gpu0.json')
     parser.add_argument('--data', type=str, default='', help='*.data path')
     parser.add_argument('--epochs', type=int, default=220)  # 220 180 250  500200 batches at bs 16, 117263 images = 273 epochs
     parser.add_argument('--batch-size', type=int, default=8)  # effective bs = batch_size * accumulate = 16 * 4 = 64
-    parser.add_argument('--ccid', type=int, default=None)
-    parser.add_argument('--cc-batch-size', type=int, default=2, help='3 cc batch size ')
+
     parser.add_argument('--device', default='0', help='device id (i.e. 0 or 0,1 or cpu)')
     parser.add_argument('--img_size', type=int, default=608, help='inference size (pixels)')  # 416 608
     parser.add_argument('--class_num', type=int, default=1, help='class number')  # 60 6 1
-    parser.add_argument('--apN', type=int, default=50, help='average precision @apN')  # 60 6 1
+    parser.add_argument('--model_id', type=int, default=None, help='model id')
 
     parser.add_argument('--cfg', type=str, default='cfg/yolov3-spp-{}cls_syn.cfg', help='*.cfg path')
-    parser.add_argument('--writer_dir', type=str, default='', help='*events* path')
-    parser.add_argument('--weights_dir', type=str, default='', help='to save weights path')
-    parser.add_argument('--result_dir', type=str, default='', help='to save result files path')
+    parser.add_argument('--writer_dir', type=str, default='writer_output/{}_cls/{}_seed{}/{}/', help='*events* path')
+    parser.add_argument('--weights_dir', type=str, default='weights/{}_cls/{}_seed{}/{}/', help='to save weights path')
+    parser.add_argument('--result_dir', type=str, default='result_output/{}_cls/{}_seed{}/{}/', help='to save result files path')
     parser.add_argument('--base_dir', type=str, default='data_xview/{}_cls/{}/', help='without syn data path')
     parser.add_argument('--name', default='', help='renames results.txt to results_name.txt if supplied')
 
+    parser.add_argument('--accumulate', type=int, default=4, help='batches to accumulate before optimizing')
+    parser.add_argument('--multi_scale', action='store_true', help='adjust (67% - 150%) img_size every 10 batches')
     parser.add_argument('--conf_thres', type=float, default=0.01, help='0.001 object confidence threshold')
     parser.add_argument('--nms_iou_thres', type=float, default=0.5, help='IOU threshold for NMS')
     parser.add_argument('--save_json', action='store_true', help='save a cocoapi-compatible JSON results file')
     parser.add_argument('--task', default='', help="'test', 'study', 'benchmark'")
-    parser.add_argument('--multi_scale', action='store_true', help='adjust (67% - 150%) img_size every 10 batches')
-    parser.add_argument('--accumulate', type=int, default=4, help='batches to accumulate before optimizing')
+
     parser.add_argument('--rect', default=False, action='store_true', help='rectangular training')
     parser.add_argument('--resume', default=False, action='store_true', help='resume training from last.pt')
     parser.add_argument('--nosave', action='store_true', help='only save final checkpoint')
@@ -498,44 +499,70 @@ def get_opt():
     parser.add_argument('--adam', action='store_true', help='use adam optimizer')
     parser.add_argument('--var', type=float, help='debug variable')
     opt = parser.parse_args()
+
     return opt
 
 
 if __name__ == '__main__':
+    
     opt = get_opt()
     Configure_file = opt.cfg_dict
     cfg_dict = json.load(open(Configure_file))
+#    cfg_dict = parse_data_cfg(Configure_file)
     opt.device = cfg_dict['device']
+    opt.dataseed = cfg_dict['dataseed']
     opt.seed = cfg_dict['seed']
-    opt.yoloseed = cfg_dict['yoloseed']
     opt.epochs = cfg_dict['epochs']
     opt.batch_size = cfg_dict['batch_size']
-    cbs_list = cfg_dict['cc_batch_size_list']
-    opt.ccid = cfg_dict['ccid']
     opt.image_size = cfg_dict['image_size']
     opt.class_num = cfg_dict['class_num']
-    opt.apN = cfg_dict['apN']
     opt.cfg = opt.cfg.format(opt.class_num)
+    opt.model_id = cfg_dict['model_id']
+    opt.conf_thres = cfg_dict['conf_thres']
+    opt.nms_iou_thres = cfg_dict['nms_iou_thres']
 
+    comment = cfg_dict['comment'] 
+    base_bias = cfg_dict['base_bias']
+    pros = cfg_dict['pros']
+    version_base = cfg_dict['version_base']
     prefix = cfg_dict['prefix']
 
-    pxwhrsd = cfg_dict['pxwhrsd'].format(opt.seed)
-    hyp_cmt = cfg_dict['hyp_cmt']
+    pxwhrsd = cfg_dict['pxwhrsd']
+    hyp_cmt = cfg_dict['hyp_cmt'] 
+    val_syn = cfg_dict['val_syn']
+    val_labeled = cfg_dict['val_labeled']
+    val_miss = cfg_dict['val_miss']
+    # syn_ratios = cfg_dict['syn_ratios']
     hyp = cfg_dict['hyp']
-    # opt.data = 'data_xview/{}_cls/{}/CC/xview_nccbkg_cc{}_{}.data'.format(opt.class_num, pxwhrsd, opt.ccid, pxwhrsd)
-    opt.data = 'data_xview/{}_cls/{}/CC/xview_nccbkg_aug_cc{}_{}.data'.format(opt.class_num, pxwhrsd, opt.ccid, pxwhrsd)
-    for cbs in cbs_list:
-        opt.cc_batch_size = cbs
-        hyp_cmt = hyp_cmt.format(opt.cc_batch_size, opt.batch_size - opt.cc_batch_size, opt.ccid)
+    if 'pw' not in opt.arc:  # remove BCELoss positive weights
+        hyp['cls_pw'] = 1.
+        hyp['obj_pw'] = 1.
+    for cx, pro in enumerate(pros):
+        cmt = comment.format(base_bias*pro, version_base+cx) 
 
-        opt.name = prefix
+        cinx = cmt.find('_CC') # first letter index
+        endstr = cmt[cinx:] # _CC*_v*
+        if cinx >= 0:
+            suffix = endstr # _CC*_v*
+        else:
+            suffix = ''
+            
+        opt.name = prefix + suffix
 
-        opt.base_dir = opt.base_dir.format(opt.class_num, pxwhrsd)
+        opt.base_dir = opt.base_dir.format(opt.class_num, pxwhrsd.format(opt.dataseed))
+        if val_syn:
+            hyp_cmt_name = hyp_cmt + '_val_syn'
+            opt.model_id = None
+            opt.data = 'data_xview/{}_{}_cls/{}_seed{}/{}_seed{}.data'.format(cmt, opt.class_num, cmt, opt.dataseed, cmt, opt.dataseed)
+        else:
+            hyp_cmt_name = hyp_cmt + '_val_xview'
+            opt.data = 'data_xview/{}_{}_cls/{}_seed{}/{}_seed{}_xview_val.data'.format(cmt, opt.class_num, cmt, opt.dataseed, cmt, opt.dataseed)
 
         time_marker = time.strftime('%Y-%m-%d_%H.%M', time.localtime())
-        opt.weights_dir = 'weights/{}_cls/{}/xview_CC/{}/'.format(opt.class_num, pxwhrsd, '{}_{}_seed{}'.format(time_marker, hyp_cmt, opt.yoloseed))
-        opt.writer_dir = 'writer_output/{}_cls/{}/xview_CC/{}/'.format(opt.class_num, pxwhrsd, '{}_{}_seed{}'.format(time_marker, hyp_cmt, opt.yoloseed))
-        opt.result_dir = 'result_output/{}_cls/{}/xview_CC/{}/'.format(opt.class_num, pxwhrsd, '{}_{}_seed{}'.format(time_marker, hyp_cmt, opt.yoloseed))
+#        time_marker = '2020-06-30_10.03'
+        opt.weights_dir = 'weights/{}_cls/xview_CC/{}_seed{}/{}/'.format(opt.class_num, cmt, opt.dataseed, '{}_{}_seed{}'.format(time_marker, hyp_cmt_name, opt.seed))
+        opt.writer_dir = 'writer_output/{}_cls/xview_CC/{}_seed{}/{}/'.format(opt.class_num, cmt, opt.dataseed, '{}_{}_seed{}'.format(time_marker, hyp_cmt_name, opt.seed))
+        opt.result_dir = 'result_output/{}_cls/xview_CC/{}_seed{}/{}/'.format(opt.class_num, cmt, opt.dataseed, '{}_{}_seed{}'.format(time_marker, hyp_cmt_name, opt.seed))
 
         if not os.path.exists(opt.weights_dir):
             os.makedirs(opt.weights_dir)
@@ -545,16 +572,17 @@ if __name__ == '__main__':
 
         if not os.path.exists(opt.result_dir):
             os.makedirs(opt.result_dir)
-        results_file = os.path.join(opt.result_dir, 'results_seed{}.txt'.format(opt.yoloseed))
-        last = os.path.join(opt.weights_dir, 'last_seed{}.pt'.format(opt.yoloseed))
-        best = os.path.join(opt.weights_dir, 'best_seed{}.pt'.format(opt.yoloseed))
+        results_file = os.path.join(opt.result_dir, 'results_{}_seed{}.txt'.format(opt.name, opt.seed))
+        last = os.path.join(opt.weights_dir, 'last_seed{}.pt'.format(opt.seed))
+        best = os.path.join(opt.weights_dir, 'best_seed{}.pt'.format(opt.seed))
         opt.weights = last if opt.resume else opt.weights
         print(opt)
+        # scale hyp['obj'] by img_size (evolved at 320)
+        # hyp['obj'] *= opt.img_size / 320.
 
         if not opt.evolve:  # Train normally
             # prebias()  # optional
             train(opt)  # train normally
-            # exit(0)
             # plot_results(result_dir=opt.result_dir, png_name='results_{}_{}.png'.format(opt.syn_display_type, opt.syn_ratio))
         else:  # Evolve hyperparameters (optional)
             opt.notest = True  # only test final epoch

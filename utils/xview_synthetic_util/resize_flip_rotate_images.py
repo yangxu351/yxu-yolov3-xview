@@ -9,13 +9,39 @@ from utils.xview_synthetic_util import process_syn_xview_background_wv_split as 
 from utils.object_score_util import get_bbox_coords_from_annos_with_object_score as gbc
 
 
+
+def flip_images(img_name, src_dir=None):
+    img = Image.open(os.path.join(src_dir, img_name))
+    name_str = img_name.split('.')[0]
+    save_dir = src_dir + '_flip'
+    if not os.path.exists(save_dir):
+        os.mkdir(save_dir)
+    shutil.copy(os.path.join(src_dir, img_name), os.path.join(save_dir, img_name))
+
+    out_lr_flip = img.transpose(Image.FLIP_LEFT_RIGHT)
+    out_lr_flip.save(os.path.join(save_dir,'{}_lr.jpg'.format(name_str)))
+
+def rotate_images(img_name, src_dir=None):
+    img = Image.open(os.path.join(src_dir, img_name))
+    name_str = img_name.split('.')[0]
+    save_dir = src_dir + '_aug'
+    if not os.path.exists(save_dir):
+        os.mkdir(save_dir)
+    shutil.copy(os.path.join(src_dir, img_name), os.path.join(save_dir, img_name))
+
+    out_rt_90 = img.transpose(Image.ROTATE_90)
+    out_rt_90.save(os.path.join(save_dir,'{}_rt90.jpg'.format(name_str)))
+    out_rt_180 = img.transpose(Image.ROTATE_180)
+    out_rt_180.save(os.path.join(save_dir,'{}_rt180.jpg'.format(name_str)))
+    out_rt_270 = img.transpose(Image.ROTATE_270)
+    out_rt_270.save(os.path.join(save_dir,'{}_rt270.jpg'.format(name_str)))
+
+
+
 def flip_rotate_images(img_name, src_dir=None):
     if src_dir:
         img = Image.open(os.path.join(src_dir, img_name))
         name_str = img_name.split('.')[0]
-        save_dir = src_dir + '_aug'
-        if not os.path.exists(save_dir):
-            os.mkdir(save_dir)
         shutil.copy(os.path.join(src_dir, img_name), os.path.join(save_dir, img_name))
 
         out_lr_flip = img.transpose(Image.FLIP_LEFT_RIGHT)
@@ -50,12 +76,12 @@ def get_rotated_point(x,y,angle):
     https://blog.csdn.net/guyuealian/article/details/78288131
     '''
     # (h, w) = image.shape[:2]
-    # # å°†å›¾åƒä¸­å¿ƒè®¾ä¸ºæ—‹è½¬ä¸­å¿ƒ
+    # # ½«Í¼ÏñÖĞĞÄÉèÎªĞı×ªÖĞĞÄ
     w, h = 1, 1
     (cX, cY) = (0.5, 0.5)
 
-    #å‡è®¾å›¾åƒçš„å®½åº¦xé«˜åº¦ä¸ºcol*row, å›¾åƒä¸­æŸä¸ªåƒç´ P(x1, y1)ï¼Œç»•æŸä¸ªåƒç´ ç‚¹Q(x2, y2)
-    #æ—‹è½¬Î¸è§’åº¦å, åˆ™è¯¥åƒç´ ç‚¹çš„æ–°åæ ‡ä½ç½®ä¸º(x, y)ï¼Œå…¶è®¡ç®—å…¬å¼ä¸ºï¼š
+    #¼ÙÉèÍ¼ÏñµÄ¿í¶Èx¸ß¶ÈÎªcol*row, Í¼ÏñÖĞÄ³¸öÏñËØP(x1, y1)£¬ÈÆÄ³¸öÏñËØµãQ(x2, y2)
+    #Ğı×ª¦È½Ç¶Èºó, Ôò¸ÃÏñËØµãµÄĞÂ×ø±êÎ»ÖÃÎª(x, y)£¬Æä¼ÆËã¹«Ê½Îª£º
 
     x = x
     y = h - y
@@ -65,7 +91,7 @@ def get_rotated_point(x,y,angle):
     new_y = (x - cX) * math.sin(math.pi / 180.0 * angle) + (y - cY) * math.cos(math.pi / 180.0 * angle) + cY
     new_x = new_x
     new_y = h - new_y
-    # return round(new_x), round(new_y) #å››èˆäº”å…¥å–æ•´
+    # return round(new_x), round(new_y) #ËÄÉáÎåÈëÈ¡Õû
     return new_x, new_y
 
 def get_flipped_point(x, y, flip='tb'):
@@ -79,12 +105,9 @@ def get_flipped_point(x, y, flip='tb'):
     return new_x, new_y
 
 
-def flip_rotate_coordinates(img_dir, lbl_dir, save_dir, name, angle=0, flip=''):
+def flip_rotate_coordinates(img_dir, lbl_dir, save_dir, aug_dir, name, angle=0, flip=''):
     if not os.path.exists(save_dir):
         os.mkdir(save_dir)
-    aug_dir = lbl_dir + '_aug'
-    if not os.path.exists(aug_dir):
-        os.mkdir(aug_dir)
     # backup the original lbl first
     shutil.copy(os.path.join(lbl_dir, '{}.txt'.format(name)), os.path.join(aug_dir, '{}.txt'.format(name)))
     if angle:
@@ -104,10 +127,10 @@ def flip_rotate_coordinates(img_dir, lbl_dir, save_dir, name, angle=0, flip=''):
             df_lf.loc[i, 1], df_lf.loc[i, 2] = get_flipped_point(df_lf.loc[i, 1], df_lf.loc[i, 2], flip)
     df_lf.to_csv(lbl_file, header=False, index=False, sep=' ')
     name = os.path.basename(lbl_file)
-    # print('name', name)
+    print('name', name)
     img_name = name.replace('.txt', '.jpg')
     img_file = os.path.join(img_dir, img_name)
-    print('img_file', img_file)
+    # print('img_file', img_file)
     gbc.plot_img_with_bbx(img_file, lbl_file, save_path=save_dir)
 
 
