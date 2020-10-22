@@ -296,15 +296,20 @@ def train(opt):
                 if sf != 1:
                     ns = [math.ceil(x * sf / 32.) * 32 for x in imgs.shape[2:]]  # new shape (stretched to 32-multiple)
                     imgs = F.interpolate(imgs, size=ns, mode='bilinear', align_corners=False)
-            
+           
             if epoch < 20:
                 # print('i', i, 'epoch', epoch)
                 for pi in range(batch_size):
                     trn_names_dict[epoch].append(Path(paths[pi]).name)
-
+            
+#            if epoch < 3 and i < 2:
+#                np.save('trn_patch_images/train_batch_{}_seed{}_epoch{}_batch{}.npy'.format(opt.name, opt.seed, epoch, i), imgs.cpu())
+                
             # Plot images with bounding boxes
-            if ni == 0:
-                fname = 'trn_patch_images/train_batch%s_seed%g_%g.jpg' % (opt.name, opt.seed, i)
+#            if epoch<8 and i<2: # 
+#                np.save('trn_patch_images/train_batch_{}_seed{}_epoch{}_batch{}.npy'.format(opt.name, opt.seed, epoch, i), imgs.cpu())
+            if ni==0:    
+                fname = 'trn_patch_images/train_batch_%s_seed%g_epoch%g_%g.jpg' % (opt.name, opt.seed, epoch, i)
                 plot_images(imgs=imgs, targets=targets, paths=paths, fname=fname)
                 if tb_writer:
                     tb_writer.add_image(fname, cv2.imread(fname)[:, :, ::-1], dataformats='HWC')

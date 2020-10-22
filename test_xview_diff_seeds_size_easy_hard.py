@@ -673,10 +673,10 @@ if __name__ == "__main__":
 
     ################  promu size 
 
-    comments = []
-    base_version = 1
-    size_sigma = [0, 0.03, 0.06, 0.09, 0.12] # 0, 0.03, 0.06, 0.09, 0.12
-    for ix,ssig in enumerate(size_sigma):
+#    comments = []
+#    base_version = 1
+#    size_sigma = [0, 0.03, 0.06, 0.09, 0.12] # 0, 0.03, 0.06, 0.09, 0.12
+#    for ix,ssig in enumerate(size_sigma):
 #        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_bxmuller_promu_size_bias{}_RC1_v{}'.format(ssig, ix+21)
 #        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_promu_size_bias{}_RC1_v{}'.format(ssig, ix+40)
 #        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_promu_size_square_bias{}_RC1_v{}'.format(ssig, ix+100)
@@ -703,13 +703,14 @@ if __name__ == "__main__":
 
 #        cmt = 'syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_bxmuller_promu_size_bias{}_RC5_v{}'.format(ssig, ix+21)
 #        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_promu_size_bias{}_RC5_v{}'.format(ssig, ix+40)
-        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_promu_size_square_bias{}_RC5_v{}'.format(ssig, ix+100)
-        px_thres = 23
-        comments.append(cmt)  
-    
-    seed_list = [0, 1, 2] # [1, 2] , 3, 4
+#        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_promu_size_square_bias{}_RC5_v{}'.format(ssig, ix+100)
+#        px_thres = 23
+#        comments.append(cmt)  
+
+        
+    seed_list = [0] # [0, 1, 2] , 3, 4
     for seed in seed_list:
       main(seed)   
       
-    seeds = [0, 1, 2]  # , 3, 4
-    computer_avg_all_seeds(seeds)
+#    seeds = [0]  # , 3, 4
+#    computer_avg_all_seeds(seeds)

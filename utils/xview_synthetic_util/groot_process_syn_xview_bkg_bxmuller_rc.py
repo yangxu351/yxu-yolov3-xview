@@ -365,20 +365,20 @@ def create_xview_base_data_for_onemodel_aug_easy_hard(model_id, rc_id, eh_type='
     data_withmodel_txt.close()
     
 
-def get_syn_args(cmt='certain_models'):
+def get_syn_args(cmt='certain_models', CC=False):
     parser = argparse.ArgumentParser()
 
-    if cmt:
+    if CC:
+        parser.add_argument("--syn_data_dir", type=str,
+                        default='/data/users/yang/data/synthetic_data_CC/syn_xview_bkg_{}'.format(cmt),
+                        help="Path to folder containing synthetic images and annos ")
+        parser.add_argument("--syn_annos_dir", type=str, default='/data/users/yang/data/synthetic_data_CC/syn_xview_bkg_{}_txt_xcycwh/'.format(cmt),
+                            help="syn xview txt")
+    else: # cmt==''
         parser.add_argument("--syn_data_dir", type=str,
                         default='/data/users/yang/data/synthetic_data/syn_xview_bkg_{}'.format(cmt),
                         help="Path to folder containing synthetic images and annos ")
         parser.add_argument("--syn_annos_dir", type=str, default='/data/users/yang/data/synthetic_data/syn_xview_bkg_{}_txt_xcycwh/'.format(cmt),
-                            help="syn xview txt")
-    else: # cmt==''
-        parser.add_argument("--syn_data_dir", type=str,
-                            default='/data/users/yang/data/synthetic_data/syn_xview_background_{}/',
-                            help="Path to folder containing synthetic images and annos ")
-        parser.add_argument("--syn_annos_dir", type=str, default='/data/users/yang/data/synthetic_data/syn_xview_background_txt_xcycwh/',
                             help="syn xview txt")
 
 
@@ -472,8 +472,8 @@ if __name__ == '__main__':
 ##        pxwhr = 'px23whr3'
     
     ''' optimize color with best size '''
-    color_sigma = [0, 5, 10, 15, 20] 
-    for ix, ssig in enumerate(color_sigma):
+#    color_sigma = [0, 5, 10, 15, 20] 
+#    for ix, ssig in enumerate(color_sigma):
 #        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_ssig0.03_bxmuller_color_bias{}_RC1_v{}'.format(ssig, ix+11)
 #        model_cmt = 'xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_ssig0.03_bxmuller_color_bias{}_RC1_v{}'.format(ssig, ix+11)
 #        pxwhr = 'px15whr3'
@@ -484,9 +484,9 @@ if __name__ == '__main__':
 #        model_cmt = 'xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_ssig0.03_bxmuller_color_bias{}_RC2_v{}'.format(ssig, ix+31)
 #        pxwhr = 'px23whr3'
         
-        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0_bxmuller_color_bias{}_RC3_v{}'.format(ssig, ix+11)
-        model_cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0_bxmuller_color_bias{}_RC3_v{}'.format(ssig, ix+11)
-        pxwhr = 'px23whr3'
+#        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0_bxmuller_color_bias{}_RC3_v{}'.format(ssig, ix+11)
+#        model_cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0_bxmuller_color_bias{}_RC3_v{}'.format(ssig, ix+11)
+#        pxwhr = 'px23whr3'
         
 #        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.09_bxmuller_color_bias{}_RC4_v{}'.format(ssig, ix+11)
 #        model_cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.09_bxmuller_color_bias{}_RC4_v{}'.format(ssig, ix+11)
@@ -501,12 +501,12 @@ if __name__ == '__main__':
 #        pxwhr = 'px23whr3'
         
 
-        sd = 17
-        base_pxwhrs = 'px23whr3_seed{}'
-        syn_args = get_syn_args(model_cmt)
-        base_pxwhrs = base_pxwhrs.format(sd)
-        split_syn_xview_background_trn_val(sd, cmt, pxwhr, base_pxwhrs)
-        create_syn_data(cmt, sd, base_pxwhrs, val_xview=False)
+#        sd = 17
+#        base_pxwhrs = 'px23whr3_seed{}'
+#        syn_args = get_syn_args(model_cmt)
+#        base_pxwhrs = base_pxwhrs.format(sd)
+#        split_syn_xview_background_trn_val(sd, cmt, pxwhr, base_pxwhrs)
+#        create_syn_data(cmt, sd, base_pxwhrs, val_xview=False)
 
 
     ''' promu bxmuller size '''
@@ -538,6 +538,22 @@ if __name__ == '__main__':
 #        base_pxwhrs = base_pxwhrs.format(sd)
 #        split_syn_xview_background_trn_val(sd, cmt, pxwhr, base_pxwhrs)
 #        create_syn_data(cmt, sd, base_pxwhrs, val_xview=False)
+
+
+    ''' optimize sigma size for common class '''
+    size_sigma = [0, 0.1, 0.2, 0.3, 0.4] # 0, 0.03, 0.06, 0.09, 0.12
+    for ix,ssig in enumerate(size_sigma):
+        cmt = 'syn_xview_bkg_px23whr3_unif_shdw_split_scatter_gauss_rndsolar_promu_size_square_bias{}_CC1_v{}'.format(ssig, ix+10)
+        model_cmt = 'unif_shdw_split_scatter_gauss_rndsolar_promu_size_square_bias{}_CC1_v{}'.format(ssig, ix+10)
+        pxwhr = 'px23whr3'       
+        
+        dt = 'color'  
+        sd = 17
+        base_pxwhrs = 'px23whr3_seed{}'
+        syn_args = get_args(model_cmt, CC=True)
+        base_pxwhrs = base_pxwhrs.format(sd)
+        split_syn_xview_background_trn_val(sd, cmt, pxwhr, base_pxwhrs)
+        create_syn_data(cmt, sd, base_pxwhrs, val_xview=False)
 
     ''' fixedsolar for best size and color '''
 #    cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_fixedsolar_ssig0.03_csig20_RC1_v30'

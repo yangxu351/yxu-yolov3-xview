@@ -265,11 +265,11 @@ if __name__ == "__main__":
 #    sd = 'seed1' 
 #    comments = ['syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.09_color_bias0_RC4_v50']
 #    comments = ['syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.03_color_square_bias30_RC4_v98']
-    comments = ['syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_promu_size_square_bias0.12_RC4_v104']
+#    comments = ['syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_promu_size_square_bias0.12_RC4_v104']
     
-    sd = 'seed0'
-    model_id = 5
-    rare_class = 4  
+#    sd = 'seed0'
+#    model_id = 5
+#    rare_class = 4  
      
 #    comments = ['syn_xview_bkg_px23whr3_xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_ssig0.03_bxmuller_color_bias0_RC2_v31']
 #    model_id = 1
@@ -283,6 +283,16 @@ if __name__ == "__main__":
 #    model_id = 4
 #    rare_class = 1
 #    sd ='seed2'
+    
+    ## common classes
+    comments = []
+    size_sigma = [0] # 0, 0.08, 0.16, 0.24, 0.32
+    for ix, ssig in enumerate(size_sigma):
+        cmt = 'syn_xview_bkg_px23whr3_shdw_split_scatter_gauss_rndsolar_promu_size_square_bias{}_CC2_v{}'.format(ssig, ix+20)
+    
+    sd = 'seed0'
+    model_id = 5
+    rare_class = 4  
     
     apN = 50
     prefix = 'results_syn_iou{}'.format(apN)

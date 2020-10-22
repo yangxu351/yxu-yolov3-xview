@@ -122,8 +122,7 @@ def group_object_annotation_and_draw_bbox(dt, px_thresh=20, whr_thres=4, upscale
 
     gbc.get_object_bbox_after_group(lbl_path, save_txt_path, class_label=0, min_region=syn_args.min_region, link_r=syn_args.link_r, px_thresh=px_thresh, whr_thres=whr_thres)
     gt_files = np.sort(glob.glob(os.path.join(lbl_path, '*.png')))
-#    print('lbl_path', lbl_path)
-#    print('gt_files', len(gt_files))
+    print('gt_files', len(gt_files))
     save_bbx_path = os.path.join(syn_args.syn_txt_dir, bbox_folder_name)
     if not os.path.exists(save_bbx_path):
         os.makedirs(save_bbx_path)
@@ -198,7 +197,7 @@ def plot_rgb_histogram(img_path, syn=False):
     plt.show()
 
 
-def get_args(cmt=''):
+def get_args(cmt, CC=False):
     parser = argparse.ArgumentParser()
     parser.add_argument("--image_folder", type=str,
                         help="Path to folder containing image chips (ie 'Image_Chips/') ",
@@ -208,21 +207,21 @@ def get_args(cmt=''):
                         default='/data/users/yang/data/xView/')
 
     #fixme
-    if cmt: # certain_models, scale_models
+    if CC: # certain_models, scale_models
+        parser.add_argument("--syn_data_dir", type=str,
+                        help="Path to folder containing synthetic images and annos ",
+                        default='/data/users/yang/data/synthetic_data_CC/syn_xview_bkg_{}'.format(cmt))
+        parser.add_argument("--syn_annos_dir", type=str, default='/data/users/yang/data/synthetic_data_CC/syn_xview_bkg_{}_txt_xcycwh/'.format(cmt),
+                            help="syn xview txt")
+        parser.add_argument("--syn_txt_dir", type=str, default='/data/users/yang/data/synthetic_data_CC/syn_xview_bkg_{}_gt_bbox/'.format(cmt),
+                            help="syn xview txt related files")
+    else: # cmt == ''
         parser.add_argument("--syn_data_dir", type=str,
                         help="Path to folder containing synthetic images and annos ",
                         default='/data/users/yang/data/synthetic_data/syn_xview_bkg_{}'.format(cmt))
         parser.add_argument("--syn_annos_dir", type=str, default='/data/users/yang/data/synthetic_data/syn_xview_bkg_{}_txt_xcycwh/'.format(cmt),
                             help="syn xview txt")
         parser.add_argument("--syn_txt_dir", type=str, default='/data/users/yang/data/synthetic_data/syn_xview_bkg_{}_gt_bbox/'.format(cmt),
-                            help="syn xview txt related files")
-    else: # cmt == ''
-        parser.add_argument("--syn_data_dir", type=str,
-                            help="Path to folder containing synthetic images and annos ",
-                            default='/data/users/yang/data/synthetic_data/syn_xview_background_{}/')
-        parser.add_argument("--syn_annos_dir", type=str, default='/data/users/yang/data/synthetic_data/syn_xview_background_txt_xcycwh',
-                            help="syn xview txt")
-        parser.add_argument("--syn_txt_dir", type=str, default='/data/users/yang/data/synthetic_data/syn_xview_background_gt_bbox',
                             help="syn xview txt related files")
 
     parser.add_argument("--syn_display_type", type=str, default='color',
@@ -374,8 +373,8 @@ if __name__ == '__main__':
 #        px_thres = 23
     
 #    color_sigma = [10, 20, 30, 40] # 10, 20, 30, 40
-    color_sigma = [0]
-    for ix,ssig in enumerate(color_sigma):
+#    color_sigma = [0]
+#    for ix,ssig in enumerate(color_sigma):
 #        cmt = 'xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_ssig0_color_square_bias{}_RC1_v{}'.format(ssig, ix+91)
 #        px_thres = 15 
 
@@ -387,18 +386,58 @@ if __name__ == '__main__':
 #        px_thres = 23
 
 #        cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.09_color_square_bias{}_RC4_v{}'.format(ssig, ix+91)
-        cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.03_color_square_bias{}_RC4_v{}'.format(ssig, ix+95)
-        px_thres = 23
+#        cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.03_color_square_bias{}_RC4_v{}'.format(ssig, ix+95)
+#        px_thres = 23
         
 #        cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0_color_square_bias{}_RC5_v{}'.format(ssig, ix+91)
 #        px_thres = 23
+        
+#        whr_thres = 3
+#        dt = 'color'
+#        syn_args = get_args(cmt)
+#        group_object_annotation_and_draw_bbox(dt, px_thres, whr_thres)
+#        draw_bbx_on_rgb_images(dt, px_thres, whr_thres)
+        
+#    ''' optimize sigma size for common class '''    
+##    size_sigma = [0, 0.08, 0.16, 0.24, 0.32] # for CC1 
+#    size_sigma = [0, 0.06, 0.12, 0.18, 0.24]# for CC2 0, 0.06, 0.12, 0.18, 0.24
+#    for ix,ssig in enumerate(size_sigma):
+##        cmt = 'unif_shdw_split_scatter_gauss_rndsolar_promu_size_square_bias{}_CC1_v{}'.format(ssig, ix+10)
+##        px_thres = 23
+##        cmt = 'xbsw_xwing_shdw_split_scatter_gauss_rndsolar_promu_size_square_bias{}_CC2_v{}'.format(ssig, ix+15)
+##        px_thres = 23
+#
+##        cmt = 'unif_shdw_split_scatter_gauss_rndsolar_promu_size_square_bias{}_CC1_v{}'.format(ssig, ix+20)
+##        px_thres = 23
+#        cmt = 'shdw_split_scatter_gauss_rndsolar_promu_size_square_bias{}_CC2_v{}'.format(ssig, ix+20)
+#        px_thres = 23
+#        
+#        whr_thres = 3
+#        dt = 'color'
+#        syn_args = get_args(cmt, CC=True)
+#        group_object_annotation_and_draw_bbox(dt, px_thres, whr_thres)
+#        draw_bbx_on_rgb_images(dt, px_thres, whr_thres)
 
+    ''' optimize sigma size for common class '''    
+    color_sigma = [1, 2, 3, 4]#
+    for ix,csig in enumerate(color_sigma):
+#        cmt = 'unif_shdw_split_scatter_gauss_rndsolar_promu_size_square_bias{}_CC1_v{}'.format(ssig, ix+10)
+#        px_thres = 23
+#        cmt = 'xbsw_xwing_shdw_split_scatter_gauss_rndsolar_promu_size_square_bias{}_CC2_v{}'.format(ssig, ix+15)
+#        px_thres = 23
+
+#        cmt = 'unif_shdw_split_scatter_gauss_rndsolar_ssig0.16_color_square_bias{}_CC1_v{}'.format(csig, ix+31)
+#        px_thres = 23
+#        cmt = 'shdw_split_scatter_gauss_rndsolar_ssig0.24_color_square_bias{}_CC2_v{}'.format(csig, ix+31)
+        cmt = 'shdw_split_scatter_gauss_rndsolar_ssig0.24_same_bwcolor_square_bias{}_CC2_v{}'.format(csig, ix+36)
+        px_thres = 23
+        
         whr_thres = 3
         dt = 'color'
-        syn_args = get_args(cmt)
+        syn_args = get_args(cmt, CC=True)
         group_object_annotation_and_draw_bbox(dt, px_thres, whr_thres)
         draw_bbx_on_rgb_images(dt, px_thres, whr_thres)
-    
+            
     
 #    cmt = 'xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_ssig0_texture_RC1_v80'
 #    px_thres = 15
