@@ -148,7 +148,8 @@ if __name__ == '__main__':
     cc1_hexes = '#cc8d61;#f8f2f5;#b2b0ad;#faeeeb;#f6f3e8;#fffff9;#fbfafb;#fcfcf9;#feecda;#b7b1b0;#c6bdab;#d9d1bc;#d0c7b7;#dcd2c1;#d5cabc;#fefef9;#f9f6f0;#fdf4e8;#62615c;#585850;' \
                      '#ccc6d0;#cec9cf;#d3d0cd;#d6cdcb;#f9f4f0;#e3e0db;#dfd9dc;#c0b9b3;#e5eaf0;#e2d8d4;#d1d6e7;#c7cadc;#d1ccd9;#c4d4dc;#cbc6cb;#cfd0d9;#eff0ef;#9ca6ad;#b9987e;#feece5;' \
                      '#f5e0d3;#f8e0bf;#ffeecb;#f9eadd;#d79d6f;#feeac8;#b9b0a6;#cdcac4;#e2dedb;#a1a8a7;#d3bfba;#9e9c9a;#9ea19f'
-    # compute_rgb_by_hex(cc1_hexes)
+    compute_rgb_by_hex(cc1_hexes)
+
     '''
     CC2 color
     # rgb mean [235 229 224]
@@ -157,9 +158,9 @@ if __name__ == '__main__':
     cc2_hexes = '#d9d0ce;#afafba;#f0eae3;#fef6e4;#ddd3d0;#f8ece5;#e6e3d5;#ddcdc6;#e7d6bf;#e8d8c6;#cabab7;#eaf2ee;#fffbf5;#fffaf0;' \
                 '#cfcfcb;#fff2ec;#cec4b8;#f9f5ed;#dcdbd7;#d2c9c2;#fbfaf6;#fbfaf6;#fefdf8;#e9e7df;#bcbdbf;#eaeaec;#fff9fa;#e0e2e1;' \
                 '#fffbef;#fefaf9;#e8dfd6;#fffefc;#fef9f6;#feffff;#fffbff;#fdf3e9;#c5bfc1;#e9e8f0;#fff0e2'
-    cc2_wing_hexes = '#d5d2d1;#d7d8cf;#b2b4b1;#d6d7ce;#f1dedd;#fdfcfa;#c9c8c6;#cbd0d8;#b7b9b6;#dcd3d0;#cbc7c0;#b4b4b2;#d7d9d7;#d3dbd8;' \
-                     '#d3dbd8;#767c86;#b6b6a2'
+    cc2_wing_hexes = '#d5d2d1;#d7d8cf;#b2b4b1;#d6d7ce;#c9c8c6;#cbd0d8;#b7b9b6;#dcd3d0;#cbc7c0;#b4b4b2;#d7d9d7;#d3dbd8;' \
+                     '#d3dbd8;#767c86;#b6b6a2;#b1b2a1' ## #f1dedd;#fdfcfa;
     # compute_rgb_by_hex(cc2_hexes)
-    # compute_rgb_by_hex(cc2_wing_hexes)
+    compute_rgb_by_hex(cc2_wing_hexes)
 
 

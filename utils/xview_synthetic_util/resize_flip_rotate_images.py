@@ -9,13 +9,38 @@ from utils.xview_synthetic_util import process_syn_xview_background_wv_split as 
 from utils.object_score_util import get_bbox_coords_from_annos_with_object_score as gbc
 
 
+def flip_images(img_name, src_dir=None):
+    img = Image.open(os.path.join(src_dir, img_name))
+    name_str = img_name.split('.')[0]
+    save_dir = src_dir + '_flip'
+    if not os.path.exists(save_dir):
+        os.mkdir(save_dir)
+    shutil.copy(os.path.join(src_dir, img_name), os.path.join(save_dir, img_name))
+
+    out_lr_flip = img.transpose(Image.FLIP_LEFT_RIGHT)
+    out_lr_flip.save(os.path.join(save_dir,'{}_lr.jpg'.format(name_str)))
+
+def rotate_images(img_name, src_dir=None):
+    img = Image.open(os.path.join(src_dir, img_name))
+    name_str = img_name.split('.')[0]
+    save_dir = src_dir + '_aug'
+    if not os.path.exists(save_dir):
+        os.mkdir(save_dir)
+    shutil.copy(os.path.join(src_dir, img_name), os.path.join(save_dir, img_name))
+
+    out_rt_90 = img.transpose(Image.ROTATE_90)
+    out_rt_90.save(os.path.join(save_dir,'{}_rt90.jpg'.format(name_str)))
+    out_rt_180 = img.transpose(Image.ROTATE_180)
+    out_rt_180.save(os.path.join(save_dir,'{}_rt180.jpg'.format(name_str)))
+    out_rt_270 = img.transpose(Image.ROTATE_270)
+    out_rt_270.save(os.path.join(save_dir,'{}_rt270.jpg'.format(name_str)))
+
+
+
 def flip_rotate_images(img_name, src_dir=None):
     if src_dir:
         img = Image.open(os.path.join(src_dir, img_name))
         name_str = img_name.split('.')[0]
-        save_dir = src_dir + '_aug'
-        if not os.path.exists(save_dir):
-            os.mkdir(save_dir)
         shutil.copy(os.path.join(src_dir, img_name), os.path.join(save_dir, img_name))
 
         out_lr_flip = img.transpose(Image.FLIP_LEFT_RIGHT)
@@ -79,12 +104,9 @@ def get_flipped_point(x, y, flip='tb'):
     return new_x, new_y
 
 
-def flip_rotate_coordinates(img_dir, lbl_dir, save_dir, name, angle=0, flip=''):
+def flip_rotate_coordinates(img_dir, lbl_dir, save_dir, aug_dir, name, angle=0, flip=''):
     if not os.path.exists(save_dir):
         os.mkdir(save_dir)
-    aug_dir = lbl_dir + '_aug'
-    if not os.path.exists(aug_dir):
-        os.mkdir(aug_dir)
     # backup the original lbl first
     shutil.copy(os.path.join(lbl_dir, '{}.txt'.format(name)), os.path.join(aug_dir, '{}.txt'.format(name)))
     if angle:
@@ -104,10 +126,10 @@ def flip_rotate_coordinates(img_dir, lbl_dir, save_dir, name, angle=0, flip=''):
             df_lf.loc[i, 1], df_lf.loc[i, 2] = get_flipped_point(df_lf.loc[i, 1], df_lf.loc[i, 2], flip)
     df_lf.to_csv(lbl_file, header=False, index=False, sep=' ')
     name = os.path.basename(lbl_file)
-    # print('name', name)
+    print('name', name)
     img_name = name.replace('.txt', '.jpg')
     img_file = os.path.join(img_dir, img_name)
-    print('img_file', img_file)
+    # print('img_file', img_file)
     gbc.plot_img_with_bbx(img_file, lbl_file, save_path=save_dir)
 
 
@@ -196,10 +218,14 @@ if __name__ == '__main__':
     img_dir = args.images_save_dir[:-1] + '_rc_{}_new_ori_multi'.format(typ)
     img_list = glob.glob(os.path.join(img_dir, '*.jpg'))
     print('img_list', len(img_list))
+    save_dir = img_dir + '_aug'
+    if not os.path.exists(save_dir):
+        os.mkdir(save_dir)
     for f in img_list:
         name = os.path.basename(f)
         img_dir = os.path.dirname(f)
-        flip_rotate_images(img_name=name, src_dir=img_dir)
+
+        flip_rotate_images(img_name=name, src_dir=img_dir, save_dir=save_dir)
 
     '''
     flip and rotate coordinates of bbox 
@@ -227,14 +253,17 @@ if __name__ == '__main__':
     lbl_dir = args.annos_save_dir[:-1] + '_rc_{}_new_ori_multi_rcid'.format(typ)
     save_dir = args.cat_sample_dir + 'image_with_bbox/{}_aug/'.format(name)
     lbl_list = glob.glob(os.path.join(lbl_dir, '*.txt'))
+    aug_dir = lbl_dir + '_aug'
+    if not os.path.exists(aug_dir):
+        os.mkdir(aug_dir)
     for lbl in lbl_list:
         name = os.path.basename(lbl).split('.')[0]
         angle_list = [90, 180, 270]
         for angle in angle_list:
-            flip_rotate_coordinates(img_dir, lbl_dir, save_dir, name, angle=angle)
+            flip_rotate_coordinates(img_dir, lbl_dir, save_dir, aug_dir, name, angle=angle)
         flip_list = ['lr'] # 'tb
         for flip in flip_list:
-            flip_rotate_coordinates(img_dir, lbl_dir, save_dir, name, flip=flip)
+            flip_rotate_coordinates(img_dir, lbl_dir, save_dir, aug_dir, name, flip=flip)
 
 
     '''
