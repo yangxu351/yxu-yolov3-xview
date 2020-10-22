@@ -53,10 +53,12 @@ if __name__ == '__main__':
     # lbl.to_csv(new_file, sep=' ', header=False, index=False)
     # plot_img_with_bbx(img_dir, new_file, img_save_dir, label_index=True)
 
-    annos_modelid_dir = '/media/lab/Yang/data/xView_YOLO/labels/608/1_cls_xcycwh_px23whr3_rc_val_multi_with_modelid'
-    annos_dir = '/media/lab/Yang/data/xView_YOLO/labels/608/1_cls_xcycwh_px23whr3_rc_val_multi'
-    image_rc_val_dir = '/media/lab/Yang/data/xView_YOLO/images/608_1cls_rc_val_multi_crops/'
-    cat_sample_dir = '/media/lab/Yang/data/xView_YOLO/cat_samples/608/1_cls/image_with_bbox_indices_val/val_rc_images_1114'
+    # typ = 'val'
+    typ = 'trn'
+    annos_modelid_dir = '/media/lab/Yang/data/xView_YOLO/labels/608/1_cls_xcycwh_px23whr3_rc_{}_multi_with_rcid'.format(typ)
+    annos_dir = '/media/lab/Yang/data/xView_YOLO/labels/608/1_cls_xcycwh_px23whr3_rc_{}_multi'.format(typ)
+    image_rc_val_dir = '/media/lab/Yang/data/xView_YOLO/images/608_1cls_rc_{}_multi_crops/'.format(typ)
+    cat_sample_dir = '/media/lab/Yang/data/xView_YOLO/cat_samples/608/1_cls/image_with_bbox_indices_{}/{}_rc_images_1114'.format(typ, typ)
     lbl_files = glob.glob(os.path.join(annos_modelid_dir, '1114_*.txt'))
     for lf in lbl_files:
         print('lf', lf)
@@ -65,9 +67,9 @@ if __name__ == '__main__':
         df_5 = df_lf[df_lf.loc[:, 5] == 5]
         for ix in df_5.index:
             df_lf.iloc[ix, 3] *= 0.9
-            df_lf.iloc[ix, 4] *= 0.7
+            df_lf.iloc[ix, 4] *= 0.8
             df_lf_nomodelid.iloc[ix, 3] *= 0.9
-            df_lf_nomodelid.iloc[ix, 4] *= 0.7
+            df_lf_nomodelid.iloc[ix, 4] *= 0.8
         df_lf.to_csv(lf, sep=' ', header=False, index=False)
         df_lf_nomodelid.to_csv(os.path.join(annos_dir, os.path.basename(lf)), sep=' ', header=False, index=False)
         plot_img_with_bbx(os.path.join(image_rc_val_dir, os.path.basename(lf).replace('.txt', '.jpg')), lf, cat_sample_dir, label_index=True)

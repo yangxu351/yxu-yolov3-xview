@@ -309,7 +309,6 @@ def train(opt):
                 if sf != 1:
                     ns = [math.ceil(x * sf / 32.) * 32 for x in imgs.shape[2:]]  # new shape (stretched to 32-multiple)
                     imgs = F.interpolate(imgs, size=ns, mode='bilinear', align_corners=False)
-
             # Plot images with bounding boxes
             if ni <= 2:# == 0:
                 if opt.rare_class:
@@ -536,7 +535,7 @@ if __name__ == '__main__':
         time_marker = time.strftime('%Y-%m-%d_%H.%M', time.localtime())
         opt.weights_dir = 'weights/{}_cls/{}/{}/'.format(opt.class_num, pxwhrsd, '{}_{}_seed{}'.format(time_marker, hyp_cmt, opt.yoloseed))
         opt.writer_dir = 'writer_output/{}_cls/{}/{}/'.format(opt.class_num, pxwhrsd, '{}_{}_seed{}'.format(time_marker, hyp_cmt, opt.yoloseed))
-        opt.result_dir = 'result_output/{}_cls/{}/{}/'.format(opt.class_num, pxwhrsd, '{}_{}_seed{}'.format(time_marker, hyp_cmt, opt.yoloseed))
+        opt.result_dir = 'result_output/{}_cls/{}/xview_only/{}/'.format(opt.class_num, pxwhrsd, '{}_{}_seed{}'.format(time_marker, hyp_cmt, opt.yoloseed))
 
         if not os.path.exists(opt.weights_dir):
             os.makedirs(opt.weights_dir)

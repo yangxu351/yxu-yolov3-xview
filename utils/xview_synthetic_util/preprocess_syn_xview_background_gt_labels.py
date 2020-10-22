@@ -104,9 +104,9 @@ def group_object_annotation_and_draw_bbox(dt, px_thresh=20, whr_thres=4):
     else:
         shutil.rmtree(save_txt_path)
         os.makedirs(save_txt_path)
-    gt_files = np.sort(glob.glob(os.path.join(lbl_path, '*{}'.format(IMG_FORMAT))))
-    for gf in gt_files:
-        os.rename(gf, gf.replace('color', 'texture'))
+    # gt_files = np.sort(glob.glob(os.path.join(lbl_path, '*{}'.format(IMG_FORMAT))))
+    # for gf in gt_files:
+    #     os.rename(gf, gf.replace('color', 'texture'))
 
     gbc.get_object_bbox_after_group(lbl_path, save_txt_path, class_label=0, min_region=syn_args.min_region,
                                     link_r=syn_args.link_r, px_thresh=px_thresh, whr_thres=whr_thres)
@@ -382,9 +382,11 @@ if __name__ == '__main__':
     #     syn_args = get_args(cmt)
     #     for dt in display_types:
     #         group_object_annotation_and_draw_bbox(dt, px_thres, whr_thres)
-    color_sigma = [15, 30, 45, 60] # 0,
+    # color_sigma = [15, 30, 45, 60] # 0,
+    color_sigma = [10, 20, 30, 40]
     for ix,ssig in enumerate(color_sigma):
-        cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.03_color_bias{}_RC5_v{}'.format(ssig, ix+51)
+        # cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.03_color_bias{}_RC5_v{}'.format(ssig, ix+51)
+        cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.03_color_square_bias{}_RC4_v{}'.format(ssig, ix+96)
         px_thres = 23
 
        # px_thres = 23

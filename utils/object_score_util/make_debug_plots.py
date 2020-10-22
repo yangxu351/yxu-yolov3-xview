@@ -46,27 +46,28 @@ def plot_hist(hist, smooth=False):
             plt.plot(hist[c, :], color_list[c])
 
 
-def make_hist_plots(rc_class=4, parent_dir='/media/lab/Seagate Expansion Drive/syn'):
-    sigs = [0, 15, 30, 45, 60]
+def make_hist_plots(rc_class=4, version_base=91, parent_dir='/media/lab/Seagate Expansion Drive/syn'):
+    # sigs = [0, 15, 30, 45, 60]
+    sigs = [10, 20, 30, 40]
     if rc_class == 1:
-        fold_name = 'syn_xview_bkg_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_ssig0_color_bias{}_RC1_v5{}'
+        fold_name = 'syn_xview_bkg_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_ssig0_color_bias{}_RC1_v{}'
     elif rc_class == 2:
-        fold_name = 'syn_xview_bkg_xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_ssig0_color_bias{}_RC2_v5{}'
+        fold_name = 'syn_xview_bkg_xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_ssig0_color_bias{}_RC2_v{}'
     elif rc_class == 3:
-        fold_name = 'syn_xview_bkg_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.09_color_bias{}_RC3_v5{}'
+        fold_name = 'syn_xview_bkg_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.09_color_bias{}_RC3_v{}'
     elif rc_class == 4:
-        fold_name = 'syn_xview_bkg_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.09_color_bias{}_RC4_v5{}'
+        fold_name = 'syn_xview_bkg_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.03_color_square_bias{}_RC4_v{}'
     elif rc_class == 5:
-        fold_name = 'syn_xview_bkg_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.03_color_bias{}_RC5_v5{}'
+        fold_name = 'syn_xview_bkg_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.03_color_bias{}_RC5_v{}'
 
     sig_imgs = []
     for sig_cnt, sig in enumerate(sigs):
-        sig_imgs.append(tm.misc_utils.get_files(os.path.join(parent_dir, fold_name.format(sig, sig_cnt),
+        sig_imgs.append(tm.misc_utils.get_files(os.path.join(parent_dir, fold_name.format(sig,  version_base + sig_cnt),
                                                              'color_all_images_step182.4'), '*.png'))
-    annos_imgs = tm.misc_utils.get_files(os.path.join(parent_dir, fold_name.format(0, 0),
+    annos_imgs = tm.misc_utils.get_files(os.path.join(parent_dir, fold_name.format(sig,  version_base + sig_cnt),
                                                              'color_all_annos_step182.4'), '*.png')
 
-    assert len(sig_imgs[0]) == len(sig_imgs[1]) == len(sig_imgs[2]) == len(sig_imgs[3]) == len(sig_imgs[4]) == len(annos_imgs)
+    assert len(sig_imgs[0]) == len(sig_imgs[1]) == len(sig_imgs[2]) == len(sig_imgs[3])  == len(annos_imgs) #== len(sig_imgs[4])
 
     plt.figure(figsize=(12, 8))
     for sig_cnt, sig in enumerate(sigs):
@@ -103,7 +104,9 @@ def cmp_annotation(parent_dir=r'/media/lab/Seagate Expansion Drive/syn_gt_box'):
 
 
 if __name__ == '__main__':
-    make_hist_plots(1)
-    make_hist_plots(2)
-    make_hist_plots(3)
-    make_hist_plots(5)
+    # make_hist_plots(1)
+    # make_hist_plots(2)
+    # make_hist_plots(3)
+    # make_hist_plots(5)
+
+    make_hist_plots(4, version_base=96, parent_dir='/media/lab/Yang/data/synthetic_data')

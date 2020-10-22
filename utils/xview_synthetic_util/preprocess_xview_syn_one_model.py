@@ -7,6 +7,7 @@ import os
 import utils.wv_util as wv
 from utils.utils_xview import coord_iou, compute_iou
 from utils.xview_synthetic_util import preprocess_xview_syn_data_distribution as pps
+from utils.object_score_util import get_bbox_coords_from_annos_with_object_score as gbc
 import pandas as pd
 from ast import literal_eval
 import json
@@ -726,7 +727,7 @@ if __name__ == '__main__':
     #
     # other_label = 0
     # val_m_rc_path = args.annos_save_dir[:-1] + '_val_m{}_to_rc{}'.format(model_id, rare_id)
-    create_model_rareclass_hard_easy_set_backup(val_m_rc_path, model_id, rare_id, non_rare_id, seed, pxwhr)
+    # create_model_rareclass_hard_easy_set_backup(val_m_rc_path, model_id, rare_id, non_rare_id, seed, pxwhr)
 
 
     '''                                                                                                 
@@ -793,6 +794,19 @@ if __name__ == '__main__':
     # model_id = 4
     # create_test_dataset_of_model_id_labeled(model_id)
 
+    type='hard'
+    # type='easy'
+    save_dir = os.path.join(args.cat_sample_dir, 'image_with_bbox/RC4_{}/'.format(type))
+    if not os.path.exists(save_dir):
+        os.mkdir(save_dir)
+    lbl_dir = args.annos_save_dir[:-1] + '_rc_all_new_ori_multi_rcid_aug_easy_hard/all_aug_m5_rc4_{}/'.format(type)
+    img_dir = args.images_save_dir[:-1] + '_rc_all_new_ori_multi_aug'
+    img_list = glob.glob(os.path.join(img_dir, '*.jpg'))
+    for f in img_list:
+        print('f ', f)
+        name = os.path.basename(f)
+        lbl_file = os.path.join(lbl_dir, name.replace('.jpg', '.txt'))
+        gbc.plot_img_with_bbx(f, lbl_file, save_dir, rare_id=True)
 
     '''
     resize validation images and labels

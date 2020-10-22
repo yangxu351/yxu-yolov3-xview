@@ -67,7 +67,8 @@ def gaussian_disribution_of_size(mu, ssig_list, rare_cls, num_aft):
     f_txt = open(os.path.join(save_dir, 'RC{}_size.txt'.format(rare_cls)), 'w')
     gs = []
     for ix, ssig in enumerate(ssig_list):
-        diag = ssig * np.diag(mu)
+        # diag =  ssig * np.diag(mu)
+        diag =  np.diag(np.power(ssig * mu, 2))
         gs = np.random.multivariate_normal(mu, diag, num_aft)
         # plt.hist(gs, 30)
         # a = np.random.choice(gs[:, 0], 450*2)
@@ -84,23 +85,42 @@ def gaussian_disribution_of_size(mu, ssig_list, rare_cls, num_aft):
         f_txt.write('@Hidden\nattr wing{}= "{}"\n\n'.format(int(ssig*100), wing_str))
         # df_size = df_size.append({'Version':ix, 'mean_body':mu[0], 'mean_wing':mu[1], 'size_sqsigma':ssig}, ignore_index=True)
     f_txt.close()
-    # if rare_cls == 1:
-    #     mode = 'w'
-    # else:
-    #     mode = 'a'
-    # with pd.ExcelWriter(os.path.join(save_dir, 'rare_class_size_mean_sigma.xlsx'), mode=mode) as writer:
-    #     df_size.to_excel(writer, sheet_name='rc{}'.format(rare_cls), index=False)
-    # df_size.tocsv(os.path.join(save_dir, 'RC{}_size_mean_sigma.csv'.format(rare_cls)), index=False)
 
+
+def gaussian_disribution_of_body_wing(mu_body, body_ssig_list, mu_wing, wing_ssig_list, ccid, num_aft):
+    np.random.seed(1)
+    save_dir = '../../data_xview/1_cls/px23whr3_seed17/CC/CC_size/'
+    if not os.path.exists(save_dir):
+        os.mkdir(save_dir)
+    f_txt = open(os.path.join(save_dir, 'syn_CC{}_size.txt'.format(ccid)), 'w')
+    mu = np.array([mu_body, mu_wing])
+    for ix in range(len(body_ssig_list)):
+        ssig = [body_ssig_list[ix]*mu_body, wing_ssig_list[ix]*mu_wing]
+        diag =  np.diag(np.power(ssig, 2))
+        gs = np.random.multivariate_normal(mu, diag, num_aft)
+        # plt.hist(gs, 30)
+        # a = np.random.choice(gs[:, 0], 450*2)
+        # print("mean, std", np.mean(a), np.std(a))
+        # plt.hist(a, 30)
+        # plt.show()
+        body_str = ''
+        wing_str = ''
+        for jx in range(gs.shape[0]):
+            body_str += '{:.2f};'.format(gs[jx, 0])
+            wing_str += '{:.2f};'.format(gs[jx, 1])
+
+        f_txt.write('@Hidden\nattr body{}= "{}"\n\n'.format(int(body_ssig_list[ix]*100), body_str))
+        f_txt.write('@Hidden\nattr wing{}= "{}"\n\n'.format(int(wing_ssig_list[ix]*100), wing_str))
+    f_txt.close()
 
 if __name__ == '__main__':
     ## rc1
-    num_aft = int(450*7*3)
-    rare_cls = 1
-    mu = [13, 7]
-    ssig_list = [0, 0.03, 0.06, 0.09, 0.12]
-    gaussian_disribution_of_size(mu, ssig_list, rare_cls, num_aft)
-
+    # num_aft = int(450*7*3)
+    # rare_cls = 1
+    # mu = [13, 7]
+    # ssig_list = [0, 0.03, 0.06, 0.09, 0.12]
+    # gaussian_disribution_of_size(mu, ssig_list, rare_cls, num_aft)
+    #
     # # ## rc2
     # num_aft = int(450*7*3)
     # rare_cls = 2
@@ -129,20 +149,27 @@ if __name__ == '__main__':
     # ssig_list = [0, 0.03, 0.06, 0.09, 0.12]
     # gaussian_disribution_of_size(mu, ssig_list, rare_cls, num_aft)
 
-
-    # mu = 25.7
-    # ssig = mu*0.12
-    # print('ssig', ssig)
-    # all_gs = []
-    # all_gsstr = ""
-    # np.random.seed(1)
-    # seeds = np.random.choice(5000, 450)
-    # for i in range(450):
-    #     sd = seeds[i]
-    #     gs, gsstr = generate_normal(sd, mu, ssig, size=7*2)
-    #     all_gs.extend(gs)
-    #     all_gsstr += gsstr
-    # print('gs min {:.3f}  max {:.3f}'.format(np.min(all_gs), np.max(all_gs)))
-    # print('gs len {} mean {:.3f} std {:.3f}'.format(len(all_gs), np.mean(all_gs), np.std(all_gs)))
-    # plt.hist(np.array(gs), bins=10, density=True)
-    # plt.show()
+    ## cc1
+    num_aft = int(450*7*3)
+    ccid = 1
+    size_file = '/media/lab/Yang/code/yolov3/data_xview/1_cls/px23whr3_seed17/CC/CC_size/CC1_size.csv'
+    # ccid = 2
+    # size_file = '/media/lab/Yang/code/yolov3/data_xview/1_cls/px23whr3_seed17/CC/CC_size/CC2_size.csv'
+    # body_ssig_list = [0, 0.05, 0.1, 0.15, 0.2, 0.25]
+    # wing_ssig_list = [0, 0.05, 0.1, 0.15, 0.2, 0.25]
+    df_size = pd.read_csv(size_file, sep='\t')
+    body = df_size['Body'].to_numpy()
+    wing = df_size['Wing'].to_numpy()
+    mu_body = np.around(np.mean(body), decimals=1)
+    mu_wing = np.around(np.mean(wing), decimals=1)
+    std_body = np.around(np.std(body), decimals=2)
+    std_wing = np.around(np.std(wing), decimals=2)
+    print('mu_body, std_body, std/mu', mu_body, std_body, std_body/mu_body/4)
+    print('mu_wing, std_wing, std/mu', mu_wing, std_wing, std_wing/mu_wing/4)
+    step_body = np.around(std_body/mu_body/4, decimals=2)
+    step_wing = np.around(std_wing/mu_wing/4, decimals=2)
+    body_ssig_list = [i*step_body for i in range(5)]
+    wing_ssig_list = [i*step_wing for i in range(5)]
+    print('body_list', body_ssig_list)
+    print('wing_list', wing_ssig_list)
+    # gaussian_disribution_of_body_wing(mu_body, body_ssig_list, mu_wing, wing_ssig_list, ccid, num_aft)

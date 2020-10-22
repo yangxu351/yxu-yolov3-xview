@@ -422,13 +422,13 @@ def collect_all_rc_of_the_same_ratio():
         # hyp_cmt = "hgiou1_29.5obj_rc{}x{}".format(rcs, opt.batch_size-rcs)
         rc_ratio = 'rc{}x{}'.format(rc_size, opt.batch_size-rc_size)
         hyp_cmt = "hgiou1_29.5obj_{}_rcls{}".format(rc_ratio, rc)
-        csv_dir = "result_output/{}_cls/{}/{}/".format(opt.class_num, base_cmt, "test_on_xview_ori_nrcbkg_aug_rc_{}_ap{}".format(hyp_cmt, apN))
+        csv_dir = "result_output/{}_cls/{}/xview_only/{}/".format(opt.class_num, base_cmt, "test_on_xview_ori_nrcbkg_aug_rc_{}_ap{}".format(hyp_cmt, apN))
         csv_name =  "xview_RC_AP50_easy_seed0.xls"
         df = pd.read_excel(os.path.join(csv_dir, csv_name))
         df_all = df_all.append(df.loc[0, :])
 
     save_name =  "xview_all_rc_{}_AP{}_RC_{}.xlsx".format(rc_ratio, apN, eht)
-    save_dir = 'result_output/{}_cls/{}/test_on_xview_ori_nrcbkg_aug_rc_{}_ap{}/'.format(opt.class_num, base_cmt, hyp_cmt[:hyp_cmt.rfind('rcls')+4], apN)
+    save_dir = 'result_output/{}_cls/{}/xview_only/test_on_xview_ori_nrcbkg_aug_rc_{}_ap{}/'.format(opt.class_num, base_cmt, hyp_cmt[:hyp_cmt.rfind('rcls')+4], apN)
     if not os.path.exists(save_dir):
         os.mkdir(save_dir)
     with pd.ExcelWriter(os.path.join(save_dir, save_name), mode='w') as writer:
@@ -450,7 +450,7 @@ def get_opt(dt=None, sr=None, comments=''):
     parser.add_argument("--class_num", type=int, default=1, help="class number")  # 60 6
     parser.add_argument("--label_dir", type=str, default="/media/lab/Yang/data/xView_YOLO/labels/", help="*.json path")
     parser.add_argument("--weights_dir", type=str, default="weights/{}_cls/{}_seed{}/", help="to save weights path")
-    parser.add_argument("--result_dir", type=str, default="result_output/{}_cls/{}_seed{}/{}/", help="to save result files path")
+    parser.add_argument("--result_dir", type=str, default="result_output/{}_cls/{}_seed{}/", help="to save result files path")
     parser.add_argument("--grids_dir", type=str, default="grids_dir/{}_cls/{}_seed{}/", help="to save grids images")
     parser.add_argument("--syn_ratio", type=float, default=sr, help="ratio of synthetic data: 0 0.25, 0.5, 0.75")
     parser.add_argument("--syn_display_type", type=str, default=dt, help="syn_texture0, syn_color0, syn_texture, syn_color, syn_mixed, syn")
@@ -578,8 +578,8 @@ if __name__ == "__main__":
     px_thres = 23
     whr_thres = 3 # 4
     sd = 17
-    model_ids = [5] #4, 1, 5, 5, 5
-    rare_classes = [3] # 1, 2, 3, 4, 5
+    model_ids = [4, 1, 5, 5, 5] #4, 1, 5, 5, 5
+    rare_classes = [1, 2, 3, 4, 5] # 1, 2, 3, 4, 5
     far_thres = 3
     rc_ratios = [4]  # 1, 2,3,4,5,6
     seeds = [0]# , 1, 2
@@ -628,14 +628,8 @@ if __name__ == "__main__":
     #            opt.data = "data_xview/{}_cls/{}/xviewtest_{}_m{}_rc{}_{}.data".format(opt.class_num, base_cmt, base_cmt, opt.model_id, opt.rare_class, opt.type)
     #             opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, "test_on_xview_{}_m{}_rc{}_ap{}_{}".format(hyp_cmt, opt.model_id, opt.rare_class, apN, opt.type))
     #             opt.data = "data_xview/{}_cls/{}/xview_rc_test_{}_m{}_rc{}_{}.data".format(opt.class_num, base_cmt, base_cmt, opt.model_id, opt.rare_class, opt.type)
-                opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'xview_only', 'test_on_xview_ori_nrcbkg_aug_rc_{}_m{}_rc{}_{}_iou{}_seed{}'.format(hyp_cmt, opt.model_id, opt.rare_class, opt.type, apN, seed))
+                opt.result_dir = os.path.join(opt.result_dir.format(opt.class_num, cmt, sd), 'xview_only', 'test_on_xview_ori_nrcbkg_aug_rc_{}_{}_iou{}_seed{}'.format(hyp_cmt, opt.type, apN, seed))
                 opt.data = 'data_xview/{}_cls/{}/RC/xview_ori_nrcbkg_aug_rc_test_{}_m{}_rc{}_{}.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id, opt.rare_class, opt.type)
-
-
-                ''' for whole validation dataset '''
-                # opt.conf_thres = 0.1
-                # opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd , "{}_{}_seed{}".format("test_on_xview_with_model", hyp_cmt, sd))
-                # opt.data = "data_xview/{}_cls/{}/{}_seed{}_with_model.data".format(opt.class_num, "px{}whr{}_seed{}".format(px_thres, whr_thres, sd), "xview_px{}whr{}".format(px_thres, whr_thres), sd)
 
                 if not os.path.exists(opt.result_dir):
                     os.makedirs(opt.result_dir)
@@ -703,11 +697,11 @@ if __name__ == "__main__":
 
             csv_name =  "{}_RC_AP{}_{}_seed{}.xls".format(tif_name, apN, opt.type, seed)
             # csv_dir = "result_output/{}_cls/{}/".format(opt.class_num, cmt[:cmt.find("bias")+4] + '_RC' + str(opt.rare_class))
-            csv_dir = "result_output/{}_cls/{}/{}/".format(opt.class_num, base_cmt, "test_on_xview_ori_nrcbkg_aug_rc_{}_ap{}".format(hyp_cmt, apN))
+            csv_dir = "result_output/{}_cls/{}/xview_only/{}/".format(opt.class_num, base_cmt, "test_on_xview_ori_nrcbkg_aug_rc_{}_ap{}".format(hyp_cmt[:hyp_cmt.rfind('rcls')+4], apN))
             if not os.path.exists(csv_dir):
-                os.mkdir(csv_dir)
+                os.makedirs(csv_dir)
             mode = 'w'
             with pd.ExcelWriter(os.path.join(csv_dir, csv_name), mode=mode) as writer:
                 df_pr_ap_far.to_excel(writer, sheet_name='RC{}_{}'.format(opt.rare_class, opt.type), index=False)
     # # compute_all_ratios(rc_ratios)
-    collect_all_rc_of_the_same_ratio()
+    # collect_all_rc_of_the_same_ratio()

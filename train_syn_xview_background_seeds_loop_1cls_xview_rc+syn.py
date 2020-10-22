@@ -550,9 +550,9 @@ if __name__ == '__main__':
         opt.base_dir = opt.base_dir.format(opt.class_num, pxwhrsd)
 
         time_marker = time.strftime('%Y-%m-%d_%H.%M', time.localtime())
-        opt.weights_dir = 'weights/{}_cls/{}/{}/'.format(opt.class_num, pxwhrsd, '{}_{}_seed{}'.format(time_marker, hyp_cmt, opt.seed))
-        opt.writer_dir = 'writer_output/{}_cls/{}/{}/'.format(opt.class_num, pxwhrsd, '{}_{}_seed{}'.format(time_marker, hyp_cmt, opt.seed))
-        opt.result_dir = 'result_output/{}_cls/{}/{}/'.format(opt.class_num, pxwhrsd, '{}_{}_seed{}'.format(time_marker, hyp_cmt, opt.seed))
+        opt.weights_dir = 'weights/{}_cls/{}/xview_only/{}/'.format(opt.class_num, pxwhrsd, '{}_{}_seed{}'.format(time_marker, hyp_cmt, opt.seed))
+        opt.writer_dir = 'writer_output/{}_cls/{}/xview_only/{}/'.format(opt.class_num, pxwhrsd, '{}_{}_seed{}'.format(time_marker, hyp_cmt, opt.seed))
+        opt.result_dir = 'result_output/{}_cls/{}/xview_only/{}/'.format(opt.class_num, pxwhrsd, '{}_{}_seed{}'.format(time_marker, hyp_cmt, opt.seed))
 
         if not os.path.exists(opt.weights_dir):
             os.makedirs(opt.weights_dir)

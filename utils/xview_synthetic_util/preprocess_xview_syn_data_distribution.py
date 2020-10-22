@@ -371,8 +371,8 @@ def draw_bbx_on_rgb_images(pxwhr='px6whr4_ng0'):
 
 def draw_bbx_on_rgb_images_with_indices_for_train_val(typestr='val', pxwhrs='px23whr3_seed17', px_thres=23, whr_thres=3):
         args = pwv.get_args(px_thres, whr_thres)
-        bbox_folder_name = '{}_images_with_bbox_with_indices_{}'.format(pxwhrs, typestr)
-        # bbox_folder_name = '{}_images_with_bbox_with_indices_{}_aug_rc'.format(pxwhrs, typestr)
+        # bbox_folder_name = '{}_images_with_bbox_with_indices_{}'.format(pxwhrs, typestr)
+        bbox_folder_name = '{}_images_with_bbox_with_indices_{}_aug_rc'.format(pxwhrs, typestr)
         save_bbx_path = os.path.join(args.cat_sample_dir, 'image_with_bbox_indices', bbox_folder_name)
         print('save_bbx_path', save_bbx_path)
         if not os.path.exists(save_bbx_path):
@@ -380,10 +380,10 @@ def draw_bbx_on_rgb_images_with_indices_for_train_val(typestr='val', pxwhrs='px2
 
         # data_img_file = os.path.join(args.data_save_dir, pxwhrs, 'xview{}_img_{}.txt'.format(typestr, pxwhrs))
         # data_lbl_file = os.path.join(args.data_save_dir, pxwhrs, 'xview{}_lbl_{}.txt'.format(typestr, pxwhrs))
-        # data_img_file = os.path.join(args.data_save_dir, pxwhrs, 'xview_ori_nrcbkg_aug_rc_val_img_px23whr3_seed17.txt')
-        # data_lbl_file = os.path.join(args.data_save_dir, pxwhrs, 'xview_ori_nrcbkg_aug_rc_val_lbl_px23whr3_seed17.txt')
-        data_img_file = os.path.join(args.data_save_dir, pxwhrs, 'only_rc_train_img_px23whr3_seed17.txt')
-        data_lbl_file = os.path.join(args.data_save_dir, pxwhrs, 'only_rc_train_lbl_px23whr3_seed17.txt')
+        data_img_file = os.path.join(args.data_save_dir, pxwhrs, 'xview_ori_nrcbkg_aug_rc_val_img_px23whr3_seed17.txt')
+        data_lbl_file = os.path.join(args.data_save_dir, pxwhrs, 'xview_ori_nrcbkg_aug_rc_val_lbl_px23whr3_seed17.txt')
+        # data_img_file = os.path.join(args.data_save_dir, pxwhrs, 'only_rc_train_img_px23whr3_seed17.txt')
+        # data_lbl_file = os.path.join(args.data_save_dir, pxwhrs, 'only_rc_train_lbl_px23whr3_seed17.txt')
         print('data_img_file', data_img_file)
         df_img = pd.read_csv(data_img_file, header=None)
         print('df_img len', df_img.shape)
@@ -674,8 +674,6 @@ def statistic_model_number(comments='px23whr3_seed17', type='all'):
     plt.grid()
     plt.savefig(os.path.join(save_dir, png_name))
     plt.show()
-
-
 
 
 
