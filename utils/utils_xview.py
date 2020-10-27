@@ -348,14 +348,14 @@ def ap_per_class(tp, conf, pred_cls, target_cls, ntp=None, pr_path='', pr_name='
         if rare_class is not None:
             i = pred_cls == 0
             n_gt = (target_cls == rare_class).sum()
-            n_p = i.sum()
-            # print('n_gt', n_gt, 'n_p', n_p)
+            n_prd = i.sum()
+            print('n_gt', n_gt, 'n_prd', n_prd)
         else:
             i = pred_cls == c
             n_gt = (target_cls == c).sum()  # Number of ground truth objects
-            n_p = i.sum()  # Number of predicted objects
+            n_prd = i.sum()  # Number of predicted objects
 
-        if n_p == 0 or n_gt == 0:
+        if n_prd == 0 or n_gt == 0:
             r[ci] = 0
             p[ci] = 0
             # AP from recall-precision curve
@@ -367,8 +367,8 @@ def ap_per_class(tp, conf, pred_cls, target_cls, ntp=None, pr_path='', pr_name='
             # Accumulate FPs and TPs
             fpc = (1 - tp[i]).cumsum(0)
             tpc = tp[i].cumsum(0)
-            # print('fpc', fpc.shape) # (178, 1)  , np.concatenate(([0.], recall).shape)
-            # print('tp', tp.shape) #  , np.concatenate(([0.], recall).shape)
+#            print('fpc', fpc.shape) # (505, 1)  , np.concatenate(([0.], recall).shape)
+#            print('tpc', tpc.shape) #  , np.concatenate(([0.], recall).shape)
 
             # Recall
             recall = tpc / (n_gt + 1e-16)  # recall curve

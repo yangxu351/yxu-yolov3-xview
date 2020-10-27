@@ -9,6 +9,7 @@ sys.path.append('/data/users/yang/code/yxu-yolov3-xview')
 from utils.object_score_util import get_bbox_coords_from_annos_with_object_score as gbc
 
 
+
 def is_non_zero_file(fpath):
     return os.path.isfile(fpath) and os.path.getsize(fpath) > 0
 
@@ -162,12 +163,87 @@ def split_cc_ncc_and_rc_by_cc_id(ccid, seed=17):
         shutil.copy(os.path.join(images_save_dir, img_name), os.path.join(trn_cc_img_dir, img_name))
 
 
+def augment_val_CC_by_id(cc_id=1, flip=False, rotate=True):
+    from utils.xview_synthetic_util.resize_flip_rotate_images import flip_images, rotate_images, flip_rotate_coordinates
+    val_cc_img_dir = os.path.join(args.images_save_dir[:-1] + '_cc{}_val'.format(cc_id))
+    val_cc_lbl_dir = args.annos_save_dir[:-1] + '_cc{}_with_id_val'.format(cc_id)
+    val_cc_img_files = np.sort(glob.glob(os.path.join(val_cc_img_dir, '*.jpg')))
+    if flip:
+        flipped_rc_img_dir = val_cc_img_dir + '_flip'
+        if not os.path.exists(flipped_rc_img_dir):
+            os.mkdir(flipped_rc_img_dir)
+        else:
+            shutil.rmtree(flipped_rc_img_dir)
+            os.mkdir(flipped_rc_img_dir)
+        flipped_rc_lbl_dir = val_cc_lbl_dir + '_flip'
+        if not os.path.exists(flipped_rc_lbl_dir):
+            os.mkdir(flipped_rc_lbl_dir)
+        else:
+            shutil.rmtree(flipped_rc_lbl_dir)
+            os.mkdir(flipped_rc_lbl_dir)
+        save_dir = args.cat_sample_dir + 'image_with_bbox/RC_flip/'
+        if not os.path.exists(save_dir):
+            os.mkdir(save_dir)
+        else:
+            shutil.rmtree(save_dir)
+            os.mkdir(save_dir)
+        for f in val_cc_img_files:
+            img_name = os.path.basename(f)
+            img_dir = os.path.dirname(f)
+            flip_images(img_name, img_dir)
+            name = img_name.split('.')[0]
+            flip_rotate_coordinates(flipped_rc_img_dir,val_cc_lbl_dir, save_dir, flipped_rc_lbl_dir, name, flip='lr')
+        val_cc_img_dir = flipped_rc_img_dir
+        val_cc_lbl_dir = flipped_rc_lbl_dir
+        aug_lbl_dir = flipped_rc_lbl_dir
+    if rotate:
+        val_img_files = np.sort(glob.glob(os.path.join(val_cc_img_dir, '*.jpg')))
+        aug_img_dir = val_cc_img_dir + '_aug'
+        if not os.path.exists(aug_img_dir):
+            os.mkdir(aug_img_dir)
+        else:
+            shutil.rmtree(aug_img_dir)
+            os.mkdir(aug_img_dir)
+        aug_lbl_dir = val_cc_lbl_dir + '_aug'
+        if not os.path.exists(aug_lbl_dir):
+            os.mkdir(aug_lbl_dir)
+        else:
+            shutil.rmtree(aug_lbl_dir)
+            os.mkdir(aug_lbl_dir)
+        save_dir = args.cat_sample_dir + 'image_with_bbox/RC_aug/'
+        if not os.path.exists(save_dir):
+            os.mkdir(save_dir)
+        else:
+            shutil.rmtree(save_dir)
+            os.mkdir(save_dir)
+
+        for f in val_img_files:
+            img_name = os.path.basename(f)
+            img_dir = os.path.dirname(f)
+            rotate_images(img_name, img_dir)
+            name = img_name.split('.')[0]
+            angle_list = [90, 180, 270]
+            for angle in angle_list:
+                flip_rotate_coordinates(aug_img_dir, val_cc_lbl_dir, save_dir, aug_lbl_dir, name, angle=angle)
+    aug_lbl0_dir = aug_lbl_dir + '_id0'
+    if not os.path.exists(aug_lbl0_dir):
+        os.mkdir(aug_lbl0_dir)
+    else:
+        shutil.rmtree(aug_lbl0_dir)
+        os.mkdir(aug_lbl0_dir)
+    aug_lbl_files = glob.glob(os.path.join(aug_lbl_dir, '*.txt'))
+    for f in aug_lbl_files:
+        df = pd.read_csv(f, header=None, sep=' ')
+        df.loc[:, 5] = 0
+        df.to_csv(os.path.join(aug_lbl0_dir, os.path.basename(f)), header=False, index=False, sep=' ')
+
+
 def add_ncc_nrc_to_bkg():
     '''
     Other airplane(NCC, NRC) labels belong to BG
     '''
-    bkg_lbl_dir = args.annos_save_dir[:-1] + '_bkg'
-    bkg_img_dir = args.images_save_dir[:-1] + '_noairplane_bkg_chips'
+    bkg_lbl_dir = args.annos_save_dir[:-1] + '_bkg-oa-other-airplane'
+    bkg_img_dir = args.images_save_dir[:-1] + '_noairplane_bkg_chips-oa-other-airplane'
     cc1_lbl0_dir = args.annos_save_dir[:-1] + '_cc1_with_id0'
     cc2_lbl0_dir = args.annos_save_dir[:-1] + '_cc2_with_id0'
     all_rc_lbl_dir = args.annos_save_dir[:-1] + '_rc_all_ori_rcid'
@@ -190,7 +266,6 @@ def add_ncc_nrc_to_bkg():
             shutil.copy(os.path.join(all_airp_img_dir, img_name), os.path.join(bkg_img_dir, img_name))
             cnt += 1
     print('cnt', cnt)
-
 
 
 def split_bkg_into_train_val(comments='px{}whr{}_seed{}', seed=17):
@@ -291,46 +366,49 @@ def split_bkg_into_train_val(comments='px{}whr{}_seed{}', seed=17):
                     os.path.join(data_save_dir, 'xview_bkg_val_img_{}.txt'.format(comments)))
 
 
-
-def combine_trn_val_for_each_CC_step_by_step(cc_id, base_pxwhrs, ccids=[1, 2]):
+def combine_trn_val_for_each_CC_step_by_step(cc_id, data_name, base_pxwhrs, ccids=[1, 2]):
     '''
     split CC1, CC2 separately
     train: CC(i) + Non-CC(i) + BKG
     val: CC(i) + Non-CC(i) + BKG + RC
     :return:
     '''
-
     ori_rc_lbl_dir = args.annos_save_dir[:-1] + '_rc_all_ori_rcid'
-    all_aug_rc_lbl_dir = ori_rc_lbl_dir + '_flip_aug'
-    all_aug_rc_img_dir = args.images_save_dir[:-1] + '_rc_ori_flip_aug'
+    # all_aug_rc_lbl0_dir = ori_rc_lbl_dir + '_flip_aug_id0'
+    # all_aug_rc_img_dir = args.images_save_dir[:-1] + '_rc_ori_flip_aug'
+    all_aug_rc_lbl0_dir = ori_rc_lbl_dir + '_aug_id0'
+    all_aug_rc_img_dir = args.images_save_dir[:-1] + '_rc_ori_aug'
 
     trn_cc_lbl_dir =  args.annos_save_dir[:-1] + '_cc{}_with_id_trn'.format(cc_id)
     trn_cc_img_dir =  args.images_save_dir[:-1] + '_cc{}_trn'.format(cc_id)
-    val_cc_lbl_dir =  args.annos_save_dir[:-1] + '_cc{}_with_id_val'.format(cc_id)
-    val_cc_img_dir =  args.images_save_dir[:-1] + '_cc{}_val'.format(cc_id)
+    if cc_id ==1:
+        val_cc_lbl_dir =  args.annos_save_dir[:-1] + '_cc{}_with_id_val_aug'.format(cc_id)
+        val_cc_img_dir =  args.images_save_dir[:-1] + '_cc{}_val_aug'.format(cc_id)
+    else:
+        val_cc_lbl_dir =  args.annos_save_dir[:-1] + '_cc{}_with_id_val'.format(cc_id)
+        val_cc_img_dir =  args.images_save_dir[:-1] + '_cc{}_val'.format(cc_id)
 
     non_ccid = ccids[ccids != cc_id][0]
     print('non_ccid', non_ccid)
     trn_ncc_lbl_dir = args.annos_save_dir[:-1] + '_cc{}_with_id_trn'.format(non_ccid)
-    val_ncc_lbl_dir = args.annos_save_dir[:-1] + '_cc{}_with_id_val'.format(non_ccid)
-    # ncc_lbl0_dir =  args.annos_save_dir[:-1] + '_cc{}_with_id0'.format(non_ccid)
+    ncc_lbl0_dir =  args.annos_save_dir[:-1] + '_cc{}_with_id0'.format(non_ccid)
     trn_ncc_img_dir = args.images_save_dir[:-1] + '_cc{}_trn'.format(non_ccid)
-    val_ncc_img_dir = args.images_save_dir[:-1] + '_cc{}_val'.format(non_ccid)
+
+    if non_ccid ==1:
+        val_ncc_lbl0_dir = args.annos_save_dir[:-1] + '_cc{}_with_id_val_aug_id0'.format(non_ccid)
+        val_ncc_img_dir = args.images_save_dir[:-1] + '_cc{}_val_aug'.format(non_ccid)
+    else:
+        val_ncc_lbl0_dir = ncc_lbl0_dir
+        val_ncc_img_dir = args.images_save_dir[:-1] + '_cc{}_val'.format(non_ccid)
 
     val_bkg_lbl_dir = args.annos_save_dir[:-1] + '_val_bkg_lbl'
     trn_bkg_lbl_dir = args.annos_save_dir[:-1] + '_trn_bkg_lbl'
     val_bkg_img_dir = args.images_save_dir[:-1] + '_val_bkg_img'
     trn_bkg_img_dir = args.images_save_dir[:-1] + '_trn_bkg_img'
 
-    cc_img_dir = args.images_save_dir[:-1] + '_cc{}'.format(cc_id)
-    img_dir = args.images_save_dir
-
     all_ori_rc_files = np.sort(glob.glob(os.path.join(ori_rc_lbl_dir, '*.txt')))
     all_ori_rc_names = [os.path.basename(f) for f in all_ori_rc_files]
-    all_aug_rc_lbl_files = np.sort(glob.glob(os.path.join(all_aug_rc_lbl_dir, '*.txt')))
-
-    # all_ncc_files = [f for f in all_ori_files if is_non_zero_file(f) and os.path.basename(f) not in all_cc_names]
-    # print('all_cc_files', len(all_cc_files))
+    all_aug_rc_lbl0_files = np.sort(glob.glob(os.path.join(all_aug_rc_lbl0_dir, '*.txt')))
 
     trn_cc_lbl_files = np.sort(glob.glob(os.path.join(trn_cc_lbl_dir, '*.txt')))
     val_cc_lbl_files = np.sort(glob.glob(os.path.join(val_cc_lbl_dir, '*.txt')))
@@ -352,14 +430,15 @@ def combine_trn_val_for_each_CC_step_by_step(cc_id, base_pxwhrs, ccids=[1, 2]):
     trn_cc_lbl_txt = open(os.path.join(data_save_dir, 'only_cc{}_trn_lbl_{}.txt'.format(cc_id, base_pxwhrs)), 'w')
     trn_nccbkg_img_txt = open(os.path.join(data_save_dir, 'xview_ncc{}bkg_trn_img_{}.txt'.format(cc_id, base_pxwhrs)), 'w')
     trn_nccbkg_lbl_txt = open(os.path.join(data_save_dir, 'xview_ncc{}bkg_trn_lbl_{}.txt'.format(cc_id, base_pxwhrs)), 'w')
-    trn_nccbkg_cc_img_txt = open(os.path.join(data_save_dir, 'xview_oa_bkg_cc{}_trn_img_{}.txt'.format(cc_id, base_pxwhrs)), 'w')
-    trn_nccbkg_cc_lbl_txt = open(os.path.join(data_save_dir, 'xview_oa_bkg_cc{}_trn_lbl_{}.txt'.format(cc_id, base_pxwhrs)), 'w')
+    trn_nccbkg_cc_img_txt = open(os.path.join(data_save_dir, '{}_trn_img_{}.txt'.format(data_name, base_pxwhrs)), 'w')
+    trn_nccbkg_cc_lbl_txt = open(os.path.join(data_save_dir, '{}_trn_lbl_{}.txt'.format(data_name, base_pxwhrs)), 'w')
 
     for f in trn_cc_lbl_files:
         trn_cc_lbl_txt.write("%s\n" % f)
         lbl_name = os.path.basename(f)
         img_name = lbl_name.replace('.txt', '.jpg')
         trn_cc_img_txt.write("%s\n" % os.path.join(trn_cc_img_dir, img_name))
+
         trn_nccbkg_cc_lbl_txt.write("%s\n" % f)
         trn_nccbkg_cc_img_txt.write("%s\n" % os.path.join(trn_cc_img_dir, img_name))
     trn_cc_lbl_txt.close()
@@ -369,9 +448,9 @@ def combine_trn_val_for_each_CC_step_by_step(cc_id, base_pxwhrs, ccids=[1, 2]):
         trn_nccbkg_img_txt.write("%s\n" % f)
         img_name = os.path.basename(f)
         lbl_name = img_name.replace('.jpg', '.txt')
-        trn_nccbkg_lbl_txt.write("%s\n" % os.path.join(trn_ncc_lbl_dir, lbl_name))
+        trn_nccbkg_lbl_txt.write("%s\n" % os.path.join(ncc_lbl0_dir, lbl_name))
         trn_nccbkg_cc_img_txt.write("%s\n" % f)
-        trn_nccbkg_cc_lbl_txt.write("%s\n" % os.path.join(trn_ncc_lbl_dir, lbl_name))
+        trn_nccbkg_cc_lbl_txt.write("%s\n" % os.path.join(ncc_lbl0_dir, lbl_name))
 
 
     for f in trn_bkg_lbl_files:
@@ -389,53 +468,55 @@ def combine_trn_val_for_each_CC_step_by_step(cc_id, base_pxwhrs, ccids=[1, 2]):
     ###### validate xview_cc_nrc_bkg
     val_cc_img_txt = open(os.path.join(data_save_dir, 'only_cc{}_val_img_{}.txt'.format(cc_id, base_pxwhrs)), 'w')
     val_cc_lbl_txt = open(os.path.join(data_save_dir, 'only_cc{}_val_lbl_{}.txt'.format(cc_id, base_pxwhrs)), 'w')
-    val_nccbkg_cc_img_txt = open(os.path.join(data_save_dir, 'xview_oa_bkg_cc{}_val_img_{}.txt'.format(cc_id, base_pxwhrs)), 'w')
-    val_nccbkg_cc_lbl_txt = open(os.path.join(data_save_dir, 'xview_oa_bkg_cc{}_val_lbl_{}.txt'.format(cc_id, base_pxwhrs)), 'w')
+    val_oa_bkg_cc_img_txt = open(os.path.join(data_save_dir, '{}_val_img_{}.txt'.format(data_name, base_pxwhrs)), 'w')
+    val_oa_bkg_cc_lbl_txt = open(os.path.join(data_save_dir, '{}_val_lbl_{}.txt'.format(data_name, base_pxwhrs)), 'w')
 
     rc_subset = []
     for f in val_cc_lbl_files:
         val_cc_lbl_txt.write("%s\n" % f)
-        val_nccbkg_cc_lbl_txt.write("%s\n" % f)
         lbl_name = os.path.basename(f)
         if lbl_name in all_ori_rc_names:
             rc_subset.append(lbl_name)
         img_name = lbl_name.replace('.txt', '.jpg')
         val_cc_img_txt.write("%s\n" % os.path.join(val_cc_img_dir, img_name))
-        val_nccbkg_cc_img_txt.write("%s\n" % os.path.join(val_cc_img_dir, img_name))
+
+        val_oa_bkg_cc_lbl_txt.write("%s\n" % f)
+        val_oa_bkg_cc_img_txt.write("%s\n" % os.path.join(val_cc_img_dir, img_name))
     val_cc_lbl_txt.close()
     val_cc_img_txt.close()
 
-    ori_subset = len(rc_subset)
+    len_subset = len(rc_subset)
     for f in val_ncc_img_files:
         img_name = os.path.basename(f)
         lbl_name = img_name.replace('.jpg', '.txt')
         # if rc_subset is empty
-        if not ori_subset and lbl_name in all_ori_rc_names:
+        if not len_subset and lbl_name in all_ori_rc_names:
             rc_subset.append(lbl_name)
-        val_nccbkg_cc_img_txt.write("%s\n" % f)
-        val_nccbkg_cc_lbl_txt.write("%s\n" % os.path.join(val_ncc_lbl_dir, lbl_name))
+        val_oa_bkg_cc_img_txt.write("%s\n" % f)
+        val_oa_bkg_cc_lbl_txt.write("%s\n" % os.path.join(val_ncc_lbl0_dir, lbl_name))
 
     cnt = 0
-    for f in all_aug_rc_lbl_files:
+    #fixme
+    for f in all_aug_rc_lbl0_files:
         lbl_name = os.path.basename(f)
         # drop dumplicate
         if lbl_name in rc_subset:
             # print('rc subset', lbl_name)
             cnt += 1
             continue
-        val_nccbkg_cc_lbl_txt.write("%s\n" % f)
+        val_oa_bkg_cc_lbl_txt.write("%s\n" % f)
         img_name = lbl_name.replace('.txt', '.jpg')
-        val_nccbkg_cc_img_txt.write("%s\n" % os.path.join(all_aug_rc_img_dir, img_name))
+        val_oa_bkg_cc_img_txt.write("%s\n" % os.path.join(all_aug_rc_img_dir, img_name))
 
-    print('all_aug_rc_files', len(all_aug_rc_lbl_files), 'cnt of rc', cnt)
+    print('all_aug_rc_files', len(all_aug_rc_lbl0_files), 'cnt of rc', cnt)
 
     for f in val_bkg_lbl_files:
-        val_nccbkg_cc_lbl_txt.write("%s\n" % f)
+        val_oa_bkg_cc_lbl_txt.write("%s\n" % f)
         img_name = os.path.basename(f).replace('.txt', '.jpg')
-        val_nccbkg_cc_img_txt.write("%s\n" % os.path.join(val_bkg_img_dir, img_name))
+        val_oa_bkg_cc_img_txt.write("%s\n" % os.path.join(val_bkg_img_dir, img_name))
 
-    val_nccbkg_cc_lbl_txt.close()
-    val_nccbkg_cc_img_txt.close()
+    val_oa_bkg_cc_lbl_txt.close()
+    val_oa_bkg_cc_img_txt.close()
 
 
 def create_xview_cc_nccbkg_data(cc_id, data_name, seed=17):
@@ -454,9 +535,9 @@ def create_xview_cc_nccbkg_data(cc_id, data_name, seed=17):
         'cc_train_label={}\n'.format(os.path.join(data_save_dir, 'only_cc{}_trn_lbl_{}.txt'.format(cc_id, base_cmt))))
 
     data_txt.write(
-        'valid={}\n'.format(os.path.join(data_save_dir, 'xview_oa_bkg_cc{}_val_img_{}.txt'.format(cc_id, base_cmt))))
+        'valid={}\n'.format(os.path.join(data_save_dir, '{}_val_img_{}.txt'.format(data_name, base_cmt))))
     data_txt.write(
-        'valid_label={}\n'.format(os.path.join(data_save_dir, 'xview_oa_bkg_cc{}_val_lbl_{}.txt'.format(cc_id, base_cmt))))
+        'valid_label={}\n'.format(os.path.join(data_save_dir, '{}_val_lbl_{}.txt'.format(data_name, base_cmt))))
 
     df_trn_nccbkg = pd.read_csv(os.path.join(data_save_dir, 'xview_ncc{}bkg_trn_img_{}.txt'.format(cc_id, base_cmt)), header=None)
     df_trn_cc = pd.read_csv(os.path.join(data_save_dir,  'only_cc{}_trn_img_{}.txt'.format(cc_id, base_cmt)), header=None)
@@ -470,18 +551,16 @@ def create_xview_cc_nccbkg_data(cc_id, data_name, seed=17):
     data_txt.close()
 
 
-def combine_syn_xview_cc(comment, seed=17, base_cmt='px23whr3_seed17', bkg_cc_sep=False):
+def combine_syn_xview_cc(comment, data_name, seed=17, base_cmt='px23whr3_seed17', bkg_cc_sep=False):
     cc_id = comment.find('CC')
     data_xview_dir =  os.path.join(args.data_xview_dir, base_cmt, 'CC')
     print('data_xview_dir', data_xview_dir)
-    xview_img_txt = pd.read_csv(open(os.path.join(data_xview_dir, '{}_train_img_{}.txt'.format(name, base_cmt))), header=None).to_numpy()
-    xview_trn_num = xview_img_txt.shape[0]
     data_txt = open(os.path.join(data_xview_dir, 'syn_xview_cc{}_{}_seed{}.data'.format(cc_id, comment, seed)), 'w')
     if not bkg_cc_sep: # cc and bkg are not separated
         data_txt.write(
-            'xview_train={}\n'.format(os.path.join(data_xview_dir, 'xview_oa_bkg_cc{}_trn_img_{}.txt'.format(cc_id, base_cmt))))
+            'xview_train={}\n'.format(os.path.join(data_xview_dir, '{}_trn_img_{}.txt'.format(data_name, base_cmt))))
         data_txt.write(
-            'xview_train_label={}\n'.format(os.path.join(data_xview_dir, 'xview_oa_bkg_cc{}_trn_lbl_{}.txt'.format(cc_id, base_cmt))))
+            'xview_train_label={}\n'.format(os.path.join(data_xview_dir, '{}_trn_lbl_{}.txt'.format(data_name, base_cmt))))
     else: # mixed batch of cc and bkg
         data_txt.write(
             'xview_cc_train={}\n'.format(os.path.join(data_xview_dir, 'only_cc{}_trn_img_{}.txt'.format(cc_id, base_cmt))))
@@ -499,9 +578,12 @@ def combine_syn_xview_cc(comment, seed=17, base_cmt='px23whr3_seed17', bkg_cc_se
         'syn_train_label={}\n'.format(os.path.join(syn_data_dir, '{}_seed{}'.format(comment, seed), '{}_train_lbl_seed{}.txt'.format(comment, seed))))
 
     data_txt.write(
-        'valid={}\n'.format(os.path.join(data_xview_dir, 'xview_oa_bkg_cc{}_val_img_{}.txt'.format(cc_id, base_cmt))))
+        'valid={}\n'.format(os.path.join(data_xview_dir, '{}_val_img_{}.txt'.format(data_name, base_cmt))))
     data_txt.write(
-        'valid_label={}\n'.format(os.path.join(data_xview_dir, 'xview_oa_bkg_cc{}_val_lbl_{}.txt'.format(cc_id, base_cmt))))
+        'valid_label={}\n'.format(os.path.join(data_xview_dir, '{}_val_lbl_{}.txt'.format(data_name, base_cmt))))
+
+    xview_img_txt = pd.read_csv(open(os.path.join(data_xview_dir, '{}_trn_img_{}.txt'.format(data_name, base_cmt))), header=None).to_numpy()
+    xview_trn_num = xview_img_txt.shape[0]
 
     data_txt.write('syn_0_xview_number={}\n'.format(xview_trn_num))
     data_txt.write('classes=%s\n' % str(args.class_num))
@@ -511,106 +593,240 @@ def combine_syn_xview_cc(comment, seed=17, base_cmt='px23whr3_seed17', bkg_cc_se
     data_txt.close()
 
 
+def create_val_xview_cc_nccbkg_data(cc_id, data_name, seed=17):
+    base_cmt = 'px{}whr{}_seed{}'.format(px_thres, whr_thres, seed)
+    data_save_dir =  os.path.join(args.data_save_dir, base_cmt, 'CC')
+    print('data_save_dir', data_save_dir)
+    data_txt = open(os.path.join(data_save_dir, '{}_test_{}.data'.format(data_name, base_cmt)), 'w')
+
+    data_txt.write(
+        'test={}\n'.format(os.path.join(data_save_dir, '{}_val_img_{}.txt'.format(data_name, base_cmt))))
+    data_txt.write(
+        'test_label={}\n'.format(os.path.join(data_save_dir, '{}_val_lbl_{}.txt'.format(data_name, base_cmt))))
+
+    data_txt.write('classes=%s\n' % str(args.class_num))
+    data_txt.write('names=./data_xview/{}_cls/xview.names\n'.format(args.class_num))
+    data_txt.write('backup=backup/\n')
+    data_txt.write('eval=color\n')
+    data_txt.close()
 
 
-def augment_all_RC():
+def plot_bbox_on_images_of_cc_val_by_id(cc_id, data_name, seed=17):
+    base_cmt = 'px{}whr{}_seed{}'.format(px_thres, whr_thres, seed)
+    data_save_dir =  os.path.join(args.data_save_dir, base_cmt, 'CC')
+    print('data_save_dir', data_save_dir)
+
+    val_img_file = os.path.join(data_save_dir, '{}_val_img_{}.txt'.format(data_name, base_cmt))
+    val_lbl_file = os.path.join(data_save_dir, '{}_val_lbl_{}.txt'.format(data_name, base_cmt))
+    df_img = pd.read_csv(val_img_file, header=None)
+    df_lbl = pd.read_csv(val_lbl_file, header=None)
+    for ix, f in enumerate(df_img.loc[:, 0]):
+        path = os.path.dirname(f)
+        if 'cc{}'.format(cc_id) in path:
+            bbox_folder_name = 'cc{}_images_with_bbox_with_ccid_hard'.format(cc_id)
+            cc_save_dir = os.path.join(args.cat_sample_dir, bbox_folder_name)
+            if not os.path.exists(cc_save_dir):
+                os.mkdir(cc_save_dir)
+            gbc.plot_img_with_bbx(f, df_lbl.loc[ix, 0], cc_save_dir,  rare_id=True)
+
+
+def cnt_instances_of_CC_by_id(cc_id, data_name, seed=17):
+    base_cmt = 'px{}whr{}_seed{}'.format(px_thres, whr_thres, seed)
+    data_save_dir =  os.path.join(args.data_save_dir, base_cmt, 'CC')
+    print('data_save_dir', data_save_dir)
+
+    trn_lbl_file = os.path.join(data_save_dir, '{}_trn_lbl_{}.txt'.format(data_name, base_cmt))
+    df_trn_lbl = pd.read_csv(trn_lbl_file, header=None)
+
+    num_pat_trn = 0
+    cnt_trn = 0
+    for f in df_trn_lbl.loc[:, 0]:
+        if not is_non_zero_file(f):
+            continue
+        df = pd.read_csv(f, header=None, sep=' ')
+        df_cc = df[df.loc[:, 5]== cc_id]
+        if not df_cc.empty:
+            num_pat_trn += 1
+        cnt_trn += df_cc.shape[0]
+    print('cc{} trn #patches {}, #instances {}'.format(cc_id, num_pat_trn, cnt_trn))
+
+    val_lbl_file = os.path.join(data_save_dir, '{}_val_lbl_{}.txt'.format(data_name, base_cmt))
+    df_val_lbl = pd.read_csv(val_lbl_file, header=None)
+
+    num_pat_val = 0
+    cnt_val = 0
+    for f in df_val_lbl.loc[:, 0]:
+        if not is_non_zero_file(f):
+            continue
+        df = pd.read_csv(f, header=None, sep=' ')
+        if not df_cc.empty:
+            num_pat_val += 1
+        df_cc = df[df.loc[:, 5]== cc_id]
+        cnt_val += df_cc.shape[0]
+    print('cc{} val #patches {}, #instances {}'.format(cc_id, num_pat_val, cnt_val))
+
+def augment_all_RC(flip=False, rotate=False):
     '''
     augment RC(i)
     1. left-right flip 2x
-    2. based on flipped patches, rotate 90, 180, 270 8x
+    2. b rotate 90, 180, 270 4x
+    3. a copy of labels with label 0
     :return:
     '''
     from utils.xview_synthetic_util.resize_flip_rotate_images import flip_images, rotate_images, flip_rotate_coordinates
     ori_rc_img_dir = os.path.join(args.images_save_dir[:-1] + '_rc_ori')
+    ori_rc_lbl_dir = args.annos_save_dir[:-1] + '_rc_all_ori_rcid'
     ori_rc_img_files = np.sort(glob.glob(os.path.join(ori_rc_img_dir, '*.jpg')))
-    flipped_rc_img_dir = ori_rc_img_dir + '_flip'
-    if not os.path.exists(flipped_rc_img_dir):
-        os.mkdir(flipped_rc_img_dir)
-    flipped_rc_lbl_dir = os.path.join(args.annos_save_dir[:-1] + '_rc_flip')
-    if not os.path.exists(flipped_rc_lbl_dir):
-        os.makedirs(flipped_rc_lbl_dir)
-    save_dir = args.cat_sample_dir + 'image_with_bbox/RC_flip/'
-    if not os.path.exists(save_dir):
-        os.mkdir(save_dir)
-    all_ori_rc_lbl_dir = args.annos_save_dir[:-1] + '_rc_all_ori_rcid'
-    for f in ori_rc_img_files:
-        img_name = os.path.basename(f)
-        img_dir = os.path.dirname(f)
-        flip_images(img_name, img_dir)
-        name = img_name.split('.')[0]
-        flip_rotate_coordinates(flipped_rc_img_dir, all_ori_rc_lbl_dir, save_dir, flipped_rc_lbl_dir, name, flip='lr')
+    if flip:
+        flipped_rc_img_dir = ori_rc_img_dir + '_flip'
+        if not os.path.exists(flipped_rc_img_dir):
+            os.mkdir(flipped_rc_img_dir)
+        else:
+            shutil.rmtree(flipped_rc_img_dir)
+            os.mkdir(flipped_rc_img_dir)
+        flipped_rc_lbl_dir = ori_rc_lbl_dir + '_flip'
+        if not os.path.exists(flipped_rc_lbl_dir):
+            os.mkdir(flipped_rc_lbl_dir)
+        else:
+            shutil.rmtree(flipped_rc_lbl_dir)
+            os.mkdir(flipped_rc_lbl_dir)
+        save_dir = args.cat_sample_dir + 'image_with_bbox/RC_flip/'
+        if not os.path.exists(save_dir):
+            os.mkdir(save_dir)
+        else:
+            shutil.rmtree(save_dir)
+            os.mkdir(save_dir)
+        for f in ori_rc_img_files:
+            img_name = os.path.basename(f)
+            img_dir = os.path.dirname(f)
+            flip_images(img_name, img_dir)
+            name = img_name.split('.')[0]
+            flip_rotate_coordinates(flipped_rc_img_dir,ori_rc_lbl_dir, save_dir, flipped_rc_lbl_dir, name, flip='lr')
+        ori_rc_img_dir = flipped_rc_img_dir
+        ori_rc_lbl_dir = flipped_rc_lbl_dir
+        aug_lbl_dir = flipped_rc_lbl_dir
+    if rotate:
+        ori_img_files = np.sort(glob.glob(os.path.join(ori_rc_img_dir, '*.jpg')))
+        aug_img_dir = ori_rc_img_dir + '_aug'
+        if not os.path.exists(aug_img_dir):
+            os.mkdir(aug_img_dir)
+        else:
+            shutil.rmtree(aug_img_dir)
+            os.mkdir(aug_img_dir)
+        aug_lbl_dir = ori_rc_lbl_dir + '_aug'
+        if not os.path.exists(aug_lbl_dir):
+            os.mkdir(aug_lbl_dir)
+        else:
+            shutil.rmtree(aug_lbl_dir)
+            os.mkdir(aug_lbl_dir)
+        save_dir = args.cat_sample_dir + 'image_with_bbox/RC_aug/'
+        if not os.path.exists(save_dir):
+            os.mkdir(save_dir)
+        else:
+            shutil.rmtree(save_dir)
+            os.mkdir(save_dir)
 
-    flipped_img_files = np.sort(glob.glob(os.path.join(flipped_rc_img_dir, '*.jpg')))
-    aug_img_dir = flipped_rc_img_dir + '_aug'
-    if not os.path.exists(aug_img_dir):
-        os.mkdir(aug_img_dir)
-    aug_lbl_dir = flipped_rc_lbl_dir + '_aug'
-    if not os.path.exists(aug_lbl_dir):
-        os.mkdir(aug_lbl_dir)
-    save_dir = args.cat_sample_dir + 'image_with_bbox/RC_aug/'
-    if not os.path.exists(save_dir):
-        os.mkdir(save_dir)
-    for f in flipped_img_files:
-        img_name = os.path.basename(f)
-        img_dir = os.path.dirname(f)
-        rotate_images(img_name, img_dir)
-        name = img_name.split('.')[0]
+        for f in ori_img_files:
+            img_name = os.path.basename(f)
+            img_dir = os.path.dirname(f)
+            rotate_images(img_name, img_dir)
+            name = img_name.split('.')[0]
+            angle_list = [90, 180, 270]
+            for angle in angle_list:
+                flip_rotate_coordinates(aug_img_dir, ori_rc_lbl_dir, save_dir, aug_lbl_dir, name, angle=angle)
+    aug_lbl0_dir = aug_lbl_dir + '_id0'
+    if not os.path.exists(aug_lbl0_dir):
+        os.mkdir(aug_lbl0_dir)
+    else:
+        shutil.rmtree(aug_lbl0_dir)
+        os.mkdir(aug_lbl0_dir)
+    aug_lbl_files = glob.glob(os.path.join(aug_lbl_dir, '*.txt'))
+    for f in aug_lbl_files:
+        df = pd.read_csv(f, header=None, sep=' ')
+        df.loc[:, 5] = 0
+        df.to_csv(os.path.join(aug_lbl0_dir, os.path.basename(f)), header=False, index=False, sep=' ')
 
-        angle_list = [90, 180, 270]
-        for angle in angle_list:
-            flip_rotate_coordinates(aug_img_dir, flipped_rc_lbl_dir, save_dir, aug_lbl_dir, name, angle=angle)
 
-
-
-def augment_RC_by_id(rc_id):
+def augment_RC_by_id(rc_id, flip=False, rotate=False):
     '''
     augment RC(i)
     1. left-right flip 2x
-    2. based on flipped patches, rotate 90, 180, 270 8x
+    2. rotate 90, 180, 270 4x
     :return:
     '''
     from utils.xview_synthetic_util.resize_flip_rotate_images import flip_images, rotate_images, flip_rotate_coordinates
+    all_ori_rc_lbl_dir = args.annos_save_dir[:-1] + '_rc_all_ori_rcid'
     ori_rc_img_dir = os.path.join(args.images_save_dir[:-1] + '_rc', 'rc{}'.format(rc_id))
     ori_rc_img_files = np.sort(glob.glob(os.path.join(ori_rc_img_dir, '*.jpg')))
-    flipped_rc_img_dir = ori_rc_img_dir + '_flip'
-    if not os.path.exists(flipped_rc_img_dir):
-        os.mkdir(flipped_rc_img_dir)
-    flipped_rc_lbl_dir = os.path.join(args.annos_save_dir[:-1] + '_rc', 'rc{}_flip'.format(rc_id))
-    if not os.path.exists(flipped_rc_lbl_dir):
-        os.makedirs(flipped_rc_lbl_dir)
-    save_dir = args.cat_sample_dir + 'image_with_bbox/RC_flip/'
-    if not os.path.exists(save_dir):
-        os.mkdir(save_dir)
-    all_ori_rc_lbl_dir = args.annos_save_dir[:-1] + '_rc_all_ori_rcid'
-    for f in ori_rc_img_files:
-        img_name = os.path.basename(f)
-        img_dir = os.path.dirname(f)
-        flip_images(img_name, img_dir)
-        name = img_name.split('.')[0]
-        flip_rotate_coordinates(flipped_rc_img_dir, all_ori_rc_lbl_dir, save_dir, flipped_rc_lbl_dir, name, flip='lr')
+    lbl_rc_path = args.annos_save_dir[:-1] + '_rc'
+    if flip:
+        flipped_rc_img_dir = ori_rc_img_dir + '_flip'
+        if not os.path.exists(flipped_rc_img_dir):
+            os.mkdir(flipped_rc_img_dir)
+        else:
+            shutil.rmtree(flipped_rc_img_dir)
+            os.mkdir(flipped_rc_img_dir)
+        flipped_rc_lbl_dir = os.path.join(lbl_rc_path, 'rc{}_flip'.format(rc_id))
+        if not os.path.exists(flipped_rc_lbl_dir):
+            os.makedirs(flipped_rc_lbl_dir)
+        else:
+            shutil.rmtree(flipped_rc_lbl_dir)
+            os.mkdir(flipped_rc_lbl_dir)
+        save_dir = args.cat_sample_dir + 'image_with_bbox/RC_flip/'
+        if not os.path.exists(save_dir):
+            os.mkdir(save_dir)
+        for f in ori_rc_img_files:
+            img_name = os.path.basename(f)
+            img_dir = os.path.dirname(f)
+            flip_images(img_name, img_dir)
+            name = img_name.split('.')[0]
+            flip_rotate_coordinates(flipped_rc_img_dir, all_ori_rc_lbl_dir, save_dir, flipped_rc_lbl_dir, name, flip='lr')
+        ori_rc_img_dir = flipped_rc_img_dir
+        all_ori_rc_lbl_dir = flipped_rc_lbl_dir
+    if rotate:
+        ori_img_files = np.sort(glob.glob(os.path.join(ori_rc_img_dir, '*.jpg')))
+        aug_img_dir = ori_rc_img_dir + '_aug'
+        if not os.path.exists(aug_img_dir):
+            os.mkdir(aug_img_dir)
+        else:
+            shutil.rmtree(aug_img_dir)
+            os.mkdir(aug_img_dir)
 
-    flipped_img_files = np.sort(glob.glob(os.path.join(flipped_rc_img_dir, '*.jpg')))
-    aug_img_dir = flipped_rc_img_dir + '_aug'
-    if not os.path.exists(aug_img_dir):
-        os.mkdir(aug_img_dir)
-    aug_lbl_dir = flipped_rc_lbl_dir + '_aug'
-    if not os.path.exists(aug_lbl_dir):
-        os.mkdir(aug_lbl_dir)
-    save_dir = args.cat_sample_dir + 'image_with_bbox/RC_aug/'
-    if not os.path.exists(save_dir):
-        os.mkdir(save_dir)
-    for f in flipped_img_files:
-        img_name = os.path.basename(f)
-        img_dir = os.path.dirname(f)
-        rotate_images(img_name, img_dir)
-        name = img_name.split('.')[0]
+        aug_lbl_dir = os.path.join(lbl_rc_path, 'rc{}_aug'.format(rc_id))
+        if not os.path.exists(aug_lbl_dir):
+            os.mkdir(aug_lbl_dir)
+        else:
+            shutil.rmtree(aug_lbl_dir)
+            os.mkdir(aug_lbl_dir)
+        save_dir = args.cat_sample_dir + 'image_with_bbox/RC_aug/'
+        if not os.path.exists(save_dir):
+            os.mkdir(save_dir)
+        else:
+            shutil.rmtree(save_dir)
+            os.mkdir(save_dir)
+        for f in ori_img_files:
+            img_name = os.path.basename(f)
+            img_dir = os.path.dirname(f)
+            rotate_images(img_name, img_dir)
+            name = img_name.split('.')[0]
+            angle_list = [90, 180, 270]
+            for angle in angle_list:
+                flip_rotate_coordinates(aug_img_dir, all_ori_rc_lbl_dir, save_dir, aug_lbl_dir, name, angle=angle)
 
-        angle_list = [90, 180, 270]
-        for angle in angle_list:
-            flip_rotate_coordinates(aug_img_dir, flipped_rc_lbl_dir, save_dir, aug_lbl_dir, name, angle=angle)
+    aug_lbl0_dir = aug_lbl_dir + '_id0'
+    if not os.path.exists(aug_lbl0_dir):
+        os.mkdir(aug_lbl0_dir)
+    else:
+        shutil.rmtree(aug_lbl0_dir)
+        os.mkdir(aug_lbl0_dir)
+    aug_lbl_files = glob.glob(os.path.join(aug_lbl_dir, '*.txt'))
+    for f in aug_lbl_files:
+        df = pd.read_csv(f, header=None, sep=' ')
+        df.loc[:, 5] = 0
+        df.to_csv(os.path.join(aug_lbl0_dir, os.path.basename(f)), header=False, index=False, sep=' ')
 
 
-def combine_val_for_each_aug_RC_step_by_step(rc_id, base_pxwhrs, rcids):
+def combine_val_for_each_aug_RC_step_by_step(rc_id, data_name, base_pxwhrs, rcids):
     '''
     RC validation set
     val: AUG RC(i) + AUG Non-RC(i) + CC + BKG
@@ -619,10 +835,12 @@ def combine_val_for_each_aug_RC_step_by_step(rc_id, base_pxwhrs, rcids):
     ori_rc_img_dir = os.path.join(args.images_save_dir[:-1] + '_rc', 'rc{}'.format(rc_id))
     all_ori_rc_lbl_dir = args.annos_save_dir[:-1] + '_rc_all_ori_rcid'
     all_ori_rc_lbl_files = np.sort(glob.glob(os.path.join(all_ori_rc_lbl_dir, '*.txt')))
-    all_ori_lbl_names = [os.path.basename(f) for f in all_ori_rc_lbl_files]
+    all_ori_rc_lbl_names = [os.path.basename(f) for f in all_ori_rc_lbl_files]
 
-    aug_rc_lbl_dir = os.path.join(args.annos_save_dir[:-1] + '_rc', 'rc{}_flip_aug'.format(rc_id))
-    aug_rc_img_dir = os.path.join(args.images_save_dir[:-1] + '_rc', 'rc{}_flip_aug'.format(rc_id))
+    # aug_rc_lbl_dir = os.path.join(args.annos_save_dir[:-1] + '_rc', 'rc{}_flip_aug'.format(rc_id))
+    # aug_rc_img_dir = os.path.join(args.images_save_dir[:-1] + '_rc', 'rc{}_flip_aug'.format(rc_id))
+    aug_rc_lbl_dir = os.path.join(args.annos_save_dir[:-1] + '_rc', 'rc{}_aug'.format(rc_id))
+    aug_rc_img_dir = os.path.join(args.images_save_dir[:-1] + '_rc', 'rc{}_aug'.format(rc_id))
     aug_rc_img_files = np.sort(glob.glob(os.path.join(aug_rc_img_dir, '*.jpg')))
     print('aug_rc{}_img_files'.format(rc_id), len(aug_rc_img_files))
 
@@ -631,14 +849,15 @@ def combine_val_for_each_aug_RC_step_by_step(rc_id, base_pxwhrs, rcids):
         os.mkdir(data_save_dir)
     val_rc_img_txt = open(os.path.join(data_save_dir, 'only_aug_rc{}_val_img_{}.txt'.format(rc_id, base_pxwhrs)), 'w')
     val_rc_lbl_txt = open(os.path.join(data_save_dir, 'only_aug_rc{}_val_lbl_{}.txt'.format(rc_id, base_pxwhrs)), 'w')
-    val_rc_nrcbkg_img_txt = open(os.path.join(data_save_dir, 'xview_oa_bkg_aug_rc{}_val_img_{}.txt'.format(rc_id, base_pxwhrs)), 'w')
-    val_rc_nrcbkg_lbl_txt = open(os.path.join(data_save_dir, 'xview_oa_bkg_aug_rc{}_val_lbl_{}.txt'.format(rc_id, base_pxwhrs)), 'w')
+    val_rc_nrcbkg_img_txt = open(os.path.join(data_save_dir, '{}_val_img_{}.txt'.format(data_name, base_pxwhrs)), 'w')
+    val_rc_nrcbkg_lbl_txt = open(os.path.join(data_save_dir, '{}_val_lbl_{}.txt'.format(data_name, base_pxwhrs)), 'w')
 
     for f in aug_rc_img_files:
         val_rc_img_txt.write("%s\n" % f)
         img_name = os.path.basename(f)
         lbl_name = img_name.replace('.jpg', '.txt')
         val_rc_lbl_txt.write("%s\n" % os.path.join(aug_rc_lbl_dir, lbl_name))
+
         val_rc_nrcbkg_img_txt.write("%s\n" % f)
         val_rc_nrcbkg_lbl_txt.write("%s\n" % os.path.join(aug_rc_lbl_dir, lbl_name))
     val_rc_img_txt.close()
@@ -648,42 +867,43 @@ def combine_val_for_each_aug_RC_step_by_step(rc_id, base_pxwhrs, rcids):
     print('non_rcids', non_rcids)
     cnt = 0
     for nrc_id in non_rcids:
-        aug_nrc_lbl_dir = os.path.join(args.annos_save_dir[:-1] + '_rc', 'rc{}_flip_aug'.format(nrc_id))
-        aug_nrc_img_dir = os.path.join(args.images_save_dir[:-1] + '_rc', 'rc{}_flip_aug'.format(nrc_id))
+        # aug_nrc_lbl_dir = os.path.join(args.annos_save_dir[:-1] + '_rc', 'rc{}_flip_aug_id0'.format(nrc_id))
+        # aug_nrc_img_dir = os.path.join(args.images_save_dir[:-1] + '_rc', 'rc{}_flip_aug'.format(nrc_id))
+        aug_nrc_lbl0_dir = os.path.join(args.annos_save_dir[:-1] + '_rc', 'rc{}_aug_id0'.format(nrc_id))
+        aug_nrc_img_dir = os.path.join(args.images_save_dir[:-1] + '_rc', 'rc{}_aug'.format(nrc_id))
         aug_nrc_img_files = np.sort(glob.glob(os.path.join(aug_nrc_img_dir, '*.jpg')))
-        for nf in aug_nrc_img_files:
-            val_rc_nrcbkg_img_txt.write("%s\n" % nf)
-            img_name = os.path.basename(nf)
+        for f in aug_nrc_img_files:
+            val_rc_nrcbkg_img_txt.write("%s\n" % f)
+            img_name = os.path.basename(f)
             lbl_name = img_name.replace('.jpg', '.txt')
-            val_rc_nrcbkg_lbl_txt.write("%s\n" % os.path.join(aug_nrc_lbl_dir, lbl_name))
+            val_rc_nrcbkg_lbl_txt.write("%s\n" % os.path.join(aug_nrc_lbl0_dir, lbl_name))
             cnt += 1
     print('non-rc cnt', cnt)
 
-    val_cc1_img_dir = args.images_save_dir[:-1] + '_cc1_val'
+    val_cc1_img_dir = args.images_save_dir[:-1] + '_cc1_val_aug'
     val_cc2_img_dir = args.images_save_dir[:-1] + '_cc2_val'
-    val_cc1_lbl_dir =  args.annos_save_dir[:-1] + '_cc1_with_id_val'
-    val_cc2_lbl_dir =  args.annos_save_dir[:-1] + '_cc2_with_id_val'
-    val_cc1_lbl_files = np.sort(glob.glob(os.path.join(val_cc1_lbl_dir, '*.txt')))
-    val_cc2_lbl_files = np.sort(glob.glob(os.path.join(val_cc2_lbl_dir, '*.txt')))
-    print('val_cc1_lbl_files, val_cc2_lbl_files', len(val_cc1_lbl_files), len(val_cc2_lbl_files))
+    cc1_lbl0_dir =  args.annos_save_dir[:-1] + '_cc1_with_id_aug_id0'
+    cc2_lbl0_dir =  args.annos_save_dir[:-1] + '_cc2_with_id0'
+    val_cc1_img_files = np.sort(glob.glob(os.path.join(val_cc1_img_dir, '*.jpg')))
+    val_cc2_img_files = np.sort(glob.glob(os.path.join(val_cc2_img_dir, '*.jpg')))
+    print('val_cc1_img_files, val_cc2_img_files', len(val_cc1_img_files), len(val_cc2_img_files))
     cnt = 0
-    for f in val_cc1_lbl_files:
-        lbl_name = os.path.basename(f)
-        if lbl_name in all_ori_lbl_names:
+    for f in val_cc1_img_files:
+        img_name= os.path.basename(f)
+        lbl_name = img_name.replace('.jpg', '.txt')
+        if lbl_name in all_ori_rc_lbl_names:
             continue
-        val_rc_nrcbkg_lbl_txt.write("%s\n" % nf)
-        img_name = lbl_name.replace('.txt', '.jpg')
-        val_rc_nrcbkg_img_txt.write("%s\n" % os.path.join(val_cc1_img_dir, img_name))
+        val_rc_nrcbkg_img_txt.write("%s\n" % f)
+        val_rc_nrcbkg_lbl_txt.write("%s\n" % os.path.join(cc1_lbl0_dir, lbl_name))
         cnt += 1
 
-
-    for f in val_cc2_lbl_files:
-        lbl_name = os.path.basename(f)
-        if lbl_name in all_ori_lbl_names:
+    for f in val_cc2_img_files:
+        img_name= os.path.basename(f)
+        lbl_name = img_name.replace('.jpg', '.txt')
+        if lbl_name in all_ori_rc_lbl_names:
             continue
-        val_rc_nrcbkg_lbl_txt.write("%s\n" % nf)
-        img_name = lbl_name.replace('.txt', '.jpg')
-        val_rc_nrcbkg_img_txt.write("%s\n" % os.path.join(val_cc2_img_dir, img_name))
+        val_rc_nrcbkg_img_txt.write("%s\n" % f)
+        val_rc_nrcbkg_lbl_txt.write("%s\n" % os.path.join(cc2_lbl0_dir, lbl_name))
         cnt += 1
     print('val cc1 + cc2', cnt)
 
@@ -707,17 +927,38 @@ def create_val_xview_rc_nrcbkg_data(rc_id, data_name, seed=17):
     print('data_save_dir', data_save_dir)
     data_txt = open(os.path.join(data_save_dir, '{}_test_{}.data'.format(data_name, base_cmt)), 'w')
     data_txt.write(
-        'valid={}\n'.format(os.path.join(data_save_dir, '{}_val_img_{}.txt'.format(data_name, base_cmt))))
+        'test={}\n'.format(os.path.join(data_save_dir, '{}_val_img_{}.txt'.format(data_name, base_cmt))))
     data_txt.write(
-        'valid_label={}\n'.format(os.path.join(data_save_dir, '{}_val_lbl_{}.txt'.format(data_name, base_cmt))))
+        'test_label={}\n'.format(os.path.join(data_save_dir, '{}_val_lbl_{}.txt'.format(data_name, base_cmt))))
 
     data_txt.write('classes=%s\n' % str(args.class_num))
     data_txt.write('names=./data_xview/{}_cls/xview.names\n'.format(args.class_num))
     data_txt.write('backup=backup/\n')
     data_txt.write('eval=color\n')
     data_txt.close()
-    
-    
+
+
+def cnt_instances_of_RC_by_id(rc_id, seed=17):
+    base_cmt = 'px{}whr{}_seed{}'.format(px_thres, whr_thres, seed)
+    data_save_dir =  os.path.join(args.data_save_dir, base_cmt, 'RC')
+    print('data_save_dir', data_save_dir)
+
+    lbl_file = os.path.join(data_save_dir, 'only_aug_rc{}_val_lbl_{}.txt'.format(rc_id, base_cmt))
+    df_lbl = pd.read_csv(lbl_file, header=None)
+
+    num_pat_trn = 0
+    cnt_trn = 0
+    for f in df_lbl.loc[:, 0]:
+        if not is_non_zero_file(f):
+            continue
+        df = pd.read_csv(f, header=None, sep=' ')
+        df_rc = df[df.loc[:, 5]== rc_id]
+        if not df_rc.empty:
+            num_pat_trn += 1
+        cnt_trn += df_rc.shape[0]
+    print('rc{} trn #patches {}, #instances {}'.format(rc_id, num_pat_trn, cnt_trn))
+
+ 
 
 def get_args(px_thres=None, whr_thres=None):
     parser = argparse.ArgumentParser()
@@ -790,11 +1031,31 @@ if __name__ == '__main__':
     '''
     remove other airplane labels ccid=None, rcid=None
     '''
-    #label_cc_and_rc_remove_other_airp_labels()
+    # label_cc_and_rc_remove_other_airp_labels()
     '''
     check bbox-with ccid or rcid
     '''
-    #plot_bbox_on_images_of_rc_and_cc()
+    # plot_bbox_on_images_of_rc_and_cc()
+    # cc_id = 1
+    # plot_bbox_on_images_of_cc_val_by_id(cc_id)
+
+    '''
+    augment RC
+    left-right flip
+    then rotate90, 180, 270
+    '''
+#    rcids= np.array([1,2,3,4,5])
+#    for rc_id in rcids:
+#       augment_RC_by_id(rc_id, rotate=True)
+#    augment_all_RC(rotate=True)
+
+    '''
+    count instances of CC
+    '''
+#    ccids=[1, 2]
+#    for cc_id in ccids:
+#        data_name = 'xview_rcncc_bkg_cc{}'.format(cc_id)
+#        cnt_instances_of_CC_by_id(cc_id, data_name, seed=17)
 
     '''
     split train:val = 80%:20%
@@ -802,35 +1063,29 @@ if __name__ == '__main__':
     RC(2) is a subset of CC(2), keep all patches of RC(2) in val of CC(2)
     combine all RC* together
     '''
-    #ccids=[1, 2]
-    #for ccid in ccids:
-    #    split_cc_ncc_and_rc_by_cc_id(ccid, seed=17)
+#    ccids=[1, 2]
+#    for ccid in ccids:
+#        split_cc_ncc_and_rc_by_cc_id(ccid, seed=17)
+        
+    '''
+    augment CC1 by rotate
+    4x
+    '''
+    #augment_val_CC_by_id(cc_id=1, flip=False, rotate=True)
 
     '''
     add NCC, NRC to BG
     '''
-    #add_ncc_nrc_to_bkg()
+    # add_ncc_nrc_to_bkg()
 
     '''
     split BKG images into train and val
     '''
-    # comments = 'px{}whr{}_seed{}'
-    # px_thres = 23
-    # whr_thres = 3
-    # seed = 17
-    # split_bkg_into_train_val(comments, seed)
-
-
-    '''
-    augment RC
-    left-right flip
-    then rotate90, 180, 270
-    '''
-    #augment_all_RC()
-    
-#    rcids= np.array([1,2,3,4,5])
-#    for rc_id in rcids:
-#       augment_RC_by_id(rc_id)
+#    comments = 'px{}whr{}_seed{}'
+#    px_thres = 23
+#    whr_thres = 3
+#    seed = 17
+#    split_bkg_into_train_val(comments, seed)
 
     '''
     RC validation set
@@ -840,9 +1095,16 @@ if __name__ == '__main__':
 #    base_pxwhrs = 'px{}whr{}_seed{}'.format(px_thres, whr_thres, seed)
 #    rcids = np.array([1,2,3,4,5])
 #    for rc_id in rcids:
-#       combine_val_for_each_aug_RC_step_by_step(rc_id, base_pxwhrs, rcids)
-#       data_name = 'xview_oa_bkg_aug_rc{}'.format(rc_id)
-#       create_val_xview_rc_nrcbkg_data(rc_id, data_name, seed)
+#        data_name = 'xview_ccnrc_bkg_aug_rc{}'.format(rc_id)
+#        combine_val_for_each_aug_RC_step_by_step(rc_id, data_name, base_pxwhrs, rcids)
+#        create_val_xview_rc_nrcbkg_data(rc_id, data_name, seed)
+
+    '''
+    count patches and instances
+    '''
+#    rcids = np.array([1,2,3,4,5])
+#    for rc_id in rcids:
+#       cnt_instances_of_RC_by_id(rc_id, seed=17)
 
     '''
     split CC1, CC2 separately
@@ -853,16 +1115,20 @@ if __name__ == '__main__':
 #    base_pxwhrs = 'px{}whr{}_seed{}'.format(px_thres, whr_thres, seed)
 #    ccids= np.array([1, 2])
 #    for cc_id in ccids:
-#        combine_trn_val_for_each_CC_step_by_step(cc_id, base_pxwhrs, ccids)
-#        data_name = 'xview_oa_bkg_cc{}'.format(cc_id)
+#        data_name = 'xview_rcncc_bkg_cc{}'.format(cc_id)
+#        combine_trn_val_for_each_CC_step_by_step(cc_id, data_name, base_pxwhrs, ccids)
 #        create_xview_cc_nccbkg_data(cc_id, data_name, seed)
+#        create_val_xview_cc_nccbkg_data(cc_id, data_name, seed)
+
 
     '''
     combine syn and xview
     '''
-    seed=17
-    base_cmt='px{}whr{}_seed{}'.format(px_thres, whr_thres, seed)
-    comments = []
-    
-    for cmt in comments:
-        combine_syn_xview_cc(cmt, seed, base_cmt, bkg_cc_sep=False)
+    # seed=17
+    # base_cmt='px{}whr{}_seed{}'.format(px_thres, whr_thres, seed)
+    # comments = []
+    # data_name = 'xview_rcncc_bkg_cc{}'.format(cc_id)
+    # for cmt in comments:
+    #     combine_syn_xview_cc(cmt, data_name, seed, base_cmt, bkg_cc_sep=False)
+
+
