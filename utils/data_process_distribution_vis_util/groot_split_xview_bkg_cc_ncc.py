@@ -328,8 +328,8 @@ def create_aug_cc_nccbkg_test(cc_id, seed=17):
     pxwhrs = 'px23whr3_seed17'
     eht = 'easy'
     base_dir = os.path.join(args.data_save_dir, pxwhrs, 'CC')
-    test_lbl_txt = open(os.path.join(base_dir, 'xview_nccbkg_aug_cc{}_test_lbl_{}.txt'.format(cc_id, pxwhrs)), 'w')
-    test_img_txt = open(os.path.join(base_dir, 'xview_nccbkg_aug_cc{}_test_img_{}.txt'.format(cc_id, pxwhrs)), 'w')
+    test_lbl_txt = open(os.path.join(base_dir, 'xview_rcncc_bkg_aug_cc{}_test_lbl_{}.txt'.format(cc_id, pxwhrs)), 'w')
+    test_img_txt = open(os.path.join(base_dir, 'xview_rcncc_bkg_aug_cc{}_test_img_{}.txt'.format(cc_id, pxwhrs)), 'w')
     lbl_dir = args.annos_save_dir[:-1] + '_val_cc{}_with_id_aug'.format(cc_id)
     img_dir = args.images_save_dir[:-1] + '_val_cc{}_aug'.format(cc_id)
     aug_cc_lbls = np.sort(glob.glob(os.path.join(lbl_dir, '*.txt')))
@@ -342,11 +342,24 @@ def create_aug_cc_nccbkg_test(cc_id, seed=17):
     val_ncc_lbl_dir = args.annos_save_dir[:-1] + '_ncc{}_val_lbl'.format(cc_id)
     val_ncc_img_dir = args.images_save_dir[:-1] + '_ncc{}_val_img'.format(cc_id)
     val_ncc_lbl_files = np.sort(glob.glob(os.path.join(val_ncc_lbl_dir, '*.txt')))
+    
     for f in val_ncc_lbl_files:
         test_lbl_txt.write('%s\n' % f)
         name = os.path.basename(f).replace('.txt', '.jpg')
         test_img_txt.write('%s\n' % os.path.join(val_ncc_img_dir, name))
-
+    
+    val_rc_lbl_dir = args.annos_save_dir[:-1] + '_rc_all_ori_rcid_aug_id0'
+    val_rc_img_dir = args.images_save_dir[:-1] + '_rc_ori_aug'
+    val_rc_lbl_files = np.sort(glob.glob(os.path.join(val_rc_lbl_dir, '*.txt')))
+    
+    for f in val_rc_lbl_files:
+        lbl_name = os.path.basename(f)
+        if lbl_name in aug_cc_lbl_names:
+            continue
+        test_lbl_txt.write('%s\n' % f)
+        name = os.path.basename(f).replace('.txt', '.jpg')
+        test_img_txt.write('%s\n' % os.path.join(val_rc_img_dir, name))
+    
     val_bkg_lbl_dir = args.annos_save_dir[:-1] + '_val_bkg_lbl'
     val_bkg_img_dir = args.images_save_dir[:-1] + '_val_bkg_img'
     val_bkg_lbl_files = np.sort(glob.glob(os.path.join(val_bkg_lbl_dir, '*.txt')))
@@ -358,13 +371,123 @@ def create_aug_cc_nccbkg_test(cc_id, seed=17):
     test_img_txt.close()
     test_lbl_txt.close()
 
-    data_txt = open(os.path.join(base_dir, 'xview_nccbkg_aug_cc{}_test_{}.data'.format(cc_id, pxwhrs)), 'w')
+    data_txt = open(os.path.join(base_dir, 'xview_rcncc_bkg_aug_cc{}_test_{}.data'.format(cc_id, pxwhrs)), 'w')
     data_txt.write('classes=%s\n' % str(args.class_num))
-    data_txt.write('test=./data_xview/{}_cls/{}/CC/xview_nccbkg_aug_cc{}_test_img_{}.txt\n'.format(args.class_num, pxwhrs, cc_id, pxwhrs))
-    data_txt.write('test_label=./data_xview/{}_cls/{}/CC/xview_nccbkg_aug_cc{}_test_lbl_{}.txt\n'.format(args.class_num, pxwhrs, cc_id, pxwhrs))
+    data_txt.write('test=./data_xview/{}_cls/{}/CC/xview_rcncc_bkg_aug_cc{}_test_img_{}.txt\n'.format(args.class_num, pxwhrs, cc_id, pxwhrs))
+    data_txt.write('test_label=./data_xview/{}_cls/{}/CC/xview_rcncc_bkg_aug_cc{}_test_lbl_{}.txt\n'.format(args.class_num, pxwhrs, cc_id, pxwhrs))
     data_txt.write('names=./data_xview/{}_cls/xview.names\n'.format(args.class_num))
     data_txt.close()
 
+
+
+def create_solid_color_cc_nccbkg_test(cc_id=2):
+    pxwhrs = 'px23whr3_seed17'
+    eht = 'easy'
+    base_dir = os.path.join(args.data_save_dir, pxwhrs, 'CC')
+    test_lbl_txt = open(os.path.join(base_dir, 'xview_rcncc_bkg_solid_cc{}_test_lbl_{}.txt'.format(cc_id, pxwhrs)), 'w')
+    test_img_txt = open(os.path.join(base_dir, 'xview_rcncc_bkg_solid_cc{}_test_img_{}.txt'.format(cc_id, pxwhrs)), 'w')
+    lbl_dir = args.annos_save_dir[:-1] + '_cc{}_with_id_val_contain_only_solid'.format(cc_id)
+    img_dir = args.images_save_dir[:-1] + '_cc{}_val'.format(cc_id)
+    solid_cc_lbls = np.sort(glob.glob(os.path.join(lbl_dir, '*.txt')))
+    solid_cc_lbl_names = [os.path.basename(f) for f in solid_cc_lbls]
+    for f in solid_cc_lbls:
+        test_lbl_txt.write('%s\n' % f)
+        name = os.path.basename(f).replace('.txt', '.jpg')
+        test_img_txt.write('%s\n' % os.path.join(img_dir, name))
+        
+    
+    val_ncc_lbl_dir = args.annos_save_dir[:-1] + '_cc1_with_id_val_aug_id0'
+    val_ncc_img_dir = args.images_save_dir[:-1] + '_cc1_val_aug'
+    val_ncc_lbl_files = np.sort(glob.glob(os.path.join(val_ncc_lbl_dir, '*.txt')))
+    for f in val_ncc_lbl_files:
+        test_lbl_txt.write('%s\n' % f)
+        name = os.path.basename(f).replace('.txt', '.jpg')
+        test_img_txt.write('%s\n' % os.path.join(val_ncc_img_dir, name))
+    
+    val_rc_lbl_dir = args.annos_save_dir[:-1] + '_rc_all_ori_rcid_aug_id0'
+    val_rc_img_dir = args.images_save_dir[:-1] + '_rc_ori_aug'
+    val_rc_lbl_files = np.sort(glob.glob(os.path.join(val_rc_lbl_dir, '*.txt')))
+    for f in val_rc_lbl_files:
+        lbl_name = os.path.basename(f)
+        if lbl_name in solid_cc_lbl_names:
+            continue
+        test_lbl_txt.write('%s\n' % f)
+        name = os.path.basename(f).replace('.txt', '.jpg')
+        test_img_txt.write('%s\n' % os.path.join(val_rc_img_dir, name))   
+         
+    val_bkg_lbl_dir = args.annos_save_dir[:-1] + '_val_bkg_lbl'
+    val_bkg_img_dir = args.images_save_dir[:-1] + '_val_bkg_img'
+    val_bkg_lbl_files = np.sort(glob.glob(os.path.join(val_bkg_lbl_dir, '*.txt')))
+    for f in val_bkg_lbl_files:
+        test_lbl_txt.write('%s\n' % f)
+        name = os.path.basename(f).replace('.txt', '.jpg')
+        test_img_txt.write('%s\n' % os.path.join(val_bkg_img_dir, name))
+
+    test_img_txt.close()
+    test_lbl_txt.close()
+    
+    data_txt = open(os.path.join(base_dir, 'xview_rcncc_bkg_solid_cc{}_test_{}.data'.format(cc_id, pxwhrs)), 'w')
+    data_txt.write('classes=%s\n' % str(args.class_num))
+    data_txt.write('test=./data_xview/{}_cls/{}/CC/xview_rcncc_bkg_solid_cc{}_test_img_{}.txt\n'.format(args.class_num, pxwhrs, cc_id, pxwhrs))
+    data_txt.write('test_label=./data_xview/{}_cls/{}/CC/xview_rcncc_bkg_solid_cc{}_test_lbl_{}.txt\n'.format(args.class_num, pxwhrs, cc_id, pxwhrs))
+    data_txt.write('names=./data_xview/{}_cls/xview.names\n'.format(args.class_num))
+    data_txt.close()    
+    
+    
+def combine_all_xview_BG_with_xview_CC_by_inst(ins, cc_id, sample_seeds=[0, 1, 2], seed=17):
+    base_cmt = 'px{}whr{}_seed{}'.format(px_thres, whr_thres, seed)
+    data_save_dir =  os.path.join(args.data_save_dir, base_cmt, 'CC')
+    cc_trn_img_file = os.path.join(data_save_dir,  'cc{}_trn_img_{}.txt'.format(cc_id, base_cmt))
+    cc_trn_lbl_file = os.path.join(data_save_dir,  'cc{}_trn_lbl_{}.txt'.format(cc_id, base_cmt))
+    df_cc_trn_img = pd.read_csv(cc_trn_img_file, header=None)
+    df_cc_trn_lbl = pd.read_csv(cc_trn_lbl_file, header=None)
+    
+    bkg_dir =  os.path.join(args.data_save_dir, base_cmt)
+    bkg_img = os.path.join(bkg_dir, 'xview_bkg_train_img_{}.txt'.format(base_cmt))
+    bkg_lbl = os.path.join(bkg_dir, 'xview_bkg_train_lbl_{}.txt'.format(base_cmt))
+    df_bkg_img = pd.read_csv(bkg_img, header=None)
+    bkg_num = df_bkg_img.shape[0]
+    
+    data_ins_dir =  os.path.join(args.data_save_dir, base_cmt, 'CC', 'instance')
+    if not os.path.exists(data_ins_dir):
+        os.mkdir(data_ins_dir)
+    
+    for ssd in sample_seeds:
+        samp_cmt = 'px{}whr{}_seed{}'.format(px_thres, whr_thres, ssd)
+        np.random.seed(ssd)
+        inxes = np.random.permutation(df_cc_trn_img.shape[0])
+        cc_ins_img_file = open(os.path.join(data_ins_dir, 'cc{}_{}ins_trn_img_{}.txt'.format(cc_id, ins, samp_cmt)), 'w')
+        cc_ins_lbl_file = open(os.path.join(data_ins_dir, 'cc{}_{}ins_trn_lbl_{}.txt'.format(cc_id, ins, samp_cmt)), 'w')
+        
+        for ix in inxes[:ins]:
+            cc_ins_img_file.write('%s\n' % df_cc_trn_img.loc[ix, 0])
+            cc_ins_lbl_file.write('%s\n' % df_cc_trn_lbl.loc[ix, 0])
+        cc_ins_img_file.close()   
+        cc_ins_lbl_file.close() 
+    
+        data_txt = open(os.path.join(data_ins_dir, 'cc{}_{}instances+xview_bkg_seed{}.data'.format(cc_id, ins, ssd)), 'w')
+        data_txt.write('cc_train=%s\n' % (os.path.join(data_ins_dir, 'cc{}_{}ins_trn_img_{}.txt'.format(cc_id, ins, samp_cmt))))
+        data_txt.write('cc_train_label=%s\n' % (os.path.join(data_ins_dir, 'cc{}_{}ins_trn_lbl_{}.txt'.format(cc_id, ins, samp_cmt)))) 
+            
+        data_txt.write(
+            'xview_bkg_train={}\n'.format(bkg_img))
+        data_txt.write(
+            'xview_bkg_train_label={}\n'.format(bkg_lbl))
+                
+        data_txt.write(
+            'valid={}\n'.format(os.path.join(data_save_dir, 'xview_rcncc_bkg_cc{}_val_img_{}.txt'.format(cc_id, base_cmt))))
+        data_txt.write(
+            'valid_label={}\n'.format(os.path.join(data_save_dir, 'xview_rcncc_bkg_cc{}_val_lbl_{}.txt'.format(cc_id, base_cmt))))
+        
+        xview_trn_num = ins + bkg_num
+    
+        data_txt.write('xview_number={}\n'.format(xview_trn_num))
+        data_txt.write('classes=%s\n' % str(args.class_num))
+        data_txt.write('names=./data_xview/{}_cls/xview.names\n'.format(args.class_num))
+        data_txt.write('backup=backup/\n')
+        data_txt.write('eval=color\n')
+        data_txt.close()
+         
 
 def get_args(px_thres=None, whr_thres=None):
     parser = argparse.ArgumentParser()
@@ -456,7 +579,7 @@ if __name__ == '__main__':
     remove ept files (drop by b-box rules: px_thres<23, whr_thres>3)
     from lbl files that contain airplanes
     '''
-    remove_ept_to_bkg()
+#    remove_ept_to_bkg()
     
     '''
     split BKG images into train and val
@@ -527,3 +650,34 @@ if __name__ == '__main__':
 #    #cc_id = 1
 #    cc_id = 2
 #    create_aug_cc_nccbkg_test(cc_id)
+
+    '''
+    create test data of CC2 with only solid color airplanes
+    '''
+#    cc_id = 2
+#    create_solid_color_cc_nccbkg_test(cc_id)
+
+    '''
+    split CC with different instances
+    '''
+    seed = 17
+#    instances = [6,12,18,24,30]
+    instances = [7, 14, 21, 28, 35]
+    ccids = [1, 2]
+    sample_seeds = [0, 1]
+    for cc_id in ccids:
+        for ins in instances:
+            combine_all_xview_BG_with_xview_CC_by_inst(ins, cc_id, sample_seeds, seed)
+    
+#    seed = 17
+#    cc_id = 2 
+#    cc2_instances = [7, 14, 21, 28, 35]
+#    sample_seeds = [0, 1]
+#    for ins in cc2_instances:
+#        combine_all_xview_BG_with_xview_CC_by_inst(ins, cc_id, sample_seeds, seed)
+    
+    
+    
+    
+    
+    

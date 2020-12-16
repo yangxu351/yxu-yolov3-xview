@@ -272,7 +272,10 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
         with open(path, 'r') as f:
             self.img_files = [x.replace('/', os.sep) for x in f.read().splitlines()  # os-agnostic
                               if os.path.splitext(x)[-1].lower() in img_formats]
-            # img_names = [os.path.basename(f) for f in self.img_files]
+        img_names = [os.path.basename(f) for f in self.img_files[:4]]
+        #print('path', path)
+        #print('img_names', img_names)
+        
         #fixme---lbl_formats
         with open(label_path, 'r') as f:
             self.lbl_files = [x.replace('/', os.sep) for x in f.read().splitlines()  # os-agnostic
@@ -283,6 +286,7 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
         # print('self.img_files', self.img_files)
         assert n > 0, 'No images found in %s. See %s' % (path, help_url)
         bi = np.floor(np.arange(n) / batch_size).astype(np.int)  # batch index
+        #print('batch index', bi)        
         nb = bi[-1] + 1  # number of batches
 
         self.batch_size = batch_size
@@ -472,10 +476,10 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
     def __getitem__(self, index):
         if self.image_weights:
             index = self.indices[index]
-
+        #print("index", index)
         img_path = self.img_files[index]
         label_path = self.label_files[index]
-
+        
         hyp = self.hyp
         #fixme
         # mosaic = True and self.augment  # load 4 images at a time into a mosaic (only during training)
@@ -539,7 +543,7 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
             #     labels = cutout(img, labels)
 
         nL = len(labels)  # number of labels
-        # print('labels nL ', nL)
+        #print('labels nL ', nL)
         if nL:
             # convert xyxy to xywh
             labels[:, 1:5] = xyxy2xywh(labels[:, 1:5])

@@ -106,7 +106,7 @@ def train(opt):
     train_label_path = data_dict['train_label']
     test_label_path = data_dict['valid_label']
     nc = int(data_dict['classes'])  # number of classes
-    syn_0_xview_number = data_dict['syn_0_xview_number']
+    syn_0_xview_number = data_dict['xview_number']
     loop_count = int(syn_0_xview_number) // batch_size
 
     # Remove previous results
@@ -512,7 +512,7 @@ if __name__ == '__main__':
     opt.device = cfg_dict['device']
     opt.dataseed = cfg_dict['dataseed']
     opt.seed = cfg_dict['seed']
-    opt.epochs = cfg_dict['epochs']
+    epochs = cfg_dict['epochs']
     opt.batch_size = cfg_dict['batch_size']
     opt.image_size = cfg_dict['image_size']
     opt.class_num = cfg_dict['class_num']
@@ -538,7 +538,11 @@ if __name__ == '__main__':
         hyp['cls_pw'] = 1.
         hyp['obj_pw'] = 1.
     for cx, pro in enumerate(pros):
-        cmt = comment.format(base_bias*pro, version_base+cx) 
+        cmt = comment.format(version_base+cx, base_bias*pro) 
+        if pro < 1:
+            opt.epochs = epochs//2
+        else:
+            opt.epochs = epochs
 
         cinx = cmt.find('_CC') # first letter index
         endstr = cmt[cinx:] # _CC*_v*
@@ -553,7 +557,7 @@ if __name__ == '__main__':
         if val_syn:
             hyp_cmt_name = hyp_cmt + '_val_syn'
             opt.model_id = None
-            opt.data = 'data_xview/{}_{}_cls/{}_seed{}/{}_seed{}.data'.format(cmt, opt.class_num, cmt, opt.dataseed, cmt, opt.dataseed)
+            opt.data = 'data_xview/{}_{}_cls/{}_seed{}.data'.format(cmt, opt.class_num, cmt, opt.dataseed, cmt, opt.dataseed)
         else:
             hyp_cmt_name = hyp_cmt + '_val_xview'
             opt.data = 'data_xview/{}_{}_cls/{}_seed{}/{}_seed{}_xview_val.data'.format(cmt, opt.class_num, cmt, opt.dataseed, cmt, opt.dataseed)

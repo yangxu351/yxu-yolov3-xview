@@ -116,7 +116,7 @@ def test(cfg,
         if dataloader is None:
             #fixme --Yang.xu
             #dataset = LoadImagesAndLabels(path, lbl_path, img_size, batch_size, rect=True, cache_labels=True, with_modelid=True)  #
-            if opt.model_id is not None:
+            if opt.cc_id is not None:
                 dataset = LoadImagesAndLabels(path, lbl_path, img_size, batch_size, rect=True, cache_labels=True, with_modelid=True)
             else:
                 dataset = LoadImagesAndLabels(path, lbl_path, img_size, batch_size, rect=True, cache_labels=True)
@@ -179,9 +179,8 @@ def test(cfg,
                 #fixme ---yang.xu
                 # tcls = labels[:, 0].tolist() if nl else []  # target class
                 tcls = labels[:, -1].tolist() if nl else []
-#                print('tcls len', len(tcls))
-#                print('tcls', tcls)
-#                exit(0)
+                # print('tcls ', len(tcls))
+                # exit(0)
 
                 seen += 1
 
@@ -228,8 +227,8 @@ def test(cfg,
 
                     #fixme --yang.xu
                     tcls_tensor = labels[:, -1]
-                    #print('tcls_tensor', tcls_tensor)
-                    #exit(0)
+                    # print('tcls_tensor', tcls_tensor)
+                    # exit(0)
 
                     # target boxes
                     tbox = xywh2xyxy(labels[:, 1:5]) * torch.Tensor([width, height, width, height]).to(device)
@@ -241,7 +240,7 @@ def test(cfg,
                     # ti = (cls == tcls_tensor).nonzero().view(-1)  # target indices
                     # pi = (cls == pred[:, 5]).nonzero().view(-1)  # prediction indices
                     #fixme --yang.xu
-                    ti = (opt.rare_class == tcls_tensor).nonzero().view(-1) # target indices
+                    ti = (opt.cc_id == tcls_tensor).nonzero().view(-1) # target indices
                     pi = (0 == pred[:, 5]).nonzero().view(-1)  # prediction indices
 #                    if len(ti):
 #                        print('\nti ', len(ti), ti)
@@ -249,7 +248,7 @@ def test(cfg,
                     if opt.type == 'easy':
                         neu_cls = 0
                         #ni = (neu_cls == tcls_tensor).nonzero().view(-1) # target neutral indices
-                        ni = (tcls_tensor!=opt.rare_class).nonzero().view(-1) # target neutral indices
+                        ni = (tcls_tensor!=opt.cc_id).nonzero().view(-1) # target neutral indices
 #                        print('ni ', len(ni), ni)
                     else:
                         ni = torch.tensor([])
@@ -265,7 +264,7 @@ def test(cfg,
                     #             if len(detected) == nl:  # all targets already located in image
                     #                 break
 
-                    # Search for detections
+                    # SeaCCh for detections
                     if len(pi) and len(ti) and not len(ni):
                         ious, i = box_iou(pred[pi, :4], tbox[ti]).max(1)  # best ious, indices
                         # print('ious ', ious.shape)
@@ -322,13 +321,13 @@ def test(cfg,
             pr_name= opt.name # + ' @IoU: {:.2f} '.format(iouv[0]) + ' conf_thres: {} '.format(conf_thres)
             pr_legend = opt.legend
             # print('*stats', *stats)
-            p, r, ap, f1, ap_class = ap_per_class(*stats, pr_path=opt.result_dir, pr_name= pr_name, pr_legend=pr_legend, rare_class=opt.rare_class, apN=opt.apN)
+            p, r, ap, f1, ap_class = ap_per_class(*stats, pr_path=opt.result_dir, pr_name= pr_name, pr_legend=pr_legend, rare_class=opt.cc_id, apN=opt.apN)
 
             print('dataset.batch ', dataset.batch.shape)
             # exit(0)
             area = (img_size*opt.res)*(img_size*opt.res)*dataset.batch.shape[0]*1e-6
             
-            plot_roc_easy_hard(*stats, pr_path=opt.result_dir, pr_name= pr_name, pr_legend=pr_legend, rare_class=opt.rare_class, area=area, ehtype=opt.type, title_data_name='xview')
+            plot_roc_easy_hard(*stats, pr_path=opt.result_dir, pr_name= pr_name, pr_legend=pr_legend, rare_class=opt.cc_id, area=area, ehtype=opt.type, title_data_name='xview')
             # if niou > 1:
             #       p, r, ap, f1 = p[:, 0], r[:, 0], ap[:, 0], ap.mean(1)  # average across ious
             #fixme --yang.xu
@@ -337,7 +336,7 @@ def test(cfg,
             mp, mr, map, mf1 = p.mean(), r.mean(), ap.mean(), f1.mean()
             #fixme --yang.xu compute before
             # nt = np.bincount(stats[3].astype(np.int64), minlength=nc)  # number of targets per class
-            st3 = stats[3][stats[3] == opt.rare_class]
+            st3 = stats[3][stats[3] == opt.cc_id]
             nt = np.bincount(st3.astype(np.int64), minlength=nc)  # number of targets per class
         else:
             nt = torch.zeros(1)
@@ -379,7 +378,7 @@ def get_opt(dt=None, sr=None, comments=''):
 
     parser.add_argument("--cfg", type=str, default="cfg/yolov3-spp-{}cls_syn.cfg", help="*.cfg path")
     parser.add_argument("--data", type=str, default="data_xview/{}_cls/{}/xview_{}_{}.data", help="*.data path")
-    parser.add_argument("--weights", type=str, default="weights/{}_cls/{}_{}/best_{}_{}.pt", help="path to weights file")
+    parser.add_argument("--weights", type=str, default="weights/{}_cls/{}/xview_CC/{}_{}/best_{}_{}.pt", help="path to weights file")
 
     parser.add_argument("--batch-size", type=int, default=8, help="size of each image batch") # 2
     parser.add_argument("--img_size", type=int, default=608, help="inference size (pixels)")
@@ -388,14 +387,14 @@ def get_opt(dt=None, sr=None, comments=''):
 
     parser.add_argument("--class_num", type=int, default=1, help="class number")  # 60 6
     parser.add_argument("--label_dir", type=str, default="/media/lab/Yang/data/xView_YOLO/labels/", help="*.json path")
-    parser.add_argument("--weights_dir", type=str, default="weights/{}_cls/{}_seed{}/", help="to save weights path")
-    parser.add_argument("--result_dir", type=str, default="result_output/{}_cls/{}_seed{}/{}/", help="to save result files path")
+    parser.add_argument("--weights_dir", type=str, default="weights/{}_cls/{}/xview_CC/", help="to save weights path")
+    parser.add_argument("--result_dir", type=str, default="result_output/{}_cls/{}/xview_CC/", help="to save result files path")
     parser.add_argument("--grids_dir", type=str, default="grids_dir/{}_cls/{}_seed{}/", help="to save grids images")
     parser.add_argument("--syn_ratio", type=float, default=sr, help="ratio of synthetic data: 0 0.25, 0.5, 0.75")
     parser.add_argument("--syn_display_type", type=str, default=dt, help="syn_texture0, syn_color0, syn_texture, syn_color, syn_mixed, syn")
     parser.add_argument("--base_dir", type=str, default="data_xview/{}_cls/{}/", help="without syn data path")
 
-    parser.add_argument("--conf-thres", type=float, default=0.01, help="0.1 0.05 0.01 object confidence threshold")
+    parser.add_argument("--conf-thres", type=float, default=0.01, help="0.1 0.05 0.001 object confidence threshold")
     parser.add_argument("--nms-iou-thres", type=float, default=0.5, help="NMS 0.5  0.6 IOU threshold for NMS")
     parser.add_argument("--save_json", action="store_true", default=True, help="save a cocoapi-compatible JSON results file")
     parser.add_argument("--task", default="test", help="test study benchmark")
@@ -403,8 +402,7 @@ def get_opt(dt=None, sr=None, comments=''):
     parser.add_argument("--name", default='', help="file name")
     parser.add_argument("--legend", default='', help="figure legend")
     parser.add_argument("--cmt", default=comments, help="comments")
-    parser.add_argument("--model_id", type=int, default=None, help="specified model id")
-    parser.add_argument("--rare_class", type=int, default=None, help="specified rare class")
+    parser.add_argument("--cc_id", type=int, default=None, help="specified rare class")
     parser.add_argument("--type", default="hard", help="hard, easy")
     parser.add_argument("--apN", type=int,  default=50, help="AP 50, 40, 20")
     opt = parser.parse_args()
@@ -415,311 +413,185 @@ def get_opt(dt=None, sr=None, comments=''):
 
 
 
-def main(seed, device):
+def main(cc_id, seed, device):
 
     base_cmt = "px23whr3_seed{}"
-    # hyp_cmt = "hgiou1_1gpu"
-
-    hyp_cmt = "hgiou1_1gpu_val_syn"
-#    hyp_cmt = "hgiou1_1gpu_halfhsv_val_syn"
-
+    #hyp_cmt = "hgiou1_1gpu_val_syn"
+    hyp_str = 'hgiou1_19.5obj_cc{}x{}_ccid{}'
+    prefix_str = 'xview_nccbkg_cc{}_cc{}x{}'
     
-#    apN = 20
-##    apN = 40
-##    apN = 50
-    prefix = 'syn'
-
     px_thres = 23
     whr_thres = 3 # 4
     sd = 17
-    model_ids = [4, 1, 5, 5, 5]
-    rare_classes = [1, 2, 3, 4, 5]
 #    ap_list = [20, 40, 50]
     apN = 50  
-    eh_types = ["easy"]# "hard", 
+    typ = "easy"# "hard", 
     far_thres = 3
-    for typ in eh_types:
-#        df_pr_ap = pd.DataFrame(columns=["Version","Seen", "NT", "AP{}".format(ap_list[0]), "AP{}".format(ap_list[1]), "AP{}".format(ap_list[2])])
-        df_pr_ap_far = pd.DataFrame(columns=["Version", "Seen", "NT", "AP{}".format(apN), "Pd(FAR=0.25)",  "Pd(FAR=0.5)", "Pd(FAR=1)", "Precision", "Recall" , "F1"])
-        for ix, cmt in enumerate(comments):
 
-            VN = ix + base_version
-            base_cmt = base_cmt.format(sd)
-            opt = get_opt(comments=cmt)
-            opt.device = device
-            opt.apN = apN
-
-            cinx = cmt.find('_RC') # first letter index
-            endstr = cmt[cinx:]
-            if cinx >= 0:
-                #medix = cmt.find('_bxmuller')
-                medix = cmt.find('_ssig')
-                mstr =  cmt[medix:cinx] # _bxmuller*_color_bias*
-                suffix = endstr + '_AP{}'.format(apN) # _RC*_v*_AP* 
-            else:
-                mstr = ''
-                suffix = ''
-    
-            opt.legend = prefix + suffix
-            opt.name = prefix + mstr + suffix # 'syn_RC*_v*_dyn*_color_bias*_AP*
-            
-            ''' for specified model id '''
-            opt.batch_size = 8
-            opt.rare_class = int(cmt[cinx+3])
-            opt.model_id = model_ids[rare_classes.index(opt.rare_class)]
-            print("opt.model_id", opt.model_id, 'opt.rare_class ', opt.rare_class)
-            #fixme--yang.xu
-#            if ix == 2 and seed == 0:
-#                seed = 3
-#                print('seed', seed)
-#            elif ix > 2 and seed == 3 :
-#                seed = 0
-            
-            opt.conf_thres = 0.01
-            tif_name = "xview"
-            ############# 2 images test set
-#            opt.type = "easy"
-#            opt.type = "hard"
-            opt.type = typ
-
-            opt.name += "_{}".format(opt.type)
-            ############# ori test dataset
-#            opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, "test_on_xview_{}_m{}_rc{}_ap{}_{}".format(hyp_cmt, opt.model_id, opt.rare_class, apN, opt.type))
-#            opt.data = "data_xview/{}_cls/{}/xview_rc_test_{}_m{}_rc{}_{}.data".format(opt.class_num, base_cmt, base_cmt, opt.model_id, opt.rare_class, opt.type)
-            
-            ############# aug rc test dataset
-#            opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_ori_nrcbkg_aug_rc_{}_m{}_rc{}_{}_iou{}'.format(hyp_cmt, opt.model_id, opt.rare_class, opt.type, apN))
-#            opt.data = 'data_xview/{}_cls/{}/xview_ori_nrcbkg_aug_rc_test_{}_m{}_rc{}_{}.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id, opt.rare_class, opt.type)
-
-            ############# model with different seeds
-#            opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_ori_nrcbkg_aug_rc_{}_m{}_rc{}_{}_iou{}_seed{}'.format(hyp_cmt, opt.model_id, opt.rare_class, opt.type, apN, seed))
-#            opt.data = 'data_xview/{}_cls/{}/RC/xview_ori_nrcbkg_aug_rc_test_{}_m{}_rc{}_{}.data'.format(opt.class_num, base_cmt, base_cmt, opt.model_id, opt.rare_class, opt.type)
-            
-#            opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_oa_bkg_aug_rc{}_{}_iou{}_seed{}'.format(opt.rare_class, hyp_cmt, apN, seed))
-#            opt.data = 'data_xview/{}_cls/{}/RC/xview_oa_bkg_aug_rc{}_test_{}.data'.format(opt.class_num, base_cmt, opt.rare_class, base_cmt)
-            
-            opt.result_dir = opt.result_dir.format(opt.class_num, cmt, sd, 'test_on_xview_ccnrc_bkg_aug_rc{}_{}_iou{}_seed{}'.format(opt.rare_class, hyp_cmt, apN, seed))
-            opt.data = 'data_xview/{}_cls/{}/RC/xview_ccnrc_bkg_aug_rc{}_test_{}.data'.format(opt.class_num, base_cmt, opt.rare_class, base_cmt)
-
-            if not os.path.exists(opt.result_dir):
-                os.makedirs(opt.result_dir)
-            print(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd), "*_{}_seed{}".format(hyp_cmt, seed), "best_seed{}.pt".format(seed)))
-#            print(glob.glob(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd), "*_{}_seed{}".format(hyp_cmt, sd), "best_seed{}.pt".format(sd))))
-#            all_weights = glob.glob(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd), "*_{}_seed{}".format(hyp_cmt, sd), "best_*seed{}.pt".format(sd)))
-            all_weights = glob.glob(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd), "*_{}_seed{}".format(hyp_cmt, seed), "best_*seed{}.pt".format(seed)))
-            all_weights.sort()
-            opt.weights = all_weights[-1]
-
-            print(opt.weights)
-            print(opt.data)
-            
-            
-            seen, nt, mp, mr, mapv, mf1 = test(opt.cfg,
-                 opt.data,
-                 opt.weights,
-                 opt.batch_size,
-                 opt.img_size,
-                 opt.conf_thres,
-                 opt.nms_iou_thres,
-                 opt.save_json, opt=opt)
-                 
-
-            df_pr_ap_far.at[ix, "Version"] = VN
-            df_pr_ap_far.at[ix, "Seen"] = seen
-            df_pr_ap_far.at[ix, "NT"] = nt
-            df_pr_ap_far.at[ix, "AP{}".format(apN)] = mapv    
-            df_pr_ap_far.at[ix, "Precision"] = mp
-            df_pr_ap_far.at[ix, "Recall"] = mr
-            df_pr_ap_far.at[ix, "F1"] = mf1
-            
-            df_rec = pd.read_csv(os.path.join(opt.result_dir, 'rec_list.txt'), header=None)
-            df_far = pd.read_csv(os.path.join(opt.result_dir, 'far_list.txt'), header=None)
-            df_far_thres = df_far[df_far<=far_thres]
-            df_far_thres = df_far_thres.dropna()
-            df_rec_thres = df_rec.loc[:df_far_thres.shape[0]-1]
-            idx25_mx = df_far[df_far>=0.25].dropna()
-#            print('idx25_mx.shape[0]', idx25_mx.shape[0])
-            if idx25_mx.shape[0] == 0:
-                idx25_mn = df_rec_thres.shape[0]-1
-            else:
-                idx25_mx = idx25_mx.idxmin()[0]
-#                print('idx25_mx', idx25_mx)
-                idx25_mn = idx25_mx # - 1
-#            print('idx25_mn', idx25_mn)
-            pd_25 = df_rec_thres.loc[idx25_mn, 0]
-            
-            idx5_mx = df_far[df_far>=0.5].dropna()
-            if idx5_mx.shape[0] == 0:
-                idx5_mn = df_rec_thres.shape[0]-1
-            else:
-                idx5_mx = idx5_mx.idxmin()[0]
-                idx5_mn = idx5_mx #- 1
-            pd_5 = df_rec_thres.loc[idx5_mn, 0]
-            
-            idx1_mx = df_far[df_far>=1].dropna()
-            if idx1_mx.shape[0] == 0:
-                idx1_mn = df_rec_thres.shape[0]-1
-            else:
-                idx1_mx = idx1_mx.idxmin()[0]
-                idx1_mn = idx1_mx# - 1  
-            pd_1 = df_rec_thres.loc[idx1_mn, 0]
-            
-            df_pr_ap_far.at[ix, "Pd(FAR=0.25)"] = pd_25
-            df_pr_ap_far.at[ix, "Pd(FAR=0.5)"] = pd_5
-            df_pr_ap_far.at[ix, "Pd(FAR=1)"] = pd_1
-    
-        csv_dir = "result_output/{}_cls/{}/".format(opt.class_num, 'syn_increase_color_mu_RC' + str(opt.rare_class))
-        #csv_dir = "result_output/1_cls/{}/".format(cmt[:cmt.find("bias")+4] + '_RC' + str(opt.rare_class))
-        if not os.path.exists(csv_dir):
-            os.mkdir(csv_dir)
-
-        sinx = cmt.find('ssig')
-        #einx = cmt.find('bias')+4
-        einx = cmt.find('_mu')+3
-        dynstr = cmt[sinx:einx]  
+    df_pr_ap_far = pd.DataFrame(columns=["CC_ratio", "Seen", "NT", "AP{}".format(apN), "Pd(FAR=0.25)",  "Pd(FAR=0.5)", "Pd(FAR=1)", "Precision", "Recall" , "F1"])
+    for ix, ratio in enumerate(cc_ratio_list):
         
-        csv_name =  "{}_{}_RC{}_{}-seed{}.xlsx".format(prefix, dynstr, opt.rare_class, opt.type, seed)          
-#        csv_name =  "{}_{}_RC{}_{}-c4.xlsx".format(prefix, dynstr, opt.rare_class, opt.type)          
-#        csv_name =  "{}_{}_RC{}_{}.xlsx".format(prefix, 'old_testset_size', opt.rare_class, opt.type)          
-        mode = 'w'
-        with pd.ExcelWriter(os.path.join(csv_dir, csv_name), mode=mode) as writer:
-            df_pr_ap_far.to_excel(writer, sheet_name='RC{}_{}'.format(opt.rare_class, opt.type), index=False) # 
+        print('ratio', ratio)
+        base_cmt = base_cmt.format(sd)
+        opt = get_opt()
+        opt.device = device
+        opt.apN = apN
+        
+        opt.cc_id = cc_id
+        print('opt.cc_id ', opt.cc_id)
+        
+        hyp_cmt = hyp_str.format(ratio, opt.batch_size-ratio, opt.cc_id)
+        prefix = prefix_str.format(opt.cc_id, ratio, opt.batch_size-ratio) 
+        
+
+        opt.legend = prefix # prefix + 
+        opt.name = prefix  # 'syn_CC*_v*_dyn*_color_bias*_AP* prefix + 
+        
+        ''' for specified model id '''
+        opt.batch_size = 8
+        
+        opt.conf_thres = 0.01
+        tif_name = prefix
+        opt.type = typ
+
+        opt.name += "_{}".format(opt.type)
+
+        opt.result_dir = os.path.join(opt.result_dir.format(opt.class_num, base_cmt), 'test_on_xview_rcncc_bkg_cc_{}_{}_iou{}_seed{}'.format(hyp_cmt, opt.type, apN, seed))
+        opt.data = 'data_xview/{}_cls/{}/CC/xview_rcncc_bkg_cc{}_test_{}.data'.format(opt.class_num, base_cmt, opt.cc_id, base_cmt)
+        
+#        opt.result_dir = os.path.join(opt.result_dir.format(opt.class_num, base_cmt), 'test_on_xview_rcncc_bkg_solid_cc_{}_{}_iou{}_seed{}'.format(hyp_cmt, opt.type, apN, seed))
+#        opt.data = 'data_xview/{}_cls/{}/CC/xview_rcncc_bkg_solid_cc{}_test_{}.data'.format(opt.class_num, base_cmt, opt.cc_id, base_cmt)
+     
+
+        if not os.path.exists(opt.result_dir):
+            os.makedirs(opt.result_dir)
+        print(os.path.join(opt.weights_dir.format(opt.class_num, base_cmt), "*_{}_seed{}".format(hyp_cmt, seed), "best_seed{}.pt".format(seed)))
+        all_weights = glob.glob(os.path.join(opt.weights_dir.format(opt.class_num, base_cmt), "*_{}_seed{}".format(hyp_cmt, seed), "best_*seed{}.pt".format(seed)))
+        all_weights.sort()
+        opt.weights = all_weights[-1]
+
+        print(opt.weights)
+        print(opt.data)
+        
+        seen, nt, mp, mr, mapv, mf1 = test(opt.cfg,
+             opt.data,
+             opt.weights,
+             opt.batch_size,
+             opt.img_size,
+             opt.conf_thres,
+             opt.nms_iou_thres,
+             opt.save_json, opt=opt)
+             
+
+        df_pr_ap_far.at[ix, "Seen"] = seen
+        df_pr_ap_far.at[ix, "NT"] = nt
+        df_pr_ap_far.at[ix, "CC_ratio"] = ratio
+        df_pr_ap_far.at[ix, "AP{}".format(apN)] = mapv    
+        df_pr_ap_far.at[ix, "Precision"] = mp
+        df_pr_ap_far.at[ix, "Recall"] = mr
+        df_pr_ap_far.at[ix, "F1"] = mf1
+        
+        df_rec = pd.read_csv(os.path.join(opt.result_dir, 'rec_list.txt'), header=None)
+        df_far = pd.read_csv(os.path.join(opt.result_dir, 'far_list.txt'), header=None)
+        df_far_thres = df_far[df_far<=far_thres]
+        df_far_thres = df_far_thres.dropna()
+        df_rec_thres = df_rec.loc[:df_far_thres.shape[0]-1]
+        idx25_mx = df_far[df_far>=0.25].dropna()
+#            print('idx25_mx.shape[0]', idx25_mx.shape[0])
+        if idx25_mx.shape[0] == 0:
+            idx25_mn = df_rec_thres.shape[0]-1
+        else:
+            idx25_mx = idx25_mx.idxmin()[0]
+#                print('idx25_mx', idx25_mx)
+            idx25_mn = idx25_mx # - 1
+#            print('idx25_mn', idx25_mn)
+        pd_25 = df_rec_thres.loc[idx25_mn, 0]
+        
+        idx5_mx = df_far[df_far>=0.5].dropna()
+        if idx5_mx.shape[0] == 0:
+            idx5_mn = df_rec_thres.shape[0]-1
+        else:
+            idx5_mx = idx5_mx.idxmin()[0]
+            idx5_mn = idx5_mx #- 1
+        pd_5 = df_rec_thres.loc[idx5_mn, 0]
+        
+        idx1_mx = df_far[df_far>=1].dropna()
+        if idx1_mx.shape[0] == 0:
+            idx1_mn = df_rec_thres.shape[0]-1
+        else:
+            idx1_mx = idx1_mx.idxmin()[0]
+            idx1_mn = idx1_mx# - 1  
+        pd_1 = df_rec_thres.loc[idx1_mn, 0]
+        
+        df_pr_ap_far.at[ix, "Pd(FAR=0.25)"] = pd_25
+        df_pr_ap_far.at[ix, "Pd(FAR=0.5)"] = pd_5
+        df_pr_ap_far.at[ix, "Pd(FAR=1)"] = pd_1
+
+    csv_dir = "result_output/{}_cls/{}/xview_CC/test_on_xview_rcncc_bkg_cc_hgiou1_19.5obj_apN{}/".format(opt.class_num, base_cmt, apN)
+    #csv_dir = "result_output/{}_cls/{}/xview_CC/test_on_xview_rcncc_bkg_solid_cc_hgiou1_19.5obj_apN{}/".format(opt.class_num, base_cmt, apN)
+    if not os.path.exists(csv_dir):
+        os.makedirs(csv_dir)
+
+    csv_name =  "xview_CC{}_AP50_{}_seed{}.xlsx".format(opt.cc_id, typ, seed)          
+    mode = 'w'
+    with pd.ExcelWriter(os.path.join(csv_dir, csv_name), mode=mode) as writer:
+        df_pr_ap_far.to_excel(writer, sheet_name='CC{}_{}'.format(opt.cc_id, opt.type), index=False) # 
 
 
 def computer_avg_all_seeds(seeds):
-    prefix = 'syn'
-    model_ids = [4, 1, 5, 5, 5]
-    rare_classes = [1, 2, 3, 4, 5]
+    base_cmt = "px23whr3_seed17"
     eht = 'easy'
     apN = 50
-    for ix, cmt in enumerate(comments):
-        cinx = cmt.find('_RC')
-        rare_class = int(cmt[cinx+3])
-        model_id = model_ids[rare_classes.index(rare_class)]
-        csv_dir = "result_output/1_cls/{}/".format('syn_increase_color_mu_RC' + str(rare_class))
-        #csv_dir = "result_output/1_cls/{}/".format(cmt[:cmt.find("bias")+4] + '_RC' + str(rare_class))
-        #sinx = cmt.find('bxmuller')
-        sinx = cmt.find('ssig')
-        #einx = cmt.find('bias')+4
-        einx = cmt.find('_mu')+3
-        dynstr = cmt[sinx:einx]
+    for cc_id in ccids:
+        csv_dir = "result_output/1_cls/{}/xview_CC/test_on_xview_rcncc_bkg_cc_hgiou1_19.5obj_apN{}/".format(base_cmt, apN)
+        #csv_dir = "result_output/1_cls/{}/xview_CC/test_on_xview_rcncc_bkg_solid_cc_hgiou1_19.5obj_apN{}/".format(base_cmt, apN)
+
+#        if cc_id ==2:
+#            prefix = 'synCC{}_ignore_notsolid_Nxquantity'.format(cc_id)
+#        else:
+#            prefix = 'synCC{}_Nxquantity'.format(cc_id)
+        prefix = 'xview_nccbkg_cc{}'.format(cc_id)
         cmb = []
         for seed in seeds:
-            csv_name =  "{}_{}_RC{}_{}-seed{}.xlsx".format(prefix, dynstr, rare_class, eht, seed)
+            csv_name =  "xview_CC{}_AP50_{}_seed{}.xlsx".format(cc_id, eht, seed)          
             # "AP{}".format(apN), "Pd(FAR=0.25)",  "Pd(FAR=0.5)", "Pd(FAR=1)"
             df = pd.read_excel(os.path.join(csv_dir, csv_name))
             cmb.append(df.to_numpy())
-            ver_list = df.loc[:, 'Version']
             imgnum_list = df.loc[:, 'Seen']
-            rcnum_list = df.loc[:, 'NT']
+            CCnum_list = df.loc[:, 'NT']
+            times_list = df.loc[:, 'CC_ratio']
 
         cmb = np.array(cmb)
         avg_cmb = np.mean(cmb[:, :, 3:7], axis=0)
-        df_avg = pd.DataFrame(columns=["Version", "Seen", "NT", "AP{}".format(apN), "Pd(FAR=0.25)",  "Pd(FAR=0.5)", "Pd(FAR=1)"])
-        df_avg['Version'] = ver_list
+        df_avg = pd.DataFrame(columns=["CC_ratio", "Seen", "NT", "AP{}".format(apN), "Pd(FAR=0.25)",  "Pd(FAR=0.5)", "Pd(FAR=1)"])
         df_avg['Seen'] = imgnum_list
-        df_avg['NT'] = rcnum_list
+        df_avg['NT'] = CCnum_list
+        df_avg['CC_ratio'] = times_list
         df_avg.loc[:, 3:7] = avg_cmb
-        save_name =  "{}_{}_RC{}_{}_avg_all_seeds.xlsx".format(prefix, dynstr, rare_class, eht)
+        save_name =  "{}_avg_all_seeds.xlsx".format(prefix)
         with pd.ExcelWriter(os.path.join(csv_dir, save_name), mode='w') as writer:
-            df_avg.to_excel(writer, sheet_name='RC{}_{}_avg'.format(rare_class, eht), index=False) #
+            df_avg.to_excel(writer, sheet_name='CC{}_{}_avg'.format(cc_id, eht), index=False) #
 
 
 
 if __name__ == "__main__":
-
-    '''
-    test for syn_xveiw_background_*_with_model
-    '''
-
-                       
-    ###########################################   
-
-    ################  color
-#    comments = []
-#    #base_version = 116
-#    color_sigma = [10, 20, 30, 40] # 0, 0.03, 0.06, 0.09, 0.12
-#    for ix,csig in enumerate(color_sigma):
-#        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_ssig0_color_square_bias{}_RC1_v{}'.format(csig, ix+91)
-#        cmt = 'syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_ssig0.06_color_square_bias{}_RC1_v{}'.format(csig, ix+96)
-#        base_version = 116
-#        cmt = 'syn_xview_bkg_px15whr3_xbw_newbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_ssig0.03_color_square_bias{}_RC1_v{}'.format(csig, ix+base_version)
-#        px_thres = 15
-#        device = '3'
-        
-#        cmt = 'syn_xview_bkg_px23whr3_xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_ssig0_color_square_bias{}_RC2_v{}'.format(csig, ix+91)
-#        px_thres = 23
-#        device = '0'
-#        base_version = 121
-#        cmt = 'syn_xview_bkg_px23whr3_xbsw_xwing_newbkg_shdw_split_scatter_gauss_rndsolar_ssig0.03_color_square_bias{}_RC2_v{}'.format(csig, ix+base_version)
-#        px_thres = 23
-#        device = '0' 
-
-#        cmt = 'syn_xview_bkg_px23whr3_xbw_newbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.03_color_square_bias{}_RC3_v{}'.format(csig, ix+116)
-#        px_thres = 23
-#        device = '0'
-#        base_version = 121
-#        cmt = 'syn_xview_bkg_px23whr3_xbw_newbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.09_color_square_bias{}_RC3_v{}'.format(csig, ix+base_version)
-#        px_thres = 23
-#        device = '3'
-
-#        base_version = 116
-#        cmt = 'syn_xview_bkg_px23whr3_xbw_newbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.12_color_square_bias{}_RC4_v{}'.format(csig, ix+base_version)
-#        px_thres = 23
-#        device = '2'
-
-#        cmt = 'syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0_color_square_bias{}_RC5_v{}'.format(csig, ix+91)
-#        px_thres = 23
-#        device = '2'
-#        base_version = 116
-#        cmt = 'syn_xview_bkg_px23whr3_xbw_newbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.03_color_square_bias{}_RC5_v{}'.format(csig, ix+base_version)
-#        px_thres = 23
-#        device = '0'
-
-#        comments.append(cmt)
-    
-
-    ''' increase color mu'''
-    comments = []
-    mu_list = [10, 20, 30] # 0, 0.03, 0.06, 0.09, 0.12     
-    for ix,ml in enumerate(mu_list):
-#        base_version = 136  
-#        cmt = 'syn_xview_bkg_px15whr3_xbw_newbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_promu_ssig0.03_increase_color_mu_{}_RC1_v{}'.format(ml, ix+base_version)
-#        px_thres = 15
-#        device='0'
-        
-#        base_version = 136  
-#        cmt = 'syn_xview_bkg_px23whr3_xbsw_xwing_newbkg_shdw_split_scatter_gauss_rndsolar_promu_ssig0.03_csig10_increase_color_mu_{}_RC2_v{}'.format(ml, ix+base_version)
-#        px_thres = 23
-#        device='0'
-#        base_version = 136  
-#        cmt = 'syn_xview_bkg_px23whr3_xbsw_xwing_newbkg_shdw_split_scatter_gauss_rndsolar_promu_ssig0.03_csig10_decrease_color_mu_{}_RC2_v{}'.format(ml, ix+base_version)
-#        px_thres = 23
-#        device='1'
-#
-#        base_version = 136  
-#        cmt = 'syn_xview_bkg_px23whr3_xbw_newbkg_unif_shdw_split_scatter_gauss_rndsolar_promu_ssig0.09_csig40_increase_color_mu_{}_RC3_v{}'.format(ml, ix+base_version)
-#        px_thres = 23
-#        device='0'
-        base_version = 136  
-        cmt = 'syn_xview_bkg_px23whr3_xbw_newbkg_unif_shdw_split_scatter_gauss_rndsolar_promu_ssig0.09_csig40_decrease_color_mu_{}_RC3_v{}'.format(ml, ix+base_version)
-        px_thres = 23
-        device='0'
-        
-#        base_version = 126  
-#        cmt = 'syn_xview_bkg_px23whr3_xbw_newbkg_unif_shdw_split_scatter_gauss_rndsolar_promu_ssig0.12_increase_color_mu_{}_RC4_v{}'.format(ml, ix+base_version)
-#        px_thres = 23
-#        device='0'
-
-#        base_version = 126 
-#        cmt = 'syn_xview_bkg_px23whr3_xbw_newbkg_unif_shdw_split_scatter_gauss_rndsolar_promu_ssig0.03_increase_color_mu_{}_RC5_v{}'.format(ml, ix+base_version)
-#        px_thres = 23
-#        device='2'       
-        comments.append(cmt)  
                 
-    seed_list = [3] # [0, 1, 2] , 3, 4
-    for seed in seed_list:
-      main(seed, device)   
+    ###########################################    
+
+    ###########################################  
+ 
+    ''' Common classes '''
+    comments = []
+    cc_ratio_list = [3, 4, 5, 6, 7] # , 8
+        
+    px_thres = 23
+    device = '1'    
+        
+    seed_list = [0, 1] # [0, 1, 2] , 3, 4
+    ccids = [1, 2] # 1, 2
+    for cc_id in ccids:
+        for seed in seed_list:
+          main(cc_id, seed, device)   
       
-    seeds = [1, 2, 3]  #0, 1, 2 , 3, 4 
+    seeds = [0, 1]  # , 3, 4
     computer_avg_all_seeds(seeds)

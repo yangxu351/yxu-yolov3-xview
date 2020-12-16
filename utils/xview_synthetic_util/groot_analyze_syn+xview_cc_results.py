@@ -89,8 +89,11 @@ def get_part_syn_args():
     parser.add_argument("--syn_data_list_dir", type=str, help="to syn data list files",
                         default='/data/users/yang/code/yxu-yolov3-xview/data_xview/{}_{}_cls/')
 
-    parser.add_argument("--results_dir", type=str, help="to save category files",
-                        default='/data/users/yang/code/yxu-yolov3-xview/result_output/{}_cls/{}_seed{}/{}/')
+#    parser.add_argument("--results_dir", type=str, help="to save category files",
+#                        default='/data/users/yang/code/yxu-yolov3-xview/result_output/{}_cls/xview_CC/{}_seed{}/{}/')
+
+    parser.add_argument("--results_dir", type=str, help="results*.json",
+                        default='/data/users/yang/code/yxu-yolov3-xview/result_output/{}_cls/{}/syn+xview_CC/{}/')
 
     parser.add_argument("--cat_sample_dir", type=str, help="to save figures",
                         default='/data/users/yang/data/xView_YOLO/cat_samples/{}/{}_cls/')
@@ -118,8 +121,8 @@ def get_part_syn_args():
     return syn_args
 
 
-def check_prd_gt_iou_xview_syn(data_file, model_id, rare_class, cmt, prefix, res_folder, base_pxwhrs='px23whr3_seed17', hyp_cmt = 'hgiou1_1gpu', seed=17, iou_thres=0.5):
-    xview_dir = os.path.join(syn_args.data_xview_dir, base_pxwhrs, 'RC')
+def check_prd_gt_iou_xview_syn(data_file, rare_class, cmt, prefix, res_folder, base_pxwhrs='px23whr3_seed17', hyp_cmt = 'hgiou1_1gpu', seed=17, iou_thres=0.5):
+    xview_dir = os.path.join(syn_args.data_xview_dir, base_pxwhrs, 'CC')
     print('xview_dir', xview_dir)
     data = parse_data_cfg(os.path.join(xview_dir, data_file))
     # fixme--yang.xu
@@ -130,26 +133,17 @@ def check_prd_gt_iou_xview_syn(data_file, model_id, rare_class, cmt, prefix, res
 
     df_imgs = pd.read_csv(img_path, header=None)
     df_lbls = pd.read_csv(lbl_path, header=None)
-    cinx = cmt.find('model') # first letter index
-    endstr = cmt[cinx:]
-    rcinx = endstr.rfind('_')
-    fstr = endstr[rcinx:] # '_' is included
-    sstr = endstr[:rcinx]
-    suffix = fstr + '_' + sstr
-    print('suffix', suffix)
+#    cinx = cmt.find(sorc) # first letter index
+#    endstr = cmt[cinx:]
+#    rcinx = endstr.rfind('_')
+#    fstr = endstr[rcinx:] # '_' is included
+#    sstr = endstr[:rcinx]
+#    suffix = fstr + '_' + sstr
+#    print('suffix', suffix)
     # print('res+_folder', res_folder)
     # exit(0)
-    if model_id:
-        result_path = syn_args.results_dir.format(syn_args.class_num, cmt, seed, res_folder)
-    #    print('result_path ', result_path)
-    # if len(lcmt) > 1:
-    #     suffix = lcmt[1] + '_' + lcmt[0]
-    #     result_path = syn_args.results_dir.format(syn_args.class_num, cmt, seed, res_folder.format(hyp_cmt, seed))
-    # else:
-    #     suffix = 'model{}'.format(model_id)
-    #     result_path = syn_args.results_dir.format(syn_args.class_num, cmt, seed, res_folder.format(hyp_cmt, seed, model_id))
-#    json_name = prefix + suffix + '*.json'
     json_name = 'results*.json'
+    result_path = syn_args.results_dir.format(syn_args.class_num, cmt, res_folder)
 #    print('result_path ', result_path)
 #    print('json_name', json_name)
     print(os.path.join(result_path, json_name))
@@ -161,7 +155,7 @@ def check_prd_gt_iou_xview_syn(data_file, model_id, rare_class, cmt, prefix, res
     res_json_file = res_json_files[0]
     res_json = json.load(open(res_json_file))
     
-    result_iou_check_dir = os.path.join(syn_args.cat_sample_dir, 'result_iou_check', 'RC{}'.format(rare_class),  cmt, res_folder)
+    result_iou_check_dir = os.path.join(syn_args.cat_sample_dir, 'result_iou_check', 'CC{}'.format(rare_class),  cmt, res_folder)
     if not os.path.exists(result_iou_check_dir):
         os.makedirs(result_iou_check_dir)
     img_names = []
@@ -169,7 +163,9 @@ def check_prd_gt_iou_xview_syn(data_file, model_id, rare_class, cmt, prefix, res
         image_name = os.path.basename(f)
         img_names.append(image_name)
         lbl_file = df_lbls.loc[ix, 0]
-
+        if not is_non_zero_file(lbl_file):
+            continue
+            
         img = cv2.imread(os.path.join(f))
         img_size = img.shape[0]
         good_gt_list = []
@@ -237,89 +233,28 @@ if __name__ == "__main__":
 
     seed = 17
     iou_thres=0.5
- 
-#    comments = ['syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias2.5_RC1_v55_color']
-    #model_id = 4
-    #rare_class = 1
-#    comments = ['syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_color_bias-0.5_RC5_v22_color']
-#    model_id = 5
-#    rare_class = 5 
-#    comments = ['syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_size_bias0_RC3_v24_color']
-#    model_id = 5
-#    rare_class = 3
-#    comments = ['syn_xview_bkg_px23whr3_xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_dynmu_size_bias0_RC2_v25_color']
-#    model_id = 1
-#    rare_class = 2
-#    comments = ['syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_dynmu_size_bias0_RC4_v26_color']
-#    model_id = 5
-#    rare_class = 4
-#    hyp_cmt = 'hgiou1_1gpu_5every_val_syn'
-#    res_folder = 'test_on_ori_nrcbkg_aug_rc_{}_m{}_rc{}_{}_iou50_epochs_v1'
-
-    ############### dynsigma size
-#    comments = ['syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_bxmuller_size_bias0_RC5_v1']
-#    model_id = 5
-#    rare_class = 5
-#    comments = ['syn_xview_bkg_px23whr3_xbw_xcolor_xbkg_unif_shdw_split_scatter_gauss_rndsolar_bxmuller_size_bias0.12_RC4_v5']
-#    comments = ['syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_promu_size_bias0.09_RC4_v43']
-#    sd = 'seed1' 
-#    comments = ['syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.09_color_bias0_RC4_v50']
-#    comments = ['syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.03_color_square_bias30_RC4_v98']
-#    comments = ['syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_promu_size_square_bias0.12_RC4_v104']
-    
-#    sd = 'seed0'
-#    model_id = 5
-#    rare_class = 4  
-     
-#    comments = ['syn_xview_bkg_px23whr3_xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_ssig0.03_bxmuller_color_bias0_RC2_v31']
-#    model_id = 1
-#    rare_class = 2 
-#    sd ='seed2' 
-#    comments = ['syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0_bxmuller_color_bias0_RC3_v11']
-#    model_id = 5
-#    rare_class = 3
-#    sd ='seed0' 
-#    comments = ['syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_ssig0.03_bxmuller_color_bias20_RC1_v15']
-#    model_id = 4
-#    rare_class = 1
-#    sd ='seed2'
-    
-    ## common classes
-    comments = []
-    size_sigma = [0] # 0, 0.08, 0.16, 0.24, 0.32
-    for ix, ssig in enumerate(size_sigma):
-        cmt = 'syn_xview_bkg_px23whr3_shdw_split_scatter_gauss_rndsolar_promu_size_square_bias{}_CC2_v{}'.format(ssig, ix+20)
-    
-    sd = 'seed0'
-    model_id = 5
-    rare_class = 4  
     
     apN = 50
-    prefix = 'results_syn_iou{}'.format(apN)
     eht = 'easy'
-
-    hyp_cmt = 'hgiou1_1gpu_val_syn'
-#    res_folder = 'test_on_ori_nrcbkg_aug_rc_{}_m{}_rc{}_{}_iou{}'
-    res_folder = 'test_on_ori_nrcbkg_aug_rc_{}_m{}_rc{}_{}_iou{}_{}'
-    data_file = 'xview_ori_nrcbkg_aug_rc_test_{}_m{}_rc{}_{}.data'
-##
     base_pxwhrs = 'px23whr3_seed17'
 
-#    data_file = 'xviewtest_{}_m{}_rc{}_{}.data'
-#    res_folder = 'test_on_xview_{}_m{}_rc{}_{}'
-    #res_folder = 'test_on_xview_{}_m{}_rc{}_{}_iou20'
-    
+    cmt = base_pxwhrs
+    sd = '0'
+#    cc_id = int(cmt.find('CC')+2)  
+#    prefix = 'xview_cc{}'.format(cc_id)
+#    res_folder = 'test_on_syn+xview_rcncc_bkg_cc_{}_{}_iou{}_seed{}'.format(hyp_cmt, eht, apN, sd)
+#    data_file = 'xview_rcncc_bkg_cc{}_test_{}.data'.format(cc_id, base_pxwhrs)
 
-#    data_file = 'xviewtest_{}_m{}_rc{}_{}_aug.data'
-#    res_folder = 'test_on_xview_{}_m{}_rc{}_{}_aug'
-    
-#    data_file = 'xviewtest_{}_upscale_m{}_rc{}_{}.data'
-#    res_folder = 'test_on_xview_{}_upscale_m{}_rc{}_{}'
+    batch_size=8
+    cc_ratios = [7, 6]
+    cc_ids=[1, 2]
+    for cbs in cc_ratios: # 'hard', 
+        for cc_id in cc_ids:
+            prefix = 'xview_cc{}'.format(cc_id)
+            hyp_cmt = "hgiou1_19.5obj_cc{}x{}_ccid{}".format(cbs, batch_size-cbs, cc_id)
+           
+            res_folder = 'test_on_xview_rcncc_bkg_cc_{}_{}_iou{}_seed{}'.format(hyp_cmt, eht, apN, sd)
+           
+            data_file = 'xview_rcncc_bkg_cc{}_test_{}.data'.format(cc_id, base_pxwhrs)
+            check_prd_gt_iou_xview_syn(data_file, cc_id, cmt, prefix, res_folder, base_pxwhrs=base_pxwhrs, hyp_cmt=hyp_cmt, seed=seed, iou_thres=iou_thres)
 
-#    data_file = 'xviewtest_{}_m{}_rc{}_2315.data'.format(base_pxwhrs, model_id, rare_class)
-#    res_folder = 'test_on_xview_with_model_{}_2315_hard'.format(hyp_cmt)
-    for eh in ['easy']: # 'hard', 
-        d_file = data_file.format(base_pxwhrs, model_id, rare_class, eh)
-        r_folder = res_folder.format(hyp_cmt, model_id, rare_class, eh, apN, sd)
-        for cmt in comments:
-            check_prd_gt_iou_xview_syn(d_file, model_id, rare_class, cmt, prefix, r_folder, base_pxwhrs=base_pxwhrs, hyp_cmt=hyp_cmt, seed=seed, iou_thres=iou_thres)

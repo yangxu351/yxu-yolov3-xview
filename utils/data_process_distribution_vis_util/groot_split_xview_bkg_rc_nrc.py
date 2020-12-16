@@ -637,20 +637,20 @@ if __name__ == '__main__':
     # split rc separately
     '''
     #fixme
-     px_thres = 23
-     whr_thres = 3
-     seed = 17
-     comments = '_px{}whr{}_seed{}'.format(px_thres, whr_thres, seed)
-     data_name = 'xview_ori_nrcbkg'
-     split_trn_val_nrc_bkg_with_rc_sep_step_by_step(data_name, comments, seed, px_thres, whr_thres)
-####     create_xview_rc_nrcbkg_data(px_thres, whr_thres, seed, val_aug=True)
+#     px_thres = 23
+#     whr_thres = 3
+#     seed = 17
+#     comments = '_px{}whr{}_seed{}'.format(px_thres, whr_thres, seed)
+#     data_name = 'xview_ori_nrcbkg'
+#     split_trn_val_nrc_bkg_with_rc_sep_step_by_step(data_name, comments, seed, px_thres, whr_thres)
+#####     create_xview_rc_nrcbkg_data(px_thres, whr_thres, seed, val_aug=True)
 
     '''
     create training rc* txt list
     '''
-    rc_list = [1, 2, 3, 4, 5]
-    for rcid in rc_list:
-        create_only_ori_rc_txt_list_by_rc(rcid, px_thres=23, whr_thres=3, seed=17)
+#    rc_list = [1, 2, 3, 4, 5]
+#    for rcid in rc_list:
+#        create_only_ori_rc_txt_list_by_rc(rcid, px_thres=23, whr_thres=3, seed=17)
 
     '''
     split syn best size color data

@@ -324,25 +324,38 @@ if __name__ == '__main__':
 
 #    size_sigma = [0, 0.03, 0.06, 0.09, 0.12] # 0, 0.03, 0.06, 0.09, 0.12
 #    for ix,ssig in enumerate(size_sigma):
-#        cmt = 'xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_promu_size_bias{}_RC1_v{}'.format(ssig, ix+40) 
-#        px_thres = 15
-#        cmt = 'xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_promu_size_square_bias{}_RC1_v{}'.format(ssig, ix+100) 
-#        px_thres = 15
-#        cmt = 'xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_promu_size_bias{}_RC2_v{}'.format(ssig, ix+40)
-#        px_thres = 23
-#        cmt = 'xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_promu_size_square_bias{}_RC2_v{}'.format(ssig, ix+100)
-#        px_thres = 23
-#        cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_promu_size_bias{}_RC3_v{}'.format(ssig, ix+40)
-#        px_thres = 23
-#        cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_promu_size_square_bias{}_RC3_v{}'.format(ssig, ix+100)
-#        px_thres = 23
-#        cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_promu_size_bias{}_RC4_v{}'.format(ssig, ix+40)
-#        px_thres = 23
-#        cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_promu_size_square_bias{}_RC4_v{}'.format(ssig, ix+100)
-#        px_thres = 23
-#        cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_promu_size_bias{}_RC5_v{}'.format(ssig, ix+40)
-#        px_thres = 23
-#        cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_promu_size_square_bias{}_RC5_v{}'.format(ssig, ix+100)
+##        cmt = 'xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_promu_size_bias{}_RC1_v{}'.format(ssig, ix+40) 
+##        cmt = 'xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_promu_size_square_bias{}_RC1_v{}'.format(ssig, ix+100) 
+##        px_thres = 15
+##        cmt = 'xbw_newbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_promu_size_square_bias{}_RC1_v{}'.format(ssig, ix+110) 
+##        px_thres = 15
+#        
+##        cmt = 'xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_promu_size_bias{}_RC2_v{}'.format(ssig, ix+40)
+##        px_thres = 23
+##        cmt = 'xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_promu_size_square_bias{}_RC2_v{}'.format(ssig, ix+100)
+##        px_thres = 23
+##        cmt = 'xbsw_xwing_newbkg_shdw_split_scatter_gauss_rndsolar_promu_size_square_bias{}_RC2_v{}'.format(ssig, ix+110)
+##        px_thres = 23
+#
+##        cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_promu_size_bias{}_RC3_v{}'.format(ssig, ix+40)
+##        px_thres = 23
+##        cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_promu_size_square_bias{}_RC3_v{}'.format(ssig, ix+100)
+##        px_thres = 23
+##        cmt = 'xbw_newbkg_unif_shdw_split_scatter_gauss_rndsolar_promu_size_square_bias{}_RC3_v{}'.format(ssig, ix+110)
+##        px_thres = 23
+#
+##        cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_promu_size_bias{}_RC4_v{}'.format(ssig, ix+40)
+##        px_thres = 23
+##        cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_promu_size_square_bias{}_RC4_v{}'.format(ssig, ix+100)
+##        px_thres = 23
+##        cmt = 'xbw_newbkg_unif_shdw_split_scatter_gauss_rndsolar_promu_size_square_bias{}_RC4_v{}'.format(ssig, ix+110)
+##        px_thres = 23
+#
+##        cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_promu_size_bias{}_RC5_v{}'.format(ssig, ix+40)
+##        px_thres = 23
+##        cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_promu_size_square_bias{}_RC5_v{}'.format(ssig, ix+100)
+##        px_thres = 23
+#        cmt = 'xbw_newbkg_unif_shdw_split_scatter_gauss_rndsolar_promu_size_square_bias{}_RC5_v{}'.format(ssig, ix+110)
 #        px_thres = 23
 
 #    color_sigma = [5, 10, 15, 20] # 0, 
@@ -373,25 +386,34 @@ if __name__ == '__main__':
 #        px_thres = 23
     
 #    color_sigma = [10, 20, 30, 40] # 10, 20, 30, 40
-#    color_sigma = [0]
-#    for ix,ssig in enumerate(color_sigma):
-#        cmt = 'xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_ssig0_color_square_bias{}_RC1_v{}'.format(ssig, ix+91)
-#        px_thres = 15 
-
-#        cmt = 'xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_ssig0_color_square_bias{}_RC2_v{}'.format(ssig, ix+91)
+#    #color_sigma = [0]
+#    base_version = 121
+#    for ix, csig in enumerate(color_sigma):
+##        #cmt = 'xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_ssig0_color_square_bias{}_RC1_v{}'.format(csig, ix+91)
+##        #cmt = 'xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_ssig0.06_color_square_bias{}_RC1_v{}'.format(csig, ix+96)
+###        cmt = 'xbw_newbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_ssig0.03_color_square_bias{}_RC1_v{}'.format(csig, ix+116)
+###        px_thres = 15 
+##
+##        cmt = 'xbsw_xwing_xbkg_shdw_split_scatter_gauss_rndsolar_ssig0_color_square_bias{}_RC2_v{}'.format(csig, ix+91)
+##        cmt = 'xbsw_xwing_newbkg_shdw_split_scatter_gauss_rndsolar_ssig0.09_color_square_bias{}_RC2_v{}'.format(csig, ix+116)
+##        px_thres = 23
+##        cmt = 'xbsw_xwing_newbkg_shdw_split_scatter_gauss_rndsolar_ssig0.03_color_square_bias{}_RC2_v{}'.format(csig, ix+base_version)
+##        px_thres = 23
+#        
+###        cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.09_color_square_bias{}_RC3_v{}'.format(csig, ix+91)
+##        cmt = 'xbw_newbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.03_color_square_bias{}_RC3_v{}'.format(csig, ix+116)
+##        px_thres = 23
+#        cmt = 'xbw_newbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.09_color_square_bias{}_RC3_v{}'.format(csig, ix+base_version)
 #        px_thres = 23
-
-#        cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.09_color_square_bias{}_RC3_v{}'.format(ssig, ix+91)
-#        cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.09_color_square_bias{}_RC3_v{}'.format(ssig, ix+91)
-#        px_thres = 23
-
-#        cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.09_color_square_bias{}_RC4_v{}'.format(ssig, ix+91)
-#        cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.03_color_square_bias{}_RC4_v{}'.format(ssig, ix+95)
-#        px_thres = 23
-        
-#        cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0_color_square_bias{}_RC5_v{}'.format(ssig, ix+91)
-#        px_thres = 23
-        
+###
+###        cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.09_color_square_bias{}_RC4_v{}'.format(csig, ix+91)
+##        cmt = 'xbw_newbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.12_color_square_bias{}_RC4_v{}'.format(csig, ix+116)
+##        px_thres = 23
+###        
+##        cmt = 'xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0_color_square_bias{}_RC5_v{}'.format(csig, ix+91)
+##        cmt = 'xbw_newbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.03_color_square_bias{}_RC5_v{}'.format(csig, ix+116)
+##        px_thres = 23
+#        
 #        whr_thres = 3
 #        dt = 'color'
 #        syn_args = get_args(cmt)
@@ -399,8 +421,8 @@ if __name__ == '__main__':
 #        draw_bbx_on_rgb_images(dt, px_thres, whr_thres)
         
 #    ''' optimize sigma size for common class '''    
-##    size_sigma = [0, 0.08, 0.16, 0.24, 0.32] # for CC1 
-#    size_sigma = [0, 0.06, 0.12, 0.18, 0.24]# for CC2 0, 0.06, 0.12, 0.18, 0.24
+#    size_sigma = []#0, 0.08, 0.16, 0.24, 0.32] # for CC1 
+##    size_sigma = [0, 0.06, 0.12, 0.18, 0.24]# for CC2 0, 0.06, 0.12, 0.18, 0.24
 #    for ix,ssig in enumerate(size_sigma):
 ##        cmt = 'unif_shdw_split_scatter_gauss_rndsolar_promu_size_square_bias{}_CC1_v{}'.format(ssig, ix+10)
 ##        px_thres = 23
@@ -409,7 +431,44 @@ if __name__ == '__main__':
 #
 ##        cmt = 'unif_shdw_split_scatter_gauss_rndsolar_promu_size_square_bias{}_CC1_v{}'.format(ssig, ix+20)
 ##        px_thres = 23
-#        cmt = 'shdw_split_scatter_gauss_rndsolar_promu_size_square_bias{}_CC2_v{}'.format(ssig, ix+20)
+##        cmt = 'shdw_split_scatter_gauss_rndsolar_promu_size_square_bias{}_CC2_v{}'.format(ssig, ix+20)
+##        px_thres = 23
+# 
+##        cmt = 'unif_shdw_split_scatter_gauss_rndsolar_promu_size_square_bias{}_CC1_v{}'.format(ssig, ix+20)
+#        cmt = 'new_bkg_unif_shdw_split_scatter_gauss_rndsolar_promu_size_square_bias{}_CC1_v{}'.format(ssig, ix+40)
+#        px_thres = 23
+#
+##        cmt = 'shdw_split_scatter_gauss_rndsolar_promu_size_square_bias{}_CC2_v{}'.format(ssig, ix+20)
+##        cmt = 'new_bkg_shdw_split_scatter_gauss_rndsolar_promu_size_square_bias{}_CC2_v{}'.format(ssig, ix+40)
+##        px_thres = 23
+#       
+#        whr_thres = 3
+#        dt = 'color'
+#        syn_args = get_args(cmt, CC=True)
+#        group_object_annotation_and_draw_bbox(dt, px_thres, whr_thres)
+#        draw_bbx_on_rgb_images(dt, px_thres, whr_thres)
+
+    ''' optimize sigma color for common class '''    
+#    color_sigma = [1, 2, 3, 4]#1, 2, 3
+##    color_sigma = [0, 1, 2, 3, 4]#
+#    for ix,csig in enumerate(color_sigma):
+##        cmt = 'unif_shdw_split_scatter_gauss_rndsolar_promu_size_square_bias{}_CC1_v{}'.format(ssig, ix+10)
+##        px_thres = 23
+##        cmt = 'xbsw_xwing_shdw_split_scatter_gauss_rndsolar_promu_size_square_bias{}_CC2_v{}'.format(ssig, ix+15)
+##        px_thres = 23
+#
+##        cmt = 'unif_shdw_split_scatter_gauss_rndsolar_ssig0.16_color_square_bias{}_CC1_v{}'.format(csig, ix+31)
+##        px_thres = 23
+##        cmt = 'new_bkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.24_color_square_bias{}_CC1_v{}'.format(csig, ix+46)
+##        px_thres = 23
+##        cmt = 'new_bkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.08_color_square_bias{}_CC1_v{}'.format(csig, ix+51)
+##        px_thres = 23
+##        cmt = 'shdw_split_scatter_gauss_rndsolar_ssig0.24_color_square_bias{}_CC2_v{}'.format(csig, ix+31)
+##        cmt = 'shdw_split_scatter_gauss_rndsolar_ssig0.24_same_bwcolor_square_bias{}_CC2_v{}'.format(csig, ix+36)
+##        cmt = 'new_bkg_shdw_split_scatter_gauss_rndsolar_ssig0.12_color_square_bias{}_CC2_v{}'.format(csig, ix+46)
+##        cmt = 'new_bkg_shdw_split_scatter_gauss_rndsolar_ssig0.12_new_color_square_bias{}_CC2_v{}'.format(csig, ix+56)
+##        
+#        cmt = 'new_bkg_shdw_split_scatter_gauss_rndsolar_ssig0_color_square_bias{}_CC2_v{}'.format(csig, ix+51)
 #        px_thres = 23
 #        
 #        whr_thres = 3
@@ -417,27 +476,68 @@ if __name__ == '__main__':
 #        syn_args = get_args(cmt, CC=True)
 #        group_object_annotation_and_draw_bbox(dt, px_thres, whr_thres)
 #        draw_bbx_on_rgb_images(dt, px_thres, whr_thres)
-
-    ''' optimize sigma size for common class '''    
-    color_sigma = [1, 2, 3, 4]#
-    for ix,csig in enumerate(color_sigma):
-#        cmt = 'unif_shdw_split_scatter_gauss_rndsolar_promu_size_square_bias{}_CC1_v{}'.format(ssig, ix+10)
-#        px_thres = 23
-#        cmt = 'xbsw_xwing_shdw_split_scatter_gauss_rndsolar_promu_size_square_bias{}_CC2_v{}'.format(ssig, ix+15)
-#        px_thres = 23
-
-#        cmt = 'unif_shdw_split_scatter_gauss_rndsolar_ssig0.16_color_square_bias{}_CC1_v{}'.format(csig, ix+31)
-#        px_thres = 23
-#        cmt = 'shdw_split_scatter_gauss_rndsolar_ssig0.24_color_square_bias{}_CC2_v{}'.format(csig, ix+31)
-        cmt = 'shdw_split_scatter_gauss_rndsolar_ssig0.24_same_bwcolor_square_bias{}_CC2_v{}'.format(csig, ix+36)
-        px_thres = 23
+     
+    ############# quantities     
+#    quantities = ['new_bkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.24_color_square_bias2_CC1_quantities',
+#    'new_bkg_shdw_split_scatter_gauss_rndsolar_promu_size_square_bias0.12_CC2_quantities']
+#    px_thres = 23
+#    for cmt in quantities:
+#        whr_thres = 3
+#        dt = 'color'
+#        syn_args = get_args(cmt, CC=True)
+#        group_object_annotation_and_draw_bbox(dt, px_thres, whr_thres)
+#        draw_bbx_on_rgb_images(dt, px_thres, whr_thres)      
+    
+    ############ 1 instance     
+#    instance = ['new_bkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0_color_square_bias0_CC1_1inst_v63',
+#    'new_bkg_shdw_split_scatter_gauss_rndsolar_promu_size_square_bias0_CC2_1inst_v63']
+#    instance = ['new_bkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.24_color_square_bias2_CC1_1inst_v64',
+#    'new_bkg_shdw_split_scatter_gauss_rndsolar_promu_size_square_bias0.12_CC2_1inst_v64']
+#    instance = ['new_bkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.08_csig1_CC1_1inst_v65',
+#    'new_bkg_shdw_split_scatter_gauss_rndsolar_promu_ssig0_csig4_CC2_1inst_v65']
+#    px_thres = 23
+#    for cmt in instance[:1]:
+#        whr_thres = 3
+#        dt = 'color'
+#        syn_args = get_args(cmt, CC=True)
+#        group_object_annotation_and_draw_bbox(dt, px_thres, whr_thres)
+#        draw_bbx_on_rgb_images(dt, px_thres, whr_thres)  
+    
+    #############  increse size color mu   
+    mu_list = [10, 20, 30]
+    for ix, ml in enumerate(mu_list):
+        ########## size
+        #cmt = 'xbw_newbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_promu_ssig0.03_increase_size_mu_{}_RC1_v{}'.format(ml, ix+131)
+        #cmt = 'xbsw_xwing_newbkg_shdw_split_scatter_gauss_rndsolar_promu_ssig0.03_increase_size_mu_{}_RC2_v{}'.format(ml, ix+131)
+        #cmt = 'xbw_newbkg_unif_shdw_split_scatter_gauss_rndsolar_promu_ssig0.09_increase_size_mu_{}_RC3_v{}'.format(ml, ix+131)
+        #cmt = 'xbw_newbkg_unif_shdw_split_scatter_gauss_rndsolar_promu_ssig0.12_increase_mu_{}_RC4_v{}'.format(ml, ix+121)
+        #cmt = 'xbw_newbkg_unif_shdw_split_scatter_gauss_rndsolar_promu_ssig0.03_increase_mu_{}_RC5_v{}'.format(ml, ix+121)
+        ###########  color 
+        #cmt = 'xbw_newbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_promu_ssig0.03_increase_color_mu_{}_RC1_v{}'.format(ml, ix+136)
+        #cmt = 'xbsw_xwing_newbkg_shdw_split_scatter_gauss_rndsolar_promu_ssig0.03_csig10_increase_color_mu_{}_RC2_v{}'.format(ml, ix+136)
+        #cmt = 'xbsw_xwing_newbkg_shdw_split_scatter_gauss_rndsolar_promu_ssig0.03_csig10_decrease_color_mu_{}_RC2_v{}'.format(ml, ix+136)
+        #cmt = 'xbw_newbkg_unif_shdw_split_scatter_gauss_rndsolar_promu_ssig0.09_csig40_increase_color_mu_{}_RC3_v{}'.format(ml, ix+136)
+        cmt = 'xbw_newbkg_unif_shdw_split_scatter_gauss_rndsolar_promu_ssig0.09_csig40_decrease_color_mu_{}_RC3_v{}'.format(ml, ix+136)
+        #cmt = 'xbw_newbkg_unif_shdw_split_scatter_gauss_rndsolar_promu_ssig0.12_increase_color_mu_{}_RC4_v{}'.format(ml, ix+126)
+        #cmt = 'xbw_newbkg_unif_shdw_split_scatter_gauss_rndsolar_promu_ssig0.03_increase_color_mu_{}_RC5_v{}'.format(ml, ix+126)
         
+        px_thres = 23
         whr_thres = 3
         dt = 'color'
-        syn_args = get_args(cmt, CC=True)
+        syn_args = get_args(cmt, CC=False)
         group_object_annotation_and_draw_bbox(dt, px_thres, whr_thres)
-        draw_bbx_on_rgb_images(dt, px_thres, whr_thres)
-            
+        draw_bbx_on_rgb_images(dt, px_thres, whr_thres)    
+
+
+    ######## scatter for CC1
+    #cmt = 'new_bkg_unif_shdw_scatter_gauss_rndsolar_promu_size_square_bias0_CC1_v70'
+#    cmt = 'new_bkg_unif_shdw_scatter_gauss_rndsolar_promu_size_square_bias0_large_CC1_v71' 
+#    px_thres = 23
+#    whr_thres = 3
+#    dt = 'color'
+#    syn_args = get_args(cmt, CC=True)
+#    group_object_annotation_and_draw_bbox(dt, px_thres, whr_thres)
+#    draw_bbx_on_rgb_images(dt, px_thres, whr_thres)   
     
 #    cmt = 'xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_ssig0_texture_RC1_v80'
 #    px_thres = 15
@@ -473,5 +573,15 @@ if __name__ == '__main__':
 #    group_object_annotation_and_draw_bbox(dt, px_thres, whr_thres)
 #    draw_bbx_on_rgb_images(dt, px_thres, whr_thres)
 
-
+#    cmt = 'new_bkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.24_color_square_bias2_CC1_2xdensity_v50'
+#    cmt = 'new_bkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.24_color_square_bias2_CC1_4xdensity_v51'
+#    cmt = 'new_bkg_shdw_split_scatter_gauss_rndsolar_promu_size_square_bias0.12_CC2_2xdensity_v50'
+#    cmt = 'new_bkg_shdw_split_scatter_gauss_rndsolar_promu_size_square_bias0.12_CC2_4xdensity_v51'
+#    px_thres = 23
+    
+#    whr_thres = 3
+#    dt = 'color'
+#    syn_args = get_args(cmt, CC=True)
+#    group_object_annotation_and_draw_bbox(dt, px_thres, whr_thres)
+#    draw_bbx_on_rgb_images(dt, px_thres, whr_thres)
 

@@ -86,8 +86,13 @@ def get_part_syn_args():
     parser.add_argument("--data_xview_dir", type=str, help="to save data files",
                         default='/data/users/yang/code/yxu-yolov3-xview/data_xview/{}_cls/')
 
-    parser.add_argument("--results_dir", type=str, help="to save category files",
-                        default='/data/users/yang/code/yxu-yolov3-xview/result_output/{}_cls/syn_CC/{}_seed{}/{}/')
+    parser.add_argument("--syn_data_list_dir", type=str, help="to syn data list files",
+                        default='/data/users/yang/code/yxu-yolov3-xview/data_xview/{}_{}_cls/')
+
+#    parser.add_argument("--results_dir", type=str, help="to save category files",
+#                        default='/data/users/yang/code/yxu-yolov3-xview/result_output/{}_cls/xview_CC/{}_seed{}/{}/')
+    parser.add_argument("--results_dir", type=str, help="syn+xview_CC results*.json",
+                        default='/data/users/yang/code/yxu-yolov3-xview/result_output/{}_cls/{}/syn+xview_CC/{}/')
 
     parser.add_argument("--cat_sample_dir", type=str, help="to save figures",
                         default='/data/users/yang/data/xView_YOLO/cat_samples/{}/{}_cls/')
@@ -115,8 +120,8 @@ def get_part_syn_args():
     return syn_args
 
 
-def check_prd_gt_iou_xview_syn(data_file,  sorc, cc_id, cmt, prefix, res_folder, base_pxwhrs='px23whr3_seed17', hyp_cmt = 'hgiou1_1gpu', seed=17, iou_thres=0.5):
-    xview_dir = os.path.join(syn_args.data_xview_dir, base_pxwhrs, 'CC')
+def check_prd_gt_iou_xview_syn(data_file, sorc, rare_class, cmt, prefix, res_folder, base_pxwhrs='px23whr3_seed17', hyp_cmt = 'hgiou1_1gpu', seed=17, iou_thres=0.5):
+    xview_dir = os.path.join(syn_args.data_xview_dir, base_pxwhrs, 'RC')
     print('xview_dir', xview_dir)
     data = parse_data_cfg(os.path.join(xview_dir, data_file))
     # fixme--yang.xu
@@ -134,14 +139,13 @@ def check_prd_gt_iou_xview_syn(data_file,  sorc, cc_id, cmt, prefix, res_folder,
     sstr = endstr[:rcinx]
     suffix = fstr + '_' + sstr
     print('suffix', suffix)
-  
-#    json_name = prefix + suffix + '*.json'
+    # print('res+_folder', res_folder)
+    # exit(0)
     json_name = 'results*.json'
+    result_path = syn_args.results_dir.format(syn_args.class_num, cmt, seed, res_folder)
 #    print('result_path ', result_path)
 #    print('json_name', json_name)
-    result_path = syn_args.results_dir.format(syn_args.class_num, cmt, seed, res_folder)
     print(os.path.join(result_path, json_name))
-    
     res_json_files = glob.glob(os.path.join(result_path, json_name))
     print('res_json_files ', len(res_json_files))
     if not len(res_json_files):
@@ -150,7 +154,7 @@ def check_prd_gt_iou_xview_syn(data_file,  sorc, cc_id, cmt, prefix, res_folder,
     res_json_file = res_json_files[0]
     res_json = json.load(open(res_json_file))
     
-    result_iou_check_dir = os.path.join(syn_args.cat_sample_dir, 'result_iou_check', 'CC{}'.format(cc_id),  cmt, res_folder)
+    result_iou_check_dir = os.path.join(syn_args.cat_sample_dir, 'result_iou_check', 'CC{}'.format(rare_class),  cmt, res_folder)
     if not os.path.exists(result_iou_check_dir):
         os.makedirs(result_iou_check_dir)
     img_names = []
@@ -160,7 +164,7 @@ def check_prd_gt_iou_xview_syn(data_file,  sorc, cc_id, cmt, prefix, res_folder,
         lbl_file = df_lbls.loc[ix, 0]
         if not is_non_zero_file(lbl_file):
             continue
-        #print('f', f)
+            
         img = cv2.imread(os.path.join(f))
         img_size = img.shape[0]
         good_gt_list = []
@@ -172,7 +176,8 @@ def check_prd_gt_iou_xview_syn(data_file,  sorc, cc_id, cmt, prefix, res_folder,
             gt_cat[:, 2] = gt_cat[:, 2] - gt_cat[:, 4] / 2
             gt_cat[:, 3] = gt_cat[:, 1] + gt_cat[:, 3]
             gt_cat[:, 4] = gt_cat[:, 2] + gt_cat[:, 4]
-            gt_cat = gt_cat[gt_cat[:, -1] == cc_id]
+#            gt_cat = gt_cat[gt_cat[:, -1] == model_id]
+            gt_cat = gt_cat[gt_cat[:, -1] == rare_class]
             good_gt_list = gt_cat.tolist()
 
         result_list = []
@@ -204,6 +209,21 @@ def check_prd_gt_iou_xview_syn(data_file,  sorc, cc_id, cmt, prefix, res_folder,
  #           cv2.putText(img, text='[conf:{:.3f}]'.format(p_score), org=(p_bbx[2] + 10, p_bbx[3]), fontFace=cv2.FONT_HERSHEY_SIMPLEX, fontScale=0.5, thickness=1, lineType=cv2.LINE_AA, color=(255, 255, 0))  # cyan
             cv2.putText(img, text='[conf:{:.3f}]'.format(p_score), org=(p_bbx[0] , p_bbx[1]-10), fontFace=cv2.FONT_HERSHEY_SIMPLEX, fontScale=0.5, thickness=1, lineType=cv2.LINE_AA, color=(255, 255, 0))  # cyan
 
+#            for g in gt_cat:
+#                g_bbx = [int(x) for x in g[1:]]
+#                iou = coord_iou(p_bbx, g_bbx)
+#
+#                if iou >= iou_thres:
+#                    print('iou---------------------------------->', iou)
+#                    print('gbbx', g_bbx)
+#                    if px not in p_iou.keys():  # **********keep the largest iou
+#                        p_iou[px] = iou
+#                    elif iou > p_iou[px]:
+#                        p_iou[px] = iou
+#                    img = cv2.rectangle(img, (p_bbx[0], p_bbx[1]), (p_bbx[2], p_bbx[3]), (255, 255, 0), 2)
+#                    cv2.putText(img, text='[conf:{:.3f}, iou:{:.3f}]'.format(p_score, p_iou[px]), org=(p_bbx[2] + 10, p_bbx[3]), fontFace=cv2.FONT_HERSHEY_SIMPLEX, fontScale=0.5, thickness=1, lineType=cv2.LINE_AA, color=(255, 255, 0))  # cyan
+#        if gt_cat.shape[0]:
+            #print('image_name', image_name)
         cv2.imwrite(os.path.join(result_iou_check_dir, image_name), img)
 
 if __name__ == "__main__":
@@ -212,93 +232,37 @@ if __name__ == "__main__":
 
     seed = 17
     iou_thres=0.5
- 
+    
     ## common classes
 #    comments = []
-#    size_sigma = [0] # 0, 0.08, 0.16, 0.24, 0.32
-#    for ix, ssig in enumerate(size_sigma):
-#        cmt = 'syn_xview_bkg_px23whr3_shdw_split_scatter_gauss_rndsolar_promu_size_square_bias{}_CC2_v{}'.format(ssig, ix+20)
-#        cc_id = 2
-#        sorc = 'size'
-#        sd = '0'
-        
-#        cmt = 'syn_xview_bkg_px23whr3_unif_shdw_split_scatter_gauss_rndsolar_promu_size_square_bias{}_CC1_v{}'.format(ssig, ix+20)
-#        cc_id = 1
-#        sorc = 'size'
-#        sd = '0'
-
+#    color_sigma = [1, 2, 3, 4] 
+#    for ix,csig in enumerate(color_sigma):
+#        cmt = 'syn_xview_bkg_px23whr3_unif_shdw_split_scatter_gauss_rndsolar_ssig0.16_color_square_bias{}_CC1_v{}'.format(csig, ix+31)
+#        #cmt = 'syn_xview_bkg_px23whr3_shdw_split_scatter_gauss_rndsolar_ssig0.24_color_square_bias{}_CC2_v{}'.format(csig, ix+31)
+#        sorc = 'color'
 #        comments.append(cmt)
-
-#    comments = ['syn_xview_bkg_px23whr3_shdw_split_scatter_gauss_rndsolar_promu_size_square_bias0.24_CC2_v24']
-#    comments = ['syn_xview_bkg_px23whr3_new_bkg_shdw_split_scatter_gauss_rndsolar_promu_size_square_bias0.12_CC2_v42']
-#    cc_id = 2
-#    sd = '1'
-#    sorc = 'size'
-    
-#    comments = ['syn_xview_bkg_px23whr3_unif_shdw_split_scatter_gauss_rndsolar_promu_size_square_bias0.16_CC1_v22']
-#    comments = ['syn_xview_bkg_px23whr3_new_bkg_unif_shdw_split_scatter_gauss_rndsolar_promu_size_square_bias0.24_CC1_v43']
-#    cc_id = 1
 #    sd = '0'
-#    sorc = 'size'
-    
-#    comments = ['syn_xview_bkg_px23whr3_shdw_split_scatter_gauss_rndsolar_ssig0.24_color_square_bias3_CC2_v33']
-#    cc_id = 2
-#    sd = '0'
-#    sorc = 'color'
-
-#    comments = ['syn_xview_bkg_px23whr3_unif_shdw_split_scatter_gauss_rndsolar_ssig0.16_color_square_bias1_CC1_v31']
-#    cc_id = 1
-#    sd = '0'
-#    sorc = 'color'
-    
-    #####new bkg
-#    comments = ['syn_xview_bkg_px23whr3_new_bkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.24_color_square_bias2_CC1_v47']
-#    cc_id = 1
-#    sd = '1'
-#    sorc = 'color'
-    #
-    comments = ['syn_xview_bkg_px23whr3_new_bkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.08_color_square_bias1_CC1_v51']
-    cc_id = 1
-    sd = '1'
-    sorc = 'color'
-
-#    comments = ['syn_xview_bkg_px23whr3_new_bkg_shdw_split_scatter_gauss_rndsolar_promu_size_square_bias0.12_CC2_v42']
-#    cc_id = 2
-#    sd = '1'
-#    sorc = 'size'
-#    comments = ['syn_xview_bkg_px23whr3_new_bkg_shdw_split_scatter_gauss_rndsolar_promu_size_square_bias0_CC2_v40']
-#    cc_id = 2
-#    sd = '2'
-#    sorc = 'size'
-    
-    ######## new color for CC2
-#    comments = []
-##    base_version = 55
-##    sigma_color = [0, 1,2,3,4]
-##    for ix, c in enumerate(sigma_color):
-##        cmt = 'syn_xview_bkg_px23whr3_new_bkg_shdw_split_scatter_gauss_rndsolar_ssig0.12_new_color_square_bias{}_CC2_v{}'.format(c, base_version+ix)
-##        comments.append(cmt)
-##    cc_id = 2
-#    comments = ['syn_xview_bkg_px23whr3_new_bkg_unif_shdw_scatter_gauss_rndsolar_promu_size_square_bias0_large_CC1_v71']
-#    base_version = 71
-#    cc_id = 1
-#    
-#    sd = '1'
-#    sorc = 'color'
+#    cc_id = int(cmt.find('CC')+2)  
     
     apN = 50
-    prefix = 'results_syn_iou{}'.format(apN)
     eht = 'easy'
-    
     base_pxwhrs = 'px23whr3_seed17'
-    hyp_cmt = 'hgiou1_1gpu_val_syn'
-#    res_folder = 'test_on_ori_nrcbkg_aug_rc_{}_m{}_rc{}_{}_iou{}'
-    res_folder = 'test_on_xview_rcncc_bkg_cc_{}_{}_iou{}_seed{}'.format(hyp_cmt, eht, apN, sd)
-    #res_folder = 'test_on_xview_rcncc_bkg_cc{}_{}_iou{}_seed{}'.format(hyp_cmt, eht, apN, sd)
+    
+#    prefix = 'results_syn_iou{}'.format(apN)
+#    hyp_cmt = 'hgiou1_1gpu_val_syn'
+#    res_folder = 'test_on_xview_nccbkg_aug_cc_{}_{}_iou{}_seed{}'
+#    data_file =  'xview_oa_bkg_cc{}_test_{}.data'
+    
+    
+    comments = []
+    sd = '0'
+    cc_id = int(cmt.find('CC')+2)  
+    prefix = 'xview_cc{}'.format(cc_id)
+    res_folder = 'test_on_syn+xview_rcncc_bkg_cc_{}_{}_iou{}_seed{}'.format(hyp_cmt, eht, apN, sd)
     data_file = 'xview_rcncc_bkg_cc{}_test_{}.data'.format(cc_id, base_pxwhrs)
-
-    for eh in ['easy']: # 'hard', 
-        d_file = data_file
-        r_folder = res_folder
+`   batch_size=8
+    cc_ratios = [7, 6]
+    for cbs in cc_ratios: # 'hard', 
+        hyp_cmt = "hgiou1_19.5obj_cc{}x{}_ccid{}".format(cbs, batch_size-cbs, cc_id)
         for cmt in comments:
             check_prd_gt_iou_xview_syn(d_file, sorc, cc_id, cmt, prefix, r_folder, base_pxwhrs=base_pxwhrs, hyp_cmt=hyp_cmt, seed=seed, iou_thres=iou_thres)

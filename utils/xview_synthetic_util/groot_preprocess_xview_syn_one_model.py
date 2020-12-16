@@ -633,6 +633,7 @@ if __name__ == '__main__':
 ##    type='easy'
 #    val_resize_crop_by_easy_hard(scale, pxwhrs, model_id, rare_id, type, px_thres)
 #    create_upsample_test_dataset_of_m_rc(model_id, rare_id, type, seed, pxwhrs)
+    
     '''
     check annotation
      plot images with bbox

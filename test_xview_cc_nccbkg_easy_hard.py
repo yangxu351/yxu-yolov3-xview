@@ -494,20 +494,21 @@ if __name__ == "__main__":
     px_thres = 23
     whr_thres = 3 # 4
     sd = 17
-    ccids = [2] # 1, 2, 3, 4, 5
+    ccids = [1, 2] # 1, 2, 3, 4, 5
     far_thres = 3
-    cc_ratios = [3,4,5,6, 7]  # 1, 2,3,4,5,6
+    cc_ratios = [3,4,5,6]  # 1, 2,3,4,5,6
     seeds = [0]# 0, 1, 2
     typ = "easy" # "hard",
-    for seed in seeds:
-        df_pr_ap_far = pd.DataFrame(columns=["CC_ratio", "Seen", "NT", "AP{}".format(apN), "Pd(FAR=0.25)", "Pd(FAR=0.5)", "Pd(FAR=1)", "Precision", "Recall" , "F1"]) #, "Precision", "Recall" , "F1"
-        for ix, ccs in enumerate(cc_ratios):
+    for cc_id in ccids:
+        for seed in seeds:
+            df_pr_ap_far = pd.DataFrame(columns=["CC_ratio", "Seen", "NT", "AP{}".format(apN), "Pd(FAR=0.25)", "Pd(FAR=0.5)", "Pd(FAR=1)", "Precision", "Recall" , "F1"]) #, "Precision", "Recall" , "F1"
+            for ix, ccs in enumerate(cc_ratios):
             
-            for cc_id in ccids:
                 base_cmt = base_cmt.format(sd)
                 opt = get_opt(comments=cmt)
-                opt.device = "0"
-                hyp_cmt = "hgiou1_29.5obj_cc{}x{}_ccid{}".format(ccs, opt.batch_size - ccs, cc_id)
+                opt.device = "1"
+                #hyp_cmt = "hgiou1_29.5obj_cc{}x{}_ccid{}".format(ccs, opt.batch_size - ccs, cc_id)
+                hyp_cmt = "hgiou1_19.5obj_cc{}x{}_ccid{}".format(ccs, opt.batch_size - ccs, cc_id)
                 opt.cc_id = cc_id
 
                 suffix = '_AP{}'.format(apN)
@@ -528,8 +529,12 @@ if __name__ == "__main__":
     #            opt.type = "hard"
                 opt.type = typ
                 opt.name += "_{}".format(opt.type)
-                opt.result_dir = os.path.join(opt.result_dir.format(opt.class_num, cmt, sd), 'xview_CC', 'test_on_xview_nccbkg_aug_cc_{}_{}_iou{}_seed{}'.format(hyp_cmt, opt.type, apN, seed))
-                opt.data = 'data_xview/{}_cls/{}/CC/xview_nccbkg_aug_cc{}_test_{}.data'.format(opt.class_num, base_cmt, opt.cc_id, base_cmt)
+#                opt.result_dir = os.path.join(opt.result_dir.format(opt.class_num, cmt, sd), 'xview_CC', 'test_on_xview_oa_bkg_cc_{}_{}_iou{}_seed{}'.format(hyp_cmt, opt.type, apN, seed))
+#                #opt.data = 'data_xview/{}_cls/{}/CC/xview_nccbkg_aug_cc{}_test_{}.data'.format(opt.class_num, base_cmt, opt.cc_id, base_cmt)
+#                opt.data = 'data_xview/{}_cls/{}/CC/xview_oa_bkg_cc{}_test_{}.data'.format(opt.class_num, base_cmt, opt.cc_id, base_cmt)
+                
+                opt.result_dir = os.path.join(opt.result_dir.format(opt.class_num, cmt, sd), 'xview_CC', 'test_on_xview_rcncc_bkg_cc_{}_{}_iou{}_seed{}'.format(hyp_cmt, opt.type, apN, seed))
+                opt.data = 'data_xview/{}_cls/{}/CC/xview_rcncc_bkg_cc{}_test_{}.data'.format(opt.class_num, base_cmt, opt.cc_id, base_cmt)
 
                 if not os.path.exists(opt.result_dir):
                     os.makedirs(opt.result_dir)
@@ -591,10 +596,13 @@ if __name__ == "__main__":
                 df_pr_ap_far.at[ix, "Pd(FAR=0.5)"] = pd_5
                 df_pr_ap_far.at[ix, "Pd(FAR=1)"] = pd_1
 
-        csv_name =  "{}_CC{}_AP{}_{}_seed{}.xls".format(tif_name, opt.cc_id, apN, opt.type, seed)
-        csv_dir = "result_output/{}_cls/{}/xview_CC/{}/".format(opt.class_num, base_cmt, "test_on_xview_nccbkg_aug_cc_{}_ap{}".format(hyp_cmt[:hyp_cmt.find('_ccid')], apN))
-        if not os.path.exists(csv_dir):
-            os.makedirs(csv_dir)
-        mode = 'w'
-        with pd.ExcelWriter(os.path.join(csv_dir, csv_name), mode=mode) as writer:
-            df_pr_ap_far.to_excel(writer, sheet_name='CC{}_{}'.format(opt.cc_id, opt.type), index=False)
+            csv_name =  "{}_CC{}_AP{}_{}_seed{}.xls".format(tif_name, opt.cc_id, apN, opt.type, seed)
+            #csv_dir = "result_output/{}_cls/{}/xview_CC/{}/".format(opt.class_num, base_cmt, "test_on_xview_nccbkg_aug_cc_{}_ap{}".format(hyp_cmt[:hyp_cmt.find('_ccid')], apN))
+            #csv_dir = "result_output/{}_cls/{}/xview_CC/{}/".format(opt.class_num, base_cmt, "test_on_xview_oa_bkg_cc_{}_ap{}".format(hyp_cmt[:hyp_cmt.find('_cc')], apN))
+            csv_dir = "result_output/{}_cls/{}/xview_CC/{}/".format(opt.class_num, base_cmt, "test_on_xview_rcncc_bkg_cc_{}_ap{}".format(hyp_cmt[:hyp_cmt.find('_cc')], apN))
+            
+            if not os.path.exists(csv_dir):
+                os.makedirs(csv_dir)
+            mode = 'w'
+            with pd.ExcelWriter(os.path.join(csv_dir, csv_name), mode=mode) as writer:
+                df_pr_ap_far.to_excel(writer, sheet_name='CC{}_{}'.format(opt.cc_id, opt.type), index=False)
