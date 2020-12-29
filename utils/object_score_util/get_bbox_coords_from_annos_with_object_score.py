@@ -13,13 +13,13 @@ def is_non_zero_file(fpath):
     return os.path.isfile(fpath) and os.path.getsize(fpath) > 0
 
 
-def get_object_bbox_after_group(label_path, save_path, class_label=0, min_region=20, link_r=30, px_thresh=6, whr_thres=4):
+def get_object_bbox_after_group(label_path, save_path, label_id=0, min_region=20, link_r=30, px_thresh=6, whr_thres=4):
     '''
     get cat id and bbox ratio based on the label file
     group all the black pixels, and each group is assigned an id (start from 1)
     :param label_path:
     :param save_path:
-    :param class_label:
+    :param label_id: first column
     :param min_region: the smallest #pixels (area) to form an object
     :param link_r: the #pixels between two connected components to be grouped
     :param whr_thres:
@@ -63,11 +63,11 @@ def get_object_bbox_after_group(label_path, save_path, class_label=0, min_region
             xc = min_w + w/2.
             yc = min_h + h/2.
             
-            f_txt.write("%s %s %s %s %s\n" % (class_label, xc, yc, w, h))
+            f_txt.write("%s %s %s %s %s\n" % (label_id, xc, yc, w, h))
         f_txt.close()
 
 
-def plot_img_with_bbx(img_file, lbl_file, save_path, label_index=False, rare_id=False):
+def plot_img_with_bbx(img_file, lbl_file, save_path, label_id=0, label_index=False):
     if not is_non_zero_file(lbl_file):
         # print(is_non_zero_file(lbl_file))
         return
@@ -97,8 +97,11 @@ def plot_img_with_bbx(img_file, lbl_file, save_path, label_index=False, rare_id=
         pl = ''
         if label_index:
             pl = '{}'.format(ix)
-        elif rare_id:
+        elif label_id and df_lbl.shape[1]==6:
             mid = int(df_lbl[ix, 5])
+            pl = '{}'.format(mid)
+        elif label_id and df_lbl.shape[1]==5:
+            mid = int(df_lbl[ix, 0])
             pl = '{}'.format(mid)
         else:
              pl = '{}'.format(cat_id)
