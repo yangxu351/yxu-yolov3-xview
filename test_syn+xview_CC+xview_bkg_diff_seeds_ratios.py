@@ -378,7 +378,7 @@ def get_opt(dt=None, sr=None, comments=''):
 
     parser.add_argument("--cfg", type=str, default="cfg/yolov3-spp-{}cls_syn.cfg", help="*.cfg path")
     parser.add_argument("--data", type=str, default="data_xview/{}_cls/{}/xview_{}_{}.data", help="*.data path")
-    parser.add_argument("--weights", type=str, default="weights/{}_cls/syn_CC+xview_BG/{}/{}/best_{}_{}.pt", help="path to weights file")
+    parser.add_argument("--weights", type=str, default="weights/{}_cls/syn+xview_CC/{}/best_{}_{}.pt", help="path to weights file")
 
     parser.add_argument("--batch-size", type=int, default=8, help="size of each image batch") # 2
     parser.add_argument("--img_size", type=int, default=608, help="inference size (pixels)")
@@ -387,8 +387,8 @@ def get_opt(dt=None, sr=None, comments=''):
 
     parser.add_argument("--class_num", type=int, default=1, help="class number")  # 60 6
     parser.add_argument("--label_dir", type=str, default="/media/lab/Yang/data/xView_YOLO/labels/", help="*.json path")
-    parser.add_argument("--weights_dir", type=str, default="weights/{}_cls/syn_CC+xview_BG/{}/", help="to save weights path")
-    parser.add_argument("--result_dir", type=str, default="result_output/{}_cls/syn_CC+xview_BG/{}/", help="to save result files path")
+    parser.add_argument("--weights_dir", type=str, default="weights/{}_cls/syn+xview_CC/{}/", help="to save weights path")
+    parser.add_argument("--result_dir", type=str, default="result_output/{}_cls/syn+xview_CC/{}/", help="to save result files path")
     parser.add_argument("--grids_dir", type=str, default="grids_dir/{}_cls/{}_seed{}/", help="to save grids images")
     parser.add_argument("--syn_ratio", type=float, default=sr, help="ratio of synthetic data: 0 0.25, 0.5, 0.75")
     parser.add_argument("--syn_display_type", type=str, default=dt, help="syn_texture0, syn_color0, syn_texture, syn_color, syn_mixed, syn")
@@ -418,10 +418,9 @@ def main(seed, device):
     base_cmt = "px23whr3_seed{}"
     # hyp_cmt = "hgiou1_1gpu"
 
-    #hyp_str = "hgiou1_19.5obj_cc{}bg{}_ccid{}_{}x_bkg"
-    hyp_str = "hgiou1_19.5obj_ccid{}_cc{}bg{}"
+    hyp_str = "hgiou1_19.5obj_ccid{}_syn+xview_cc{}bg{}"
 
-    prefix_str = 'syn_cc{}+xview_bkg'
+    prefix_str = 'syn+xview_CC{}'
 
     px_thres = 23
     whr_thres = 3 # 4
@@ -430,7 +429,7 @@ def main(seed, device):
     apN = 50  
     typ = "easy"# "hard", 
     far_thres = 3
-    for i, cc_id in enumerate(ccids):
+    for cx, cc_id in enumerate(ccids):
         
             #df_pr_ap_far = pd.DataFrame(columns=["Version", "CC", "CC_ratio", "Nx_bkg", "Seen", "NT", "AP{}".format(apN), "Pd(FAR=0.25)",  "Pd(FAR=0.5)", "Pd(FAR=1)", "Precision", "Recall" , "F1"])
         df_pr_ap_far = pd.DataFrame(columns=["Version", "CC", "CC_ratio", "Seen", "NT", "AP{}".format(apN), "Pd(FAR=0.25)",  "Pd(FAR=0.5)", "Pd(FAR=1)", "Precision", "Recall" , "F1"])
@@ -474,15 +473,15 @@ def main(seed, device):
             opt.type = typ
 
 
-            opt.result_dir = os.path.join(opt.result_dir.format(opt.class_num, comments[i]), 'test_on_xview_rcncc_bkg_cc{}_{}_iou{}_seed{}'.format(hyp_cmt, opt.type, apN, seed))
+            opt.result_dir = os.path.join(opt.result_dir.format(opt.class_num, comments[cx]), 'test_on_xview_rcncc_bkg_cc{}_{}_iou{}_seed{}'.format(hyp_cmt, opt.type, apN, seed))
             opt.data = 'data_xview/{}_cls/{}/CC/xview_rcncc_bkg_cc{}_test_{}.data'.format(opt.class_num, base_cmt, opt.cc_id, base_cmt)
 
             if not os.path.exists(opt.result_dir):
                 os.makedirs(opt.result_dir)
-            print(os.path.join(opt.weights_dir.format(opt.class_num, comments[i]), "*_{}_seed{}".format(hyp_cmt, seed), "best_seed{}.pt".format(seed)))
+            print(os.path.join(opt.weights_dir.format(opt.class_num, comments[cx]), "*_{}_seed{}".format(hyp_cmt, seed), "best_seed{}.pt".format(seed)))
 #            print(glob.glob(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd),   "*_{}_seed{}".format(hyp_cmt, sd), "best_seed{}.pt".format(sd))))
 #            all_weights = glob.glob(os.path.join(opt.weights_dir.format(opt.class_num, cmt, sd), "*_{}_seed{}".format(hyp_cmt, sd), "best_*seed{}.pt".format(sd)))
-            all_weights = glob.glob(os.path.join(opt.weights_dir.format(opt.class_num, comments[i]), "*_{}_seed{}".format(hyp_cmt, seed), "best_*seed{}.pt".format(seed)))
+            all_weights = glob.glob(os.path.join(opt.weights_dir.format(opt.class_num, comments[cx]), "*_{}_seed{}".format(hyp_cmt, seed), "best_*seed{}.pt".format(seed)))
             all_weights.sort()
             opt.weights = all_weights[-1]
 
@@ -547,26 +546,25 @@ def main(seed, device):
             df_pr_ap_far.at[ix, "Pd(FAR=0.5)"] = pd_5
             df_pr_ap_far.at[ix, "Pd(FAR=1)"] = pd_1
     
-        csv_dir = "result_output/{}_cls/syn_CC+xview_BG/{}/".format(opt.class_num, prefix, 'N')
+        csv_dir = "result_output/{}_cls/syn+xview_CC/{}/{}/".format(opt.class_num, comments[cx], prefix)
         if not os.path.exists(csv_dir):
             os.makedirs(csv_dir)
         
-        csv_name =  "syn_cc{}+xview_bkg_diff_mixed_batches_{}_seed{}.xlsx".format(opt.cc_id, opt.type, seed)          
+        csv_name =  "syn+xview_cc{}+xview_bkg_diff_mixed_batches_{}_seed{}.xlsx".format(opt.cc_id, opt.type, seed)          
         mode = 'w'
         with pd.ExcelWriter(os.path.join(csv_dir, csv_name), mode=mode) as writer:
             df_pr_ap_far.to_excel(writer, sheet_name='CC{}_{}'.format(opt.cc_id, opt.type), index=False) # 
 
 
 def computer_avg_all_seeds(seeds):
-    prefix_str = 'syn_cc{}+xview_bkg'
-    hyp_str = "hgiou1_19.5obj_ccid{}_cc{}bg{}"
-    #hyp_str = "hgiou1_19.5obj_cc{}bg{}_ccid{}_Nx_bkg"
+    prefix_str = 'syn+xview_CC{}'
+    #hyp_str = "hgiou1_19.5obj_ccid{}_syn+xview_cc{}bg{}"
     base_cmt = "px23whr3_seed17"
     #ccids = [1,2]
     eht = 'easy'
     apN = 50
     
-    for cc_id in ccids:
+    for cx, cc_id in enumerate(ccids):
 #        hyp_cmt = hyp_str.format(cc_id, cbs, bkgbs)
         #for ix, cbs in enumerate(cc_ratios):
     #        cbs = 7
@@ -575,11 +573,11 @@ def computer_avg_all_seeds(seeds):
             #prefix = prefix_str.format(cc_id, times)
             #hyp_cmt = hyp_str.format(cbs, bkgbs, cc_id)
         prefix = prefix_str.format(cc_id)
-        csv_dir = "result_output/1_cls/syn_CC+xview_BG/{}/".format(prefix)
+        csv_dir = "result_output/1_cls/syn+xview_CC/{}/{}/".format(comments[cx], prefix)
             
         cmb = []
         for seed in seeds:
-            csv_name =  "{}_diff_mixed_batches_{}_seed{}.xlsx".format(prefix, eht, seed)          
+            csv_name =  "{}+xview_bkg_diff_mixed_batches_{}_seed{}.xlsx".format(prefix, eht, seed)          
             # "AP{}".format(apN), "Pd(FAR=0.25)",  "Pd(FAR=0.5)", "Pd(FAR=1)"
             df = pd.read_excel(os.path.join(csv_dir, csv_name))
             cmb.append(df.to_numpy())
@@ -602,7 +600,7 @@ def computer_avg_all_seeds(seeds):
         df_avg['NT'] = CCnum_list
         
         df_avg.loc[:, 5:9] = avg_cmb
-        save_name =  "{}_diff_mixed_batches_{}_avg_all_seeds.xlsx".format(prefix, eht, seed)
+        save_name =  "{}+xview_bkg_diff_mixed_batches_{}_avg_all_seeds.xlsx".format(prefix, eht, seed)
         with pd.ExcelWriter(os.path.join(csv_dir, save_name), mode='w') as writer:
             df_avg.to_excel(writer, sheet_name='CC{}_{}_avg'.format(cc_id, eht), index=False) #
 
@@ -620,16 +618,16 @@ if __name__ == "__main__":
     ###########################################  
  
     ''' Common classes '''
-    comments = ['syn_xview_bkg_px23whr3_new_bkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.08_color_square_bias1_CC1_v51']
-    ccids  = [1]
-#    comments = ['syn_xview_bkg_px23whr3_new_bkg_shdw_split_scatter_gauss_rndsolar_ssig0_color_square_bias3_CC2_v53']
-#    ccids  = [2]
-    seed_list = [0, 1] # [0, 1, 2] , 3, 4
-    cc_ratios = [3, 4, 5, 6, 7]
+    ccids  = [2]
+    comments = ['syn_xview_bkg_px23whr3_new_bkg_shdw_split_scatter_gauss_rndsolar_ssig0_color_square_bias3_CC2_v53']
+#    ccids = [1]
+#    comments = ['syn_xview_bkg_px23whr3_new_bkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.08_color_square_bias1_CC1_v51']
+    seed_list = [3] # [0, 1, 2] , 3, 4
+    cc_ratios = [4, 5, 6, 7] # 3, 4, 5, 6, 7
     
     device = '0'
     for seed in seed_list:
       main(seed, device)   
       
-    seeds = [0, 1]  # , 2, 3, 4
-    computer_avg_all_seeds(seeds)
+#    seeds = [0, 1]  # , 2, 3, 4
+#    computer_avg_all_seeds(seeds)

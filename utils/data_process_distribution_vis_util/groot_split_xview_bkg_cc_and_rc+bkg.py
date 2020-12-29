@@ -478,6 +478,7 @@ def combine_trn_val_for_each_CC_step_by_step(cc_id, data_name, base_pxwhrs, ccid
     split CC1, CC2 separately
     train: CC(i) + Non-CC(i) + BKG
     val: CC(i) + Non-CC(i) + BKG + RC
+    take CC1 \cap CC2 into consideration
     :return:
     '''
     #ori_rc_lbl_dir = args.annos_save_dir[:-1] + '_rc_all_ori_rcid'
@@ -915,7 +916,41 @@ def create_all_airplane_labels_remained_list_data(data_name, base_pxwhrs):
     data_txt.write('backup=backup/\n')
     data_txt.write('eval=color\n')
     data_txt.close()
+
+
+def create_data_for_syn_CC_plus_xview_BG(cmt, base_pxwhrs):
+    cc_id = cmt[cmt.find('CC')+2]
+    data_base_dir = os.path.join(args.data_save_dir, base_pxwhrs)
+    syn_data_dir = args.syn_data_list_dir.format(cmt, args.class_num)
+    data_save_dir = os.path.join(syn_data_dir, f'{cmt}_seed{seed}')
+    data_name = cmt + '+xview_bkg'
+    data_txt = open(os.path.join(data_save_dir, '{}_{}.data'.format(data_name, base_pxwhrs)), 'w')
+    data_txt.write(
+        'xview_bkg_train={}\n'.format(os.path.join(data_base_dir, 'xview_bkg_trn_img_{}.txt'.format(base_pxwhrs))))
+    data_txt.write(
+        'xview_bkg_train_label={}\n'.format(os.path.join(data_base_dir, 'xview_bkg_trn_lbl_{}.txt'.format(base_pxwhrs))))
+
+    data_txt.write(
+        'syn_train={}\n'.format(os.path.join(data_save_dir,  '{}_train_img_seed{}.txt'.format(cmt, seed))))
+    data_txt.write(
+        'syn_train_label={}\n'.format(os.path.join(data_save_dir, '{}_train_lbl_seed{}.txt'.format(cmt, seed))))
+
+    data_txt.write(
+        'valid={}\n'.format(os.path.join(data_base_dir, '{}_val_img_{}.txt'.format('xview_cc_rc_bkg', base_pxwhrs))))
+    data_txt.write(
+        'valid_label={}\n'.format(os.path.join(data_base_dir, '{}_val_lbl_{}.txt'.format('xview_cc_rc_bkg', base_pxwhrs))))
     
+    df_syn = pd.read_csv(os.path.join(data_save_dir,  '{}_train_img_seed{}.txt'.format(cmt, seed)), header=None)
+    df_bkg = pd.read_csv(os.path.join(data_base_dir, 'xview_bkg_trn_img_{}.txt'.format(base_pxwhrs)), header=None)
+    
+    xview_trn_num = df_syn.shape[0] + df_bkg.shape[0]
+    data_txt.write('xview_number={}\n'.format(xview_trn_num))
+    data_txt.write('classes=%s\n' % str(args.class_num))
+    data_txt.write('names=./data_xview/{}_cls/xview.names\n'.format(args.class_num))
+    data_txt.write('backup=backup/\n')
+    data_txt.write('eval=color\n')
+    data_txt.close()
+
     
 def combine_syn_xview_cc(comment, data_name, seed=17, base_cmt='px23whr3_seed17', bkg_cc_sep=False):
     cc_id = comment[comment.find('CC')+2]
@@ -965,8 +1000,8 @@ def combine_syn_xview_cc(comment, data_name, seed=17, base_cmt='px23whr3_seed17'
 
 def create_syn_plus_xview_cc_list_data(comment, data_name, seed=17, base_cmt='px23whr3_seed17'):
     '''
-    write files in syn adn xview_cc(i) into one file list
-    then create *.data: combined_syn_xcc + BG 
+    write files of syn and xview_cc(i) into one file list
+    then create *.data: combined_syn+xview_cc + BG 
     '''
     cc_id = comment[comment.find('CC')+2]
     data_name = data_name.format(cc_id)
@@ -996,7 +1031,7 @@ def create_syn_plus_xview_cc_list_data(comment, data_name, seed=17, base_cmt='px
     
     df_bkg = pd.read_csv(os.path.join(data_xview_dir, 'xview_ncc{}bkg_trn_img_{}.txt'.format(cc_id, base_cmt)), header=None)
     print('df_bkg', df_bkg.shape[0])
-    data_txt = open(os.path.join(data_xview_dir, '{}+xview_cc{}_{}.data'.format(comment, cc_id, base_cmt)), 'w')
+    data_txt = open(os.path.join(data_syn_xview_dir, '{}+xview_cc{}_{}.data'.format(comment, cc_id, base_cmt)), 'w')
     
     # mixed batch of cc and bkg
     data_txt.write(
@@ -1575,7 +1610,6 @@ def get_args(px_thres=None, whr_thres=None):
     args.annos_save_dir = args.annos_save_dir + '{}/{}_cls_xcycwh_px{}whr{}/'.format(args.input_size, args.class_num, px_thres, whr_thres)
     args.txt_save_dir = args.txt_save_dir + '{}/{}_cls/'.format(args.input_size, args.class_num)
     args.data_save_dir = args.data_save_dir.format(args.class_num)
-    args.data_list_save_dir = args.data_list_save_dir.format(args.input_size, args.class_num)
     if not os.path.exists(args.txt_save_dir):
         os.makedirs(args.txt_save_dir)
 
@@ -1588,8 +1622,6 @@ def get_args(px_thres=None, whr_thres=None):
 
     if not os.path.exists(args.data_save_dir):
         os.makedirs(args.data_save_dir)
-    if not os.path.exists(args.data_list_save_dir):
-        os.makedirs(args.data_list_save_dir)
     args.cat_sample_dir = args.cat_sample_dir + '{}/{}_cls/'.format(args.input_size, args.class_num)
     if not os.path.exists(args.cat_sample_dir):
         os.makedirs(args.cat_sample_dir)
@@ -1648,7 +1680,7 @@ if __name__ == '__main__':
 #    print('cc{} instances'.format(cc_id), cc_cnt)  
   
     ''' get files contains both cc1 and cc2 '''
-    cc1_and_cc2()
+    #cc1_and_cc2()
     
     '''
     split train:val = 80%:20%
@@ -1711,7 +1743,7 @@ if __name__ == '__main__':
 #    seed = 17
 #    base_pxwhrs = 'px{}whr{}_seed{}'.format(px_thres, whr_thres, seed)
 #    create_val_rc_cc_bkg_list_data(base_pxwhrs)
-    
+     
     '''
     count patches and instances
     '''
@@ -1725,7 +1757,6 @@ if __name__ == '__main__':
 #    rc_id = 2
 #    cnt_instances_of_RC_in_CC_by_id(rc_id, seed=17)
     
-
     
     '''
     split CC1, CC2 separately
@@ -1741,8 +1772,7 @@ if __name__ == '__main__':
 #        create_xview_cc_nccbkg_data(cc_id, data_name, seed)
 #        create_val_xview_cc_nccbkg_data(cc_id, data_name, seed)
 
-
-    
+   
     '''
     for CC
     training: the same training file names as CC(i) + Non-CC(i) + BKG
@@ -1754,19 +1784,34 @@ if __name__ == '__main__':
 #    data_name = 'xview_cc_oa'
 #    create_all_airplane_labels_remained_list_data(data_name, base_pxwhrs)
 
+    
     '''
-    combine syn and xview
+    create *.data of syn_CC + xview_BG
+    '''
+    seed=17
+    px_thres = 23
+    whr_thres = 3
+    base_pxwhrs='px{}whr{}_seed{}'.format(px_thres, whr_thres, seed)
+
+    comments = ['syn_xview_bkg_px23whr3_new_bkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.08_color_square_bias1_CC1_v51',
+    'syn_xview_bkg_px23whr3_new_bkg_shdw_split_scatter_gauss_rndsolar_ssig0_color_square_bias3_CC2_v53']
+    
+    for cmt in comments:
+        create_data_for_syn_CC_plus_xview_BG(cmt, base_pxwhrs)
+    
+    '''
+    combine syn and xview CC
     '''
 #    seed=17
 #    px_thres = 23
 #    whr_thres = 3
 #    base_cmt='px{}whr{}_seed{}'.format(px_thres, whr_thres, seed)
-#    comments = ['syn_xview_bkg_px23whr3_new_bkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.24_color_square_bias2_CC1_v47',
-#    'syn_xview_bkg_px23whr3_new_bkg_shdw_split_scatter_gauss_rndsolar_promu_size_square_bias0.12_CC2_v42']
-#    
+#    #comments = ['syn_xview_bkg_px23whr3_new_bkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.08_color_square_bias1_CC1_v51',
+#    comments = ['syn_xview_bkg_px23whr3_new_bkg_shdw_split_scatter_gauss_rndsolar_ssig0_color_square_bias3_CC2_v53']
+#
 #    data_name = 'xview_rcncc_bkg_cc{}'
 #    for cmt in comments:
-#       combine_syn_xview_cc(cmt, data_name, seed, base_cmt, bkg_cc_sep=False)
+#       #combine_syn_xview_cc(cmt, data_name, seed, base_cmt, bkg_cc_sep=False)
 #       create_syn_plus_xview_cc_list_data(cmt, data_name, seed=17, base_cmt='px23whr3_seed17')
 
 

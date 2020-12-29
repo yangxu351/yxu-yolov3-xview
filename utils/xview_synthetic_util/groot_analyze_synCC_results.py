@@ -257,10 +257,10 @@ if __name__ == "__main__":
 #    sd = '1'
 #    sorc = 'color'
     #
-    comments = ['syn_xview_bkg_px23whr3_new_bkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.08_color_square_bias1_CC1_v51']
-    cc_id = 1
-    sd = '1'
-    sorc = 'color'
+#    comments = ['syn_xview_bkg_px23whr3_new_bkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.08_color_square_bias1_CC1_v51']
+#    cc_id = 1
+#    sd = '1'
+#    sorc = 'color'
 
 #    comments = ['syn_xview_bkg_px23whr3_new_bkg_shdw_split_scatter_gauss_rndsolar_promu_size_square_bias0.12_CC2_v42']
 #    cc_id = 2
@@ -270,6 +270,10 @@ if __name__ == "__main__":
 #    cc_id = 2
 #    sd = '2'
 #    sorc = 'size'
+    comments = ['syn_xview_bkg_px23whr3_new_bkg_shdw_split_scatter_gauss_rndsolar_ssig0_color_square_bias3_CC2_v53']
+    cc_id = 2
+    sd = '1'
+    sorc = 'color'
     
     ######## new color for CC2
 #    comments = []

@@ -143,185 +143,185 @@ def split_bkg_into_train_val(comments='px{}whr{}_seed{}', seed=17, px_thres=23, 
                     os.path.join(data_save_dir, 'xview_bkg_val_img_{}.txt'.format(comments)))
 
 
-def split_trn_val_for_each_CC_step_by_step(cc_id, seed, txt_name, base_pxwhrs):
-    '''
-    split CC1, CC2 separately
-    1. split CC* to train and val
-    2. split Non-CC to train and val
-    3. combine BKG of train and val
-    :return:
-    '''
-    all_ori_dir = args.annos_save_dir[:-1] + '_with_id0'
-    all_cc_dir =  args.annos_save_dir[:-1] + '_cc{}_with_id'.format(cc_id)
-    val_bkg_lbl_dir = args.annos_save_dir[:-1] + '_val_bkg_lbl'
-    trn_bkg_lbl_dir = args.annos_save_dir[:-1] + '_trn_bkg_lbl'
-    val_bkg_img_dir = args.images_save_dir[:-1] + '_val_bkg_img'
-    trn_bkg_img_dir = args.images_save_dir[:-1] + '_trn_bkg_img'
-    cc_img_dir = args.images_save_dir[:-1] + '_cc{}'.format(cc_id)
-    img_dir = args.images_save_dir
-
-    all_ori_files = np.sort(glob.glob(os.path.join(all_ori_dir, '*.txt')))
-    all_cc_files = np.sort(glob.glob(os.path.join(all_cc_dir, '*.txt')))
-    all_cc_names = [os.path.basename(f) for f in all_cc_files]
-    all_ncc_files = [f for f in all_ori_files if is_non_zero_file(f) and os.path.basename(f) not in all_cc_names]
-    print('all_cc_files', len(all_cc_files))
-
-    np.random.seed(seed)
-    val_cc_num = round(len(all_cc_files)*args.val_percent)
-    trn_cc_num = len(all_cc_files) - val_cc_num
-    print('trn_cc_num, val_cc_num', trn_cc_num, val_cc_num)
-
-    val_ncc_num = round(len(all_ncc_files)*args.val_percent)
-    trn_ncc_num = len(all_ncc_files) - val_ncc_num
-    print('trn_ncc_num, val_ncc_num', trn_ncc_num, val_ncc_num)
-
-    all_cc_files = np.random.permutation(all_cc_files)
-    trn_cc_files = all_cc_files[:trn_cc_num]
-    val_cc_files = all_cc_files[trn_cc_num:trn_cc_num+val_cc_num]
-
-    all_ncc_files = np.random.permutation(all_ncc_files)
-    trn_ncc_files = all_ncc_files[:trn_ncc_num]
-    val_ncc_files = all_ncc_files[trn_ncc_num:trn_ncc_num+val_ncc_num]
-    trn_ncc_Lbl_dir = args.annos_save_dir[:-1] + '_ncc{}_trn_lbl'.format(cc_id)
-    val_ncc_lbl_dir = args.annos_save_dir[:-1] + '_ncc{}_val_lbl'.format(cc_id)
-    trn_ncc_img_dir = args.images_save_dir[:-1] + '_ncc{}_trn_img'.format(cc_id)
-    val_ncc_img_dir = args.images_save_dir[:-1] + '_ncc{}_val_img'.format(cc_id)
-    if not os.path.exists(trn_ncc_Lbl_dir):
-        os.mkdir(trn_ncc_Lbl_dir)
-    else:
-        shutil.rmtree(trn_ncc_Lbl_dir)
-        os.mkdir(trn_ncc_Lbl_dir)
-    if not os.path.exists(val_ncc_lbl_dir):
-        os.mkdir(val_ncc_lbl_dir)
-    else:
-        shutil.rmtree(val_ncc_lbl_dir)
-        os.mkdir(val_ncc_lbl_dir)
-    if not os.path.exists(trn_ncc_img_dir):
-        os.mkdir(trn_ncc_img_dir)
-    else:
-        shutil.rmtree(trn_ncc_img_dir)
-        os.mkdir(trn_ncc_img_dir)
-    if not os.path.exists(val_ncc_img_dir):
-        os.mkdir(val_ncc_img_dir)
-    else:
-        shutil.rmtree(val_ncc_img_dir)
-        os.mkdir(val_ncc_img_dir)
-
-    trn_bkg_lbl_files = np.sort(glob.glob(os.path.join(trn_bkg_lbl_dir, '*.txt')))
-    val_bkg_lbl_files = np.sort(glob.glob(os.path.join(val_bkg_lbl_dir, '*.txt')))
-    print('trn_bkg_lbl_files, val_bkg_lbl_files', len(trn_bkg_lbl_files), len(val_bkg_lbl_files))
-
-    data_save_dir =  os.path.join(args.data_save_dir, base_pxwhrs, 'CC')
-    if not os.path.exists(data_save_dir):
-        os.mkdir(data_save_dir)
-
-    trn_cc_img_txt = open(os.path.join(data_save_dir, 'only_cc{}_trn_img_{}.txt'.format(cc_id, base_pxwhrs)), 'w')
-    trn_cc_lbl_txt = open(os.path.join(data_save_dir, 'only_cc{}_trn_lbl_{}.txt'.format(cc_id, base_pxwhrs)), 'w')
-    trn_nccbkg_img_txt = open(os.path.join(data_save_dir, '{}_trn_img_{}.txt'.format(txt_name, base_pxwhrs)), 'w')
-    trn_nccbkg_lbl_txt = open(os.path.join(data_save_dir, '{}_trn_lbl_{}.txt'.format(txt_name, base_pxwhrs)), 'w')
-
-    cc_img_trn_dir = args.images_save_dir[:-1] + '_trn_cc{}'.format(cc_id)
-    if not os.path.exists(cc_img_trn_dir):
-        os.mkdir(cc_img_trn_dir)
-    cc_lbl_trn_dir = args.annos_save_dir[:-1] + '_trn_cc{}_with_id'.format(cc_id)
-    if not os.path.exists(cc_lbl_trn_dir):
-        os.mkdir(cc_lbl_trn_dir)
-    for f in trn_cc_files:
-        trn_cc_lbl_txt.write("%s\n" % f)
-        lbl_name = os.path.basename(f)
-        img_name = lbl_name.replace('.txt', '.jpg')
-        trn_cc_img_txt.write("%s\n" % os.path.join(cc_img_dir, img_name))
-        shutil.copy(os.path.join(cc_img_dir, img_name), os.path.join(cc_img_trn_dir, img_name))
-        shutil.copy(f, os.path.join(cc_lbl_trn_dir, lbl_name))
-
-    for f in trn_ncc_files:
-        trn_nccbkg_lbl_txt.write("%s\n" % f)
-        lbl_name = os.path.basename(f)
-        img_name = lbl_name.replace('.txt', '.jpg')
-        trn_nccbkg_img_txt.write("%s\n" % os.path.join(img_dir, img_name))
-        shutil.copy(os.path.join(img_dir, img_name), os.path.join(trn_ncc_img_dir, img_name))
-        shutil.copy(f, os.path.join(trn_ncc_Lbl_dir, lbl_name))
-
-    for f in trn_bkg_lbl_files:
-        trn_nccbkg_lbl_txt.write("%s\n" % f)
-        img_name = os.path.basename(f).replace('.txt', '.jpg')
-        trn_nccbkg_img_txt.write("%s\n" % os.path.join(trn_bkg_img_dir, img_name))
-
-    trn_nccbkg_lbl_txt.close()
-    trn_nccbkg_img_txt.close()
-
-    ###### validate xview_cc_nrc_bkg
-    cc_img_val_dir = args.images_save_dir[:-1] + '_val_cc{}'.format(cc_id)
-    if not os.path.exists(cc_img_val_dir):
-        os.mkdir(cc_img_val_dir)
-    cc_lbl_val_dir = args.annos_save_dir[:-1] + '_val_cc{}_with_id'.format(cc_id)
-    if not os.path.exists(cc_lbl_val_dir):
-        os.mkdir(cc_lbl_val_dir)
-
-    val_nccbkg_cc_img_txt = open(os.path.join(data_save_dir, 'xview_nccbkg_cc{}_val_img_{}.txt'.format(cc_id, base_pxwhrs)), 'w')
-    val_nccbkg_cc_lbl_txt = open(os.path.join(data_save_dir, 'xview_nccbkg_cc{}_val_lbl_{}.txt'.format(cc_id, base_pxwhrs)), 'w')
-
-    for f in val_cc_files:
-        val_nccbkg_cc_lbl_txt.write("%s\n" % f)
-        lbl_name = os.path.basename(f)
-        img_name = lbl_name.replace('.txt', '.jpg')
-        val_nccbkg_cc_img_txt.write("%s\n" % os.path.join(cc_img_dir, img_name))
-        shutil.copy(f, os.path.join(cc_lbl_val_dir, lbl_name))
-        shutil.copy(os.path.join(cc_img_dir, img_name), os.path.join(cc_img_val_dir, img_name))
-
-    for f in val_ncc_files:
-        val_nccbkg_cc_lbl_txt.write("%s\n" % f)
-        lbl_name = os.path.basename(f)
-        img_name = lbl_name.replace('.txt', '.jpg')
-        val_nccbkg_cc_img_txt.write("%s\n" % os.path.join(img_dir, img_name))
-        shutil.copy(os.path.join(img_dir, img_name), os.path.join(val_ncc_img_dir, img_name))
-        shutil.copy(f, os.path.join(val_ncc_lbl_dir, lbl_name))
-
-    for f in val_bkg_lbl_files:
-        val_nccbkg_cc_lbl_txt.write("%s\n" % f)
-        img_name = os.path.basename(f).replace('.txt', '.jpg')
-        val_nccbkg_cc_img_txt.write("%s\n" % os.path.join(val_bkg_img_dir, img_name))
-
-    val_nccbkg_cc_lbl_txt.close()
-    val_nccbkg_cc_img_txt.close()
-
-
-def create_xview_cc_nccbkg_data(cc_id, data_name, txt_name, seed=17, val_aug=False):
-    base_cmt = 'px{}whr{}_seed{}'.format(px_thres, whr_thres, seed)
-    data_save_dir =  os.path.join(args.data_save_dir, base_cmt, 'CC')
-    print('data_save_dir', data_save_dir)
-    data_txt = open(os.path.join(data_save_dir, '{}_{}.data'.format(data_name, base_cmt)), 'w')
-    data_txt.write(
-        'xview_train={}\n'.format(os.path.join(data_save_dir, '{}_trn_img_{}.txt'.format(txt_name, base_cmt))))
-    data_txt.write(
-        'xview_train_label={}\n'.format(os.path.join(data_save_dir, '{}_trn_lbl_{}.txt'.format(txt_name, base_cmt))))
-
-    data_txt.write(
-        'cc_train={}\n'.format(os.path.join(data_save_dir,  'only_cc{}_trn_img_{}.txt'.format(cc_id, base_cmt))))
-    data_txt.write(
-        'cc_train_label={}\n'.format(os.path.join(data_save_dir, 'only_cc{}_trn_lbl_{}.txt'.format(cc_id, base_cmt))))
-
-    if val_aug:
-        data_txt.write(
-            'valid={}\n'.format(os.path.join(data_save_dir, 'xview_nccbkg_aug_cc{}_test_img_{}.txt'.format(cc_id, base_cmt))))
-        data_txt.write(
-            'valid_label={}\n'.format(os.path.join(data_save_dir, 'xview_nccbkg_aug_cc{}_test_lbl_{}.txt'.format(cc_id, base_cmt))))
-    else:
-        data_txt.write(
-            'valid={}\n'.format(os.path.join(data_save_dir, '{}_val_img_{}.txt'.format(data_name, base_cmt))))
-        data_txt.write(
-            'valid_label={}\n'.format(os.path.join(data_save_dir, '{}_val_lbl_{}.txt'.format(data_name, base_cmt))))
-
-    df_trn_nccbkg = pd.read_csv(os.path.join(data_save_dir, '{}_trn_img_{}.txt'.format(txt_name, base_cmt)), header=None)
-    df_trn_cc = pd.read_csv(os.path.join(data_save_dir,  'only_cc{}_trn_img_{}.txt'.format(cc_id, base_cmt)), header=None)
-    xview_trn_num = df_trn_nccbkg.shape[0] + df_trn_cc.shape[0]
-
-    data_txt.write('xview_number={}\n'.format(xview_trn_num))
-    data_txt.write('classes=%s\n' % str(args.class_num))
-    data_txt.write('names=./data_xview/{}_cls/xview.names\n'.format(args.class_num))
-    data_txt.write('backup=backup/\n')
-    data_txt.write('eval=color\n')
-    data_txt.close()
+#def split_trn_val_for_each_CC_step_by_step(cc_id, seed, txt_name, base_pxwhrs):
+#    '''
+#    split CC1, CC2 separately
+#    1. split CC* to train and val
+#    2. split Non-CC to train and val
+#    3. combine BKG of train and val
+#    :return:
+#    '''
+#    all_ori_dir = args.annos_save_dir[:-1] + '_with_id0'
+#    all_cc_dir =  args.annos_save_dir[:-1] + '_cc{}_with_id'.format(cc_id)
+#    val_bkg_lbl_dir = args.annos_save_dir[:-1] + '_val_bkg_lbl'
+#    trn_bkg_lbl_dir = args.annos_save_dir[:-1] + '_trn_bkg_lbl'
+#    val_bkg_img_dir = args.images_save_dir[:-1] + '_val_bkg_img'
+#    trn_bkg_img_dir = args.images_save_dir[:-1] + '_trn_bkg_img'
+#    cc_img_dir = args.images_save_dir[:-1] + '_cc{}'.format(cc_id)
+#    img_dir = args.images_save_dir
+#
+#    all_ori_files = np.sort(glob.glob(os.path.join(all_ori_dir, '*.txt')))
+#    all_cc_files = np.sort(glob.glob(os.path.join(all_cc_dir, '*.txt')))
+#    all_cc_names = [os.path.basename(f) for f in all_cc_files]
+#    all_ncc_files = [f for f in all_ori_files if is_non_zero_file(f) and os.path.basename(f) not in all_cc_names]
+#    print('all_cc_files', len(all_cc_files))
+#
+#    np.random.seed(seed)
+#    val_cc_num = round(len(all_cc_files)*args.val_percent)
+#    trn_cc_num = len(all_cc_files) - val_cc_num
+#    print('trn_cc_num, val_cc_num', trn_cc_num, val_cc_num)
+#
+#    val_ncc_num = round(len(all_ncc_files)*args.val_percent)
+#    trn_ncc_num = len(all_ncc_files) - val_ncc_num
+#    print('trn_ncc_num, val_ncc_num', trn_ncc_num, val_ncc_num)
+#
+#    all_cc_files = np.random.permutation(all_cc_files)
+#    trn_cc_files = all_cc_files[:trn_cc_num]
+#    val_cc_files = all_cc_files[trn_cc_num:trn_cc_num+val_cc_num]
+#
+#    all_ncc_files = np.random.permutation(all_ncc_files)
+#    trn_ncc_files = all_ncc_files[:trn_ncc_num]
+#    val_ncc_files = all_ncc_files[trn_ncc_num:trn_ncc_num+val_ncc_num]
+#    trn_ncc_Lbl_dir = args.annos_save_dir[:-1] + '_ncc{}_trn_lbl'.format(cc_id)
+#    val_ncc_lbl_dir = args.annos_save_dir[:-1] + '_ncc{}_val_lbl'.format(cc_id)
+#    trn_ncc_img_dir = args.images_save_dir[:-1] + '_ncc{}_trn_img'.format(cc_id)
+#    val_ncc_img_dir = args.images_save_dir[:-1] + '_ncc{}_val_img'.format(cc_id)
+#    if not os.path.exists(trn_ncc_Lbl_dir):
+#        os.mkdir(trn_ncc_Lbl_dir)
+#    else:
+#        shutil.rmtree(trn_ncc_Lbl_dir)
+#        os.mkdir(trn_ncc_Lbl_dir)
+#    if not os.path.exists(val_ncc_lbl_dir):
+#        os.mkdir(val_ncc_lbl_dir)
+#    else:
+#        shutil.rmtree(val_ncc_lbl_dir)
+#        os.mkdir(val_ncc_lbl_dir)
+#    if not os.path.exists(trn_ncc_img_dir):
+#        os.mkdir(trn_ncc_img_dir)
+#    else:
+#        shutil.rmtree(trn_ncc_img_dir)
+#        os.mkdir(trn_ncc_img_dir)
+#    if not os.path.exists(val_ncc_img_dir):
+#        os.mkdir(val_ncc_img_dir)
+#    else:
+#        shutil.rmtree(val_ncc_img_dir)
+#        os.mkdir(val_ncc_img_dir)
+#
+#    trn_bkg_lbl_files = np.sort(glob.glob(os.path.join(trn_bkg_lbl_dir, '*.txt')))
+#    val_bkg_lbl_files = np.sort(glob.glob(os.path.join(val_bkg_lbl_dir, '*.txt')))
+#    print('trn_bkg_lbl_files, val_bkg_lbl_files', len(trn_bkg_lbl_files), len(val_bkg_lbl_files))
+#
+#    data_save_dir =  os.path.join(args.data_save_dir, base_pxwhrs, 'CC')
+#    if not os.path.exists(data_save_dir):
+#        os.mkdir(data_save_dir)
+#
+#    trn_cc_img_txt = open(os.path.join(data_save_dir, 'only_cc{}_trn_img_{}.txt'.format(cc_id, base_pxwhrs)), 'w')
+#    trn_cc_lbl_txt = open(os.path.join(data_save_dir, 'only_cc{}_trn_lbl_{}.txt'.format(cc_id, base_pxwhrs)), 'w')
+#    trn_nccbkg_img_txt = open(os.path.join(data_save_dir, '{}_trn_img_{}.txt'.format(txt_name, base_pxwhrs)), 'w')
+#    trn_nccbkg_lbl_txt = open(os.path.join(data_save_dir, '{}_trn_lbl_{}.txt'.format(txt_name, base_pxwhrs)), 'w')
+#
+#    cc_img_trn_dir = args.images_save_dir[:-1] + '_trn_cc{}'.format(cc_id)
+#    if not os.path.exists(cc_img_trn_dir):
+#        os.mkdir(cc_img_trn_dir)
+#    cc_lbl_trn_dir = args.annos_save_dir[:-1] + '_trn_cc{}_with_id'.format(cc_id)
+#    if not os.path.exists(cc_lbl_trn_dir):
+#        os.mkdir(cc_lbl_trn_dir)
+#    for f in trn_cc_files:
+#        trn_cc_lbl_txt.write("%s\n" % f)
+#        lbl_name = os.path.basename(f)
+#        img_name = lbl_name.replace('.txt', '.jpg')
+#        trn_cc_img_txt.write("%s\n" % os.path.join(cc_img_dir, img_name))
+#        shutil.copy(os.path.join(cc_img_dir, img_name), os.path.join(cc_img_trn_dir, img_name))
+#        shutil.copy(f, os.path.join(cc_lbl_trn_dir, lbl_name))
+#
+#    for f in trn_ncc_files:
+#        trn_nccbkg_lbl_txt.write("%s\n" % f)
+#        lbl_name = os.path.basename(f)
+#        img_name = lbl_name.replace('.txt', '.jpg')
+#        trn_nccbkg_img_txt.write("%s\n" % os.path.join(img_dir, img_name))
+#        shutil.copy(os.path.join(img_dir, img_name), os.path.join(trn_ncc_img_dir, img_name))
+#        shutil.copy(f, os.path.join(trn_ncc_Lbl_dir, lbl_name))
+#
+#    for f in trn_bkg_lbl_files:
+#        trn_nccbkg_lbl_txt.write("%s\n" % f)
+#        img_name = os.path.basename(f).replace('.txt', '.jpg')
+#        trn_nccbkg_img_txt.write("%s\n" % os.path.join(trn_bkg_img_dir, img_name))
+#
+#    trn_nccbkg_lbl_txt.close()
+#    trn_nccbkg_img_txt.close()
+#
+#    ###### validate xview_cc_nrc_bkg
+#    cc_img_val_dir = args.images_save_dir[:-1] + '_val_cc{}'.format(cc_id)
+#    if not os.path.exists(cc_img_val_dir):
+#        os.mkdir(cc_img_val_dir)
+#    cc_lbl_val_dir = args.annos_save_dir[:-1] + '_val_cc{}_with_id'.format(cc_id)
+#    if not os.path.exists(cc_lbl_val_dir):
+#        os.mkdir(cc_lbl_val_dir)
+#
+#    val_nccbkg_cc_img_txt = open(os.path.join(data_save_dir, 'xview_nccbkg_cc{}_val_img_{}.txt'.format(cc_id, base_pxwhrs)), 'w')
+#    val_nccbkg_cc_lbl_txt = open(os.path.join(data_save_dir, 'xview_nccbkg_cc{}_val_lbl_{}.txt'.format(cc_id, base_pxwhrs)), 'w')
+#
+#    for f in val_cc_files:
+#        val_nccbkg_cc_lbl_txt.write("%s\n" % f)
+#        lbl_name = os.path.basename(f)
+#        img_name = lbl_name.replace('.txt', '.jpg')
+#        val_nccbkg_cc_img_txt.write("%s\n" % os.path.join(cc_img_dir, img_name))
+#        shutil.copy(f, os.path.join(cc_lbl_val_dir, lbl_name))
+#        shutil.copy(os.path.join(cc_img_dir, img_name), os.path.join(cc_img_val_dir, img_name))
+#
+#    for f in val_ncc_files:
+#        val_nccbkg_cc_lbl_txt.write("%s\n" % f)
+#        lbl_name = os.path.basename(f)
+#        img_name = lbl_name.replace('.txt', '.jpg')
+#        val_nccbkg_cc_img_txt.write("%s\n" % os.path.join(img_dir, img_name))
+#        shutil.copy(os.path.join(img_dir, img_name), os.path.join(val_ncc_img_dir, img_name))
+#        shutil.copy(f, os.path.join(val_ncc_lbl_dir, lbl_name))
+#
+#    for f in val_bkg_lbl_files:
+#        val_nccbkg_cc_lbl_txt.write("%s\n" % f)
+#        img_name = os.path.basename(f).replace('.txt', '.jpg')
+#        val_nccbkg_cc_img_txt.write("%s\n" % os.path.join(val_bkg_img_dir, img_name))
+#
+#    val_nccbkg_cc_lbl_txt.close()
+#    val_nccbkg_cc_img_txt.close()
+#
+#
+#def create_xview_cc_nccbkg_data(cc_id, data_name, txt_name, seed=17, val_aug=False):
+#    base_cmt = 'px{}whr{}_seed{}'.format(px_thres, whr_thres, seed)
+#    data_save_dir =  os.path.join(args.data_save_dir, base_cmt, 'CC')
+#    print('data_save_dir', data_save_dir)
+#    data_txt = open(os.path.join(data_save_dir, '{}_{}.data'.format(data_name, base_cmt)), 'w')
+#    data_txt.write(
+#        'xview_train={}\n'.format(os.path.join(data_save_dir, '{}_trn_img_{}.txt'.format(txt_name, base_cmt))))
+#    data_txt.write(
+#        'xview_train_label={}\n'.format(os.path.join(data_save_dir, '{}_trn_lbl_{}.txt'.format(txt_name, base_cmt))))
+#
+#    data_txt.write(
+#        'cc_train={}\n'.format(os.path.join(data_save_dir,  'only_cc{}_trn_img_{}.txt'.format(cc_id, base_cmt))))
+#    data_txt.write(
+#        'cc_train_label={}\n'.format(os.path.join(data_save_dir, 'only_cc{}_trn_lbl_{}.txt'.format(cc_id, base_cmt))))
+#
+#    if val_aug:
+#        data_txt.write(
+#            'valid={}\n'.format(os.path.join(data_save_dir, 'xview_nccbkg_aug_cc{}_test_img_{}.txt'.format(cc_id, base_cmt))))
+#        data_txt.write(
+#            'valid_label={}\n'.format(os.path.join(data_save_dir, 'xview_nccbkg_aug_cc{}_test_lbl_{}.txt'.format(cc_id, base_cmt))))
+#    else:
+#        data_txt.write(
+#            'valid={}\n'.format(os.path.join(data_save_dir, '{}_val_img_{}.txt'.format(data_name, base_cmt))))
+#        data_txt.write(
+#            'valid_label={}\n'.format(os.path.join(data_save_dir, '{}_val_lbl_{}.txt'.format(data_name, base_cmt))))
+#
+#    df_trn_nccbkg = pd.read_csv(os.path.join(data_save_dir, '{}_trn_img_{}.txt'.format(txt_name, base_cmt)), header=None)
+#    df_trn_cc = pd.read_csv(os.path.join(data_save_dir,  'only_cc{}_trn_img_{}.txt'.format(cc_id, base_cmt)), header=None)
+#    xview_trn_num = df_trn_nccbkg.shape[0] + df_trn_cc.shape[0]
+#
+#    data_txt.write('xview_number={}\n'.format(xview_trn_num))
+#    data_txt.write('classes=%s\n' % str(args.class_num))
+#    data_txt.write('names=./data_xview/{}_cls/xview.names\n'.format(args.class_num))
+#    data_txt.write('backup=backup/\n')
+#    data_txt.write('eval=color\n')
+#    data_txt.close()
 
 
 def create_aug_cc_nccbkg_test(cc_id, seed=17):
@@ -433,60 +433,7 @@ def create_solid_color_cc_nccbkg_test(cc_id=2):
     data_txt.write('names=./data_xview/{}_cls/xview.names\n'.format(args.class_num))
     data_txt.close()    
     
-    
-def combine_all_xview_BG_with_xview_CC_by_inst(ins, cc_id, sample_seeds=[0, 1, 2], seed=17):
-    base_cmt = 'px{}whr{}_seed{}'.format(px_thres, whr_thres, seed)
-    data_save_dir =  os.path.join(args.data_save_dir, base_cmt, 'CC')
-    cc_trn_img_file = os.path.join(data_save_dir,  'cc{}_trn_img_{}.txt'.format(cc_id, base_cmt))
-    cc_trn_lbl_file = os.path.join(data_save_dir,  'cc{}_trn_lbl_{}.txt'.format(cc_id, base_cmt))
-    df_cc_trn_img = pd.read_csv(cc_trn_img_file, header=None)
-    df_cc_trn_lbl = pd.read_csv(cc_trn_lbl_file, header=None)
-    
-    bkg_dir =  os.path.join(args.data_save_dir, base_cmt)
-    bkg_img = os.path.join(bkg_dir, 'xview_bkg_train_img_{}.txt'.format(base_cmt))
-    bkg_lbl = os.path.join(bkg_dir, 'xview_bkg_train_lbl_{}.txt'.format(base_cmt))
-    df_bkg_img = pd.read_csv(bkg_img, header=None)
-    bkg_num = df_bkg_img.shape[0]
-    
-    data_ins_dir =  os.path.join(args.data_save_dir, base_cmt, 'CC', 'instance')
-    if not os.path.exists(data_ins_dir):
-        os.mkdir(data_ins_dir)
-    
-    for ssd in sample_seeds:
-        samp_cmt = 'px{}whr{}_seed{}'.format(px_thres, whr_thres, ssd)
-        np.random.seed(ssd)
-        inxes = np.random.permutation(df_cc_trn_img.shape[0])
-        cc_ins_img_file = open(os.path.join(data_ins_dir, 'cc{}_{}ins_trn_img_{}.txt'.format(cc_id, ins, samp_cmt)), 'w')
-        cc_ins_lbl_file = open(os.path.join(data_ins_dir, 'cc{}_{}ins_trn_lbl_{}.txt'.format(cc_id, ins, samp_cmt)), 'w')
-        
-        for ix in inxes[:ins]:
-            cc_ins_img_file.write('%s\n' % df_cc_trn_img.loc[ix, 0])
-            cc_ins_lbl_file.write('%s\n' % df_cc_trn_lbl.loc[ix, 0])
-        cc_ins_img_file.close()   
-        cc_ins_lbl_file.close() 
-    
-        data_txt = open(os.path.join(data_ins_dir, 'cc{}_{}instances+xview_bkg_seed{}.data'.format(cc_id, ins, ssd)), 'w')
-        data_txt.write('cc_train=%s\n' % (os.path.join(data_ins_dir, 'cc{}_{}ins_trn_img_{}.txt'.format(cc_id, ins, samp_cmt))))
-        data_txt.write('cc_train_label=%s\n' % (os.path.join(data_ins_dir, 'cc{}_{}ins_trn_lbl_{}.txt'.format(cc_id, ins, samp_cmt)))) 
-            
-        data_txt.write(
-            'xview_bkg_train={}\n'.format(bkg_img))
-        data_txt.write(
-            'xview_bkg_train_label={}\n'.format(bkg_lbl))
-                
-        data_txt.write(
-            'valid={}\n'.format(os.path.join(data_save_dir, 'xview_rcncc_bkg_cc{}_val_img_{}.txt'.format(cc_id, base_cmt))))
-        data_txt.write(
-            'valid_label={}\n'.format(os.path.join(data_save_dir, 'xview_rcncc_bkg_cc{}_val_lbl_{}.txt'.format(cc_id, base_cmt))))
-        
-        xview_trn_num = ins + bkg_num
-    
-        data_txt.write('xview_number={}\n'.format(xview_trn_num))
-        data_txt.write('classes=%s\n' % str(args.class_num))
-        data_txt.write('names=./data_xview/{}_cls/xview.names\n'.format(args.class_num))
-        data_txt.write('backup=backup/\n')
-        data_txt.write('eval=color\n')
-        data_txt.close()
+
          
 
 def get_args(px_thres=None, whr_thres=None):
@@ -590,20 +537,21 @@ if __name__ == '__main__':
 #    seed = 17
 #    split_bkg_into_train_val(comments, seed, px_thres, whr_thres)
     
-    '''
-    split CC1, CC2 separately
-    1. split CC* to train and val
-    2. split Non-CC to train and val
-    3. split BKG to train and val, #BKG  == CC* + Non-CC
-    '''
-#    seed = 17
-#    base_pxwhrs = 'px{}whr{}_seed{}'.format(px_thres, whr_thres, seed)
-#    #cc_id = 1
-#    cc_id = 2
-#    txt_name = 'xview_nccbkg_nocc{}'.format(cc_id)
-#    split_trn_val_for_each_CC_step_by_step(cc_id, seed, txt_name, base_pxwhrs)
-#    data_name = 'xview_nccbkg_cc{}'.format(cc_id)
-#    create_xview_cc_nccbkg_data(cc_id, data_name, txt_name, seed)
+    ######################### wrong!!!! 
+###    '''
+###    split CC1, CC2 separately
+###    1. split CC* to train and val
+###    2. split Non-CC to train and val
+###    3. split BKG to train and val, #BKG  == CC* + Non-CC
+###    '''
+###    seed = 17
+###    base_pxwhrs = 'px{}whr{}_seed{}'.format(px_thres, whr_thres, seed)
+###    #cc_id = 1
+###    cc_id = 2
+###    txt_name = 'xview_nccbkg_nocc{}'.format(cc_id)
+###    split_trn_val_for_each_CC_step_by_step(cc_id, seed, txt_name, base_pxwhrs)
+###    data_name = 'xview_nccbkg_cc{}'.format(cc_id)
+###    create_xview_cc_nccbkg_data(cc_id, data_name, txt_name, seed)
 
     '''
     augment CC 
@@ -638,15 +586,15 @@ if __name__ == '__main__':
     create *.data with val augmented CC  
     '''
 #    seed = 17
-#    #cc_id = 1
-#    cc_id = 2
+#    cc_id = 1
+#    #cc_id = 2
 #    txt_name = 'xview_nccbkg_nocc{}'.format(cc_id)
 #    data_name = 'xview_nccbkg_aug_cc{}'.format(cc_id)
 #    create_xview_cc_nccbkg_data(cc_id, data_name, txt_name, seed, val_aug=True)
-#
-#    '''
-#    create test data of Aug CC
-#    '''
+
+    '''
+    create test data of Aug CC
+    '''
 #    #cc_id = 1
 #    cc_id = 2
 #    create_aug_cc_nccbkg_test(cc_id)
@@ -657,24 +605,7 @@ if __name__ == '__main__':
 #    cc_id = 2
 #    create_solid_color_cc_nccbkg_test(cc_id)
 
-    '''
-    split CC with different instances
-    '''
-    seed = 17
-#    instances = [6,12,18,24,30]
-    instances = [7, 14, 21, 28, 35]
-    ccids = [1, 2]
-    sample_seeds = [0, 1]
-    for cc_id in ccids:
-        for ins in instances:
-            combine_all_xview_BG_with_xview_CC_by_inst(ins, cc_id, sample_seeds, seed)
-    
-#    seed = 17
-#    cc_id = 2 
-#    cc2_instances = [7, 14, 21, 28, 35]
-#    sample_seeds = [0, 1]
-#    for ins in cc2_instances:
-#        combine_all_xview_BG_with_xview_CC_by_inst(ins, cc_id, sample_seeds, seed)
+
     
     
     

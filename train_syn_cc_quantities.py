@@ -434,7 +434,7 @@ def train(opt):
             # Save backup every 10 epochs (optional)
             #fixme
             # if (epoch > 0 and epoch % 10 == 0):
-            if (epoch > 0 and epoch % 50 == 0) or (epoch > 100 and epoch % 20 == 0) :
+            if (epochs <200 and epoch % 50 == 0) or (epochs > 200 and epoch % 100 == 0) :
                 torch.save(chkpt, opt.weights_dir + 'backup%g.pt' % epoch)
 
             # Delete checkpoint
@@ -534,6 +534,9 @@ if __name__ == '__main__':
     val_miss = cfg_dict['val_miss']
     # syn_ratios = cfg_dict['syn_ratios']
     hyp = cfg_dict['hyp']
+    
+    hyp_cmt = hyp_cmt.format(hyp['obj'])
+    
     if 'pw' not in opt.arc:  # remove BCELoss positive weights
         hyp['cls_pw'] = 1.
         hyp['obj_pw'] = 1.

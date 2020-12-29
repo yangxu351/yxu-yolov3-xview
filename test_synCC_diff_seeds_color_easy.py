@@ -643,7 +643,7 @@ if __name__ == "__main__":
         comments.append(cmt) 
           
     
-    seed_list = [0, 1, 2] # [0, 1, 2] , 3, 4
+    seed_list = [2] # [0, 1, 2] , 3, 4
     for seed in seed_list:
       main(seed, device)   
     

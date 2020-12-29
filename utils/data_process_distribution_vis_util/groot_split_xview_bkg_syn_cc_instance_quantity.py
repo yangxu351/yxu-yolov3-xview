@@ -259,8 +259,14 @@ def create_syn_dataset_with_different_quantities():
         syn_annos_quan_dir = args.syn_annos_cc_dir.format(cmt_quantities[ix])
         print(syn_quan_dir)
         quan_img_files = np.sort(glob.glob(os.path.join(syn_quan_dir, 'color_all_images_step182.4', '*.png')))
-        quan_lbl_files = np.sort(glob.glob(os.path.join(syn_annos_quan_dir, 'minr100_linkr15_px23whr3_color_all_annos_txt_step182.4','*.txt')))
+        quan_lbl_files = np.sort(glob.glob(os.path.join(syn_annos_quan_dir, 'minr100_linkr15_px23whr3_color_all_annos_txt_step182.4', '*.txt')))
+        #non_intersections = [n for n in quan_img_files if n.replace('.png', '.txt') not in quan_lbl_files]
+        #print('non-intersections', len(non_intersections), non_intersections[:2])
+        #quan_lbl_files = [os.path.join(syn_annos_quan_dir, 'minr100_linkr15_px23whr3_color_all_annos_txt_step182.4', os.path.basename(f).replace('.png', '.txt')) for f in quan_img_files]
         quan_img_num = len(quan_img_files) 
+        print('quan_img_num', quan_img_num)
+        print('quan_lbl_files', len(quan_lbl_files))
+        #exit(0)
         #prefix = cmt[:cmt.find('_CC')+3]
         syn_data_dir = args.syn_data_list_dir.format(syn_cmt, args.class_num)
         syn_trn_img_file = os.path.join(syn_data_dir, '{}_seed{}'.format(syn_cmt, seed),  '{}_train_img_seed{}.txt'.format(syn_cmt, seed))
@@ -277,9 +283,9 @@ def create_syn_dataset_with_different_quantities():
             quant = quantities[ix].format(base_version+tx, t)
             quan_data_file = '{}_seed{}.data'.format(quant, seed)
             quan_trn_img_file = '{}_train_img_seed{}.txt'.format(quant, seed)
-            quan_trn_lbl_file = '{}_train_lbl_seed{}.txt'.format(quant, base_version+tx, seed)
-            quan_val_img_file = '{}_val_img_seed{}.txt'.format(quant, base_version+tx, seed)
-            quan_val_lbl_file = '{}_val_lbl_seed{}.txt'.format(quant, base_version+tx, seed)
+            quan_trn_lbl_file = '{}_train_lbl_seed{}.txt'.format(quant, seed)
+            quan_val_img_file = '{}_val_img_seed{}.txt'.format(quant, seed)
+            quan_val_lbl_file = '{}_val_lbl_seed{}.txt'.format(quant, seed)
             syn_quan_dir = args.syn_data_list_dir.format(quant, args.class_num)
             if not os.path.exists(syn_quan_dir):
                 os.mkdir(syn_quan_dir)
@@ -298,8 +304,7 @@ def create_syn_dataset_with_different_quantities():
                     new_trn_lbl_files.write('%s\n'%(df_src_trn_lbl.loc[i, 0]))
                 for j in range(new_num_val):
                     new_val_img_files.write('%s\n'%(df_src_val_img.loc[j, 0]))
-                    new_val_lbl_files.write('%s\n'%(df_src_val_lbl.loc[j, 0]))
-                    
+                    new_val_lbl_files.write('%s\n'%(df_src_val_lbl.loc[j, 0]))                   
             else:
                 print('new_num_trn', new_num_trn)
                 for i in range(src_num_trn):
@@ -318,7 +323,6 @@ def create_syn_dataset_with_different_quantities():
                 trn_ixes = indexes[:med_num_trn]
                 val_ixes = indexes[med_num_trn:med_num_trn+med_num_val]
                 for i in trn_ixes:
-                    
                     new_trn_img_files.write('%s\n'%(quan_img_files[i]))
                     new_trn_lbl_files.write('%s\n'%(quan_lbl_files[i]))
                 for j in val_ixes:
@@ -341,7 +345,61 @@ def create_syn_dataset_with_different_quantities():
             quan_data.write('eval=quantities')
             quan_data.close()
 
- 
+    
+def combine_all_xview_BG_with_xview_CC_by_inst(ins, cc_id, sample_seeds=[0, 1, 2], seed=17):
+    base_cmt = 'px{}whr{}_seed{}'.format(px_thres, whr_thres, seed)
+    data_save_dir =  os.path.join(args.data_save_dir, base_cmt, 'CC')
+    cc_trn_img_file = os.path.join(data_save_dir,  'cc{}_trn_img_{}.txt'.format(cc_id, base_cmt))
+    cc_trn_lbl_file = os.path.join(data_save_dir,  'cc{}_trn_lbl_{}.txt'.format(cc_id, base_cmt))
+    df_cc_trn_img = pd.read_csv(cc_trn_img_file, header=None)
+    df_cc_trn_lbl = pd.read_csv(cc_trn_lbl_file, header=None)
+    
+    bkg_dir =  os.path.join(args.data_save_dir, base_cmt)
+    bkg_img = os.path.join(bkg_dir, 'xview_bkg_train_img_{}.txt'.format(base_cmt))
+    bkg_lbl = os.path.join(bkg_dir, 'xview_bkg_train_lbl_{}.txt'.format(base_cmt))
+    df_bkg_img = pd.read_csv(bkg_img, header=None)
+    bkg_num = df_bkg_img.shape[0]
+    
+    data_ins_dir =  os.path.join(args.data_save_dir, base_cmt, 'CC', 'instance')
+    if not os.path.exists(data_ins_dir):
+        os.mkdir(data_ins_dir)
+    
+    for ssd in sample_seeds:
+        samp_cmt = 'px{}whr{}_seed{}'.format(px_thres, whr_thres, ssd)
+        np.random.seed(ssd)
+        inxes = np.random.permutation(df_cc_trn_img.shape[0])
+        cc_ins_img_file = open(os.path.join(data_ins_dir, 'cc{}_{}ins_trn_img_{}.txt'.format(cc_id, ins, samp_cmt)), 'w')
+        cc_ins_lbl_file = open(os.path.join(data_ins_dir, 'cc{}_{}ins_trn_lbl_{}.txt'.format(cc_id, ins, samp_cmt)), 'w')
+        
+        for ix in inxes[:ins]:
+            cc_ins_img_file.write('%s\n' % df_cc_trn_img.loc[ix, 0])
+            cc_ins_lbl_file.write('%s\n' % df_cc_trn_lbl.loc[ix, 0])
+        cc_ins_img_file.close()   
+        cc_ins_lbl_file.close() 
+    
+        data_txt = open(os.path.join(data_ins_dir, 'cc{}_{}instances+xview_bkg_seed{}.data'.format(cc_id, ins, ssd)), 'w')
+        data_txt.write('cc_train=%s\n' % (os.path.join(data_ins_dir, 'cc{}_{}ins_trn_img_{}.txt'.format(cc_id, ins, samp_cmt))))
+        data_txt.write('cc_train_label=%s\n' % (os.path.join(data_ins_dir, 'cc{}_{}ins_trn_lbl_{}.txt'.format(cc_id, ins, samp_cmt)))) 
+            
+        data_txt.write(
+            'xview_bkg_train={}\n'.format(bkg_img))
+        data_txt.write(
+            'xview_bkg_train_label={}\n'.format(bkg_lbl))
+                
+        data_txt.write(
+            'valid={}\n'.format(os.path.join(data_save_dir, 'xview_rcncc_bkg_cc{}_val_img_{}.txt'.format(cc_id, base_cmt))))
+        data_txt.write(
+            'valid_label={}\n'.format(os.path.join(data_save_dir, 'xview_rcncc_bkg_cc{}_val_lbl_{}.txt'.format(cc_id, base_cmt))))
+        
+        xview_trn_num = ins + bkg_num
+    
+        data_txt.write('xview_number={}\n'.format(xview_trn_num))
+        data_txt.write('classes=%s\n' % str(args.class_num))
+        data_txt.write('names=./data_xview/{}_cls/xview.names\n'.format(args.class_num))
+        data_txt.write('backup=backup/\n')
+        data_txt.write('eval=color\n')
+        data_txt.close()
+         
 
 def get_args(px_thres=None, whr_thres=None):
     parser = argparse.ArgumentParser()
@@ -432,7 +490,7 @@ if __name__ == '__main__':
 
 
     '''
-    combine xivew_BG with syn CC
+    combine xivew_BG with syn CC with different times
     '''
 #    seed=17
 #    base_cmt='px{}whr{}_seed{}'.format(px_thres, whr_thres, seed)
@@ -442,9 +500,12 @@ if __name__ == '__main__':
 #    for ti in times:
 #        for syn_cmt in syn_cmts:
 #            combine_xview_BG_with_syn_CC_by_bkgtimes(syn_cmt, ti, seed)
-
-    seed=17
-    base_cmt='px{}whr{}_seed{}'.format(px_thres, whr_thres, seed)
+    
+    '''
+    combine xivew_BG with syn CC with different instances each patch contains 1instance
+    '''
+#    seed=17
+#    base_cmt='px{}whr{}_seed{}'.format(px_thres, whr_thres, seed)
 #    syn_cmts = ['syn_xview_bkg_px23whr3_new_bkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0_color_square_bias0_CC1_1inst_v63',
 #    'syn_xview_bkg_px23whr3_new_bkg_shdw_split_scatter_gauss_rndsolar_promu_size_square_bias0_CC2_1inst_v63']
 #    syn_cmts = ['syn_xview_bkg_px23whr3_new_bkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.24_color_square_bias2_CC1_1inst_v64',
@@ -456,18 +517,18 @@ if __name__ == '__main__':
 #            #combine_all_xview_BG_with_syn_CC_one_inst(syn_cmt, ti, seed)
 #            combine_all_xview_BG_with_syn_CC_one_inst(syn_cmt, ti, sample_seeds, seed, val_syn=False)
 
-    syn_cc1_cmt = 'syn_xview_bkg_px23whr3_new_bkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.08_csig1_CC1_1inst_v65'
-    cc1_instances = [7, 14, 21, 28, 35]#[6,12,18,24,30]
-    instances = cc1_instances
-    syn_cmt = syn_cc1_cmt
+#    syn_cc1_cmt = 'syn_xview_bkg_px23whr3_new_bkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.08_csig1_CC1_1inst_v65'
+#    cc1_instances = [7, 14, 21, 28, 35]#[6,12,18,24,30]
+#    instances = cc1_instances
+#    syn_cmt = syn_cc1_cmt
 #    syn_cc2_cmt = 'syn_xview_bkg_px23whr3_new_bkg_shdw_split_scatter_gauss_rndsolar_promu_ssig0_csig4_CC2_1inst_v65'
 #    cc2_instances = [7, 14, 21, 28, 35]
 #    instances = cc2_instances
 #    syn_cmt = syn_cc2_cmt
-    sample_seeds = [2] # 0, 1
-    for ti in instances:
-        #combine_all_xview_BG_with_syn_CC_one_inst(syn_cmt, ti, seed)
-        combine_all_xview_BG_with_syn_CC_one_inst(syn_cmt, ti, sample_seeds, seed, val_syn=False)
+#    sample_seeds = [0, 1] # 0, 1
+#    for ti in instances:
+#        #combine_all_xview_BG_with_syn_CC_one_inst(syn_cmt, ti, seed)
+#        combine_all_xview_BG_with_syn_CC_one_inst(syn_cmt, ti, sample_seeds, seed, val_syn=False)
  
     '''
      quantities
@@ -482,11 +543,45 @@ if __name__ == '__main__':
 #    
 #    cmt_quantities = ['syn_xview_bkg_new_bkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.24_color_square_bias2_CC1_quantities',
 #    'syn_xview_bkg_new_bkg_shdw_split_scatter_gauss_rndsolar_promu_size_square_bias0.12_CC2_quantities']
-#    
-#    seed = 17
-#    base_version = 60
-#    create_syn_dataset_with_different_quantities()
 
+#    syn_cmts = ['syn_xview_bkg_px23whr3_new_bkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.08_color_square_bias1_CC1_v51',
+#    'syn_xview_bkg_px23whr3_new_bkg_shdw_split_scatter_gauss_rndsolar_ssig0_color_square_bias4_CC2_v54']
+#    
+#    quantities = ['syn_xview_bkg_px23whr3_new_bkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.8_csig1_CC1_v{}_{}quantities',
+#    'syn_xview_bkg_px23whr3_new_bkg_shdw_split_scatter_gauss_rndsolar_promu_ssig0_csig4_CC2_v{}_{}quantities']
+#    
+#    cmt_quantities = ['syn_xview_bkg_new_bkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.8_csig1_CC1_quantities',
+#    'syn_xview_bkg_new_bkg_shdw_split_scatter_gauss_rndsolar_promu_ssig0_csig4_CC2_quantities'] 
+
+    #syn_cmts = ['syn_xview_bkg_px23whr3_new_bkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.08_color_square_bias1_CC1_v51',
+    syn_cmts = ['syn_xview_bkg_px23whr3_new_bkg_shdw_split_scatter_gauss_rndsolar_ssig0_color_square_bias3_CC2_v53']
+    #quantities = ['syn_xview_bkg_px23whr3_new_bkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.8_csig1_CC1_v{}_{}quantities',
+    quantities = ['syn_xview_bkg_px23whr3_new_bkg_shdw_split_scatter_gauss_rndsolar_promu_ssig0_csig3_CC2_v{}_{}quantities']
+    #cmt_quantities = ['syn_xview_bkg_new_bkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.8_csig1_CC1_quantities',
+    cmt_quantities = ['syn_xview_bkg_new_bkg_shdw_split_scatter_gauss_rndsolar_promu_ssig0_csig3_CC2_quantities'] 
     
+    seed = 17
+    base_version = 60
+    create_syn_dataset_with_different_quantities()
+
+
+    '''
+    split CC with different instances
+    '''
+#    seed = 17
+##    instances = [6,12,18,24,30]
+#    instances = [7, 14, 21, 28, 35]
+#    ccids = [1, 2]
+#    sample_seeds = [0, 1]
+#    for cc_id in ccids:
+#        for ins in instances:
+#            combine_all_xview_BG_with_xview_CC_by_inst(ins, cc_id, sample_seeds, seed)
     
+#    seed = 17
+#    cc_id = 2 
+#    cc2_instances = [7, 14, 21, 28, 35]
+#    sample_seeds = [0, 1]
+#    for ins in cc2_instances:
+#        combine_all_xview_BG_with_xview_CC_by_inst(ins, cc_id, sample_seeds, seed)
+      
     

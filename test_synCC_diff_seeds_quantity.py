@@ -608,13 +608,16 @@ if __name__ == "__main__":
     quantity_times = [0.5, 2, 4] 
     for ix, times in enumerate(quantity_times):
         #cmt = 'syn_xview_bkg_px23whr3_new_bkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.24_color_square_bias2_CC1_v{}_{}quantities'.format(ix+60, times)
-        cmt = 'syn_xview_bkg_px23whr3_new_bkg_shdw_split_scatter_gauss_rndsolar_promu_size_square_bias0.12_CC2_v{}_{}quantities'.format(ix+60, times)
+        #cmt = 'syn_xview_bkg_px23whr3_new_bkg_shdw_split_scatter_gauss_rndsolar_promu_size_square_bias0.12_CC2_v{}_{}quantities'.format(ix+60, times)
+        
+        #cmt = 'syn_xview_bkg_px23whr3_new_bkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.8_csig1_CC1_v{}_{}quantities'.format(ix+60, times)
+        cmt = 'syn_xview_bkg_px23whr3_new_bkg_shdw_split_scatter_gauss_rndsolar_promu_ssig0_csig3_CC2_v{}_{}quantities'.format(ix+60, times)
         
         px_thres = 23
         comments.append(cmt) 
-        device = '3'    
+        device = '1'    
         
-    seed_list = [0, 1] # [0, 1, 2] , 3, 4
+    seed_list = [1] # [0, 1, 2] , 3, 4
     for seed in seed_list:
       main(seed, device)   
       

@@ -644,14 +644,14 @@ if __name__ == "__main__":
 #        device = '1'
 
     base_version = 40
-    size_sigma = [0, 0.06, 0.12, 0.18, 0.24] # for CC2
+    size_sigma = [0, 0.06, 0.12, 0.18, 0.24] # for CC2 0, 0.06, 0.12, 0.18, 0.24
     for ix,ssig in enumerate(size_sigma):
         #cmt = 'syn_xview_bkg_px23whr3_xbsw_xwing_shdw_split_scatter_gauss_rndsolar_promu_size_square_bias{}_CC2_v{}'.format(ssig, ix+10)
         #cmt = 'syn_xview_bkg_px23whr3_shdw_split_scatter_gauss_rndsolar_promu_size_square_bias{}_CC2_v{}'.format(ssig, ix+20)
         cmt = 'syn_xview_bkg_px23whr3_new_bkg_shdw_split_scatter_gauss_rndsolar_promu_size_square_bias{}_CC2_v{}'.format(ssig, ix+base_version)
         px_thres = 23
         comments.append(cmt)   
-        device = '3'  
+        device = '2'  
 
 #    comments = ['syn_xview_bkg_px23whr3_new_bkg_unif_shdw_scatter_gauss_rndsolar_promu_size_square_bias0_CC1_v70']    
 #    base_version = 70
@@ -660,9 +660,9 @@ if __name__ == "__main__":
 #    px_thres = 23
 #    device = '1' 
     
-    seed_list = [0, 1, 2] # [0, 1, 2] , 3, 4
-    for seed in seed_list:
-      main(seed, device)   
+#    seed_list = [2] # [0, 1, 2] , 3, 4
+#    for seed in seed_list:
+#      main(seed, device)   
       
     seeds = [0, 1, 2]  # , 3, 4
     computer_avg_all_seeds(seeds)

@@ -276,28 +276,32 @@ if __name__ == "__main__":
 #    rare_class = 2 
 #    sd ='seed0' 
 #    sorc = 'size'
+#    comments = ['syn_xview_bkg_px23whr3_xbsw_xwing_newbkg_shdw_split_scatter_gauss_rndsolar_ssig0.03_color_square_bias10_RC2_v121']
+#    rare_class = 2 
+#    sd ='seed2' 
+#    sorc = 'color'
 
     #comments = ['syn_xview_bkg_px15whr3_xbw_xbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_promu_size_square_bias0_RC1_v100']
-    comments = ['syn_xview_bkg_px15whr3_xbw_newbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_promu_size_square_bias0.03_RC1_v111']
-    rare_class = 1
-    sd ='seed1'
-    sorc = 'size'
+#    comments = ['syn_xview_bkg_px15whr3_xbw_newbkg_unif_mig21_shdw_split_scatter_gauss_rndsolar_promu_size_square_bias0.03_RC1_v111']
+#    rare_class = 1
+#    sd ='seed1'
+#    sorc = 'size'
 
-#    comments = ['syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.09_color_square_bias30_RC3_v93']
+#    comments = ['syn_xview_bkg_px23whr3_xbw_newbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.09_color_square_bias40_RC3_v124']
 #    rare_class = 3
 #    sd ='seed1' 
 #    sorc = 'color'
 
 
-#    comments = ['syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0_color_square_bias30_RC5_v93']
-#    rare_class = 5
-#    sd ='seed2' 
-#    sorc = 'color'
+    comments = ['syn_xview_bkg_px23whr3_xbw_newbkg_unif_shdw_split_scatter_gauss_rndsolar_promu_size_square_bias0.03_RC5_v111']
+    rare_class = 5
+    sd ='seed0' 
+    sorc = 'size'
 
-#    comments = ['syn_xview_bkg_px23whr3_xbw_xbkg_unif_shdw_split_scatter_gauss_rndsolar_ssig0.03_color_square_bias0_RC4_v95']
+#    comments = ['syn_xview_bkg_px23whr3_xbw_newbkg_unif_shdw_split_scatter_gauss_rndsolar_promu_size_square_bias0.12_RC4_v114']
 #    sd = 'seed1'
 #    rare_class = 4 
-#    sorc = 'color'
+#    sorc = 'size'
 
     apN = 50
     prefix = 'results_syn_iou{}'.format(apN)
